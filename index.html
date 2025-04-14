@@ -225,10 +225,11 @@
                     ctx.fillStyle = 'black';
                     ctx.beginPath();
                     ctx.roundRect(
-                        screenX - healthBarWidth / 2,
-                        screenY - this.radius - 15,
-                        healthBarWidth,
-                        5
+                        screenX - healthBarWidth / 2 - 2,//-2 so that black bar bigger than blue
+                        screenY + this.radius + 15 - 2,
+                        healthBarWidth + 4,//+4 so that black bar bigger
+                        8 + 4,
+                        4
                     );//older browsers might not have roundrect!!!
                     ctx.fill();
                     
@@ -237,10 +238,10 @@
                     ctx.beginPath();
                     ctx.roundRect(
                         screenX - healthBarWidth / 2,
-                        screenY - this.radius - 15,
+                        screenY + this.radius + 15,
                         healthBarWidth * healthPercentage,
-                        5,
-                        
+                        8,
+                        4
                     );
                     ctx.fill();
                 }
