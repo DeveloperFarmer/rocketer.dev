@@ -104,7 +104,8 @@
                 this.x = x;
                 this.y = y;
                 this.radius = 30;
-                this.color = '#3498db';
+                this.color = '#00B0E1';
+                this.outline = '#0092C3'
                 this.speed = 5;
                 this.angle = 0;
                 this.health = 100;
@@ -163,7 +164,7 @@
 
             shoot() {
                 const bulletSpeed = 10;
-                const bulletX = this.x + Math.cos(this.angle) * (this.radius + 10);
+                const bulletX = this.x + Math.cos(this.angle) * (this.radius + 10);//change 10 to barrelLength - bulletSpeed
                 const bulletY = this.y + Math.sin(this.angle) * (this.radius + 10);
                 
                 bullets.push(new Bullet(
@@ -182,14 +183,9 @@
                 
                 // Only draw if on screen
                 if (this.isOnScreen(screenX, screenY)) {
-                    // Draw tank body
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath();
-                    ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
-                    ctx.fill();
-
                     // Draw tank barrel
-                    ctx.strokeStyle = '#2980b9';
+                    ctx.strokeStyle = '#7B7B7B';
+                    ctx.fillStyle = '#999999'
                     ctx.lineWidth = 10;
                     ctx.beginPath();
                     ctx.moveTo(screenX, screenY);
@@ -197,6 +193,16 @@
                         screenX + Math.cos(this.angle) * (this.radius + 20),
                         screenY + Math.sin(this.angle) * (this.radius + 20)
                     );
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    // Draw tank body
+                    ctx.fillStyle = this.color;
+                    ctx.strokeStyle = this.outline;
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
                     ctx.stroke();
 
                     // Draw health bar
@@ -497,13 +503,13 @@
             ctx.save();
 
             // Draw area outside the map (where camera can go beyond)
-            ctx.fillStyle = '#1a1a1a'; // Dark gray for out-of-bounds
+            ctx.fillStyle = 'rgba(95, 103, 108, 0.5)'; // Dark gray for out-of-bounds
 
             // Top border (above y=0)
-            ctx.fillRect(-cameraX,-cameraY,MAP_WIDTH,Math.min(0, cameraY));//Math.min so that only draw if cameraY < 0
+            ctx.fillRect(-cameraX-canvas.width/2,-cameraY,MAP_WIDTH+canvas.width,Math.min(0, cameraY));//Math.min so that only draw if cameraY < 0
 
             // Bottom border (below y=MAP_HEIGHT)
-            ctx.fillRect(-cameraX,MAP_HEIGHT - cameraY,MAP_WIDTH,canvas.height);
+            ctx.fillRect(-cameraX-canvas.width/2,MAP_HEIGHT - cameraY,MAP_WIDTH+canvas.width,canvas.height);
 
             // Left border (left of x=0)
             ctx.fillRect(-cameraX,-cameraY,Math.min(0, cameraX),MAP_HEIGHT);//only draw if cameraX < 0
