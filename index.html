@@ -1,72 +1,558 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <!-- 
-      This is an HTML comment
-      You can write text in a comment and the content won't be visible in the page
-    -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline Rocketer</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #222;
+        }
+        canvas {
+            display: block;
+            background-color: #CDCDCD;
+        }
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+        #mapSize {
+            position: absolute;
+            top: 40px;
+            left: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #ccc;
+            text-shadow: 1px 1px 2px black;
+        }
+    </style>
+</head>
+<body>
+    <div id="score">Score: 0</div>
+    <div id="mapSize">Map: 4000x4000</div>
+    <div id="fpsCounter">FPS: 0</div>
+    <canvas id="gameCanvas"></canvas>
 
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="https://glitch.com/favicon.ico" />
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const mapSizeElement = document.getElementById('mapSize');
 
-    <!--
-      This is the page head - it contains info the browser uses
-      Like the title, which appears on the browser tab but not inside the page
-      Further down you'll see the content that displays in the page
-    -->
-    <title>Hello World!</title>
+        // Set canvas to window size (viewport)
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-    <!-- The website stylesheet -->
-    <link rel="stylesheet" href="/style.css" />
+        // Game variables
+        let score = 0;
+        const players = [];
+        const bullets = [];
+        const enemies = [];
+        const particles = [];
+        const keys = {};
+        
+        // Map settings
+        const MAP_WIDTH = 4000;
+        const MAP_HEIGHT = 4000;
+        let cameraX = 0;
+        let cameraY = 0;
+        
+        // Grid settings for map background
+        const GRID_SIZE = 20;
+        const GRID_LINE_COLOR = '#C8C8C8';
 
-    <!-- The website JavaScript file -->
-    <script src="/script.js" defer></script>
-  </head>
-  <body>
-    <!--
-      The body includes the content you see in the page
-      Each element is defined using tags, like this <div></div>
-      The attributes like class="wrapper" let us style elements in the CSS
-    -->
-    <div class="wrapper">
-      <div class="content" role="main">
-        <h1 class="title">Hello World!</h1>
-        <img
-          src="https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2Fillustration.svg?v=1618177344016"
-          class="illustration"
-          alt="Editor illustration"
-          title="Click the image!"
-        />
-        <div class="instructions">
-          <h2>Using this project</h2>
-          <p>
-            This is the Glitch <strong>Hello Website</strong> project. You can
-            use it to build your own site. Check out the code in the editor and open
-            the <span class="fileopener" data-file="TODO.md" data-line="0"
-              >TODO</span> for next steps!
-          </p>
-          <!--  🚧 TODO: ADD BUTTON HERE -->
+        // Player class
+        class Player {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 30;
+                this.color = '#3498db';
+                this.speed = 5;
+                this.angle = 0;
+                this.health = 100;
+                this.bulletCooldown = 0;
+                this.bulletCooldownMax = 10;
+                this.score = 0;
+            }
 
-          <!-- Once you've added the button from TODO.md, click it in the page -->
-          <!-- Check out the function in script.js to see how it works -->
-        </div>
-      </div>
-    </div>
-    <!-- The footer holds our remix button — you can keep or delete it ✂ -->
-    <footer class="footer">
-      <div class="links"></div>
-      <a
-        class="btn--remix"
-        target="_top"
-        href="https://glitch.com/edit/#!/remix/glitch-hello-website"
-      >
-        <img
-          src="https://cdn.glitch.com/605e2a51-d45f-4d87-a285-9410ad350515%2FLogo_Color.svg?v=1618199565140"
-          alt=""
-        />
-        Remix on Glitch
-      </a>
-    </footer>
-  </body>
+            update() {
+                // Movement
+                let moveX = 0;
+                let moveY = 0;
+
+                if (keys['w'] || keys['ArrowUp']) moveY -= this.speed;
+                if (keys['s'] || keys['ArrowDown']) moveY += this.speed;
+                if (keys['a'] || keys['ArrowLeft']) moveX -= this.speed;
+                if (keys['d'] || keys['ArrowRight']) moveX += this.speed;
+
+                // Diagonal movement normalization
+                if (moveX !== 0 && moveY !== 0) {
+                    moveX *= 0.7071;
+                    moveY *= 0.7071;
+                }
+
+                this.x += moveX;
+                this.y += moveY;
+
+                // Boundary check (now against map size)
+                this.x = Math.max(this.radius, Math.min(MAP_WIDTH - this.radius, this.x));
+                this.y = Math.max(this.radius, Math.min(MAP_HEIGHT - this.radius, this.y));
+
+                // Angle towards mouse (adjusted for camera offset)
+                const mouseWorldX = mouseX + cameraX;
+                const mouseWorldY = mouseY + cameraY;
+                this.angle = Math.atan2(mouseWorldY - this.y, mouseWorldX - this.x);
+
+                // Bullet cooldown
+                if (this.bulletCooldown > 0) {
+                    this.bulletCooldown--;
+                }
+
+                // Shoot if mouse is clicked
+                if (mouseDown && this.bulletCooldown === 0) {
+                    this.shoot();
+                    this.bulletCooldown = this.bulletCooldownMax;
+                }
+                
+                // Update camera to follow player (centered)
+                cameraX = this.x - canvas.width / 2;
+                cameraY = this.y - canvas.height / 2;
+                
+                // Keep camera within map bounds
+                cameraX = Math.max(0, Math.min(MAP_WIDTH - canvas.width, cameraX));
+                cameraY = Math.max(0, Math.min(MAP_HEIGHT - canvas.height, cameraY));
+            }
+
+            shoot() {
+                const bulletSpeed = 10;
+                const bulletX = this.x + Math.cos(this.angle) * (this.radius + 10);
+                const bulletY = this.y + Math.sin(this.angle) * (this.radius + 10);
+                
+                bullets.push(new Bullet(
+                    bulletX,
+                    bulletY,
+                    Math.cos(this.angle) * bulletSpeed,
+                    Math.sin(this.angle) * bulletSpeed,
+                    this
+                ));
+            }
+
+            draw() {
+                // Convert world coordinates to screen coordinates
+                const screenX = this.x - cameraX;
+                const screenY = this.y - cameraY;
+                
+                // Only draw if on screen
+                if (this.isOnScreen(screenX, screenY)) {
+                    // Draw tank body
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Draw tank barrel
+                    ctx.strokeStyle = '#2980b9';
+                    ctx.lineWidth = 10;
+                    ctx.beginPath();
+                    ctx.moveTo(screenX, screenY);
+                    ctx.lineTo(
+                        screenX + Math.cos(this.angle) * (this.radius + 20),
+                        screenY + Math.sin(this.angle) * (this.radius + 20)
+                    );
+                    ctx.stroke();
+
+                    // Draw health bar
+                    const healthBarWidth = this.radius * 2;
+                    const healthPercentage = this.health / 100;
+                    
+                    ctx.fillStyle = '#e74c3c';
+                    ctx.fillRect(
+                        screenX - healthBarWidth / 2,
+                        screenY - this.radius - 15,
+                        healthBarWidth,
+                        5
+                    );
+                    
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.fillRect(
+                        screenX - healthBarWidth / 2,
+                        screenY - this.radius - 15,
+                        healthBarWidth * healthPercentage,
+                        5
+                    );
+                }
+            }
+            
+            isOnScreen(x, y) {
+                return x + this.radius > 0 && x - this.radius < canvas.width &&
+                       y + this.radius > 0 && y - this.radius < canvas.height;
+            }
+        }
+
+        // Bullet class
+        class Bullet {
+            constructor(x, y, dx, dy, owner) {
+                this.x = x;
+                this.y = y;
+                this.dx = dx;
+                this.dy = dy;
+                this.radius = 5;
+                this.color = '#f39c12';
+                this.owner = owner;
+                this.lifetime = 100;
+            }
+
+            update() {
+                this.x += this.dx;
+                this.y += this.dy;
+                this.lifetime--;
+
+                // Check collision with enemies if player's bullet
+                if (this.owner instanceof Player) {
+                    for (let i = enemies.length - 1; i >= 0; i--) {
+                        const enemy = enemies[i];
+                        const dist = Math.hypot(this.x - enemy.x, this.y - enemy.y);
+                        if (dist < this.radius + enemy.radius) {
+                            // Hit enemy
+                            enemy.health -= 25;
+                            if (enemy.health <= 0) {
+                                this.owner.score += 10;
+                                score += 10;
+                                scoreElement.textContent = `Score: ${score}`;
+                                createParticles(enemy.x, enemy.y, enemy.color, 15);
+                                enemies.splice(i, 1);
+                                spawnEnemy();
+                            }
+                            return true; // Mark for removal
+                        }
+                    }
+                }
+
+                // Check collision with player if enemy's bullet
+                if (this.owner instanceof Enemy && players.length > 0) {
+                    const player = players[0];
+                    const dist = Math.hypot(this.x - player.x, this.y - player.y);
+                    if (dist < this.radius + player.radius) {
+                        player.health -= 10;
+                        if (player.health <= 0) {
+                            // Game over
+                            alert(`Game Over! Your score: ${score}`);
+                            document.location.reload();
+                        }
+                        return true; // Mark for removal
+                    }
+                }
+
+                // Check out of bounds (now against map size)
+                if (this.x < 0 || this.x > MAP_WIDTH || this.y < 0 || this.y > MAP_HEIGHT) {
+                    return true;
+                }
+
+                // Check lifetime
+                if (this.lifetime <= 0) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            draw() {
+                // Convert world coordinates to screen coordinates
+                const screenX = this.x - cameraX;
+                const screenY = this.y - cameraY;
+                
+                // Only draw if on screen
+                if (screenX + this.radius > 0 && screenX - this.radius < canvas.width &&
+                    screenY + this.radius > 0 && screenY - this.radius < canvas.height) {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // Enemy class
+        class Enemy {
+            constructor() {
+                // Spawn at edge of map
+                const side = Math.floor(Math.random() * 4);
+                switch (side) {
+                    case 0: // top
+                        this.x = Math.random() * MAP_WIDTH;
+                        this.y = -30;
+                        break;
+                    case 1: // right
+                        this.x = MAP_WIDTH + 30;
+                        this.y = Math.random() * MAP_HEIGHT;
+                        break;
+                    case 2: // bottom
+                        this.x = Math.random() * MAP_WIDTH;
+                        this.y = MAP_HEIGHT + 30;
+                        break;
+                    case 3: // left
+                        this.x = -30;
+                        this.y = Math.random() * MAP_HEIGHT;
+                        break;
+                }
+
+                this.radius = 20 + Math.random() * 10;
+                this.color = `hsl(${Math.random() * 60}, 70%, 50%)`;
+                this.speed = 1 + Math.random() * 2;
+                this.health = 100;
+                this.shootCooldown = Math.floor(Math.random() * 100);
+                this.shootCooldownMax = 100;
+            }
+
+            update() {
+                // Move towards player
+                if (players.length > 0) {
+                    const player = players[0];
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                    this.x += Math.cos(angle) * this.speed;
+                    this.y += Math.sin(angle) * this.speed;
+                }
+
+                // Shoot at player
+                if (this.shootCooldown <= 0 && players.length > 0) {
+                    const player = players[0];
+                    const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                    const bulletSpeed = 5;
+                    
+                    bullets.push(new Bullet(
+                        this.x,
+                        this.y,
+                        Math.cos(angle) * bulletSpeed,
+                        Math.sin(angle) * bulletSpeed,
+                        this
+                    ));
+                    
+                    this.shootCooldown = this.shootCooldownMax;
+                } else {
+                    this.shootCooldown--;
+                }
+            }
+
+            draw() {
+                // Convert world coordinates to screen coordinates
+                const screenX = this.x - cameraX;
+                const screenY = this.y - cameraY;
+                
+                // Only draw if on screen
+                if (this.isOnScreen(screenX, screenY)) {
+                    // Draw enemy body
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Draw health bar
+                    const healthBarWidth = this.radius * 2;
+                    const healthPercentage = this.health / 100;
+                    
+                    ctx.fillStyle = '#e74c3c';
+                    ctx.fillRect(
+                        screenX - healthBarWidth / 2,
+                        screenY - this.radius - 10,
+                        healthBarWidth,
+                        5
+                    );
+                    
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.fillRect(
+                        screenX - healthBarWidth / 2,
+                        screenY - this.radius - 10,
+                        healthBarWidth * healthPercentage,
+                        5
+                    );
+                }
+            }
+            
+            isOnScreen(x, y) {
+                return x + this.radius > 0 && x - this.radius < canvas.width &&
+                       y + this.radius > 0 && y - this.radius < canvas.height;
+            }
+        }
+
+        // Particle class for effects
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = Math.random() * 3 + 1;
+                this.dx = (Math.random() - 0.5) * 5;
+                this.dy = (Math.random() - 0.5) * 5;
+                this.lifetime = 30 + Math.random() * 30;
+                this.alpha = 1;
+            }
+
+            update() {
+                this.x += this.dx;
+                this.y += this.dy;
+                this.lifetime--;
+                this.alpha = this.lifetime / 60;
+                return this.lifetime <= 0;
+            }
+
+            draw() {
+                // Convert world coordinates to screen coordinates
+                const screenX = this.x - cameraX;
+                const screenY = this.y - cameraY;
+                
+                // Only draw if on screen
+                if (screenX + this.radius > 0 && screenX - this.radius < canvas.width &&
+                    screenY + this.radius > 0 && screenY - this.radius < canvas.height) {
+                    ctx.save();
+                    ctx.globalAlpha = this.alpha;
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        function createParticles(x, y, color, count) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        function spawnEnemy() {
+            enemies.push(new Enemy());
+        }
+        
+        function drawGrid() {
+            ctx.strokeStyle = GRID_LINE_COLOR;
+            ctx.lineWidth = 2;
+            
+            // Calculate visible grid area
+            const startX = Math.floor(cameraX / GRID_SIZE) * GRID_SIZE;
+            const startY = Math.floor(cameraY / GRID_SIZE) * GRID_SIZE;
+            
+            const endX = Math.min(MAP_WIDTH, startX + canvas.width + GRID_SIZE);
+            const endY = Math.min(MAP_HEIGHT, startY + canvas.height + GRID_SIZE);
+            
+            // Draw vertical lines
+            for (let x = startX; x <= endX; x += GRID_SIZE) {
+                const screenX = x - cameraX;
+                ctx.beginPath();
+                ctx.moveTo(screenX, 0);
+                ctx.lineTo(screenX, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Draw horizontal lines
+            for (let y = startY; y <= endY; y += GRID_SIZE) {
+                const screenY = y - cameraY;
+                ctx.beginPath();
+                ctx.moveTo(0, screenY);
+                ctx.lineTo(canvas.width, screenY);
+                ctx.stroke();
+            }
+        }
+
+        // Mouse tracking (now in screen coordinates)
+        let mouseX = 0;
+        let mouseY = 0;
+        let mouseDown = false;
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        canvas.addEventListener('mousedown', () => {
+            mouseDown = true;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            mouseDown = false;
+        });
+
+        // Keyboard controls
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Game initialization
+        function init() {
+            players.push(new Player(MAP_WIDTH / 2, MAP_HEIGHT / 2));
+            
+            // Spawn initial enemies
+            for (let i = 0; i < 5; i++) {
+                spawnEnemy();
+            }
+            
+            // Update map size display
+            mapSizeElement.textContent = `Map: ${MAP_WIDTH}x${MAP_HEIGHT}`;
+        }
+
+        // Game loop
+        function gameLoop() {
+            // Clear canvas
+            ctx.fillStyle = '#CDCDCD';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid background
+            drawGrid();
+
+            // Update and draw all game objects
+            players.forEach(player => {
+                player.update();
+                player.draw();
+            });
+
+            // Update bullets and remove dead ones
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].update() && bullets.splice(i, 1);
+            }
+            bullets.forEach(bullet => bullet.draw());
+
+            // Update enemies
+            enemies.forEach(enemy => {
+                enemy.update();
+                enemy.draw();
+            });
+
+            // Update particles and remove dead ones
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update() && particles.splice(i, 1);
+            }
+            particles.forEach(particle => particle.draw());
+
+            // Occasionally spawn new enemies
+            if (Math.random() < 0.01 && enemies.length < 10) {
+                spawnEnemy();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game
+        init();
+        gameLoop();
+    </script>
+</body>
 </html>
