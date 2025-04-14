@@ -186,7 +186,8 @@
                     // Draw tank barrel
                     ctx.strokeStyle = '#7B7B7B';
                     ctx.fillStyle = '#999999'
-                    ctx.lineWidth = 10;
+                    ctx.lineWidth = 4;
+                  /*
                     ctx.beginPath();
                     ctx.moveTo(screenX, screenY);
                     ctx.lineTo(
@@ -195,6 +196,17 @@
                     );
                     ctx.fill();
                     ctx.stroke();
+                  */
+                  
+                    ctx.save();
+                    ctx.translate(screenX, screenY);
+                    ctx.rotate(this.angle);
+                    const barrelLength = this.radius + 20;
+                    const barrelWidth = this.radius/1.5;
+                    const barrelOffset = 0;
+                    ctx.fillRect(barrelOffset,-barrelWidth/2,barrelLength,barrelWidth);
+                    ctx.strokeRect(barrelOffset,-barrelWidth/2,barrelLength,barrelWidth);
+                    ctx.restore(); // Restore transformation state
                     
                     // Draw tank body
                     ctx.fillStyle = this.color;
@@ -209,21 +221,28 @@
                     const healthBarWidth = this.radius * 2;
                     const healthPercentage = this.health / 100;
                     
-                    ctx.fillStyle = '#e74c3c';
-                    ctx.fillRect(
+                    //ctx.fillStyle = '#e74c3c';
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.roundRect(
                         screenX - healthBarWidth / 2,
                         screenY - this.radius - 15,
                         healthBarWidth,
                         5
-                    );
+                    );//older browsers might not have roundrect!!!
+                    ctx.fill();
                     
-                    ctx.fillStyle = '#2ecc71';
-                    ctx.fillRect(
+                    //ctx.fillStyle = '#2ecc71';
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.roundRect(
                         screenX - healthBarWidth / 2,
                         screenY - this.radius - 15,
                         healthBarWidth * healthPercentage,
-                        5
+                        5,
+                        
                     );
+                    ctx.fill();
                 }
             }
             
