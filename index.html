@@ -491,6 +491,29 @@
                 ctx.stroke();
             }
         }
+      
+        function drawMapBoundary() {
+            // Save the current drawing state
+            ctx.save();
+
+            // Draw area outside the map (where camera can go beyond)
+            ctx.fillStyle = '#1a1a1a'; // Dark gray for out-of-bounds
+
+            // Top border (above y=0)
+            ctx.fillRect(-cameraX,-cameraY,MAP_WIDTH,-cameraY);
+
+            // Bottom border (below y=MAP_HEIGHT)
+            ctx.fillRect(-cameraX,MAP_HEIGHT - cameraY,MAP_WIDTH,canvas.height);
+
+            // Left border (left of x=0)
+            ctx.fillRect(-cameraX,-cameraY,-cameraX,MAP_HEIGHT);
+
+            // Right border (right of x=MAP_WIDTH)
+            ctx.fillRect(MAP_WIDTH - cameraX,-cameraY,canvas.width,MAP_HEIGHT);
+
+            // Restore drawing state
+            ctx.restore();
+        }
 
         // Mouse tracking (now in screen coordinates)
         let mouseX = 0;
@@ -545,6 +568,7 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             // Draw grid background
+            drawMapBoundary();
             drawGrid();
 
             // Update and draw all game objects
