@@ -2,13 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+    <meta name="application-name" content="rocketer.io" />
+    <meta name="description" content="Scenexe.io but bad." />
     <title>Offline Rocketer</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://cdn.glitch.global/92cf917f-5d16-4251-8140-4f5181b6661b/favicon.png?v=1679492856483"
+    />
     <style>
         body {
             margin: 0;
             overflow: hidden;
             background-color: #222;
+            text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
+            font-weight: 700;
+            font-family: "Roboto", sans-serif;
         }
         canvas {
             display: block;
@@ -21,7 +31,7 @@
             font-family: Arial, sans-serif;
             font-size: 20px;
             color: white;
-            text-shadow: 1px 1px 2px black;
+            font-size: 1.3vw; /*the words change size based on browser width*/
         }
         #mapSize {
             position: absolute;
@@ -30,16 +40,16 @@
             font-family: Arial, sans-serif;
             font-size: 16px;
             color: #ccc;
-            text-shadow: 1px 1px 2px black;
+            font-size: 1.3vw;
         }
         #fpsCounter {
             position: absolute;
-            top: 70px;  /* Position below the map size display */
+            top: 70px;
             left: 10px;
             font-family: Arial, sans-serif;
             font-size: 16px;
             color: #ccc;
-            text-shadow: 1px 1px 2px black;
+            font-size: 1.3vw;
         }
         #fpsCounter.high { color: #2ecc71; }  /* Green for 60 FPS */
         #fpsCounter.medium { color: #f39c12; } /* Yellow for 30-59 FPS */
@@ -47,6 +57,12 @@
     </style>
 </head>
 <body>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Yantramanav:wght@900&display=swap"
+      rel="stylesheet"
+    />
     <div id="score">Score: 0</div>
     <div id="mapSize">Map: 4000x4000</div>
     <div id="fpsCounter">FPS: 0</div>
