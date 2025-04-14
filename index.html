@@ -500,13 +500,13 @@
             ctx.fillStyle = '#1a1a1a'; // Dark gray for out-of-bounds
 
             // Top border (above y=0)
-            ctx.fillRect(-cameraX,-cameraY,MAP_WIDTH,-cameraY);
+            ctx.fillRect(-cameraX,-cameraY,MAP_WIDTH,cameraY);
 
             // Bottom border (below y=MAP_HEIGHT)
             ctx.fillRect(-cameraX,MAP_HEIGHT - cameraY,MAP_WIDTH,canvas.height);
 
             // Left border (left of x=0)
-            ctx.fillRect(-cameraX,-cameraY,-cameraX,MAP_HEIGHT);
+            ctx.fillRect(-cameraX,-cameraY,cameraX,MAP_HEIGHT);
 
             // Right border (right of x=MAP_WIDTH)
             ctx.fillRect(MAP_WIDTH - cameraX,-cameraY,canvas.width,MAP_HEIGHT);
@@ -563,12 +563,10 @@
 
         // Game loop
         function gameLoop() {
-            // Clear canvas
+            // Clear canvas by drawing over
             ctx.fillStyle = '#CDCDCD';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw grid background
-            drawMapBoundary();
+            drawMapBoundary();//draw area outside map
             drawGrid();
 
             // Update and draw all game objects
