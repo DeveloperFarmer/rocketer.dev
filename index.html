@@ -32,6 +32,18 @@
             color: #ccc;
             text-shadow: 1px 1px 2px black;
         }
+        #fpsCounter {
+            position: absolute;
+            top: 70px;  /* Position below the map size display */
+            left: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            color: #ccc;
+            text-shadow: 1px 1px 2px black;
+        }
+        #fpsCounter.high { color: #2ecc71; }  /* Green for 60 FPS */
+        #fpsCounter.medium { color: #f39c12; } /* Yellow for 30-59 FPS */
+        #fpsCounter.low { color: #e74c3c; }   /* Red for <30 FPS */
     </style>
 </head>
 <body>
@@ -68,6 +80,12 @@
         // Grid settings for map background
         const GRID_SIZE = 20;
         const GRID_LINE_COLOR = '#C8C8C8';
+        
+        // FPS counter variables
+        let fps = 0;
+        let fpsCounter = document.getElementById('fpsCounter');
+        let lastFpsUpdate = 0;
+        let frameCount = 0;
 
         // Player class
         class Player {
@@ -545,6 +563,19 @@
             // Occasionally spawn new enemies
             if (Math.random() < 0.01 && enemies.length < 10) {
                 spawnEnemy();
+            }
+          
+            // FPS counter update
+            frameCount++;
+            const now = performance.now();
+            if (now >= lastFpsUpdate + 1000) { // Update every second
+                fps = frameCount;
+                frameCount = 0;
+                lastFpsUpdate = now;
+                fpsCounter.textContent = `FPS: ${fps}`;
+                fpsCounter.className = 
+                  fps >= 60 ? 'high' : 
+                  fps >= 30 ? 'medium' : 'low';
             }
 
             requestAnimationFrame(gameLoop);
