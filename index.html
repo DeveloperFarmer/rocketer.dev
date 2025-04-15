@@ -102,6 +102,9 @@
             background-color: black;
         }
         #playButton {
+            position: absolute;
+            top: 50%;
+            left: 50%;
             background-color: #e74c3c;
             color: white;
             border: none;
@@ -136,7 +139,8 @@
             <button id="restartButton">Play Again</button>
         </div>
     </div>
-    <div id="tempHomeScreen">
+    <div id="tempHomeScreen"></div>
+    <button id="playButton">Play</button>
 
     <script>
         // Canvas setup
@@ -770,9 +774,14 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Start the game
-        init();
-        gameLoop();
+        document.getElementById('playButton').addEventListener('click', startGame);
+        function startGame(){
+          // First time start game
+          document.getElementById('playButton').style.display = "none";
+          document.getElementById('tempHomeScreen').style.display = "none";
+          init();
+          gameLoop();
+        }
     </script>
 </body>
 </html>
