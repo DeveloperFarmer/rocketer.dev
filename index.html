@@ -358,7 +358,9 @@
                             //document.location.reload();
                             showDeathScreen(score);
                         }
-                        return true; // Mark for removal
+                        //else{
+                          return true; // Mark for removal
+                        //}
                     }
                 }
 
@@ -646,7 +648,7 @@
             document.getElementById('deathScreen').classList.add('hidden');
             resetGame();
             isGamePaused = false;
-            console.log("hehe?")
+            gameLoop();//restart the screen updates
         }
 
         function resetGame() {
