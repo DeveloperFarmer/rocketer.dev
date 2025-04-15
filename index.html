@@ -219,6 +219,7 @@
 
                     // Draw health bar
                     const healthBarWidth = this.radius * 2;
+                    const healthBarHeight = 5;
                     const healthPercentage = this.health / 100;
                     
                     //ctx.fillStyle = '#e74c3c';
@@ -228,7 +229,7 @@
                         screenX - healthBarWidth / 2 - 2,//-2 so that black bar bigger than blue
                         screenY + this.radius + 15 - 2,
                         healthBarWidth + 4,//+4 so that black bar bigger
-                        8 + 4,
+                        healthBarHeight + 4,
                         4
                     );//older browsers might not have roundrect!!!
                     ctx.fill();
@@ -240,7 +241,7 @@
                         screenX - healthBarWidth / 2,
                         screenY + this.radius + 15,
                         healthBarWidth * healthPercentage,
-                        8,
+                        healthBarHeight,
                         4
                     );
                     ctx.fill();
@@ -412,23 +413,30 @@
 
                     // Draw health bar
                     const healthBarWidth = this.radius * 2;
+                    const healthBarHeight = 5;
                     const healthPercentage = this.health / 100;
                     
-                    ctx.fillStyle = '#e74c3c';
-                    ctx.fillRect(
-                        screenX - healthBarWidth / 2,
-                        screenY - this.radius - 10,
-                        healthBarWidth,
-                        5
-                    );
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.roundRect(
+                        screenX - healthBarWidth / 2 - 2,
+                        screenY + this.radius + 15 - 2,
+                        healthBarWidth + 4,
+                        healthBarHeight + 4,
+                        4
+                    );//older browsers might not have roundrect!!!
+                    ctx.fill();
                     
-                    ctx.fillStyle = '#2ecc71';
-                    ctx.fillRect(
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.roundRect(
                         screenX - healthBarWidth / 2,
-                        screenY - this.radius - 10,
+                        screenY + this.radius + 15,
                         healthBarWidth * healthPercentage,
-                        5
+                        healthBarHeight,
+                        4
                     );
+                    ctx.fill();
                 }
             }
             
