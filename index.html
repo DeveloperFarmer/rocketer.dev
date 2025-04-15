@@ -92,6 +92,30 @@
         #restartButton:hover {
             background-color: #c0392b;
         }
+      
+        #tempHomeScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+        }
+        #playButton {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        #playButton:hover {
+            background-color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -112,6 +136,7 @@
             <button id="restartButton">Play Again</button>
         </div>
     </div>
+    <div id="tempHomeScreen">
 
     <script>
         // Canvas setup

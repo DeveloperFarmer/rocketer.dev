@@ -1,0 +1,6 @@
+ALPHA 0.0.2 - April 15, 2025
+- Added a death screen and respawning
+ALPHA 0.0.1 - April 14, 2025
+- Moved the game to this website
+- This game is a rewritten version of the old singleplayer rocketer
+- Fixed the map borders and health bars
