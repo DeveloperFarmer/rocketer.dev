@@ -1,4 +1,4 @@
-Next update: copy homescreen code from rocketer, polish bullets
+Next update: copy homescreen code from rocketer, add body collision, add settings (add option to turn off health bars when max health)
 
 ALPHA 0.0.2 - April 15, 2025
 - Added a death screen and respawning

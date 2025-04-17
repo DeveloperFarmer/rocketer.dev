@@ -192,7 +192,9 @@
                 this.outline = '#0092C3'
                 this.speed = 5;
                 this.angle = 0;
-                this.health = 100;
+                const health = 100;
+                this.health = health;
+                this.maxhealth = health;
                 this.bulletCooldown = 0;
                 this.bulletCooldownMax = 30;
                 this.score = 0;
@@ -312,7 +314,7 @@
                     // Draw health bar
                     const healthBarWidth = this.radius * 2;
                     const healthBarHeight = 5;
-                    const healthPercentage = this.health / 100;
+                    const healthPercentage = this.health / this.maxhealth;
                     
                     //ctx.fillStyle = '#e74c3c';
                     ctx.fillStyle = 'black';
@@ -393,7 +395,7 @@
                             shape.health -= this.damage;
                             if (shape.health <= 0) {
                                 // Add score based on shape type
-                                const points = [10, 15, 20][shape.type]; // Square=10, Triangle=15, Pentagon=20
+                                const points = shapescores[shape.type];
                                 this.owner.score += points;
                                 score += points;
                                 scoreElement.textContent = `Score: ${score}`;
@@ -487,7 +489,9 @@
                 this.color = `hsl(${hslColor}, 70%, 50%)`;
                 this.outline = `hsl(${hslColor}, 50%, 50%)`;//darker saturation
                 this.speed = 1 + Math.random() * 2;
-                this.health = 100;
+                const health = 100;
+                this.health = health;
+                this.maxhealth = health;//doesnt change
                 this.shootCooldown = Math.floor(Math.random() * 100);
                 this.shootCooldownMax = 100;
                 this.barrelWidth = botRadius/1.5;
@@ -542,7 +546,7 @@
                     // Draw health bar
                     const healthBarWidth = this.radius * 2;
                     const healthBarHeight = 5;
-                    const healthPercentage = this.health / 100;
+                    const healthPercentage = this.health / this.maxhealth;
                     
                     ctx.fillStyle = 'black';
                     ctx.beginPath();
@@ -612,12 +616,26 @@
                 ];
                 const shapesizes = [
                     35,
-                    20,
+                    25,
                     70,
                     100,
                     150,
                     200
                 ];
+                const shapescores = [
+                    10,
+                    5,
+                    20,
+                    30,
+                    50,
+                    150,
+                    500,
+                    2000,
+                    5000,
+                    9000,
+                    14000,
+                    20000
+                ]
                 //add support for bigger shapes in the future
         class Shape {
             constructor(x, y) {
