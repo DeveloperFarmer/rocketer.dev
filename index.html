@@ -194,6 +194,9 @@
                 this.bulletCooldown = 0;
                 this.bulletCooldownMax = 10;
                 this.score = 0;
+                this.barrelLength = 50;
+                this.barrelWidth = 20;
+                this.barrelOffset = 0;
             }
 
             update() {
@@ -283,11 +286,13 @@
                     ctx.save();
                     ctx.translate(screenX, screenY);
                     ctx.rotate(this.angle);
+                  /*
                     const barrelLength = this.radius + 20;
                     const barrelWidth = this.radius/1.5;
                     const barrelOffset = 0;
-                    ctx.fillRect(barrelOffset,-barrelWidth/2,barrelLength,barrelWidth);
-                    ctx.strokeRect(barrelOffset,-barrelWidth/2,barrelLength,barrelWidth);
+                    */
+                    ctx.fillRect(this.barrelOffset,-this.barrelWidth/2,this.barrelLength,this.barrelWidth);
+                    ctx.strokeRect(this.barrelOffset,-this.barrelWidth/2,this.barrelLength,this.barrelWidth);
                     ctx.restore(); // Restore transformation state
                     
                     // Draw tank body
@@ -343,12 +348,12 @@
                 this.y = y;
                 this.dx = dx;
                 this.dy = dy;
-                this.radius = 5;
+                this.radius = owner.barrelWidth/2;
                 this.color = owner.color;
                 this.outline = owner.outline;
                 this.owner = owner;
                 this.lifetime = 100;
-            }
+            }//add bullet offset in the future
 
             update() {
                 this.x += this.dx;
@@ -451,13 +456,15 @@
                 }
                 
                 const hslColor = Math.random() * 60;
-                this.radius = 20 + Math.random() * 10;
+                const botRadius = 20 + Math.random() * 30;
+                this.radius = botRadius;
                 this.color = `hsl(${hslColor}, 70%, 50%)`;
                 this.outline = `hsl(${hslColor}, 50%, 50%)`;//darker saturation
                 this.speed = 1 + Math.random() * 2;
                 this.health = 100;
                 this.shootCooldown = Math.floor(Math.random() * 100);
                 this.shootCooldownMax = 100;
+                this.barrelWidth = botRadius/1.5;
             }
 
             update() {
