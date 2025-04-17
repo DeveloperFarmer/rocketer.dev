@@ -194,11 +194,14 @@
                 this.angle = 0;
                 this.health = 100;
                 this.bulletCooldown = 0;
-                this.bulletCooldownMax = 10;
+                this.bulletCooldownMax = 30;
                 this.score = 0;
                 this.barrelLength = 50;
                 this.barrelWidth = 20;
                 this.barrelOffset = 0;
+                this.bulletDamage = 50;
+                this.bulletSpeed = 5;
+                this.bodyDamage = 3;
             }
 
             update() {
@@ -355,6 +358,7 @@
                 this.outline = owner.outline;
                 this.owner = owner;
                 this.lifetime = 100;
+                this.damage = owner.bulletDamage;
             }//add bullet offset in the future
 
             update() {
@@ -369,7 +373,7 @@
                         const dist = Math.hypot(this.x - enemy.x, this.y - enemy.y);
                         if (dist < this.radius + enemy.radius) {
                             // Hit enemy
-                            enemy.health -= 25;
+                            enemy.health -= this.damage;
                             if (enemy.health <= 0) {
                                 this.owner.score += 10;
                                 score += 10;
@@ -386,7 +390,7 @@
                         const dist = Math.hypot(this.x - shape.x, this.y - shape.y);
 
                         if (dist < this.radius + shape.size/2) {
-                            shape.health -= 10;
+                            shape.health -= this.damage;
                             if (shape.health <= 0) {
                                 // Add score based on shape type
                                 const points = [10, 15, 20][shape.type]; // Square=10, Triangle=15, Pentagon=20
@@ -408,7 +412,7 @@
                     const player = players[0];
                     const dist = Math.hypot(this.x - player.x, this.y - player.y);
                     if (dist < this.radius + player.radius) {
-                        player.health -= 10;
+                        player.health -= this.damage;
                         if (player.health <= 0) {
                             // Game over
                             //alert(`Game Over! Your score: ${score}`);
@@ -487,6 +491,7 @@
                 this.shootCooldown = Math.floor(Math.random() * 100);
                 this.shootCooldownMax = 100;
                 this.barrelWidth = botRadius/1.5;
+                this.bulletDamage = 10;
             }
 
             update() {
@@ -605,9 +610,12 @@
                     75
                 ];
                 const shapesizes = [
-                    40,
+                    35,
                     20,
-                    60
+                    70,
+                    100,
+                    150,
+                    200
                 ];
                 //add support for bigger shapes in the future
                 this.x = x;
@@ -637,6 +645,7 @@
                 ctx.rotate(this.rotation);
                 ctx.fillStyle = this.color;
                 ctx.strokeStyle = this.outline;
+                ctx.lineJoin = "round";//to make shape corners round
 
                 switch(this.type) {
                     case 0: // Square
@@ -645,9 +654,13 @@
                         break;
                     case 1: // Triangle
                         ctx.beginPath();
-                        ctx.moveTo(0, -this.size/2);
-                        ctx.lineTo(-this.size/2, this.size/2);
-                        ctx.lineTo(this.size/2, this.size/2);
+                        for (let i = 0; i < 3; i++) {
+                            const angle = (i * Math.PI * 2 / 3) - Math.PI/2;
+                            ctx.lineTo(
+                                Math.cos(angle) * this.size/2,
+                                Math.sin(angle) * this.size/2
+                            );
+                        }
                         ctx.closePath();
                         ctx.fill();
                         ctx.stroke();
