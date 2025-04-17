@@ -344,7 +344,8 @@
                 this.dx = dx;
                 this.dy = dy;
                 this.radius = 5;
-                this.color = '#f39c12';
+                this.color = owner.color;
+                this.outline = owner.outline;
                 this.owner = owner;
                 this.lifetime = 100;
             }
@@ -415,9 +416,12 @@
                 if (screenX + this.radius > 0 && screenX - this.radius < canvas.width &&
                     screenY + this.radius > 0 && screenY - this.radius < canvas.height) {
                     ctx.fillStyle = this.color;
+                    ctx.strokeStyle = this.outline;
+                    ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.stroke();
                 }
             }
         }
@@ -445,9 +449,11 @@
                         this.y = Math.random() * MAP_HEIGHT;
                         break;
                 }
-
+                
+                const hslColor = Math.random() * 60;
                 this.radius = 20 + Math.random() * 10;
-                this.color = `hsl(${Math.random() * 60}, 70%, 50%)`;
+                this.color = `hsl(${hslColor}, 70%, 50%)`;
+                this.outline = `hsl(${hslColor}, 50%, 50%)`;//darker saturation
                 this.speed = 1 + Math.random() * 2;
                 this.health = 100;
                 this.shootCooldown = Math.floor(Math.random() * 100);
@@ -492,9 +498,12 @@
                 if (this.isOnScreen(screenX, screenY)) {
                     // Draw enemy body
                     ctx.fillStyle = this.color;
+                    ctx.strokeStyle = this.outline;
+                    ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.stroke();
 
                     // Draw health bar
                     const healthBarWidth = this.radius * 2;
