@@ -199,8 +199,8 @@
                 this.barrelLength = 50;
                 this.barrelWidth = 20;
                 this.barrelOffset = 0;
-                this.bulletDamage = 50;
-                this.bulletSpeed = 5;
+                this.bulletDamage = 30;
+                this.bulletSpeed = 7;
                 this.bodyDamage = 3;
             }
 
@@ -253,7 +253,7 @@
             }
 
             shoot() {
-                const bulletSpeed = 10;
+                const bulletSpeed = this.bulletSpeed;
                 const bulletX = this.x + Math.cos(this.angle) * (this.radius + 10);//change 10 to barrelLength - bulletSpeed
                 const bulletY = this.y + Math.sin(this.angle) * (this.radius + 10);
                 
@@ -574,8 +574,7 @@
             }
         }
       
-        class Shape {
-            constructor(x, y) {
+      
                 const shapecolors = [
                     '#FC7676', //square
                     '#FFE46B', //triangle
@@ -607,7 +606,9 @@
                 const shapehealths = [
                     50,
                     25,//NOTE: triangle is second in the list, but it is the smallest and least health
-                    75
+                    85,
+                    170,
+                    350
                 ];
                 const shapesizes = [
                     35,
@@ -618,9 +619,11 @@
                     200
                 ];
                 //add support for bigger shapes in the future
+        class Shape {
+            constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                const shapetype = Math.floor(Math.random() * 3); // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
+                const shapetype = Math.floor(Math.random() * 5); // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
                 this.type = shapetype;
                 this.size = shapesizes[shapetype];
                 this.health = shapehealths[shapetype];
@@ -681,6 +684,33 @@
                 }
 
                 ctx.restore();
+              
+                // Draw health bar
+                    const healthBarWidth = this.size;
+                    const healthBarHeight = 5;
+                    const healthPercentage = this.health / shapehealths[this.type];
+                    
+                    ctx.fillStyle = 'black';
+                    ctx.beginPath();
+                    ctx.roundRect(
+                        screenX - healthBarWidth / 2 - 2,//-2 so that black bar bigger than blue
+                        screenY + healthBarWidth / 2 + 15 - 2,
+                        healthBarWidth + 4,//+4 so that black bar bigger
+                        healthBarHeight + 4,
+                        4
+                    );//older browsers might not have roundrect!!!
+                    ctx.fill();
+                    
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.roundRect(
+                        screenX - healthBarWidth / 2,
+                        screenY + healthBarWidth / 2 + 15,
+                        healthBarWidth * healthPercentage,
+                        healthBarHeight,
+                        4
+                    );
+                    ctx.fill();
             }
 
             isOnScreen(x, y) {
