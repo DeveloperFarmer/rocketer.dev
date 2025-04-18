@@ -182,7 +182,8 @@
         const particles = [];
         const shapes = [];
         let MAX_SHAPES = 50;
-        let MAX_BOTS = 10;
+        let MAX_BOTS = 0;//10
+        let gamemode = "FFA";
         const keys = {};
         
         // Map settings
@@ -200,6 +201,8 @@
         let fpsCounter = document.getElementById('fpsCounter');
         let lastFpsUpdate = 0;
         let frameCount = 0;
+        //other debug stuff
+        let numberOfObjectsDrawn = 0;
         
         //death stuff
         let isGamePaused = false;
@@ -361,6 +364,7 @@
                         4
                     );
                     ctx.fill();
+                    numberOfObjectsDrawn++;
                 }
             }
             
@@ -477,6 +481,7 @@
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
+                    numberOfObjectsDrawn++;
                 }
             }
         }
@@ -591,6 +596,7 @@
                         4
                     );
                     ctx.fill();
+                    numberOfObjectsDrawn++;
                 }
             }
             
@@ -634,7 +640,10 @@
                     25,//NOTE: triangle is second in the list, but it is the smallest and least health
                     85,
                     170,
-                    350
+                    350,
+                    1050,
+                    3500,
+                    
                 ];
                 const shapesizes = [
                     35,
@@ -751,6 +760,7 @@
                         4
                     );
                     ctx.fill();
+                numberOfObjectsDrawn++;
             }
 
             isOnScreen(x, y) {
@@ -795,6 +805,7 @@
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.restore();
+                    numberOfObjectsDrawn++;
                 }
             }
         }
@@ -993,16 +1004,16 @@
             
             // Update map size display
             mapSizeElement.textContent = `Map: ${MAP_WIDTH}x${MAP_HEIGHT}`;
-            botnumberElement.textContent = `Number of enemies: ${MAP_WIDTH}x${MAP_HEIGHT}`;
-            shapenumberElement.textContent = `Number of shapes: ${MAP_WIDTH}x${MAP_HEIGHT}`;
-            dimensionElement.textContent = `Dimension: ${MAP_WIDTH}x${MAP_HEIGHT}`;
-            drawnentitiesElement.textContent = `Drawn Entities: ${MAP_WIDTH}x${MAP_HEIGHT}`;
+            botnumberElement.textContent = `Number of enemies: ${MAX_BOTS}`;
+            shapenumberElement.textContent = `Number of shapes: ${MAX_SHAPES}`;
+            dimensionElement.textContent = `Dimension: ${gamemode}`;
             document.getElementById('restartButton').addEventListener('click', restartGame);
         }
 
         // Game loop
         function gameLoop() {
             if (isGamePaused) return;//dont do anything if at death screen
+            numberOfObjectsDrawn = 0;
             // Clear canvas by drawing over
             ctx.fillStyle = '#CDCDCD';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1046,6 +1057,9 @@
           
             //if debug is open, and if dimension is not crossroads or cavern:
             drawMinimap()
+          
+            //update debug
+            drawnentitiesElement.textContent = `Drawn Entities: ${numberOfObjectsDrawn}`;
           
             // FPS counter update
             frameCount++;
