@@ -1,0 +1,12 @@
+Next update: copy homescreen code from rocketer, add settings (add option to turn off health bars when max health, add option to change debug text color to #ccc)
+ADD BODY COLLISION, and make sure to this.healingValue = 0;//reset the healing delay time
+make bigger shapes rarer, and add special shapes, e.g. gem
+add funny mode where shapes rotate super fast
+add a limit of 60fps to prevent good devices from having fast animations (or add delta like rocketer)
+remember to add numberOfObjectsDrawn to all the drawing functions
+
+
+
+
+
+Note: this file is for my reference, isnt used ingame
