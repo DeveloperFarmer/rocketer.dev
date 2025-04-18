@@ -1231,7 +1231,10 @@
             drawMinimap()
           
             //update debug
-            drawnentitiesElement.textContent = `Drawn Entities: ${numberOfObjectsDrawn}`;
+            let newtext = `Drawn Entities: ${numberOfObjectsDrawn}`;
+            if (drawnentitiesElement.textContent != newtext){//dont update debug 60 times per second, only update when needed (idk if this will change the performance or not)
+              drawnentitiesElement.textContent = newtext;
+            }
           
             // FPS counter update
             frameCount++;
@@ -1254,6 +1257,8 @@
           // First time start game
           document.getElementById('playButton').style.display = "none";
           document.getElementById('tempHomeScreen').style.display = "none";
+          changelogPreview.style.display = "none";
+          subtitle.style.display = "none";
           init();
           gameLoop();
         }
@@ -1269,6 +1274,7 @@
                     AR += AR == "" ? AQ[AB] : "<br />" + AQ[AB];
                   }
                 }//get the first paragraph (latest version update) (version updates are separated by an empty line in the changelog txt file)
+                let additionaltext = "you can view the full changelog <div id='openChangelogButton'>here</div>"
                 changelogPreview.innerHTML = AR.replace(/\n/g, "<br />");//replace text new line with html new line, and add to the div
                 subtitle.textContent = WI[0].split("-", 1)[0].trim();//add the version no. to subtitle div
                 //now fix the entire changelog text
