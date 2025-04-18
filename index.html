@@ -708,8 +708,46 @@
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                const shapetype = Math.floor(Math.random() * 12); // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
-                //if want to spawn number n, put n+1 in the line above (put 12 if you want type 11 tetradecagon to spawn)
+                const shapeChance = Math.floor(Math.random() * 101); //choose random number from 0 to 100
+                let shapetype = 0;  // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
+                if (shapeChance<15){//0 to 14
+                  shapetype = 0;//spawn a square
+                }
+                else if (shapeChance<35){//15 to 34
+                  shapetype = 1;
+                }
+                else if (shapeChance<50){//3,4,5
+                  shapetype = 1;
+                }
+                else if (shapeChance<65){//3,4,5
+                  shapetype = 1;
+                }
+                else if (shapeChance<74){//3,4,5
+                  shapetype = 1;
+                }
+                else if (shapeChance<82){//3,4,5
+                  shapetype = 1;
+                }
+                else if (shapeChance<89){//3,4,5
+                  shapetype = 1;
+                }
+                else if (shapeChance<94){//3,4,5
+                  shapetype = 1;
+                }
+                else if (shapeChance<98){//3,4,5
+                  shapetype = 1;
+                }
+                else if (shapeChance<6){//3,4,5
+                  shapetype = 1;
+                }
+                else if (shapeChance<6){//3,4,5
+                  shapetype = 1;
+                }
+              /*
+                else if (shapeChance<6){//tetradecagon and above cannot spawn in FFA (for rocketer)
+                  shapetype = 1;
+                }
+              */
                 this.type = shapetype;
                 this.size = shapesizes[shapetype];
                 this.health = shapehealths[shapetype];
