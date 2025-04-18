@@ -220,6 +220,7 @@
                 const health = 100;
                 this.health = health;
                 this.maxhealth = health;
+                this.healSpeed = health/20;
                 this.bulletCooldown = 0;
                 this.bulletCooldownMax = 30;
                 this.score = 0;
@@ -530,8 +531,8 @@
                 this.shootCooldown = Math.floor(Math.random() * 100);
                 this.shootCooldownMax = 100;
                 this.barrelWidth = botRadius/1.5;
-                this.bulletDamage = 10;
-                this.bulletPenetration = 100;
+                this.bulletDamage = 2;
+                this.bulletPenetration = 5;
             }
 
             update() {

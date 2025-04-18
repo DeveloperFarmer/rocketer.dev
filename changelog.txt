@@ -1,8 +1,18 @@
 Next update: copy homescreen code from rocketer, add body collision, add settings (add option to turn off health bars when max health, add option to change debug text color to #ccc)
 make bigger shapes rarer, and add special shapes, e.g. gem
 add funny mode where shapes rotate super fast
+add a limit of 60fps to prevent good devices from having fast animations (or add delta like rocketer)
 remember to add numberOfObjectsDrawn to all the drawing functions
 
+ALPHA 0.0.3 - April 18, 2025
+- Changed the debug to mimic rocketer
+- Added a minimap
+- Bullets can now pass through objects (added penetration)
+- Nerfed basic's damage
+- Added all shapes up until tetradecagon
+- Added spawning chances for different shapes
+- Fixed drawing sequence (shapes now drawn at the bottom, particles rendered last)
+- Fixed rotation speed
 ALPHA 0.0.2 - April 15, 2025
 - Added a death screen and respawning
 - Added a simple home screen
