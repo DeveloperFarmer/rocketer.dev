@@ -643,7 +643,11 @@
                     350,
                     1050,
                     3500,
-                    
+                    14000,
+                    35000,
+                    63000,
+                    98000,
+                    140000
                 ];
                 const shapesizes = [
                     35,
@@ -651,7 +655,13 @@
                     70,
                     100,
                     150,
-                    200
+                    200,
+                    300,
+                    450,
+                    675,
+                    1100,
+                    2020,
+                    3500
                 ];
                 const shapescores = [
                     10,
@@ -672,7 +682,8 @@
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                const shapetype = Math.floor(Math.random() * 5); // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
+                const shapetype = Math.floor(Math.random() * 12); // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
+                //if want to spawn number n, put n+1 in the line above (put 12 if you want type 11 tetradecagon to spawn)
                 this.type = shapetype;
                 this.size = shapesizes[shapetype];
                 this.health = shapehealths[shapetype];
