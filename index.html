@@ -221,6 +221,8 @@
                 this.health = health;
                 this.maxhealth = health;
                 this.healSpeed = health/20;
+                this.healDelay = 60 * 6;//6 seconds
+                this.healingValue = 0;//increases when waiting for healDelay time, when reach same value as healdelay, then start healing
                 this.bulletCooldown = 0;
                 this.bulletCooldownMax = 30;
                 this.score = 0;
@@ -276,9 +278,25 @@
                 cameraX = this.x - canvas.width / 2;
                 cameraY = this.y - canvas.height / 2;
                 
-                // Keep camera within map bounds (will change later once i add some stuff)
+                // Keep camera within map bounds (add this as a setting in the future)
                 //cameraX = Math.max(0, Math.min(MAP_WIDTH - canvas.width, cameraX));
                 //cameraY = Math.max(0, Math.min(MAP_HEIGHT - canvas.height, cameraY));
+              
+                //HEALING
+                if (this.health < this.maxhealth){
+                  if (this.healingValue >= this.healDelay){//heal!
+                    this.health += this.healSpeed;
+                    if (this.health >= this.maxhealth){//finish healing
+                      if (this.health > this.maxhealth){//if overhealed
+                        this.health = this.maxhealth;
+                      }
+                      this.healingValue = 0;//reset the healing delay time
+                    }
+                  }
+                  else{//waiting for healdelay timing before start healing
+                    this.healingValue++;
+                  }
+                }
             }
 
             shoot() {
