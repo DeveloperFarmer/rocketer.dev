@@ -25,6 +25,12 @@
             display: block;
             background-color: #CDCDCD;
         }
+        #changelogPreview {
+            position: absolute;
+            top: 5%;
+            left: 0%;
+            font-size: max(2.5vh,20px); /*the words change size based on browser height, but minimum size is 20px (use max because if 20px more than 2.5vh, then use 20px)*/
+        }
         .debug {
             position: absolute;
             font-size: max(2.1vh,15px);
@@ -220,8 +226,8 @@
                 const health = 100;
                 this.health = health;
                 this.maxhealth = health;
-                this.healSpeed = health/20;
-                this.healDelay = 60 * 6;//6 seconds
+                this.healSpeed = health/60/8;//takes 8 seconds to fully heal from 0 to max health
+                this.healDelay = 60 * 6;//6 seconds of waiting before healing starts
                 this.healingValue = 0;//increases when waiting for healDelay time, when reach same value as healdelay, then start healing
                 this.bulletCooldown = 0;
                 this.bulletCooldownMax = 30;
@@ -464,6 +470,7 @@
                     const dist = Math.hypot(this.x - player.x, this.y - player.y);
                     if (dist < this.radius + player.radius) {
                         player.health -= this.damage;
+                        player.healingValue = 0;//reset the healing delay time
                         this.health--;//reduce bullet health
                         if (player.health <= 0) {
                             // Game over
