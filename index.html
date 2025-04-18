@@ -16,7 +16,7 @@
             margin: 0;
             overflow: hidden;
             background-color: #222;
-            text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
+            text-shadow: -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, 2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000, -2px 0.2vh 0 #000, -0.2vh 0 0 #000;
             font-weight: 700;
             font-family: "Roboto", sans-serif;
             color: white;
@@ -27,14 +27,14 @@
         }
         .debug {
             position: absolute;
-            font-size: 2.2vh;
+            font-size: max(2.2vh,20px);
             left: 10px;
         }
         #score {
             position: absolute;
             bottom: 3%;
             left: 0%;
-            font-size: 1.3vw; /*the words change size based on browser width*/
+            font-size: max(2.5vh,20px); /*the words change size based on browser height, but minimum size is 20px (use max because if 20px more than 2.5vh, then use 20px)*/
             text-align: center;
             width: 100%;
         }
@@ -42,7 +42,7 @@
             top: 20%;
         }
         #botnumber{
-            top: 100px;
+            top: 21%;
         }
         #shapenumber{
             top: 130px;
@@ -50,12 +50,12 @@
         #dimension {
             top: 50%;
         }
-      #drawnEntities {
-          top: 40%;
-      }
+        #drawnEntities {
+            top: 40%;
+        }
         #fpsCounter {
             position: absolute;
-            top: 70px;
+            top: 18%;
             left: 10px;
             color: #ccc;
             font-size: 1.1vw;
@@ -147,6 +147,7 @@
     <div id="botnumber" class="debug">Number of enemies: 0</div>
     <div id="shapenumber" class="debug">Number of shapes: 0</div>
     <div id="dimension" class="debug">Dimension: FFA</div>
+    <div id="drawnEntities" class="debug">Drawn Entities: xx</div>
     <canvas id="gameCanvas"></canvas>
     <div id="deathScreen" class="hidden">
         <div class="death-content">
