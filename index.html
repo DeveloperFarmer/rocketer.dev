@@ -16,7 +16,7 @@
             margin: 0;
             overflow: hidden;
             background-color: #222;
-            text-shadow: -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, 2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000, -2px 0.2vh 0 #000, -0.2vh 0 0 #000;
+            text-shadow: -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, 2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000, -2px 2px 0 #000, -2px 0 0 #000;
             font-weight: 700;
             font-family: "Roboto", sans-serif;
             color: white;
@@ -27,8 +27,8 @@
         }
         .debug {
             position: absolute;
-            font-size: max(2.2vh,20px);
-            left: 10px;
+            font-size: max(2.1vh,15px);
+            left: 20px;
         }
         #score {
             position: absolute;
@@ -39,26 +39,26 @@
             width: 100%;
         }
         #mapSize {
-            top: 20%;
+            top: 30%;
         }
         #botnumber{
-            top: 21%;
+            top: 22%;
         }
         #shapenumber{
-            top: 130px;
+            top: 26%;
         }
         #dimension {
-            top: 50%;
+            top: 34%;
         }
         #drawnEntities {
-            top: 40%;
+            top: 38%;
         }
         #fpsCounter {
             position: absolute;
             top: 18%;
-            left: 10px;
+            left: 20px;
             color: #ccc;
-            font-size: 1.1vw;
+            font-size: max(2.1vh,15px);
         }
         #fpsCounter.high { color: #2ecc71; }  /* Green for 60 FPS */
         #fpsCounter.medium { color: #f39c12; } /* Yellow for 30-59 FPS */
@@ -165,6 +165,10 @@
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
         const mapSizeElement = document.getElementById('mapSize');
+        const botnumberElement = document.getElementById('botnumber');
+        const shapenumberElement = document.getElementById('shapenumber');
+        const dimensionElement = document.getElementById('dimension');
+        const drawnentitiesElement = document.getElementById('drawnEntities');
 
         // Set canvas to window size
         canvas.width = window.innerWidth;
@@ -177,19 +181,19 @@
         const enemies = [];
         const particles = [];
         const shapes = [];
-        const MAX_SHAPES = 50;
-        const MAX_BOTS = 10;
+        let MAX_SHAPES = 50;
+        let MAX_BOTS = 10;
         const keys = {};
         
         // Map settings
-        const MAP_WIDTH = 4000;
-        const MAP_HEIGHT = 4000;
+        let MAP_WIDTH = 4000;
+        let MAP_HEIGHT = 4000;
         let cameraX = 0;
         let cameraY = 0;
         
         // Map background
-        const GRID_SIZE = 20;
-        const GRID_LINE_COLOR = '#C8C8C8';
+        let GRID_SIZE = 20;
+        let GRID_LINE_COLOR = '#C8C8C8';
         
         // FPS counter variables
         let fps = 0;
@@ -989,6 +993,10 @@
             
             // Update map size display
             mapSizeElement.textContent = `Map: ${MAP_WIDTH}x${MAP_HEIGHT}`;
+            botnumberElement.textContent = `Number of enemies: ${MAP_WIDTH}x${MAP_HEIGHT}`;
+            shapenumberElement.textContent = `Number of shapes: ${MAP_WIDTH}x${MAP_HEIGHT}`;
+            dimensionElement.textContent = `Dimension: ${MAP_WIDTH}x${MAP_HEIGHT}`;
+            drawnentitiesElement.textContent = `Drawn Entities: ${MAP_WIDTH}x${MAP_HEIGHT}`;
             document.getElementById('restartButton').addEventListener('click', restartGame);
         }
 
