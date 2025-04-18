@@ -27,7 +27,7 @@
         }
         .debug {
             position: absolute;
-            font-size: 1.1vw;
+            font-size: 2.2vh;
             left: 10px;
         }
         #score {
@@ -39,7 +39,7 @@
             width: 100%;
         }
         #mapSize {
-            top: 40px;
+            top: 20%;
         }
         #botnumber{
             top: 100px;
@@ -47,6 +47,12 @@
         #shapenumber{
             top: 130px;
         }
+        #dimension {
+            top: 50%;
+        }
+      #drawnEntities {
+          top: 40%;
+      }
         #fpsCounter {
             position: absolute;
             top: 70px;
@@ -140,6 +146,7 @@
     <div id="fpsCounter">FPS: 0</div>
     <div id="botnumber" class="debug">Number of enemies: 0</div>
     <div id="shapenumber" class="debug">Number of shapes: 0</div>
+    <div id="dimension" class="debug">Dimension: FFA</div>
     <canvas id="gameCanvas"></canvas>
     <div id="deathScreen" class="hidden">
         <div class="death-content">
@@ -854,8 +861,8 @@
             //draw the minimap at top left corner of screen
             let mmX = 10;
             let mmY = 10;
-            let mmWidth = 150;
-            let mmHeight = 150;
+            let mmWidth = 150/1000*canvas.height;
+            let mmHeight = 150/1000*canvas.height;//size scaling depending on height of browser
             //if rectangular map instad of square
             if (MAP_WIDTH > MAP_HEIGHT){
               mmWidth = mmWidth/MAP_HEIGHT*MAP_WIDTH;
@@ -865,7 +872,7 @@
             }
             ctx.fillStyle = "rgba(189,189,189,.5)";
             ctx.strokeStyle = "rgb(90,90,90)";
-            ctx.lineWidth = 5;
+            ctx.lineWidth = 5/1000*canvas.height;//size scaling depending on height of browser
             ctx.fillRect(mmX, mmY, mmWidth, mmHeight);
             ctx.strokeRect(mmX, mmY, mmWidth, mmHeight);
             //player location on minimap
