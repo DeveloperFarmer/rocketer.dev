@@ -678,27 +678,29 @@
                     20000
                 ]
                 const shapeRotationSpeed = [
-                  2,
-                  2.5,
-                  1.7,
-                  1.4,
-                  
-                ]
+                  0.002,
+                  0.01,
+                  0.002,
+                  0.002,
+                  0.0015,
+                  0.001,
+                  0.001
+                ]//NOTE: 2 IS THE MAXIMUM because 2*Math.PI is 360 degrees
                 //add support for bigger shapes in the future
         class Shape {
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                const shapetype = Math.floor(Math.random() * 4); // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
+                const shapetype = Math.floor(Math.random() * 7); // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
                 //if want to spawn number n, put n+1 in the line above (put 12 if you want type 11 tetradecagon to spawn)
                 this.type = shapetype;
                 this.size = shapesizes[shapetype];
                 this.health = shapehealths[shapetype];
                 this.color = shapecolors[shapetype];//note: if shapetype more than 11, just use 11's color and outline (tetradecagon)
                 this.outline = shapeoutlines[shapetype];
-                //this.rotation = Math.random() * Math.PI * 2;
-                this.rotation = shapeRotationSpeed[shapetype];
-                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+                this.rotation = Math.random() * Math.PI * 2;//choose a random starting angle
+                this.rotationSpeed = shapeRotationSpeed[shapetype] * Math.PI;
+                //this.rotationSpeed = (Math.random() - 0.5) * 0.02;
             }
 
             update() {

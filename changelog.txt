@@ -1,5 +1,6 @@
 Next update: copy homescreen code from rocketer, add body collision, add settings (add option to turn off health bars when max health, add option to change debug text color to #ccc)
 make bigger shapes rarer, and add special shapes, e.g. gem
+add funny mode where shapes rotate super fast
 remember to add numberOfObjectsDrawn to all the drawing functions
 
 ALPHA 0.0.2 - April 15, 2025
