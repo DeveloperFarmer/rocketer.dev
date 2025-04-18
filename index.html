@@ -52,6 +52,7 @@
             height: 100%;
             width: 100%;
             font-weight: 900;
+            display: none;
         }
         #changelogtextdiv {
           padding: 2vmin 3vmin;
@@ -230,7 +231,7 @@
     <div id="tempHomeScreen"></div>
     <button id="playButton">Play</button>
     <div id="changelogPreview">ALPHA ?.?.?<br>- Loading changelog...<br>you can view the full changelog here</div>
-    <div id="subtitle">?.?.?</div>
+    <div id="subtitle">ALPHA ?.?.?</div>
     <div id="full-changelog">
         <div id="changelogtextdiv">
           <h1>Changelog</h1>
@@ -1293,6 +1294,9 @@
                 hereButton.innerText = "here";
                 hereButton.id = "openChangelogButton";
                 changelogPreview.appendChild(hereButton);
+                hereButton.addEventListener("click", () => {
+                  fullchangelog.style.display = "block";
+                });
                 
                 subtitle.textContent = WI[0].split("-", 1)[0].trim();//add the version no. to subtitle div
                 //now fix the entire changelog text
@@ -1325,9 +1329,6 @@
           });
         }
         loadChangelog();
-        document.getElementById('openChangelogButton').addEventListener("click", () => {
-          fullchangelog.style.display = "block";
-        });
     </script>
 </body>
 </html>
