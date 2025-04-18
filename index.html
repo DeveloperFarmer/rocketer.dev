@@ -1212,26 +1212,24 @@
                   if (!AQ[AB].startsWith("    ")) {
                     AR += AR == "" ? AQ[AB] : "<br />" + AQ[AB];
                   }
-                }
-                var AG = document.getElementById("changelogPreview");
-                AG.innerHTML = AR.replace(/\n/g, "<br />");
-                var AT = document.getElementById("subtitle");
-                AT.textContent = WI[0].split("-", 1)[0].trim();
+                }//get the first paragraph (latest version update) (version updates are separated by an empty line in the changelog txt file)
+                changelogPreview.innerHTML = AR.replace(/\n/g, "<br />");//replace text new line with html new line, and add to the div
+                subtitle.textContent = WI[0].split("-", 1)[0].trim();//add the version no. to subtitle div
                 AR = "";
                 for (var AX = 0; AX < WI.length; AX++) {
                   if (AR != "") {
-                    AR += "<br /><br /><hr />";
+                    AR += "<br /><br /><hr />";//add horizontal line in changelog
                   }
                   for (var AF = WI[AX].split("\n"), Az = 0; Az < AF.length; Az++) {
                     var Aj = 0;
                     var S0 = "";
                     for (Aj = 0; AF[Az].startsWith("    ", Aj * 4); Aj++) {
-                      S0 += "&emsp;&emsp;";
+                      S0 += "&emsp;&emsp;";//add paragraph indentation in changelog
                     }
                     if (Az == 0) {
-                      AR += "<h3>";
+                      AR += "<h3>";//font size
                     } else if (AR != "" && Az != 1) {
-                      AR += "<br />";
+                      AR += "<br />";//new line
                     }
                     AR += S0 + AF[Az];
                     if (Az == 0) {
@@ -1239,7 +1237,7 @@
                     }
                   }
                 }
-                document.getElementById("full-changelog").children[0].children[2].innerHTML = AR.replace(/\n/g, "<br />");
+                fullchangelog.children[0].children[2].innerHTML = AR.replace(/\n/g, "<br />");
               })(AU.replace(/\r?\n/g, "\r\n"));
               AS();
             });
