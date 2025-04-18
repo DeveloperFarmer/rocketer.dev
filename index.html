@@ -1286,8 +1286,14 @@
                     AR += AR == "" ? AQ[AB] : "<br />" + AQ[AB];
                   }
                 }//get the first paragraph (latest version update) (version updates are separated by an empty line in the changelog txt file)
-                let additionaltext = "<br>you can view the full changelog <div id='openChangelogButton'>here</div>"
+                let additionaltext = "<br>you can view the full changelog ";//leave a blank space cuz we're adding a word after that
                 changelogPreview.innerHTML = AR.replace(/\n/g, "<br />") + additionaltext;//replace text new line with html new line, and add to the div
+                
+                const hereButton = document.createElement("div");
+                hereButton.innerText = "here";
+                hereButton.id = "openChangelogButton";
+                changelogPreview.appendChild(hereButton);
+                
                 subtitle.textContent = WI[0].split("-", 1)[0].trim();//add the version no. to subtitle div
                 //now fix the entire changelog text
                 AR = "";
