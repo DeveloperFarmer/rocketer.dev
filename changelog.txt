@@ -8,9 +8,11 @@ ALPHA 0.0.3 - April 18, 2025
 - Added spawning chances for different shapes
 - Fixed drawing sequence (shapes now drawn at the bottom, particles rendered last)
 - Fixed rotation speed
+
 ALPHA 0.0.2 - April 15, 2025
 - Added a death screen and respawning
 - Added a simple home screen
+
 ALPHA 0.0.1 - April 14, 2025
 - Moved the game to this website
 - This game is a rewritten version of the old singleplayer rocketer

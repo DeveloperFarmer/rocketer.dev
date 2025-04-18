@@ -185,6 +185,9 @@
         const shapenumberElement = document.getElementById('shapenumber');
         const dimensionElement = document.getElementById('dimension');
         const drawnentitiesElement = document.getElementById('drawnEntities');
+        const changelogPreview = document.getElementById('changelogPreview');
+        const subtitle = document.getElementById('subtitle');
+        const fullchangelog = document.getElementById('full-changelog');
 
         // Set canvas to window size
         canvas.width = window.innerWidth;
@@ -1198,51 +1201,51 @@
           init();
           gameLoop();
         }
-        function WE() {
-        return new Promise(function (AS) {
-          fetch("/changelog.txt").then(function (AU) {
-            return AU.text();
-          }).then(function (AU) {
-            (function (AP) {
-              var AR = "";
-              for (var AQ = ("CHANGELOG - " + (WI = AP.split("\n\r\n"))[0]).split("\n"), AB = 0; AB < AQ.length; AB++) {
-                if (!AQ[AB].startsWith("    ")) {
-                  AR += AR == "" ? AQ[AB] : "<br />" + AQ[AB];
-                }
-              }
-              var AG = document.getElementById("changelogPreview");
-              AG.innerHTML = AR.replace(/\n/g, "<br />");
-              var AT = document.getElementById("subtitle");
-              AT.textContent = WI[0].split("-", 1)[0].trim();
-              AR = "";
-              for (var AX = 0; AX < WI.length; AX++) {
-                if (AR != "") {
-                  AR += "<br /><br /><hr />";
-                }
-                for (var AF = WI[AX].split("\n"), Az = 0; Az < AF.length; Az++) {
-                  var Aj = 0;
-                  var S0 = "";
-                  for (Aj = 0; AF[Az].startsWith("    ", Aj * 4); Aj++) {
-                    S0 += "&emsp;&emsp;";
-                  }
-                  if (Az == 0) {
-                    AR += "<h3>";
-                  } else if (AR != "" && Az != 1) {
-                    AR += "<br />";
-                  }
-                  AR += S0 + AF[Az];
-                  if (Az == 0) {
-                    AR += "</h3>";
+        function loadChangelog() {
+          return new Promise(function (AS) {
+            fetch("/changelog.txt").then(function (AU) {
+              return AU.text();
+            }).then(function (AU) {
+              (function (AP) {
+                var AR = "";
+                for (var AQ = ("CHANGELOG - " + (WI = AP.split("\n\r\n"))[0]).split("\n"), AB = 0; AB < AQ.length; AB++) {
+                  if (!AQ[AB].startsWith("    ")) {
+                    AR += AR == "" ? AQ[AB] : "<br />" + AQ[AB];
                   }
                 }
-              }
-              document.getElementById("full-changelog").children[0].children[2].innerHTML = AR.replace(/\n/g, "<br />");
-            })(AU.replace(/\r?\n/g, "\r\n"));
-            AS();
+                var AG = document.getElementById("changelogPreview");
+                AG.innerHTML = AR.replace(/\n/g, "<br />");
+                var AT = document.getElementById("subtitle");
+                AT.textContent = WI[0].split("-", 1)[0].trim();
+                AR = "";
+                for (var AX = 0; AX < WI.length; AX++) {
+                  if (AR != "") {
+                    AR += "<br /><br /><hr />";
+                  }
+                  for (var AF = WI[AX].split("\n"), Az = 0; Az < AF.length; Az++) {
+                    var Aj = 0;
+                    var S0 = "";
+                    for (Aj = 0; AF[Az].startsWith("    ", Aj * 4); Aj++) {
+                      S0 += "&emsp;&emsp;";
+                    }
+                    if (Az == 0) {
+                      AR += "<h3>";
+                    } else if (AR != "" && Az != 1) {
+                      AR += "<br />";
+                    }
+                    AR += S0 + AF[Az];
+                    if (Az == 0) {
+                      AR += "</h3>";
+                    }
+                  }
+                }
+                document.getElementById("full-changelog").children[0].children[2].innerHTML = AR.replace(/\n/g, "<br />");
+              })(AU.replace(/\r?\n/g, "\r\n"));
+              AS();
+            });
           });
-        });
-      }
-      WE();
+        }
+        loadChangelog();
     </script>
 </body>
 </html>
