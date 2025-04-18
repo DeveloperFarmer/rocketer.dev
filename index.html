@@ -39,15 +39,21 @@
             left: 50%;
             font-size: max(2.5vh,20px);
         }
-        #fullchangelog {
-            position: fixed;
+        #full-changelog {
+            position: absolute;
             top: 0%;
             left: 0%;
             padding: 1vmin;
             line-height: 1.5;
             background-color: rgba(0, 0, 0, .5);
-            font-weight: 400;
+            height: 120vh;
+            width: 80px;
+            font-weight: 700;
+            border-radius: .5vmin;
         }
+      #changelogtextdiv {
+        padding:2vmin 3vmin;
+      }
         .debug {
             position: absolute;
             font-size: max(2.1vh,15px);
@@ -183,8 +189,8 @@
     <button id="playButton">Play</button>
     <div id="changelogPreview">ALPHA ?.?.?<br>- Loading changelog...<br>you can view the full changelog here</div>
     <div id="subtitle">?.?.?</div>
-    <div id="full-changelog" class="hide modal">
-        <div>
+    <div id="full-changelog">
+        <div id="changelogtextdiv">
           <h1>Changelog</h1>
           <hr />
           <p style="overflow: auto; height: 70vh; width: 70vw; text-align: left; font-size: 2vmin">- Loading changelog...</p>
