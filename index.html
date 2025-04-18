@@ -229,6 +229,7 @@
                 this.bulletDamage = 30;
                 this.bulletSpeed = 7;
                 this.bodyDamage = 3;
+                this.bulletPenetration = 100;
             }
 
             update() {
@@ -387,6 +388,7 @@
                 this.owner = owner;
                 this.lifetime = 100;
                 this.damage = owner.bulletDamage;
+                this.health = owner.bulletPenetration;
             }//add bullet offset in the future
 
             update() {
@@ -402,6 +404,7 @@
                         if (dist < this.radius + enemy.radius) {
                             // Hit enemy
                             enemy.health -= this.damage;
+                            this.health--;//reduce bullet health
                             if (enemy.health <= 0) {
                                 this.owner.score += 10;
                                 score += 10;
@@ -410,7 +413,7 @@
                                 enemies.splice(i, 1);
                                 spawnEnemy();
                             }
-                            return true; // Mark for removal
+                            //return true; // Mark for removal
                         }
                     }
                     for (let i = shapes.length - 1; i >= 0; i--) {
@@ -419,6 +422,7 @@
 
                         if (dist < this.radius + shape.size/2) {
                             shape.health -= this.damage;
+                            this.health--;//reduce bullet health
                             if (shape.health <= 0) {
                                 // Add score based on shape type
                                 const points = shapescores[shape.type];
@@ -430,7 +434,7 @@
                                 shapes.splice(i, 1);
                                 setTimeout(spawnShape, 1000); // Respawn after delay
                             }
-                            return true; // Bullet is destroyed
+                            //return true; // Bullet is destroyed
                         }
                     }
                 }
@@ -441,26 +445,33 @@
                     const dist = Math.hypot(this.x - player.x, this.y - player.y);
                     if (dist < this.radius + player.radius) {
                         player.health -= this.damage;
+                        this.health--;//reduce bullet health
                         if (player.health <= 0) {
                             // Game over
-                            //alert(`Game Over! Your score: ${score}`);
-                            //document.location.reload();
                             showDeathScreen(score);
                         }
                         //else{
-                          return true; // Mark for removal
+                          //return true; // Mark for removal
                         //}
                     }
                 }
 
                 // Check out of bounds (now against map size)
                 if (this.x < 0 || this.x > MAP_WIDTH || this.y < 0 || this.y > MAP_HEIGHT) {
-                    return true;
+                    return true;//Mark for removal
                 }
+              
+                //check bullet health (penetration)
+                if (this.health <= 0) {
+                    return true;//Mark for removal
+                }
+              else {
+                console.log(this.health)
+              }
 
                 // Check lifetime
                 if (this.lifetime <= 0) {
-                    return true;
+                    return true;//Mark for removal
                 }
 
                 return false;
@@ -523,6 +534,7 @@
                 this.shootCooldownMax = 100;
                 this.barrelWidth = botRadius/1.5;
                 this.bulletDamage = 10;
+                this.bulletPenetration = 100;
             }
 
             update() {
@@ -681,17 +693,22 @@
                   0.002,
                   0.01,
                   0.002,
-                  0.002,
                   0.0015,
                   0.001,
-                  0.001
+                  0.0005,
+                  0.0004,
+                  0.0003,
+                  0.0002,
+                  0.0001,
+                  0.00005,
+                  0.00005
                 ]//NOTE: 2 IS THE MAXIMUM because 2*Math.PI is 360 degrees
                 //add support for bigger shapes in the future
         class Shape {
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                const shapetype = Math.floor(Math.random() * 7); // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
+                const shapetype = Math.floor(Math.random() * 12); // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
                 //if want to spawn number n, put n+1 in the line above (put 12 if you want type 11 tetradecagon to spawn)
                 this.type = shapetype;
                 this.size = shapesizes[shapetype];
