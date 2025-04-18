@@ -84,6 +84,18 @@
         #exit-changelog:hover {
           background-color: rgba(69,69,69,.5);
         }
+        #openChangelogButton {
+          background:none;
+          border:none;
+          margin:0;
+          padding:0;
+          cursor: pointer;
+          color: rgb(0, 176, 225);
+        }
+        #openChangelogButton:hover {
+          text-decoration:underline;
+          color: rgb(0, 123, 255);
+        }
         .debug {
             position: absolute;
             font-size: max(2.1vh,15px);
@@ -1274,8 +1286,8 @@
                     AR += AR == "" ? AQ[AB] : "<br />" + AQ[AB];
                   }
                 }//get the first paragraph (latest version update) (version updates are separated by an empty line in the changelog txt file)
-                let additionaltext = "you can view the full changelog <div id='openChangelogButton'>here</div>"
-                changelogPreview.innerHTML = AR.replace(/\n/g, "<br />");//replace text new line with html new line, and add to the div
+                let additionaltext = "<br>you can view the full changelog <div id='openChangelogButton'>here</div>"
+                changelogPreview.innerHTML = AR.replace(/\n/g, "<br />") + additionaltext;//replace text new line with html new line, and add to the div
                 subtitle.textContent = WI[0].split("-", 1)[0].trim();//add the version no. to subtitle div
                 //now fix the entire changelog text
                 AR = "";
@@ -1307,6 +1319,9 @@
           });
         }
         loadChangelog();
+        document.getElementById('openChangelogButton').addEventListener("click", () => {
+          fullchangelog.style.display = "block";
+        });
     </script>
 </body>
 </html>
