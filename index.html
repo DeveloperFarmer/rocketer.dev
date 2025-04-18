@@ -39,10 +39,10 @@
             left: 50%;
             font-size: max(2.5vh,20px);
         }
-      h3 & h1{
-    padding: 0px;
-    margin: 0px;    
-  }
+        h3, h1{
+          padding: 0px;
+          margin: .5vmin;    
+        }
         #full-changelog {
             position: absolute;
             top: 0%;
@@ -74,6 +74,15 @@
           border-radius: 1vmin;
           background-color: rgba(0, 0, 0, .5);
           padding: .5vmin 1vmin;
+          /*Hover transition*/
+          -webkit-transition: all 0.3s ease-out;
+          -moz-transition: all 0.3s ease-out;
+          -o-transition: all 0.3s ease-out;
+          transition: all 0.3s ease-out;
+          cursor: pointer;
+        }
+        #exit-changelog:hover {
+          background-color: rgba(69,69,69,.5);
         }
         .debug {
             position: absolute;
@@ -232,6 +241,9 @@
         const changelogPreview = document.getElementById('changelogPreview');
         const subtitle = document.getElementById('subtitle');
         const fullchangelog = document.getElementById('full-changelog');
+        document.getElementById('exit-changelog').addEventListener("click", () => {
+          fullchangelog.style.display = "none";
+        });
 
         // Set canvas to window size
         canvas.width = window.innerWidth;
