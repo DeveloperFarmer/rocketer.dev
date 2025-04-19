@@ -20,6 +20,10 @@
             font-weight: 700;
             font-family: "Roboto", sans-serif;
             color: white;
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* Internet Explorer/Edge */
+            user-select: none;         /* Standard */
         }
         canvas {
             display: block;
@@ -38,14 +42,17 @@
             top: 5%;
             left: 50%;
             -webkit-transform: translateY(-50%) translateX(-50%);
-            font-size: max(6vh,20px);
+            font-size: max(7vh,35px);
+            letter-spacing: 0.2vh;
         }
         #subtitle {
             position: absolute;
             top: 10%;
             left: 50%;
             -webkit-transform: translateY(-50%) translateX(-50%);
-            font-size: max(2.5vh,20px);
+            font-size: max(3.5vh,15.25px);
+            font-weight: 400;
+            letter-spacing: 0.2vh;
         }
         h3, h1{
           padding: 0px;
@@ -197,7 +204,7 @@
         }
         #playButton {
             position: absolute;
-            top: 52.9%;
+            top: calc(55% - 1vmin);
             left: calc(50% + 15.3vmin);
             -webkit-transform: translateY(-50%) translateX(-50%);
             background-color: rgb(56, 183, 100);
@@ -210,7 +217,6 @@
             font-family: "Roboto", sans-serif;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 20px;
             transition: background-color 0.3s;
         }
 
