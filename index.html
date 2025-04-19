@@ -210,6 +210,7 @@
             font-size: max(2.5vh,20px); /*the words change size based on browser height, but minimum size is 20px (use max because if 20px more than 2.5vh, then use 20px)*/
             text-align: center;
             width: 100%;
+            display: none;
         }
         #mapSize {
             top: 30%;
@@ -441,6 +442,7 @@
         let frameCount = 0;
         //other debug stuff
         let numberOfObjectsDrawn = 0;
+        let debugState = "close";
         
         //death stuff
         let isGamePaused = false;
@@ -1426,12 +1428,16 @@
           document.getElementById('hometitle').style.display = "none";
           subtitle.style.display = "none";
           document.getElementById('subsubtitle').style.display = "none";
+          document.getElementById('gamemodeSelector').style.display = "none";
+          //add game divs
+          document.getElementById('score').style.display = "block";
           //open debug
           fpsCounter.style.display = "block";
-          var allOtherDebugDivs = document.getElementsByClassName("debug");
-          for(var i = 0; i < allOtherDebugDivs.length; i++){
-            document.getElementById(allOtherDebugDivs.item(i)).className = "debugopen";
+          let allOtherDebugDivs = document.querySelectorAll(".debug");
+          for(let i = 0; i < allOtherDebugDivs.length; i++){
+            document.getElementById(allOtherDebugDivs[i].id).className = "debugopen";
           }
+          debugState = "open";
           //start the game
           init();
           gameLoop();
