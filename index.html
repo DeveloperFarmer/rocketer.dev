@@ -356,7 +356,7 @@
             <button id="restartButton">Play Again</button>
         </div>
     </div>
-    <div id="tempHomeScreen"></div>
+    <canvas id="homeScreen"></canvas>
     <input enterkeyhint="go" id="display-name-input" placeholder="Display Name" maxlength="50">
     <button id="playButton">PLAY</button>
     <div id="changelogPreview">ALPHA ?.?.?<br>- Loading changelog...<br>you can view the full changelog here</div>
@@ -368,7 +368,7 @@
         <div id="gamemodeArrow1">&lt;</div>
         <div id="gamemodeArrow2">&gt;</div>
         <div id="regionWord">Region</div>
-        <div id="regionTitle">singleplayer</div>
+        <div id="regionTitle">local</div>
         <div id="regionArrow1">&lt;</div>
         <div id="regionArrow2">&gt;</div>
     </div>
@@ -385,6 +385,8 @@
         // Canvas setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const hcanvas = document.getElementById('homeScreen');
+        const hctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
         const mapSizeElement = document.getElementById('mapSize');
         const botnumberElement = document.getElementById('botnumber');
@@ -411,7 +413,7 @@
         const shapes = [];
         let MAX_SHAPES = 50;
         let MAX_BOTS = 10;
-        let gamemode = "PvE";
+        let gamemode = "PvE arena";
         document.getElementById('gamemodeTitle').textContent = gamemode;
         const keys = {};
         
