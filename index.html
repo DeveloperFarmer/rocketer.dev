@@ -191,11 +191,14 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            background-color: #e74c3c;
+            background-color: rgb(56, 183, 100);
             color: white;
             border: none;
-            padding: 10px 20px;
-            font-size: 1.2rem;
+            padding: 0.5vmin;
+            height: 5vmin;
+            font-size: 3vmin;
+            font-weight: 900;
+            font-family: "Roboto", sans-serif;
             border-radius: 5px;
             cursor: pointer;
             margin-top: 20px;
@@ -203,7 +206,10 @@
         }
 
         #playButton:hover {
-            background-color: #c0392b;
+            background-color: #48f083;
+        }
+        #display-name-input {
+
         }
     </style>
 </head>
@@ -230,7 +236,8 @@
         </div>
     </div>
     <div id="tempHomeScreen"></div>
-    <button id="playButton">Play</button>
+    <input enterkeyhint="go" id="display-name-input" placeholder="Display Name" maxlength="50">
+    <button id="playButton">PLAY</button>
     <div id="changelogPreview">ALPHA ?.?.?<br>- Loading changelog...<br>you can view the full changelog here</div>
     <div id="subtitle">ALPHA ?.?.?</div>
     <div id="full-changelog">
