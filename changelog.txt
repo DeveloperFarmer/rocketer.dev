@@ -1,3 +1,7 @@
+ALPHA 0.0.4 - April 19, 2025
+- Made changes to the home screen
+- You can now press m to toggle debug
+
 ALPHA 0.0.3 - April 18, 2025
 - Added player healing (6 sec delay, 8 sec full healing)
 - Changed the debug to mimic rocketer

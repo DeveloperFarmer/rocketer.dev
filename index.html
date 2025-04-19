@@ -1267,6 +1267,7 @@
         // Keyboard controls
         window.addEventListener('keydown', (e) => {
             keys[e.key] = true;
+            checkForKeybinds(e.key);
         });
 
         window.addEventListener('keyup', (e) => {
@@ -1278,6 +1279,27 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         });
+      
+        function checkForKeybinds(key){//pressed a key, check if the key represents anything (except player movement)
+          if (key == "m" && players.length > 0){//if ingame and press m
+            if (debugState == "open"){//close the debug
+              fpsCounter.style.display = "none";
+              let allOtherDebugDivs = document.querySelectorAll(".debugopen");
+              for(let i = 0; i < allOtherDebugDivs.length; i++){
+                document.getElementById(allOtherDebugDivs[i].id).className = "debug";
+              }
+              debugState = "close";
+            }
+            else {//open the debug
+              fpsCounter.style.display = "block";
+              let allOtherDebugDivs = document.querySelectorAll(".debug");
+              for(let i = 0; i < allOtherDebugDivs.length; i++){
+                document.getElementById(allOtherDebugDivs[i].id).className = "debugopen";
+              }
+              debugState = "open";
+            }
+          }
+        }
       
         function spawnShape() {
             shapes.push(new Shape(
