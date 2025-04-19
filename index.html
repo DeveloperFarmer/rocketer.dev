@@ -123,15 +123,17 @@
         }
         #regionArrow1 {
             position: absolute;
-            top: 75%;
-            left: 5%;
+            top: 83%;
+            left: 27%;
             -webkit-transform: translateY(-50%) translateX(-50%);
+            color: lightgrey;
         }
         #regionArrow2 {
             position: absolute;
-            top: 75%;
-            left: 95%;
+            top: 83%;
+            left: 73%;
             -webkit-transform: translateY(-50%) translateX(-50%);
+            color: lightgrey;
         }
         h3, h1{
           padding: 0px;
@@ -362,11 +364,11 @@
     <div id="subtitle">ALPHA ?.?.?</div>
     <div id="subsubtitle">Gamemode</div>
     <div id="gamemodeSelector">
-        <div id="gamemodeTitle">Spike Wars</div>
+        <div id="gamemodeTitle">Connecting...</div>
         <div id="gamemodeArrow1">&lt;</div>
         <div id="gamemodeArrow2">&gt;</div>
         <div id="regionWord">Region</div>
-        <div id="regionTitle">spike.war</div>
+        <div id="regionTitle">singleplayer</div>
         <div id="regionArrow1">&lt;</div>
         <div id="regionArrow2">&gt;</div>
     </div>
@@ -410,6 +412,7 @@
         let MAX_SHAPES = 50;
         let MAX_BOTS = 10;
         let gamemode = "PvE";
+        document.getElementById('gamemodeTitle').textContent = gamemode;
         const keys = {};
         
         // Map settings
