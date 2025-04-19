@@ -56,6 +56,16 @@
             letter-spacing: 0.2vh;
             text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
         }
+        #subsubtitle {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            -webkit-transform: translateY(-50%) translateX(-50%);
+            font-size: 5vh;
+            font-weight: 400;
+            letter-spacing: 0.2vh;
+            text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+        }
         h3, h1{
           padding: 0px;
           margin: .5vmin;    
@@ -267,7 +277,7 @@
     <div id="fpsCounter">FPS: 0</div>
     <div id="botnumber" class="debug">Number of enemies: 0</div>
     <div id="shapenumber" class="debug">Number of shapes: 0</div>
-    <div id="dimension" class="debug">Dimension: FFA</div>
+    <div id="dimension" class="debug">Dimension: PvE</div>
     <div id="drawnEntities" class="debug">Drawn Entities: xx</div>
     <canvas id="gameCanvas"></canvas>
     <div id="deathScreen" class="hidden">
@@ -283,6 +293,12 @@
     <div id="changelogPreview">ALPHA ?.?.?<br>- Loading changelog...<br>you can view the full changelog here</div>
     <div id="hometitle">rocketer 2.0</div>
     <div id="subtitle">ALPHA ?.?.?</div>
+    <div id="subsubtitle">Gamemode</div>
+    <div id="gamemodeSelector">
+      <div id="gamemodeTitle">
+        
+      </div>
+    </div>
     <div id="full-changelog">
         <div id="changelogtextdiv">
           <h1>Changelog</h1>
@@ -322,7 +338,7 @@
         const shapes = [];
         let MAX_SHAPES = 50;
         let MAX_BOTS = 10;
-        let gamemode = "FFA";
+        let gamemode = "PvE";
         const keys = {};
         
         // Map settings
@@ -1323,7 +1339,9 @@
           document.getElementById('tempHomeScreen').style.display = "none";
           document.getElementById('display-name-input').style.display = "none";
           changelogPreview.style.display = "none";
+          document.getElementById('hometitle').style.display = "none";
           subtitle.style.display = "none";
+          document.getElementById('subsubtitle').style.display = "none";
           init();
           gameLoop();
         }
