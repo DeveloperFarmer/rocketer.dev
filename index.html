@@ -194,10 +194,14 @@
           text-decoration:underline;
           color: rgb(0, 123, 255);
         }
-        .debug {
+        .debug {/*debug closed by default*/
+            display: none;
+        }
+        .debugopen {/*change to this class to open the debug*/
             position: absolute;
             font-size: max(2.1vh,15px);
             left: 20px;
+            display: block;
         }
         #score {
             position: absolute;
@@ -228,6 +232,7 @@
             left: 20px;
             color: #ccc;
             font-size: max(2.1vh,15px);
+            display: none;
         }
         #fpsCounter.high { color: #2ecc71; }  /* Green for 60 FPS */
         #fpsCounter.medium { color: #f39c12; } /* Yellow for 30-59 FPS */
@@ -386,7 +391,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const hcanvas = document.getElementById('homeScreen');
-        const hctx = canvas.getContext('2d');
+        const hctx = hcanvas.getContext('2d');
         const scoreElement = document.getElementById('score');
         const mapSizeElement = document.getElementById('mapSize');
         const botnumberElement = document.getElementById('botnumber');
@@ -403,6 +408,8 @@
         // Set canvas to window size
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+        hcanvas.width = window.innerWidth;
+        hcanvas.height = window.innerHeight;
 
         // Game variables
         let score = 0;
@@ -429,7 +436,7 @@
         
         // FPS counter variables
         let fps = 0;
-        let fpsCounter = document.getElementById('fpsCounter');
+        const fpsCounter = document.getElementById('fpsCounter');
         let lastFpsUpdate = 0;
         let frameCount = 0;
         //other debug stuff
@@ -1411,13 +1418,21 @@
         document.getElementById('playButton').addEventListener('click', startGame);
         function startGame(){
           // First time start game
+          //remove home screen divs
           document.getElementById('playButton').style.display = "none";
-          document.getElementById('tempHomeScreen').style.display = "none";
+          hcanvas.style.display = "none";
           document.getElementById('display-name-input').style.display = "none";
           changelogPreview.style.display = "none";
           document.getElementById('hometitle').style.display = "none";
           subtitle.style.display = "none";
           document.getElementById('subsubtitle').style.display = "none";
+          //open debug
+          fpsCounter.style.display = "block";
+          var allOtherDebugDivs = document.getElementsByClassName("debug");
+          for(var i = 0; i < allOtherDebugDivs.length; i++){
+            document.getElementById(allOtherDebugDivs.item(i)).className = "debugopen";
+          }
+          //start the game
           init();
           gameLoop();
         }
