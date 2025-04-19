@@ -33,9 +33,16 @@
             font-weight: 900;
             line-height: 1.5;
         }
-        #subtitle {
+        #hometitle {
             position: absolute;
             top: 5%;
+            left: 50%;
+            -webkit-transform: translateY(-50%) translateX(-50%);
+            font-size: max(6vh,20px);
+        }
+        #subtitle {
+            position: absolute;
+            top: 10%;
             left: 50%;
             -webkit-transform: translateY(-50%) translateX(-50%);
             font-size: max(2.5vh,20px);
@@ -190,8 +197,8 @@
         }
         #playButton {
             position: absolute;
-            top: 50%;
-            left: 50%;
+            top: 52.9%;
+            left: calc(50% + 15.3vmin);
             -webkit-transform: translateY(-50%) translateX(-50%);
             background-color: rgb(56, 183, 100);
             color: white;
@@ -212,23 +219,31 @@
         }
         #display-name-input {
             position: absolute;
-            top: 50%;
+            top: 55%;
             left: 50%;
             -webkit-transform: translateY(-50%) translateX(-50%);
-            width: 30vmin;
+            width: 28.5vmin;
             padding-left: 1vmin;
-            padding-top: 1.5vmin;
-            padding-bottom: 1.5vmin;
+            padding-top: 1.1vmin;
+            padding-bottom: 1.1vmin;
             padding-right: 10vmin;
             font-size: 3vmin;
             font-weight: 900;
             font-family: "Roboto", sans-serif;
             border: .5vmin solid black;
-            border-radius: .5vmin;
+            border-radius: 1vmin;
         }
+        /*input box styling*/
         input:focus {
             outline: none;
             border: none;
+        }
+        ::placeholder {
+          color: #b9b9b9;
+          opacity: 1; /* Firefox */
+        }
+        ::-ms-input-placeholder { /* Edge 12 -18 */
+          color: #b9b9b9;
         }
     </style>
 </head>
@@ -258,6 +273,7 @@
     <input enterkeyhint="go" id="display-name-input" placeholder="Display Name" maxlength="50">
     <button id="playButton">PLAY</button>
     <div id="changelogPreview">ALPHA ?.?.?<br>- Loading changelog...<br>you can view the full changelog here</div>
+    <div id="hometitle">rocketer 2.0</div>
     <div id="subtitle">ALPHA ?.?.?</div>
     <div id="full-changelog">
         <div id="changelogtextdiv">
@@ -1297,6 +1313,7 @@
           // First time start game
           document.getElementById('playButton').style.display = "none";
           document.getElementById('tempHomeScreen').style.display = "none";
+          document.getElementById('display-name-input').style.display = "none";
           changelogPreview.style.display = "none";
           subtitle.style.display = "none";
           init();
