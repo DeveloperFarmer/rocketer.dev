@@ -456,8 +456,8 @@
         let hsMAP_SIZE = 3000;
         let rotationRadius = 200;//home screen will move in a circular path, and the radius of this circle is this
         let rotationAngle = 0;//in degree, the angle of the circular path that the map is at now (usedto calculate the x and y coords)
-        let hsCameraX = hsMAP_SIZE/2 + rotationRadius;
-        let hsCameraY = hsMAP_SIZE/2;
+        let hsCameraX = hsMAP_SIZE/2 + rotationRadius  - canvas.width / 2;
+        let hsCameraY = hsMAP_SIZE/2  - canvas.width / 2;
 
         // Player class
         class Player {
@@ -1461,34 +1461,26 @@
         function drawPolygon(sides,x,y,rot){//only for home screen background
             const shapetype = sides-3;
             if (sides == 4){//square and triangle are the anomalies that dont follow the sides
-              shapeType = 0;
+              shapetype = 0;
             }
             else if (sides == 3){
-              shapeType = 1;
+              shapetype = 1;
             }
-                this.size = shapesizes[shapetype];
-                this.health = shapehealths[shapetype];
-                this.color = shapecolors[shapetype];//note: if shapetype more than 11, just use 11's color and outline (tetradecagon)
-                this.outline = shapeoutlines[shapetype];
-                this.rotation = Math.random() * Math.PI * 2;//choose a random starting angle
-                this.rotationSpeed = shapeRotationSpeed[shapetype] * Math.PI;
+            const size = shapesizes[shapetype];
             hctx.save();
-            hctx.translate(x, y);
+            hctx.translate(x-hsCameraX, y-hsCameraY);
             hctx.rotate(rot/180*Math.PI);
             hctx.fillStyle = shapecolors[shapetype];
             hctx.strokeStyle = shapeoutlines[shapetype];
             hctx.beginPath();
-                        for (let i = 0; i < sides; i++) {
-                            const angle = (i * Math.PI * 2 / sides) - Math.PI/2;
-                            hctx.lineTo(
-                                Math.cos(angle) * this.size/2,
-                                Math.sin(angle) * this.size/2
-                            );
-                        }
-                        hctx.closePath();
-                        hctx.fill();
-                        hctx.stroke();
-          hctx.restore();
+            for (let i = 0; i < sides; i++) {
+                const angle = (i * Math.PI * 2 / sides) - Math.PI/2;
+                hctx.lineTo(Math.cos(angle) * size/2,Math.sin(angle) * size/2);
+            }
+            hctx.closePath();
+            hctx.fill();
+            hctx.stroke();
+            hctx.restore();
         }
       
         //drawing canvas for homescreen background
@@ -1500,17 +1492,18 @@
             drawGridHomeScreen();//(no need draw boundary of map)
             //now draw the stuff
             if (gamemode == "PvE arena"){
-              //hsMAP_SIZE,rotationRadius,hsCameraX
               hctx.lineJoin = "round";//to make shape corners round
               hctx.lineWidth = 4;
-              
+              //drawPolygon(sides,x,y,rot)
+              //map size is 3000
+              drawPolygon(9,1500,1500,0)
             }
           
             hctx.fillStyle = 'rgba(0,0,0,.5)';//make homescreen background darker
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
             //now move the camera
-            hsCameraX = hsMAP_SIZE/2 + rotationRadius*Math.cos(rotationAngle/180*Math.PI);
-            hsCameraY = hsMAP_SIZE/2 + rotationRadius*Math.sin(rotationAngle/180*Math.PI);
+            hsCameraX = hsMAP_SIZE/2 + rotationRadius*Math.cos(rotationAngle/180*Math.PI) - canvas.width / 2;
+            hsCameraY = hsMAP_SIZE/2 + rotationRadius*Math.sin(rotationAngle/180*Math.PI) - canvas.width / 2;
             rotationAngle++;
             if(rotationAngle>=360){
               rotationAngle-=360;

@@ -5,7 +5,7 @@ add funny mode where shapes rotate super fast
 add a limit of 60fps to prevent good devices from having fast animations (or add delta like rocketer)
 remember to add numberOfObjectsDrawn to all the drawing functions
 
-Next update: add home screen background in hctx, add body collision
+Next update: add home screen background in hctx, add body collision, copy scenexe grid, add resize detector for home screen
 
 
 
