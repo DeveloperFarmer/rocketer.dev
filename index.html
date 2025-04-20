@@ -1178,7 +1178,7 @@
       
         function drawMapBoundary() {// Draw area outside the map (where camera can go beyond)
             ctx.save();
-            ctx.fillStyle = 'rgba(95, 103, 108, 0.5)'; // Dark gray for out-of-bounds
+            ctx.fillStyle = 'rgba(95, 103, 108, 0.5)';
 
             // Top border (above y=0)
             ctx.fillRect(-cameraX-canvas.width/2,-cameraY,MAP_WIDTH+canvas.width,Math.min(0, cameraY));//Math.min so that only draw if cameraY < 0
