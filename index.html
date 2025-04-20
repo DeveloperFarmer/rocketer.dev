@@ -446,6 +446,9 @@
         
         //death stuff
         let isGamePaused = false;
+      
+        //home screen (hs) background canvas stuff
+        let hsMAP_SIZE = 
 
         // Player class
         class Player {
@@ -1225,6 +1228,33 @@
                 ctx.restore();
             }
         }
+      
+        function drawGridHomeScreen() {//ONLY FOR HOMSCREEN
+            hctx.strokeStyle = GRID_LINE_COLOR;
+            hctx.lineWidth = 2;
+            const startX = Math.floor(cameraX / GRID_SIZE) * GRID_SIZE;
+            const startY = Math.floor(cameraY / GRID_SIZE) * GRID_SIZE;
+            const endX = Math.min(MAP_WIDTH, startX + canvas.width + GRID_SIZE);
+            const endY = Math.min(MAP_HEIGHT, startY + canvas.height + GRID_SIZE);
+            
+            // Draw vertical lines
+            for (let x = startX; x <= endX; x += GRID_SIZE) {
+                const screenX = x - cameraX;
+                ctx.beginPath();
+                ctx.moveTo(screenX, 0);
+                ctx.lineTo(screenX, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Draw horizontal lines
+            for (let y = startY; y <= endY; y += GRID_SIZE) {
+                const screenY = y - cameraY;
+                ctx.beginPath();
+                ctx.moveTo(0, screenY);
+                ctx.lineTo(canvas.width, screenY);
+                ctx.stroke();
+            }
+        }
 
         // Mouse tracking (now in screen coordinates)
         let mouseX = 0;
@@ -1417,6 +1447,21 @@
             }
 
             requestAnimationFrame(gameLoop);
+        }
+      
+        //drawing canvas for homescreen background
+        function homeScreenLoop() {
+            if (players.length > 0) return;//dont do anything if ingame
+            //start drawing the homescreen if not ingame
+            hctx.fillStyle = '#CDCDCD';
+            hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
+            drawGrid();
+            drawMapBoundary();//draw area outside map (translucent rectangles so that grids also change color)
+          
+            hctx.fillStyle = 'rgba(0,0,0,.5)';//make homescreen background darker
+            hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
+
+            requestAnimationFrame(homeScreenLoop);
         }
 
         document.getElementById('playButton').addEventListener('click', startGame);
