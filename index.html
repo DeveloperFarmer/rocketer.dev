@@ -1176,11 +1176,8 @@
             }
         }
       
-        function drawMapBoundary() {
-            // Save the current drawing state
+        function drawMapBoundary() {// Draw area outside the map (where camera can go beyond)
             ctx.save();
-
-            // Draw area outside the map (where camera can go beyond)
             ctx.fillStyle = 'rgba(95, 103, 108, 0.5)'; // Dark gray for out-of-bounds
 
             // Top border (above y=0)
