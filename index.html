@@ -564,28 +564,12 @@
                     ctx.strokeStyle = '#7B7B7B';
                     ctx.fillStyle = '#999999'
                     ctx.lineWidth = 4;
-                  /*
-                    ctx.beginPath();
-                    ctx.moveTo(screenX, screenY);
-                    ctx.lineTo(
-                        screenX + Math.cos(this.angle) * (this.radius + 20),
-                        screenY + Math.sin(this.angle) * (this.radius + 20)
-                    );
-                    ctx.fill();
-                    ctx.stroke();
-                  */
-                  
                     ctx.save();
                     ctx.translate(screenX, screenY);
                     ctx.rotate(this.angle);
-                  /*
-                    const barrelLength = this.radius + 20;
-                    const barrelWidth = this.radius/1.5;
-                    const barrelOffset = 0;
-                    */
                     ctx.fillRect(this.barrelOffset,-this.barrelWidth/2,this.barrelLength,this.barrelWidth);
                     ctx.strokeRect(this.barrelOffset,-this.barrelWidth/2,this.barrelLength,this.barrelWidth);
-                    ctx.restore(); // Restore transformation state
+                    ctx.restore();
                     
                     // Draw tank body
                     ctx.fillStyle = this.color;
@@ -600,8 +584,6 @@
                     const healthBarWidth = this.radius * 2;
                     const healthBarHeight = 5;
                     const healthPercentage = this.health / this.maxhealth;
-                    
-                    //ctx.fillStyle = '#e74c3c';
                     ctx.fillStyle = 'black';
                     ctx.beginPath();
                     ctx.roundRect(
@@ -612,8 +594,6 @@
                         4
                     );//older browsers might not have roundrect!!!
                     ctx.fill();
-                    
-                    //ctx.fillStyle = '#2ecc71';
                     ctx.fillStyle = this.color;
                     ctx.beginPath();
                     ctx.roundRect(
@@ -1138,9 +1118,18 @@
                     ctx.save();
                     ctx.globalAlpha = this.alpha;
                     ctx.fillStyle = this.color;
+                    ctx.strokeStyle = this.color;
                     ctx.beginPath();
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
+                    //make outline more opaque
+                    if ((this.alpha + 0.3)>1){
+                      ctx.globalAlpha = 1;
+                    }
+                    else{
+                      ctx.globalAlpha = this.alpha + 0.3;
+                    }
+                    ctx.stroke();
                     ctx.restore();
                     numberOfObjectsDrawn++;
                 }
