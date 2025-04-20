@@ -448,7 +448,12 @@
         let isGamePaused = false;
       
         //home screen (hs) background canvas stuff
-        let hsMAP_SIZE = 
+        let hsMAP_SIZE = 3000;
+        let rotationRadius = 200;//home screen will move in a circular path, and the radius of this circle is this
+        let rotationAngle = 0;//in radians, the angle of the circular path
+            
+        let hsCameraX = hsMAP_SIZE/2 + rotationRadius;
+        let hsCameraY = hsMAP_SIZE/2;
 
         // Player class
         class Player {
@@ -1232,26 +1237,26 @@
         function drawGridHomeScreen() {//ONLY FOR HOMSCREEN
             hctx.strokeStyle = GRID_LINE_COLOR;
             hctx.lineWidth = 2;
-            const startX = Math.floor(cameraX / GRID_SIZE) * GRID_SIZE;
-            const startY = Math.floor(cameraY / GRID_SIZE) * GRID_SIZE;
-            const endX = Math.min(MAP_WIDTH, startX + canvas.width + GRID_SIZE);
-            const endY = Math.min(MAP_HEIGHT, startY + canvas.height + GRID_SIZE);
+            const startX = Math.floor(hsCameraX / GRID_SIZE) * GRID_SIZE;
+            const startY = Math.floor(hsCameraY / GRID_SIZE) * GRID_SIZE;
+            const endX = Math.min(hsMAP_SIZE, startX + hcanvas.width + GRID_SIZE);
+            const endY = Math.min(hsMAP_SIZE, startY + hcanvas.height + GRID_SIZE);
             
             // Draw vertical lines
             for (let x = startX; x <= endX; x += GRID_SIZE) {
-                const screenX = x - cameraX;
+                const screenX = x - hsCameraX;
                 ctx.beginPath();
                 ctx.moveTo(screenX, 0);
-                ctx.lineTo(screenX, canvas.height);
+                ctx.lineTo(screenX, hcanvas.height);
                 ctx.stroke();
             }
             
             // Draw horizontal lines
             for (let y = startY; y <= endY; y += GRID_SIZE) {
-                const screenY = y - cameraY;
+                const screenY = y - hsCameraY;
                 ctx.beginPath();
                 ctx.moveTo(0, screenY);
-                ctx.lineTo(canvas.width, screenY);
+                ctx.lineTo(hcanvas.width, screenY);
                 ctx.stroke();
             }
         }
@@ -1455,11 +1460,16 @@
             //start drawing the homescreen if not ingame
             hctx.fillStyle = '#CDCDCD';
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
-            drawGrid();
-            drawMapBoundary();//draw area outside map (translucent rectangles so that grids also change color)
+            drawGridHomeScreen();//(no need draw boundary of map)
+            //now draw the stuff
+            if (gamemode == "PvE arena"){
+              //hsMAP_SIZE,rotationRadius,hsCameraX
+            }
           
             hctx.fillStyle = 'rgba(0,0,0,.5)';//make homescreen background darker
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
+            //now move the camera
+            
 
             requestAnimationFrame(homeScreenLoop);
         }
