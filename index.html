@@ -457,7 +457,7 @@
         let rotationRadius = 200;//home screen will move in a circular path, and the radius of this circle is this
         let rotationAngle = 0;//in degree, the angle of the circular path that the map is at now (usedto calculate the x and y coords)
         let hsCameraX = hsMAP_SIZE/2 + rotationRadius  - canvas.width / 2;
-        let hsCameraY = hsMAP_SIZE/2  - canvas.width / 2;
+        let hsCameraY = hsMAP_SIZE/2  - canvas.height / 2;
 
         // Player class
         class Player {
@@ -1503,7 +1503,7 @@
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
             //now move the camera
             hsCameraX = hsMAP_SIZE/2 + rotationRadius*Math.cos(rotationAngle/180*Math.PI) - canvas.width / 2;
-            hsCameraY = hsMAP_SIZE/2 + rotationRadius*Math.sin(rotationAngle/180*Math.PI) - canvas.width / 2;
+            hsCameraY = hsMAP_SIZE/2 + rotationRadius*Math.sin(rotationAngle/180*Math.PI) - canvas.height / 2;
             rotationAngle++;
             if(rotationAngle>=360){
               rotationAngle-=360;
