@@ -632,7 +632,7 @@
         let cameraY = 0;
         
         // Map background
-        let GRID_SIZE = 20;
+        let GRID_SIZE = 24;
         let GRID_LINE_COLOR = '#C8C8C8';
         
         // FPS counter variables
@@ -1355,7 +1355,7 @@
         
         function drawGrid() {
             ctx.strokeStyle = GRID_LINE_COLOR;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 4;
             
             // Calculate visible grid area
             const startX = Math.floor(cameraX / GRID_SIZE) * GRID_SIZE;
@@ -1435,7 +1435,7 @@
       
         function drawGridHomeScreen() {//ONLY FOR HOMSCREEN
             hctx.strokeStyle = GRID_LINE_COLOR;
-            hctx.lineWidth = 2;
+            hctx.lineWidth = 4;
             const startX = Math.floor(hsCameraX / GRID_SIZE) * GRID_SIZE;
             const startY = Math.floor(hsCameraY / GRID_SIZE) * GRID_SIZE;
             const endX = Math.min(hsMAP_SIZE, startX + hcanvas.width + GRID_SIZE);
@@ -1654,7 +1654,7 @@
         }
       
         function drawPolygon(sides,x,y,rot){//only for home screen background
-            const shapetype = sides-3;
+            let shapetype = sides-3;
             if (sides == 4){//square and triangle are the anomalies that dont follow the sides
               shapetype = 0;
             }
@@ -1692,6 +1692,12 @@
               //drawPolygon(sides,x,y,rot)
               //map size is 3000
               drawPolygon(9,1500,1500,0)
+              drawPolygon(6,1790,2069,0)
+              drawPolygon(5,1399,1997,0)
+              drawPolygon(4,1784,1967,0)
+              drawPolygon(3,776,1910,0)
+              drawPolygon(3,1046,1288,0)
+              drawPolygon(3,2790,2069,0)
             }
           
             hctx.fillStyle = 'rgba(0,0,0,.5)';//make homescreen background darker
