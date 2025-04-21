@@ -389,8 +389,8 @@
     <div id="subsubtitle">Gamemode</div>
     <div id="gamemodeSelector">
         <div id="gamemodeTitle">Connecting...</div>
-        <div id="gamemodeArrow1">&lt;</div>
-        <div id="gamemodeArrow2">&gt;</div>
+        <div id="gamemodeArrow1" onclick="changeGamemode('p')">&lt;</div>
+        <div id="gamemodeArrow2" onclick="changeGamemode('n')">&gt;</div>
         <div id="regionWord">Region</div>
         <div id="regionTitle">local</div>
         <div id="regionArrow1">&lt;</div>
@@ -439,9 +439,32 @@
         const shapes = [];
         let MAX_SHAPES = 50;
         let MAX_BOTS = 10;
-        let gamemode = "PvE arena";
+        const gamemodeList = ["PvE arena","Free For All","2 Teams","4 Teams"];
+        const gamemodeColors = ["#BA0DB1","#D23136","#A061D7","#00C24E"];//for home screen
+        let currentGamemodeID = 0;//PvE
+        let gamemode = gamemodeList[currentGamemodeID];
+        document.getElementById('gamemodeSelector').style.backgroundColor = gamemodeColors[currentGamemodeID];
         document.getElementById('gamemodeTitle').textContent = gamemode;
         const keys = {};
+      
+        //function for changing gamemode on home screen
+        function changeGamemode(type) {
+          if (type == "n"){//next gamemode
+            currentGamemodeID++;
+            if (currentGamemodeID >= gamemodeList.length){
+              currentGamemodeID = 0;
+            }
+          }
+          else if (type == "p"){//previous gamemode
+            currentGamemodeID--;
+            if (currentGamemodeID < 0){
+              currentGamemodeID = (gamemodeList.length - 1);
+            }
+          }
+          gamemode = gamemodeList[currentGamemodeID];
+          document.getElementById('gamemodeSelector').style.backgroundColor = gamemodeColors[currentGamemodeID];
+          document.getElementById('gamemodeTitle').textContent = gamemode;
+        }
         
         // Map settings
         let MAP_WIDTH = 4000;
