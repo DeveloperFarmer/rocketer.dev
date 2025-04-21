@@ -124,16 +124,18 @@
             top: 25%;
             left: 7%;
             -webkit-transform: translateY(-50%) translateX(-50%);
-            color: lightgrey;
             font-size: 6vmin;
+            transition: all 0.3s ease-out;
+            cursor: pointer;
         }
         #gamemodeArrow2 {
             position: absolute;
             top: 25%;
             left: 93%;
             -webkit-transform: translateY(-50%) translateX(-50%);
-            color: lightgrey;
             font-size: 6vmin;
+            transition: all 0.3s ease-out;
+            cursor: pointer;
         }
         #regionArrow1 {
             position: absolute;
@@ -141,6 +143,8 @@
             left: 27%;
             -webkit-transform: translateY(-50%) translateX(-50%);
             color: lightgrey;
+            transition: all 0.3s ease-out;
+            /*cursor: pointer;*/
         }
         #regionArrow2 {
             position: absolute;
@@ -148,7 +152,16 @@
             left: 73%;
             -webkit-transform: translateY(-50%) translateX(-50%);
             color: lightgrey;
+            transition: all 0.3s ease-out;
+            /*cursor: pointer;*/
         }
+        #gamemodeArrow1:hover, #gamemodeArrow2:hover{
+          font-size: 7.5vmin;
+        }
+      /*
+        #regionArrow1:hover, #regionArrow2:hover{
+          font-size: 5.5vmin;
+        }*/
         h3, h1{
           padding: 0px;
           margin: .5vmin;    
