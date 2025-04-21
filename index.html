@@ -90,7 +90,7 @@
             font-size: 5vh;
             font-weight: 400;
             background-color: #BA0DB1;
-            background-image: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, rgba(225,225,225,0.5) 51%);/*create a lighter shade for the top part of the button, #D82BCF*/
+            /*background-image: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, rgba(225,225,225,0.5) 51%);/*create a lighter shade for the top part of the button, #D82BCF*/
             font-size: 4vmin;
             font-weight: 900;
             font-family: "Roboto", sans-serif;
@@ -98,7 +98,18 @@
             border-radius: 1vmin;
             white-space: nowrap;
             text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
-            transition: all 5s ease-out;
+            transition: all .3s ease-out;
+        }
+        #gamemodeSelectorLighterColor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 50%;
+            width: 100%;
+            background-color: #d82bcf;
+            border-radius: 0.5vmin;
+            white-space: nowrap;
+            transition: all .3s ease-out;
         }
         #gamemodeTitle {
             position: absolute;
@@ -389,6 +400,7 @@
     <div id="subtitle">ALPHA ?.?.?</div>
     <div id="subsubtitle">Gamemode</div>
     <div id="gamemodeSelector">
+      <div id="gamemodeSelectorLighterColor"></div>
         <div id="gamemodeTitle">Connecting...</div>
         <div id="gamemodeArrow1" onclick="changeGamemode('p')">&lt;</div>
         <div id="gamemodeArrow2" onclick="changeGamemode('n')">&gt;</div>
@@ -446,6 +458,7 @@
         let currentGamemodeID = 0;//PvE
         let gamemode = gamemodeList[currentGamemodeID];
         document.getElementById('gamemodeSelector').style.backgroundColor = gamemodeColors[currentGamemodeID];
+        document.getElementById('gamemodeSelectorLighterColor').style.backgroundColor = gamemodeColorsLight[currentGamemodeID];
         //document.getElementById('gamemodeSelector').style.backgroundImage = "linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, " + gamemodeColorsLight[currentGamemodeID] + " 51%)";
         document.getElementById('gamemodeTitle').textContent = gamemode;
         const keys = {};
@@ -466,7 +479,7 @@
           }
           gamemode = gamemodeList[currentGamemodeID];
           document.getElementById('gamemodeSelector').style.backgroundColor = gamemodeColors[currentGamemodeID];
-        //document.getElementById('gamemodeSelector').style.backgroundImage = "linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, " + gamemodeColorsLight[currentGamemodeID] + " 51%)";
+          document.getElementById('gamemodeSelectorLighterColor').style.backgroundColor = gamemodeColorsLight[currentGamemodeID];
           document.getElementById('gamemodeTitle').textContent = gamemode;
           if (currentGamemodeID != 0){//not PvE, so need to connect to server
             //remove player button and name input, put connecting...
