@@ -413,6 +413,8 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            animation-name: opacityFade;/*whenever you change the display from none to block*/
+            animation-duration: .5s;
         }
 
         #playButton:hover {
@@ -428,6 +430,12 @@
           font-weight: 900;
           font-family: "Roboto", sans-serif;
           text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+          animation-name: opacityFade;
+          animation-duration: .5s;
+        }
+        @keyframes opacityFade {
+          from {opacity: 0;}
+          to {opacity: 1;}
         }
         #display-name-input {
             position: absolute;
@@ -444,6 +452,8 @@
             font-family: "Roboto", sans-serif;
             border: .5vmin solid black;
             border-radius: 1vmin;
+            animation-name: opacityFade;
+            animation-duration: .5s;
         }
         /*input box styling*/
         input:focus {
@@ -556,6 +566,9 @@
         //document.getElementById('gamemodeSelector').style.backgroundImage = "linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, " + gamemodeColorsLight[currentGamemodeID] + " 51%)";
         gamemodeTitle.textContent = gamemode;
         regionTitle.textContent = serverLocations[currentGamemodeID];
+        if (currentGamemodeID == 0){//no connecting required for PvE
+          document.getElementById('connecting').style.display = "none";
+        }
         const keys = {};
       
         //function for changing gamemode on home screen
@@ -576,8 +589,9 @@
           gamemode = gamemodeList[currentGamemodeID];
           document.getElementById('gamemodeSelector').style.backgroundColor = gamemodeColors[currentGamemodeID];
           document.getElementById('gamemodeSelectorLighterColor').style.backgroundColor = gamemodeColorsLight[currentGamemodeID];
-          //gamemodeTitle.textContent = gamemode;
+          //gamemodeTitle.textContent = gamemode;//dont change immediately, only after animation
           gamemodeTitleAnimation.textContent = gamemode;
+          regionTitle.textContent = serverLocations[currentGamemodeID];
           if (type == "n"){
             gamemodeTitle.classList.toggle('animateNext');
             gamemodeTitleAnimation.classList.toggle('animateNext');

@@ -7,6 +7,6 @@ remember to add numberOfObjectsDrawn to all the drawing functions
 
 Next update: add home screen background in hctx, add body collision, copy scenexe grid, add resize detector for home screen
 
-add feature where clicking on the gamemode in the home screen will show the list of gamemodes, and add animation for region
+add feature where clicking on the gamemode in the home screen will show the list of gamemodes, and add animation for gamemode region on gamemode select div
 
 Note: this file is for my reference, isnt used ingame
