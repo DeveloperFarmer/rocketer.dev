@@ -254,18 +254,28 @@
         }*/
         #ovalAnimation {/*the big black oval that yeets across your screen when you change gamemode*/
           position: fixed;
-          top: -10%;
-          left: 
-          height: 120%;
+          top: -45%;
+          left: 100%;
+          width: 90%;
+          height: 180%;
           background-color: black;
           border-radius: 50%;
-          display: none;
-          animation-name: yeet;
+        }
+        #ovalAnimation.left{
+          animation-name: yeetLeft;
           animation-duration: .5s;
         }
-        @keyframes yeetlet {
-          from {opacity: 0;}
-          to {opacity: 1;}
+        #ovalAnimation.right{
+          animation-name: yeetRight;
+          animation-duration: .5s;
+        }
+        @keyframes yeetLeft {
+          from {left: 100%;}
+          to {left: -45%;}
+        }
+        @keyframes yeetRight {
+          from {left: -45%;}
+          to {left: 100%;}
         }
         h3, h1{
           padding: 0px;
@@ -507,6 +517,7 @@
         </div>
     </div>
     <canvas id="homeScreen"></canvas>
+    <div id="ovalAnimation"></div>
     <div id="connecting">Connecting...</div>
     <input enterkeyhint="go" id="display-name-input" placeholder="Display Name" maxlength="50">
     <button id="playButton">PLAY</button>
@@ -551,6 +562,7 @@
         const fullchangelog = document.getElementById('full-changelog');
         const gamemodeTitle = document.getElementById('gamemodeTitle');
         const gamemodeTitleAnimation = document.getElementById('gamemodeTitleAnimation');//for animating purposes
+        const oval = document.getElementById('ovalAnimation');//also for the animation
         document.getElementById('exit-changelog').addEventListener("click", () => {
           fullchangelog.style.display = "none";
         });
@@ -610,10 +622,12 @@
           if (type == "n"){
             gamemodeTitle.classList.toggle('animateNext');
             gamemodeTitleAnimation.classList.toggle('animateNext');
+            oval.classList.toggle('left');
           }
           else{
             gamemodeTitle.classList.toggle('animatePrev');
             gamemodeTitleAnimation.classList.toggle('animatePrev');
+            oval.classList.toggle('right');
           }
           if (currentGamemodeID != 0){//not PvE, so need to connect to server
             //remove player button and name input, put connecting...
