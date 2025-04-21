@@ -80,6 +80,11 @@
             letter-spacing: 0.2vh;
             text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
         }
+      #connecting {
+        -webkit-transform: translateY(-50%) translateX(-50%);
+        font-size: 5vh;
+        font-weight: 400;
+      }
         #gamemodeSelector {
             position: absolute;
             top: 44%;
@@ -87,7 +92,6 @@
             height: 12%;
             width: 39.5vmin;
             -webkit-transform: translateY(-50%) translateX(-50%);
-            font-size: 5vh;
             font-weight: 400;
             background-color: #BA0DB1;
             /*background-image: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, rgba(225,225,225,0.5) 51%);/*create a lighter shade for the top part of the button, #D82BCF*/
@@ -116,11 +120,17 @@
             top: 25%;
             left: 50%;
             -webkit-transform: translateY(-50%) translateX(-50%);
+            transition: font-size .3s ease-out;
+        }
+        #gamemodeTitle:hover {
+            font-size: 4.5vmin;
+            cursor: pointer;
         }
         #gamemodeTitleAnimation {
             position: absolute;
             top: 25%;
-            left: -50%;/*hide it until animation occurs (this allows two gamemode words to appear during animation when you click the arrow button left or right)*/
+            left: -50%;
+            opacity: 0;/*hide it until animation occurs (this allows two gamemode words to appear during animation when you click the arrow button left or right)*/
             -webkit-transform: translateY(-50%) translateX(-50%);
         }
         #gamemodeTitle.animatePrev{/*change to previous gamemode*/
@@ -171,7 +181,7 @@
             opacity: 0;
           }
           50% {
-            opacity: 1;
+            opacity: 0.3;
           }
           100% {
             left: 50%;
@@ -184,7 +194,7 @@
             opacity: 0;
           }
           50% {
-            opacity: 1;
+            opacity: 0.3;
           }
           100% {
             left: 50%;
@@ -542,6 +552,7 @@
       
         //function for changing gamemode on home screen
         function changeGamemode(type) {
+          if (gamemodeTitle.classList.contains("animateNext")||gamemodeTitle.classList.contains("animateNext")) return;//dont do anything if it is currently animating (might break the current animation)
           if (type == "n"){//next gamemode
             currentGamemodeID++;
             if (currentGamemodeID >= gamemodeList.length){
@@ -569,6 +580,7 @@
           }
           if (currentGamemodeID != 0){//not PvE, so need to connect to server
             //remove player button and name input, put connecting...
+            //might want to animate the gamemode region too...
           }
         }
         gamemodeTitle.addEventListener("animationend", () => {//when finish animating the gamemode selector title after changing gamemode, THEN update the real new gamemode

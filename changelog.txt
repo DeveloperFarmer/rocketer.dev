@@ -1,3 +1,6 @@
+ALPHA 0.0.5 - April 21, 2025
+- Added some animation when changing gamemode
+
 ALPHA 0.0.4 - April 19, 2025
 - Made changes to the home screen
 - You can now press m to toggle debug
