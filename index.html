@@ -257,24 +257,24 @@
           top: -45%;
           left: 100%;
           width: 90%;
-          height: 180%;
+          height: 190%;
           background-color: black;
           border-radius: 50%;
         }
         #ovalAnimation.left{
           animation-name: yeetLeft;
-          animation-duration: .5s;
+          animation-duration: 1.2s;
         }
         #ovalAnimation.right{
           animation-name: yeetRight;
-          animation-duration: .5s;
+          animation-duration: 1.2s;
         }
         @keyframes yeetLeft {
           from {left: 100%;}
-          to {left: -45%;}
+          to {left: -90%;}
         }
         @keyframes yeetRight {
-          from {left: -45%;}
+          from {left: -90%;}
           to {left: 100%;}
         }
         h3, h1{
@@ -622,11 +622,17 @@
           if (type == "n"){
             gamemodeTitle.classList.toggle('animateNext');
             gamemodeTitleAnimation.classList.toggle('animateNext');
-            oval.classList.toggle('left');
+            if (oval.classList.contains("left")){//if havent remove
+              oval.classList.toggle('left');//remove it
+            }
+            oval.classList.toggle('left');//animate it (the big chonky oval that yeets across your screen)
           }
           else{
             gamemodeTitle.classList.toggle('animatePrev');
             gamemodeTitleAnimation.classList.toggle('animatePrev');
+            if (oval.classList.contains("right")){//if havent remove
+              oval.classList.toggle('right');//remove it
+            }
             oval.classList.toggle('right');
           }
           if (currentGamemodeID != 0){//not PvE, so need to connect to server
