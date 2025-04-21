@@ -117,11 +117,29 @@
             left: 50%;
             -webkit-transform: translateY(-50%) translateX(-50%);
         }
-        #gamemodeTitle.animate{
-          animation-name: fadeOutOldGamemode;
+        #gamemodeTitleAnimation {
+            position: absolute;
+            top: 25%;
+            left: -50%;/*hide it until animation occurs (this allows two gamemode words to appear during animation when you click the arrow button left or right)*/
+            -webkit-transform: translateY(-50%) translateX(-50%);
+        }
+        #gamemodeTitle.animatePrev{/*change to previous gamemode*/
+          animation-name: fadeOutOldGamemodePrev;
           animation-duration: .5s;
         }
-        @keyframes fadeOutOldGamemode {
+        #gamemodeTitle.animateNext{/*change to next gamemode*/
+          animation-name: fadeOutOldGamemodeNext;
+          animation-duration: .5s;
+        }
+        #gamemodeTitleAnimation.animatePrev{
+          animation-name: fadeInNewGamemodePrev;
+          animation-duration: .5s;
+        }
+        #gamemodeTitleAnimation.animateNext{
+          animation-name: fadeInNewGamemodeNext;
+          animation-duration: .5s;
+        }
+        @keyframes fadeOutOldGamemodePrev {
           0% {
             left: 50%;
             opacity: 1;
@@ -132,6 +150,45 @@
           100% {
             left: 100%;
             opacity: 0;
+          }
+        }
+        @keyframes fadeOutOldGamemodeNext {
+          0% {
+            left: 50%;
+            opacity: 1;
+          }
+          50% {
+            opacity: 0;
+          }
+          100% {
+            left: 0%;
+            opacity: 0;
+          }
+        }
+        @keyframes fadeInNewGamemodePrev {
+          0% {
+            left: 0%;
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            left: 50%;
+            opacity: 1;
+          }
+        }
+        @keyframes fadeInNewGamemodeNext {
+          0% {
+            left: 100%;
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            left: 50%;
+            opacity: 1;
           }
         }
         #regionWord {
@@ -419,6 +476,7 @@
     <div id="gamemodeSelector">
       <div id="gamemodeSelectorLighterColor"></div>
         <div id="gamemodeTitle">Connecting...</div>
+        <div id="gamemodeTitleAnimation">Connecting...</div>
         <div id="gamemodeArrow1" onclick="changeGamemode('p')">&lt;</div>
         <div id="gamemodeArrow2" onclick="changeGamemode('n')">&gt;</div>
         <div id="regionWord">Region</div>
@@ -451,6 +509,7 @@
         const subtitle = document.getElementById('subtitle');
         const fullchangelog = document.getElementById('full-changelog');
         const gamemodeTitle = document.getElementById('gamemodeTitle');
+        const gamemodeTitleAnimation = document.getElementById('gamemodeTitleAnimation');//for animating purposes
         document.getElementById('exit-changelog').addEventListener("click", () => {
           fullchangelog.style.display = "none";
         });
@@ -498,12 +557,31 @@
           gamemode = gamemodeList[currentGamemodeID];
           document.getElementById('gamemodeSelector').style.backgroundColor = gamemodeColors[currentGamemodeID];
           document.getElementById('gamemodeSelectorLighterColor').style.backgroundColor = gamemodeColorsLight[currentGamemodeID];
-          gamemodeTitle.textContent = gamemode;
-          gamemodeTitle.classList.toggle('animate');
+          //gamemodeTitle.textContent = gamemode;
+          gamemodeTitleAnimation.textContent = gamemode;
+          if (type == "n"){
+            gamemodeTitle.classList.toggle('animateNext');
+            gamemodeTitleAnimation.classList.toggle('animateNext');
+          }
+          else{
+            gamemodeTitle.classList.toggle('animatePrev');
+            gamemodeTitleAnimation.classList.toggle('animatePrev');
+          }
           if (currentGamemodeID != 0){//not PvE, so need to connect to server
             //remove player button and name input, put connecting...
           }
         }
+        gamemodeTitle.addEventListener("animationend", () => {//when finish animating the gamemode selector title after changing gamemode, THEN update the real new gamemode
+          gamemodeTitle.textContent = gamemode;
+          if (gamemodeTitle.classList.contains("animateNext")){//remove the class to allow new animation
+            gamemodeTitle.classList.toggle('animateNext');
+            gamemodeTitleAnimation.classList.toggle('animateNext');
+          }
+          else if (gamemodeTitle.classList.contains("animatePrev")){
+            gamemodeTitle.classList.toggle('animatePrev');
+            gamemodeTitleAnimation.classList.toggle('animatePrev');
+          }
+        });
         
         // Map settings
         let MAP_WIDTH = 4000;
