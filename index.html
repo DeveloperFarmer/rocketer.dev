@@ -80,11 +80,6 @@
             letter-spacing: 0.2vh;
             text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
         }
-      #connecting {
-        -webkit-transform: translateY(-50%) translateX(-50%);
-        font-size: 5vh;
-        font-weight: 400;
-      }
         #gamemodeSelector {
             position: absolute;
             top: 44%;
@@ -92,7 +87,6 @@
             height: 12%;
             width: 39.5vmin;
             -webkit-transform: translateY(-50%) translateX(-50%);
-            font-weight: 400;
             background-color: #BA0DB1;
             /*background-image: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, rgba(225,225,225,0.5) 51%);/*create a lighter shade for the top part of the button, #D82BCF*/
             font-size: 4vmin;
@@ -424,6 +418,17 @@
         #playButton:hover {
             background-color: #48f083;
         }
+        #connecting {
+          position: absolute;
+          top: 55%;
+          left: 50%;
+          -webkit-transform: translateY(-50%) translateX(-50%);
+          text-align:center;
+          font-size: 6vmin;
+          font-weight: 900;
+          font-family: "Roboto", sans-serif;
+          text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+        }
         #display-name-input {
             position: absolute;
             top: 55%;
@@ -477,6 +482,7 @@
         </div>
     </div>
     <canvas id="homeScreen"></canvas>
+    <div id="connecting">Connecting...</div>
     <input enterkeyhint="go" id="display-name-input" placeholder="Display Name" maxlength="50">
     <button id="playButton">PLAY</button>
     <div id="changelogPreview">ALPHA ?.?.?<br>- Loading changelog...<br>you can view the full changelog here</div>
@@ -490,7 +496,7 @@
         <div id="gamemodeArrow1" onclick="changeGamemode('p')">&lt;</div>
         <div id="gamemodeArrow2" onclick="changeGamemode('n')">&gt;</div>
         <div id="regionWord">Region</div>
-        <div id="regionTitle">local</div>
+        <div id="regionTitle">???</div>
         <div id="regionArrow1">&lt;</div>
         <div id="regionArrow2">&gt;</div>
     </div>
@@ -542,12 +548,14 @@
         const gamemodeList = ["PvE arena","Free For All","2 Teams","4 Teams"];
         const gamemodeColorsLight = ["#D82BCF","#F04F54","#BE7FF5","#00E06C"];
         const gamemodeColors = ["#BA0DB1","#D23136","#A061D7","#00C24E"];//for home screen
+        const serverLocations = ["local","Sweden","Sweden","Sweden"]
         let currentGamemodeID = 0;//PvE
         let gamemode = gamemodeList[currentGamemodeID];
         document.getElementById('gamemodeSelector').style.backgroundColor = gamemodeColors[currentGamemodeID];
         document.getElementById('gamemodeSelectorLighterColor').style.backgroundColor = gamemodeColorsLight[currentGamemodeID];
         //document.getElementById('gamemodeSelector').style.backgroundImage = "linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, " + gamemodeColorsLight[currentGamemodeID] + " 51%)";
         gamemodeTitle.textContent = gamemode;
+        regionTitle.textContent = serverLocations[currentGamemodeID];
         const keys = {};
       
         //function for changing gamemode on home screen
@@ -580,7 +588,15 @@
           }
           if (currentGamemodeID != 0){//not PvE, so need to connect to server
             //remove player button and name input, put connecting...
+            document.getElementById('playButton').style.display = "none";
+            document.getElementById('display-name-input').style.display = "none";
+            document.getElementById('connecting').style.display = "block";
             //might want to animate the gamemode region too...
+          }
+          else{
+            document.getElementById('playButton').style.display = "block";
+            document.getElementById('display-name-input').style.display = "block";
+            document.getElementById('connecting').style.display = "none";
           }
         }
         gamemodeTitle.addEventListener("animationend", () => {//when finish animating the gamemode selector title after changing gamemode, THEN update the real new gamemode
@@ -1685,6 +1701,7 @@
           document.getElementById('playButton').style.display = "none";
           hcanvas.style.display = "none";
           document.getElementById('display-name-input').style.display = "none";
+          document.getElementById('connecting').style.display = "none";
           changelogPreview.style.display = "none";
           document.getElementById('hometitle').style.display = "none";
           subtitle.style.display = "none";
