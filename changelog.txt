@@ -1,6 +1,7 @@
 ALPHA 0.0.5 - April 21, 2025
 - Added some animation when changing gamemode
 - Fixed the background grid
+- Improved the home screen canvas render
 
 ALPHA 0.0.4 - April 19, 2025
 - Made changes to the home screen

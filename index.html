@@ -252,6 +252,21 @@
         #regionArrow1:hover, #regionArrow2:hover{
           font-size: 5.5vmin;
         }*/
+        #ovalAnimation {/*the big black oval that yeets across your screen when you change gamemode*/
+          position: fixed;
+          top: -10%;
+          left: 
+          height: 120%;
+          background-color: black;
+          border-radius: 50%;
+          display: none;
+          animation-name: yeet;
+          animation-duration: .5s;
+        }
+        @keyframes yeetlet {
+          from {opacity: 0;}
+          to {opacity: 1;}
+        }
         h3, h1{
           padding: 0px;
           margin: .5vmin;    
@@ -1691,8 +1706,11 @@
               hctx.lineWidth = 4;
               //drawPolygon(sides,x,y,rot)
               //map size is 3000
+              drawPolygon(11,2276,1677,0)
               drawPolygon(9,1500,1500,0)
-              drawPolygon(6,1790,2069,0)
+              drawPolygon(8,776,1450,0)
+              drawPolygon(7,776,1050,0)
+              drawPolygon(6,1790,1069,0)
               drawPolygon(5,1399,1997,0)
               drawPolygon(4,1784,1967,0)
               drawPolygon(3,776,1910,0)
@@ -1705,7 +1723,8 @@
             //now move the camera
             hsCameraX = hsMAP_SIZE/2 + rotationRadius*Math.cos(rotationAngle/180*Math.PI) - canvas.width / 2;
             hsCameraY = hsMAP_SIZE/2 + rotationRadius*Math.sin(rotationAngle/180*Math.PI) - canvas.height / 2;
-            rotationAngle++;
+            //rotationAngle++;//good for testing
+            rotationAngle+=0.2;
             if(rotationAngle>=360){
               rotationAngle-=360;
             }
