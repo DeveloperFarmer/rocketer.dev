@@ -79,6 +79,7 @@
             font-weight: 400;
             letter-spacing: 0.2vh;
             text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+            font-family: "Yantramanav";
         }
         #gamemodeSelector {
             position: absolute;
@@ -263,7 +264,7 @@
         }
         #ovalAnimation.left{
           animation-name: yeetLeft;
-          animation-duration: 1.2s;
+          animation-duration: 1s;
         }
         #ovalAnimation.right{
           animation-name: yeetRight;
@@ -498,7 +499,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Yantramanav:wght@900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Yantramanav:wght@400&display=swap"
       rel="stylesheet"
     />
     <canvas id="gameCanvas"></canvas>
@@ -600,7 +601,7 @@
       
         //function for changing gamemode on home screen
         function changeGamemode(type) {
-          if (gamemodeTitle.classList.contains("animateNext")||gamemodeTitle.classList.contains("animateNext")) return;//dont do anything if it is currently animating (might break the current animation)
+          if (gamemodeTitle.classList.contains("animateNext")||gamemodeTitle.classList.contains("animateNext")||oval.classList.contains("left")||oval.classList.contains("right")) return;//dont do anything if it is currently animating (might break the current animation)
           if (type == "n"){//next gamemode
             currentGamemodeID++;
             if (currentGamemodeID >= gamemodeList.length){
