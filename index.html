@@ -1810,7 +1810,7 @@
             shapenumberElement.textContent = `Number of shapes: ${MAX_SHAPES}`;
             dimensionElement.textContent = `Dimension: ${gamemode}`;
             document.getElementById('restartButton').addEventListener('click', restartGame);
-            document.getElementById('continueButton').addEventListener('click', restartGame);
+            document.getElementById('continueButton').addEventListener('click', returnToHomeScreen);
         }
 
         // Game loop
@@ -2047,6 +2047,28 @@
         function closeModal2(){
           document.getElementById('modal2').style.display = "none";
           document.getElementById('blackScreen').style.display = "none";
+        }
+        function returnToHomeScreen(){//return from death screen to home screen
+          document.getElementById('playButton').style.display = "block";
+          hcanvas.style.display = "block";
+          document.getElementById('display-name-input').style.display = "block";
+          //document.getElementById('connecting').style.display = "block";
+          changelogPreview.style.display = "block";
+          document.getElementById('hometitle').style.display = "block";
+          subtitle.style.display = "block";
+          document.getElementById('subsubtitle').style.display = "block";
+          document.getElementById('gamemodeSelector').style.display = "block";
+          document.getElementById('left-buttons').style.display = "block";
+          document.getElementById('top-buttons').style.display = "block";
+          document.getElementById('right-buttons').style.display = "block";
+          document.getElementById('score').style.display = "none";
+          fpsCounter.style.display = "none";
+          let allOtherDebugDivs = document.querySelectorAll(".debug");
+          for(let i = 0; i < allOtherDebugDivs.length; i++){
+            document.getElementById(allOtherDebugDivs[i].id).className = "debug";
+          }
+          debugState = "close";
+          document.getElementById('deathScreen').classList.add('hidden');
         }
     </script>
 </body>
