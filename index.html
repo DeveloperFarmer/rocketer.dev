@@ -492,6 +492,7 @@
       #right-buttons {
         right: 0.15vmin;
         bottom: 0;
+        flex-direction: row;
       }
       #reddit {
         background-color: #f94404;
@@ -523,6 +524,18 @@
       #settings:hover {
         background-color: #acacac;
       }
+      #feedback {
+        background-color: #b58eff;
+      }
+      #feedback:hover {
+        background-color: #cbb0ff;
+      }
+      #reportbug {
+        background-color: #fdcdac;
+      }
+      #reportbug:hover {
+        background-color: #fedcc5;
+      }
       .hsButtons {
         width: 5.8vmin;
         height: 5.8vmin;
@@ -534,6 +547,15 @@
         display: flex;
         justify-content: center;
         align-items: center;
+      }
+      .hsButtons.text {
+        width: fit-content;
+        padding-left: 1vmin;
+        padding-right: 1vmin;
+        font-size: 3vmin;
+        font-weight: 700;
+        font-family: "Roboto", sans-serif;
+        text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
       }
       .material-icons.hsIcons {
         font-size: 4.5vmin;
@@ -665,7 +687,8 @@
       </button>
     </div>
     <div id="right-buttons" class="hsFlexbox">
-      <button id="reportbug" class="hsButtons"></button>
+      <button id="feedback" class="hsButtons text">Submit Feedback</button>
+      <button id="reportbug" class="hsButtons text">Report Bugs</button>
     </div>
     <div id="top-buttons" class="hsFlexbox">
       <button id="star" class="hsButtons">
