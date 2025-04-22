@@ -687,8 +687,8 @@
       </button>
     </div>
     <div id="right-buttons" class="hsFlexbox">
-      <button id="feedback" class="hsButtons text">Submit Feedback</button>
-      <button id="reportbug" class="hsButtons text">Report Bugs</button>
+      <button id="feedback" class="hsButtons text" onclick="bugs()">Submit Feedback</button>
+      <button id="reportbug" class="hsButtons text" onclick="bugs()">Report Bugs</button>
     </div>
     <div id="top-buttons" class="hsFlexbox">
       <button id="star" class="hsButtons">
@@ -717,7 +717,8 @@
     </div>
     <div id="blackScreen"></div>
     <div id="modal" class="modal"><h1 id="message-popup-title" class="modalText">Error</h1><hr><p id="message-popup-text"  class="modalTextSmall">Accounts will be added soon</p><hr><button id="ok-button" class="modalButton" onclick="closeModal()">OK</button></div>
-
+    <div id="modal2" class="modal"><h1 class="modalText">Feedback/Bugs</h1><hr><p class="modalTextSmall">Please join our Discord server!</p><hr><button class="modalButton" onclick="closeModal2()">OK</button></div>
+  
     <script>
         // Canvas setup
         const canvas = document.getElementById('gameCanvas');
@@ -1941,6 +1942,9 @@
           subtitle.style.display = "none";
           document.getElementById('subsubtitle').style.display = "none";
           document.getElementById('gamemodeSelector').style.display = "none";
+          document.getElementById('left-buttons').style.display = "none";
+          document.getElementById('top-buttons').style.display = "none";
+          document.getElementById('right-buttons').style.display = "none";
           //add game divs
           document.getElementById('score').style.display = "block";
           //open debug
@@ -2013,8 +2017,16 @@
           document.getElementById('modal').style.display = "block";
           document.getElementById('blackScreen').style.display = "block";
         }
+        function bugs(){//ingame method to report bugs, not ready yet
+          document.getElementById('modal2').style.display = "block";
+          document.getElementById('blackScreen').style.display = "block";
+        }
         function closeModal(){
           document.getElementById('modal').style.display = "none";
+          document.getElementById('blackScreen').style.display = "none";
+        }
+        function closeModal2(){
+          document.getElementById('modal2').style.display = "none";
           document.getElementById('blackScreen').style.display = "none";
         }
     </script>
