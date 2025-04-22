@@ -473,25 +473,25 @@
         ::-ms-input-placeholder { /* Edge 12 -18 */
           color: #b9b9b9;
         }
-      #left-buttons {
+      .hsFlexbox{/*for the button containers on the home screen*/
         position: fixed;
-        left: 0.15vmin;
-        bottom: 0;
         align-items: center;
         display: flex;
         flex-direction: column;
         gap: 0.15vmin;
         text-align: center;
       }
+      #left-buttons {
+        left: 0.15vmin;
+        bottom: 0;
+      }
       #top-buttons {
-        position: fixed;
         right: 0.15vmin;
         top: 0;
-        align-items: center;
-        display: flex;
-        flex-direction: column;
-        gap: 0.15vmin;
-        text-align: center;
+      }
+      #right-buttons {
+        right: 0.15vmin;
+        bottom: 0;
       }
       #reddit {
         background-color: #f94404;
@@ -556,6 +556,7 @@
         text-align: center;
         top: 50%;
         -webkit-transform: translateY(-50%) translateX(-50%);
+        display:none;
       }
       .modalButton{
         text-shadow: -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, 2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000, -2px 2px 0 #000, -2px 0 0 #000;
@@ -593,6 +594,15 @@
         max-height: 70vh;
         overflow-y: auto;
         padding: 0.5vw;
+      }
+      #blackScreen {
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            background-color: rgba(0, 0, 0, .5);
+            height: 100%;
+            width: 100%;
+            display: none;
       }
     </style>
 </head>
@@ -642,7 +652,7 @@
         <div id="regionArrow1">&lt;</div>
         <div id="regionArrow2">&gt;</div>
     </div>
-    <div id="left-buttons">
+    <div id="left-buttons" class="hsFlexbox">
       <button id="reddit" class="hsButtons">
         <span class="material-icons hsIcons" onclick="window.open('https://www.reddit.com/r/rocketer/')">
         reddit
@@ -654,20 +664,22 @@
         </span>
       </button>
     </div>
-    <div id="right-buttons"></div>
-    <div id="top-buttons">
+    <div id="right-buttons" class="hsFlexbox">
+      <button id="reportbug" class="hsButtons"></button>
+    </div>
+    <div id="top-buttons" class="hsFlexbox">
       <button id="star" class="hsButtons">
-        <span class="material-icons hsIcons" onclick="">
+        <span class="material-icons hsIcons" onclick="accounts()">
         star
         </span>
       </button>
       <button id="person" class="hsButtons">
-        <span class="material-icons hsIcons" onclick="">
+        <span class="material-icons hsIcons" onclick="accounts()">
         person
         </span>
       </button>
       <button id="settings" class="hsButtons">
-        <span class="material-icons hsIcons" onclick="">
+        <span class="material-icons hsIcons" onclick="accounts()">
         settings
         </span>
       </button>
@@ -680,8 +692,8 @@
           <hr /><button id="exit-changelog" class="modalButton">BACK</button>
         </div>
     </div>
-    <div i></div>
-    <div class="modal"><h1 id="message-popup-title" class="modalText">Error</h1><hr><p id="message-popup-text"  class="modalTextSmall">Accounts will be added soon</p><hr><button id="ok-button" class="modalButton">OK</button></div>
+    <div id="blackScreen"></div>
+    <div id="modal" class="modal"><h1 id="message-popup-title" class="modalText">Error</h1><hr><p id="message-popup-text"  class="modalTextSmall">Accounts will be added soon</p><hr><button id="ok-button" class="modalButton" onclick="closeModal()">OK</button></div>
 
     <script>
         // Canvas setup
@@ -1973,6 +1985,15 @@
           });
         }
         loadChangelog();
+      
+        function accounts(){//not ready yet
+          document.getElementById('modal').style.display = "block";
+          document.getElementById('blackScreen').style.display = "block";
+        }
+        function closeModal(){
+          document.getElementById('modal').style.display = "none";
+          document.getElementById('blackScreen').style.display = "none";
+        }
     </script>
 </body>
 </html>
