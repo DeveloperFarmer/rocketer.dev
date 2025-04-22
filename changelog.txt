@@ -1,6 +1,7 @@
 ALPHA 0.0.6 - April 22, 2025
 - Home screen looks more like scenexe now
 - Added player spawn particle effect, removed shape death particle effect
+- Improved death screen, added continue button
 
 ALPHA 0.0.5 - April 21, 2025
 - Added some animation when changing gamemode
