@@ -373,33 +373,37 @@
             align-items: center;
             z-index: 1000;
             color: white;
-            font-family: Arial, sans-serif;
+            font-weight: 900;
             text-align: center;
+            line-height: 0.5;
         }
         .death-content-top {
             position: fixed;
             left: 0;
-            bottom: 65%;
+            bottom: 60%;
             width: 100%;
             height: 30%;
+            line-height: 1;
         }
         .death-content-bottom {
             position: fixed;
             left: 0;
-            top: 55%;
+            top: 50%;
             width: 100%;
             height: 30%;
         }
 
         #deathScreen.hidden {
-            display: none;
+          display: none;
         }
 
         .deathScreenButton {
             background-color: white;
             color: black;
-            padding: 10px 20px;
-            font-size: 1.2vmin;
+            padding: .7vmin 1vmin;
+            font-size: 2.3vmin;
+            font-weight: 900;
+            font-family: "Roboto", sans-serif;
             border: .5vmin solid black;
             border-radius: 1vmin;
             cursor: pointer;
@@ -408,12 +412,6 @@
         }
         .deathScreenButton:hover {
             background-color: lightgrey;
-        }
-        #restartButton {
-          
-        }
-        #continueButton {
-          
         }
         #playButton {
             position: absolute;
@@ -659,15 +657,16 @@
     <div id="shapenumber" class="debug">Number of shapes: 0</div>
     <div id="dimension" class="debug">Dimension: PvE</div>
     <div id="drawnEntities" class="debug">Drawn Entities: xx</div>
-    <div id="deathScreen">
+    <div id="deathScreen" class="hidden">
         <div class="death-content-top">
             <h1 style="font-size: 5vmin;">You died!</h1>
             <p style="font-size: 2.5vmin;">you were killed by <span id="killer">???</span></p>
         </div>
         <div class="death-content-bottom">
-            <p>Level <span id="finalLvl">???</span> <span id="playerUpgrade">???-???</span></p>
-            <br><p>Time Played: <span id="totalTime">??:??:??</span></p>
-            <p>Score: <span id="finalScore">0</span></p>
+            <p style="font-size: 2.5vmin;">Level <span id="finalLvl">???</span> <span id="playerUpgrade">???-???</span></p>
+            <br><p style="font-size: 2.5vmin;">Time Played: <span id="totalTime">??:??:??</span></p>
+            <p style="font-size: 2.5vmin;">Score: <span id="finalScore">0</span></p>
+            <p style="font-size: 2.5vmin;">Kills: <span id="totalKills">0</span></p>
             <button id="restartButton" class="deathScreenButton">Play Again</button>
             <button id="continueButton" class="deathScreenButton">Continue</button>
         </div>
@@ -1811,6 +1810,7 @@
             shapenumberElement.textContent = `Number of shapes: ${MAX_SHAPES}`;
             dimensionElement.textContent = `Dimension: ${gamemode}`;
             document.getElementById('restartButton').addEventListener('click', restartGame);
+            document.getElementById('continueButton').addEventListener('click', restartGame);
         }
 
         // Game loop
