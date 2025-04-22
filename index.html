@@ -526,22 +526,22 @@
         background-color: #8b93f1;
       }
       #star {
-        background-color: #5b64ee;
+        background-color: #ffe449;
       }
-      #discord:hover {
-        background-color: #8b93f1;
+      #star:hover {
+        background-color: #ffec80;
       }
-      #discord {
-        background-color: #5b64ee;
+      #person {
+        background-color: #0092c3;
       }
-      #discord:hover {
-        background-color: #8b93f1;
+      #person:hover {
+        background-color: #4db3d5;
       }
-      #discord {
-        background-color: #5b64ee;
+      #settings {
+        background-color: #888888;
       }
-      #discord:hover {
-        background-color: #8b93f1;
+      #settings:hover {
+        background-color: #acacac;
       }
       .hsButtons {
         width: 5.8vmin;
@@ -558,6 +558,88 @@
       .material-icons.hsIcons {
         font-size: 4.5vmin;
         text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+      }
+      .modal{
+        line-height: 1.5;
+        font-size: 1vmin;
+        box-sizing: border-box;
+        background-color: rgba(0,0,0,.5);
+        border-radius: .5vmin;
+        box-shadow: 0 0 0 .4vmin #000;
+        color: #fff;
+        font-family: Roboto;
+        font-weight: 700;
+        left: 50%;
+        opacity: 1;
+        padding: 2vmin 3vmin;
+        position: fixed;
+        text-align: center;
+        top: 50%;
+        -webkit-transform: translateY(-50%) translateX(-50%);
+        transition: top .5s,opacity .5s;
+      }
+      .modalButton{
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: rgba(0,0,0,0);
+        -webkit-font-smoothing: antialiased;
+        box-sizing: border-box;
+        line-height: inherit;
+        overflow: visible;
+        text-transform: none;
+        -webkit-appearance: button;
+        border: none;
+        outline: none;
+        padding: .3vmin 4vmin;
+        transition: background-color .2s ease;
+        cursor: pointer;
+        margin-bottom: .5vmin;
+        margin-top: .5vmin;
+        background-color: rgba(0,0,0,.5);
+        border-radius: .5vmin;
+        box-shadow: 0 0 0 .4vmin #000;
+        color: #fff;
+        font-family: Roboto;
+        font-size: 1.8vmin;
+        font-weight: 700;
+        height: auto;
+        margin-left: 1vmin;
+        margin-right: 1vmin;
+        padding-left: 1vmin;
+        padding-right: 1vmin;
+        text-align: center;
+        white-space: nowrap;
+        width: auto;
+      }
+      .modalText{
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: rgba(0,0,0,0);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        color: #fff;
+        box-sizing: border-box;
+        font-size: 3.5vmin;
+        text-align: center;
+        font-family: Roboto;
+        font-weight: 700;
+        margin-bottom: .5vmin;
+        margin-top: .5vmin;
+      }
+      .modalTextSmall{
+        -webkit-text-size-adjust: 100%;
+        -webkit-tap-highlight-color: rgba(0,0,0,0);
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        color: #fff;
+        box-sizing: border-box;
+        font-size: 2vmin;
+        font-family: Roboto;
+        font-weight: 400;
+        margin: 1vmin;
+        text-align: center;
+        margin-bottom: .5vmin;
+        margin-top: .5vmin;
+        overflow-y: scroll;
+        max-height: 70vh;
       }
     </style>
 </head>
@@ -645,6 +727,7 @@
           <hr /><button id="exit-changelog">BACK</button>
         </div>
     </div>
+    <div class="modal"><h1 id="message-popup-title" class="modalText">Error</h1><hr><p id="message-popup-text"  class="modalTextSmall" style="overflow-y: auto; max-height: 70vh;padding: 0.5vw;">Accounts will be added soon</p><hr><button id="ok-button" class="modalButton">OK</button></div>
 
     <script>
         // Canvas setup
