@@ -503,22 +503,39 @@
         gap: 0.5vmin;
       }
       #reddit {
-        width: 5vmin;
-        height: 5vmin;
-        background-color: red;
-        border: .5vmin solid black;
-        border-radius: 1vmin;
+        background-color: #f94404;
+      }
+      #reddit:hover {
+        background-color: #f97b4b;
       }
       #discord {
+        background-color: #5b64ee;
+      }
+      #discord:hover {
+        background-color: #8b93f1;
+      }
+      .hsButtons {
         width: 5vmin;
         height: 5vmin;
-        background-color: blue;
         border: .5vmin solid black;
         border-radius: 1vmin;
+        cursor: pointer;
+        color: white;
+      }
+      .hsIcons {
+        font-size: 4vmin;
+        position: absolute;
+        top: calc(50% - 1.1vw);
+        left: calc(50% - 1.1vw);
+        text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
       }
     </style>
 </head>
 <body>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -561,8 +578,15 @@
         <div id="regionArrow2">&gt;</div>
     </div>
     <div id="left-buttons">
-      <button id="reddit"></button>
-      <button id="discord"></button>
+      <button id="reddit" class="hsButtons">
+        <span
+        class="hsIcons material-icons"
+        onclick="window.open('https://www.reddit.com/r/rocketer/')"
+      >
+        reddit
+      </span>
+      </button>
+      <button id="discord" class="hsButtons"></button>
     </div>
     <div id="right-buttons"></div>
     <div id="top-buttons"></div>
