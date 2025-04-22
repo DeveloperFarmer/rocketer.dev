@@ -495,12 +495,22 @@
         }
       #left-buttons {
         position: fixed;
-        left: 0.1vmin;
+        left: 0.15vmin;
         bottom: 0;
         align-items: center;
         display: flex;
         flex-direction: column;
-        gap: 0.1vmin;
+        gap: 0.15vmin;
+        text-align: center;
+      }
+      #top-buttons {
+        position: fixed;
+        right: 0.15vmin;
+        top: 0;
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15vmin;
         text-align: center;
       }
       #reddit {
@@ -515,17 +525,39 @@
       #discord:hover {
         background-color: #8b93f1;
       }
+      #star {
+        background-color: #5b64ee;
+      }
+      #discord:hover {
+        background-color: #8b93f1;
+      }
+      #discord {
+        background-color: #5b64ee;
+      }
+      #discord:hover {
+        background-color: #8b93f1;
+      }
+      #discord {
+        background-color: #5b64ee;
+      }
+      #discord:hover {
+        background-color: #8b93f1;
+      }
       .hsButtons {
-        width: 6vmin;
-        height: 6vmin;
+        width: 5.8vmin;
+        height: 5.8vmin;
         border: .5vmin solid black;
         border-radius: 1vmin;
         cursor: pointer;
         color: white;
+        /*center the icon using flex, cuz text-align center doesnt work for the icon*/
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
       .material-icons.hsIcons {
-        font-size: 3vmin;
-        text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
+        font-size: 4.5vmin;
+        text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
       }
     </style>
 </head>
@@ -588,7 +620,23 @@
       </button>
     </div>
     <div id="right-buttons"></div>
-    <div id="top-buttons"></div>
+    <div id="top-buttons">
+      <button id="star" class="hsButtons">
+        <span class="material-icons hsIcons" onclick="">
+        star
+        </span>
+      </button>
+      <button id="person" class="hsButtons">
+        <span class="material-icons hsIcons" onclick="">
+        person
+        </span>
+      </button>
+      <button id="settings" class="hsButtons">
+        <span class="material-icons hsIcons" onclick="">
+        settings
+        </span>
+      </button>
+    </div>
     <div id="full-changelog">
         <div id="changelogtextdiv">
           <h1>Changelog</h1>
