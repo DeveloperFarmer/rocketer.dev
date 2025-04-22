@@ -1066,7 +1066,7 @@
                                 this.owner.score += 10;
                                 score += 10;
                                 scoreElement.textContent = `Score: ${score}`;
-                                createParticles(enemy.x, enemy.y, enemy.color, 15);
+                                //createParticles(enemy.x, enemy.y, enemy.color, enemy.outline, 15);
                                 enemies.splice(i, 1);
                                 spawnEnemy();
                             }
@@ -1087,7 +1087,7 @@
                                 score += points;
                                 scoreElement.textContent = `Score: ${score}`;
 
-                                createParticles(shape.x, shape.y, shape.color, 8);
+                                //createParticles(shape.x, shape.y, shape.color, shape.outline, 8);
                                 shapes.splice(i, 1);
                                 setTimeout(spawnShape, 1000); // Respawn after delay
                             }
@@ -1506,14 +1506,16 @@
 
         // Particle class for effects
         class Particle {
-            constructor(x, y, color) {
+            constructor(x, y, color, outline) {
                 this.x = x;
                 this.y = y;
                 this.color = color;
-                this.radius = Math.random() * 3 + 1;
+                this.outline = outline;
+                //this.radius = Math.random() * 3 + 1;
+                this.radius = Math.random() * 5 + 10;
                 this.dx = (Math.random() - 0.5) * 5;
                 this.dy = (Math.random() - 0.5) * 5;
-                this.lifetime = 30 + Math.random() * 30;
+                this.lifetime = 40 + Math.random() * 10;
                 this.alpha = 1;
             }
 
@@ -1521,7 +1523,11 @@
                 this.x += this.dx;
                 this.y += this.dy;
                 this.lifetime--;
-                this.alpha = this.lifetime / 60;
+                //this.alpha = this.lifetime / 60;
+                if (this.lifetime < 25){
+                  this.alpha-=0.05;
+                  if (this.alpha < 0){this.alpha = 0;}
+                }
                 return this.lifetime <= 0;
             }
 
@@ -1536,17 +1542,11 @@
                     ctx.save();
                     ctx.globalAlpha = this.alpha;
                     ctx.fillStyle = this.color;
+                    ctx.strokeStyle = this.outline;
                     ctx.strokeStyle = this.color;
                     ctx.beginPath();
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
-                    //make outline more opaque
-                    if ((this.alpha + 0.3)>1){
-                      ctx.globalAlpha = 1;
-                    }
-                    else{
-                      ctx.globalAlpha = this.alpha + 0.3;
-                    }
                     ctx.stroke();
                     ctx.restore();
                     numberOfObjectsDrawn++;
@@ -1554,9 +1554,9 @@
             }
         }
 
-        function createParticles(x, y, color, count) {
+        function createParticles(x, y, color, outline, count) {
             for (let i = 0; i < count; i++) {
-                particles.push(new Particle(x, y, color));
+                particles.push(new Particle(x, y, color, outline));
             }
         }
 
@@ -1775,6 +1775,7 @@
         // Game initialization
         function init() {
             players.push(new Player(MAP_WIDTH / 2, MAP_HEIGHT / 2));
+            createParticles(MAP_WIDTH / 2, MAP_HEIGHT / 2, players[0].color, players[0].outline, 15);
             
             // Spawn initial enemies
             for (let i = 0; i < MAX_BOTS; i++) {
