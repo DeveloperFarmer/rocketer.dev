@@ -493,6 +493,29 @@
         ::-ms-input-placeholder { /* Edge 12 -18 */
           color: #b9b9b9;
         }
+      #left-buttons {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5vmin;
+      }
+      #reddit {
+        width: 5vmin;
+        height: 5vmin;
+        background-color: red;
+        border: .5vmin solid black;
+        border-radius: 1vmin;
+      }
+      #discord {
+        width: 5vmin;
+        height: 5vmin;
+        background-color: blue;
+        border: .5vmin solid black;
+        border-radius: 1vmin;
+      }
     </style>
 </head>
 <body>
@@ -537,6 +560,12 @@
         <div id="regionArrow1">&lt;</div>
         <div id="regionArrow2">&gt;</div>
     </div>
+    <div id="left-buttons">
+      <button id="reddit"></button>
+      <button id="discord"></button>
+    </div>
+    <div id="right-buttons"></div>
+    <div id="top-buttons"></div>
     <div id="full-changelog">
         <div id="changelogtextdiv">
           <h1>Changelog</h1>
