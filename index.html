@@ -383,25 +383,42 @@
             border-radius: 10px;
             border: 2px solid #e74c3c;
         }
+        .death-content-top {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        .death-content-bottom {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+        }
 
         #deathScreen.hidden {
             display: none;
         }
 
-        #restartButton {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
+        .deathScreenButton {
+            background-color: white;
+            color: black;
             padding: 10px 20px;
-            font-size: 1.2rem;
-            border-radius: 5px;
+            font-size: 1.2vmin;
+            border: .5vmin solid black;
+            border-radius: 1vmin;
             cursor: pointer;
             margin-top: 20px;
             transition: background-color 0.3s;
         }
-
-        #restartButton:hover {
-            background-color: #c0392b;
+        .deathScreenButton:hover {
+            background-color: lightgrey;
+        }
+        #restartButton {
+          
+        }
+        #continueButton {
+          
         }
         #playButton {
             position: absolute;
@@ -648,11 +665,19 @@
     <div id="dimension" class="debug">Dimension: PvE</div>
     <div id="drawnEntities" class="debug">Drawn Entities: xx</div>
     <div id="deathScreen" class="hidden">
-        <div class="death-content">
-            <h1>Game Over!</h1>
-            <p>Final Score: <span id="finalScore">0</span></p>
-            <button id="restartButton">Play Again</button>
+      <div class="death-content">
+        <div class="death-content-top">
+            <h1>You died!</h1>
+            <p>you were killed by <span id="killer">???</span></p>
         </div>
+        <div class="death-content-bottom">
+            <p>Level <span id="finalLvl">???</span> <span id="playerUpgrade">???-???</span></p>
+            <br><p>Time Played: <span id="totalTime">??:??:??</span></p>
+            <p>Score: <span id="finalScore">0</span></p>
+            <button id="restartButton" class="deathScreenButton">Play Again</button>
+            <button id="continueButton" class="deathScreenButton">Continue</button>
+        </div>
+      </div>
     </div>
     <canvas id="homeScreen"></canvas>
     <div id="ovalAnimation"></div>
