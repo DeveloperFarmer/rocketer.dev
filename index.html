@@ -1395,6 +1395,20 @@
                   0.00005,
                   0.00005
                 ]//NOTE: 2 IS THE MAXIMUM because 2*Math.PI is 360 degrees
+                const shapeNames = [
+                  "Square",
+                  "Triangle",
+                  "Pentagon",
+                  "Hexagon",
+                  "Heptagon",
+                  "Octagon",
+                  "Nonagon",
+                  "Decagon",
+                  "Hendecagon",
+                  "Dodecagon",
+                  "Tridecagon",
+                  "Tetradecagon"
+                ]
                 //add support for bigger shapes in the future
         class Shape {
             constructor(x, y) {
@@ -1510,6 +1524,25 @@
                   ctx.beginPath();
                   ctx.arc(0, 0, this.size/2, 0, 2 * Math.PI);
                   ctx.stroke();
+                  //write shape name
+                  ctx.fillStyle = "white";
+                  ctx.strokeStyle = "black";
+                  ctx.lineWidth = 5;
+                  ctx.font = "700 50px Roboto";
+                  ctx.textAlign = "center";
+                  let name = "";
+                  let radtier = 0;//not radiant
+                  if (radtier == 1){name = "Radiant "}
+                  else if (radtier == 2){name = "Gleaming "}
+                  else if (radtier == 3){name = "Luminous "}
+                  else if (radtier == 4){name = "Lustrous "}
+                  else if (radtier == 5){name = "Highly Radiant "}
+                  name += shapeNames[this.type];
+                  ctx.strokeText(name,0,0 - this.size/2 - 45);
+                  ctx.fillText(name,0,0 - this.size/2 - 45);
+                  ctx.font = "700 20px Roboto";
+                  ctx.strokeText("Lv. 1",0,0 - this.size/2 - 20);
+                  ctx.fillText("Lv. 1",0,0 - this.size/2 - 20);
                 }
 
                 ctx.restore();
