@@ -1525,10 +1525,11 @@
                   ctx.arc(0, 0, this.size/2, 0, 2 * Math.PI);
                   ctx.stroke();
                   //write shape name
+                  ctx.rotate(-this.rotation);
                   ctx.fillStyle = "white";
                   ctx.strokeStyle = "black";
-                  ctx.lineWidth = 5;
-                  ctx.font = "700 50px Roboto";
+                  ctx.lineWidth = 9;
+                  ctx.font = "700 30px Roboto";
                   ctx.textAlign = "center";
                   let name = "";
                   let radtier = 0;//not radiant
@@ -1540,9 +1541,9 @@
                   name += shapeNames[this.type];
                   ctx.strokeText(name,0,0 - this.size/2 - 45);
                   ctx.fillText(name,0,0 - this.size/2 - 45);
-                  ctx.font = "700 20px Roboto";
-                  ctx.strokeText("Lv. 1",0,0 - this.size/2 - 20);
-                  ctx.fillText("Lv. 1",0,0 - this.size/2 - 20);
+                  ctx.font = "700 15px Roboto";
+                  ctx.strokeText("lv. 1",0,0 - this.size/2 - 20);
+                  ctx.fillText("lv. 1",0,0 - this.size/2 - 20);
                 }
 
                 ctx.restore();
