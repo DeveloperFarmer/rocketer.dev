@@ -495,12 +495,13 @@
         }
       #left-buttons {
         position: fixed;
-        left: 0;
+        left: 0.1vmin;
         bottom: 0;
         align-items: center;
         display: flex;
         flex-direction: column;
-        gap: 0.5vmin;
+        gap: 0.1vmin;
+        text-align: center;
       }
       #reddit {
         background-color: #f94404;
@@ -515,18 +516,15 @@
         background-color: #8b93f1;
       }
       .hsButtons {
-        width: 5vmin;
-        height: 5vmin;
+        width: 6vmin;
+        height: 6vmin;
         border: .5vmin solid black;
         border-radius: 1vmin;
         cursor: pointer;
         color: white;
       }
-      .hsIcons {
-        font-size: 4vmin;
-        position: absolute;
-        top: calc(50% - 1.1vw);
-        left: calc(50% - 1.1vw);
+      .material-icons.hsIcons {
+        font-size: 3vmin;
         text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
       }
     </style>
@@ -579,14 +577,15 @@
     </div>
     <div id="left-buttons">
       <button id="reddit" class="hsButtons">
-        <span
-        class="hsIcons material-icons"
-        onclick="window.open('https://www.reddit.com/r/rocketer/')"
-      >
+        <span class="material-icons hsIcons" onclick="window.open('https://www.reddit.com/r/rocketer/')">
         reddit
-      </span>
+        </span>
       </button>
-      <button id="discord" class="hsButtons"></button>
+      <button id="discord" class="hsButtons">
+        <span class="material-icons hsIcons" onclick="window.open('https://discord.com/invite/R83VfCXDFN')">
+        discord
+        </span>
+      </button>
     </div>
     <div id="right-buttons"></div>
     <div id="top-buttons"></div>
