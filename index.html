@@ -837,6 +837,7 @@
         let MAX_SHAPES = 50;
         let MAX_BOTS = 10;
         let shapeID = 0;
+        let botID = 0;
         const gamemodeList = ["PvE arena","Free For All","2 Teams","4 Teams","Tank Editor"];
         const gamemodeColorsLight = ["#D82BCF","#F04F54","#BE7FF5","#00E06C","#00B0E1"];
         const gamemodeColors = ["#BA0DB1","#D23136","#A061D7","#00C24E","#0092C3"];//for home screen
@@ -1273,6 +1274,11 @@
                 this.barrelWidth = botRadius/1.5;
                 this.bulletDamage = 2;
                 this.bulletPenetration = 5;
+                this.id = botID;
+                botID++;
+                if (botID > 10000){//max 10k bots, also prevent ID from getting too big
+                  botID = 0;
+                }
             }
 
             update() {
@@ -1321,13 +1327,7 @@
                                 this.x -= pushX * separation;
                                 this.y -= pushY * separation;
                                 bot.x += pushX * separation;
-                                shape.y += pushY * separation;
-                                
-                                // Adjust circular centers to maintain orbits
-                                this.circleCenter.x -= pushX * separation;
-                                this.circleCenter.y -= pushY * separation;
-                                shape.circleCenter.x += pushX * separation;
-                                shape.circleCenter.y += pushY * separation;
+                                bot.y += pushY * separation;
                             }
                             else{//normal collision
                                 const nx = dx / dist;
@@ -1337,26 +1337,12 @@
                                 const moveY = ny * overlap * 0.5;
                                 //bounce
                                 const bounceFactor = 0.3;
-                                const relativeSpeed = 1;
+                                const relativeSpeed = 1;//dont change this
                                 // Apply separation (both shapes move half the distance) + bounce
                                 this.x -= (moveX + nx * relativeSpeed * bounceFactor);
                                 this.y -= (moveY + ny * relativeSpeed * bounceFactor);
-                                shape.x += (moveX + nx * relativeSpeed * bounceFactor);
-                                shape.y += (moveY + ny * relativeSpeed * bounceFactor);
-                                // Adjust circular centers to maintain orbits
-                                this.circleCenter.x -= (moveX + nx * relativeSpeed * bounceFactor);
-                                this.circleCenter.y -= (moveY + ny * relativeSpeed * bounceFactor);
-                                shape.circleCenter.x += (moveX + nx * relativeSpeed * bounceFactor);
-                                shape.circleCenter.y += (moveY + ny * relativeSpeed * bounceFactor);
-                                //bounce
-                              /*
-                                const bounceFactor = 0.3;
-                                const relativeSpeed = 1;
-                                this.x -= nx * relativeSpeed * bounceFactor;
-                                this.y -= ny * relativeSpeed * bounceFactor;
-                                shape.x += nx * relativeSpeed * bounceFactor;
-                                shape.y += ny * relativeSpeed * bounceFactor;
-                                */
+                                bot.x += (moveX + nx * relativeSpeed * bounceFactor);
+                                bot.y += (moveY + ny * relativeSpeed * bounceFactor);
                             }
                         }
                     }
@@ -1572,6 +1558,9 @@
                 //this.rotationSpeed = (Math.random() - 0.5) * 0.02;
                 this.id = shapeID;
                 shapeID++;
+                if (shapeID > 10000){//max 10k shapes, also prevent ID from getting too big
+                  shapeID = 0;
+                }
                 // Circular movement properties
                 this.circleCenter = {x: x,y: y};
                 this.circleRadius = 100;
