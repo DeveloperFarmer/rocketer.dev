@@ -652,12 +652,37 @@
             display: none;
       }
       #loadingWords {
-        position: absolute;
-        top: 50%;
+        position: fixed;
         left: 50%;
         -webkit-transform: translateY(-50%) translateX(-50%);
         font-size: 7vmin;
         font-weight: 900;
+        text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+      }
+      #loadingWords1 {
+        top: 50%;
+        -webkit-transform: translateY(-50%) translateX(-50%);
+        font-size: 4vmin;
+        font-weight: 900;
+        text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+      }
+      #loadingWords2 {
+        position: absolute;
+        top: 56%;
+        left: 50%;
+        -webkit-transform: translateY(-50%) translateX(-50%);
+        font-size: 2vmin;
+        font-weight: 900;
+        text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+      }
+      #loadingWords3 {
+        position: absolute;
+        top: 56%;
+        left: 50%;
+        -webkit-transform: translateY(-50%) translateX(-50%);
+        font-size: 2vmin;
+        font-weight: 900;
+        text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
       }
     </style>
 </head>
@@ -763,7 +788,7 @@
     <div id="blackScreen"></div>
     <div id="modal" class="modal"><h1 id="message-popup-title" class="modalText">Error</h1><hr><p id="message-popup-text"  class="modalTextSmall">Accounts will be added soon</p><hr><button id="ok-button" class="modalButton" onclick="closeModal()">OK</button></div>
     <div id="modal2" class="modal"><h1 class="modalText">Feedback/Bugs</h1><hr><p class="modalTextSmall">Please join our Discord server!</p><hr><button class="modalButton" onclick="closeModal2()">OK</button></div>
-    <div id="loadingWords">Joining Server...</div>
+    <div id="loadingWords"><span id="loadingWords1">Joining Server...</span><span id="loadingWords2">If this takes too long, there might be a problem with the server or your connection.</span><span id="loadingWords3">Reloading the page may fix the problem.</span></div>
   
     <script>
         // Canvas setup
