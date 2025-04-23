@@ -653,36 +653,44 @@
       }
       #loadingWords {
         position: fixed;
-        left: 50%;
-        -webkit-transform: translateY(-50%) translateX(-50%);
-        font-size: 7vmin;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        font-size: 10vmin;
         font-weight: 900;
         text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+        line-height: 1.5;
+        display: none;
       }
       #loadingWords1 {
-        top: 50%;
+        position: fixed;
+        left: 50%;
+        top: 47%;
         -webkit-transform: translateY(-50%) translateX(-50%);
-        font-size: 4vmin;
-        font-weight: 900;
-        text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+          animation-name: opacityFade;
+          animation-duration: 1s;
+        display: none;
       }
       #loadingWords2 {
-        position: absolute;
-        top: 56%;
+        position: fixed;
         left: 50%;
+        top: 55%;
         -webkit-transform: translateY(-50%) translateX(-50%);
-        font-size: 2vmin;
-        font-weight: 900;
-        text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+        font-size: 2.5vmin;
+          animation-name: opacityFade;
+          animation-duration: 1s;
+        display: none;
       }
       #loadingWords3 {
-        position: absolute;
-        top: 56%;
+        position: fixed;
         left: 50%;
+        top: 59%;
         -webkit-transform: translateY(-50%) translateX(-50%);
         font-size: 2vmin;
-        font-weight: 900;
-        text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+          animation-name: opacityFade;
+          animation-duration: 1s;
+        display: none;
       }
     </style>
 </head>
@@ -2083,6 +2091,18 @@
           }
           debugState = "open";
           //start the game
+          document.getElementById('loadingWords').style.display = "block";
+          document.getElementById('loadingWords1').style.display = "block";
+          setTimeout(() => {
+            if (document.getElementById('loadingWords1').style.display == "block"){
+              document.getElementById('loadingWords2').style.display = "block";
+            }
+          }, 5000);//if still on loading screen 5 seconds later, add the next loading screen words
+          setTimeout(() => {
+            if (document.getElementById('loadingWords2').style.display == "block"){
+              document.getElementById('loadingWords3').style.display = "block";
+            }
+          }, 15000);//if still on loading screen 15 seconds later, add the next loading screen words
           init();
           gameLoop();
         }
