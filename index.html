@@ -1514,6 +1514,24 @@
 
             update() {
                 this.rotation += this.rotationSpeed;
+                for (let i = shapes.length - 1; i >= 0; i--) {
+                        const shape = shapes[i];
+                        const dist = Math.hypot(this.x - shape.x, this.y - shape.y);
+                        if (dist < this.radius + shape.radius) {
+                            // 2 shapes touching each other
+                            enemy.health -= this.damage;
+                            this.health--;//reduce bullet health
+                            if (enemy.health <= 0) {
+                                this.owner.score += 10;
+                                score += 10;
+                                scoreElement.textContent = `Score: ${score}`;
+                                //createParticles(enemy.x, enemy.y, enemy.color, enemy.outline, 15);
+                                enemies.splice(i, 1);
+                                spawnEnemy();
+                            }
+                            //return true; // Mark for removal
+                        }
+                    }
             }
 
             draw() {
@@ -1918,6 +1936,14 @@
             dimensionElement.textContent = `Dimension: ${gamemode}`;
             document.getElementById('restartButton').addEventListener('click', restartGame);
             document.getElementById('continueButton').addEventListener('click', returnToHomeScreen);
+            connectedToServer()
+        }
+      
+        function connectedToServer(){
+          document.getElementById('loadingWords').style.display = "none";
+          document.getElementById('loadingWords1').style.display = "none";
+          document.getElementById('loadingWords2').style.display = "none";
+          document.getElementById('loadingWords3').style.display = "none";
         }
 
         // Game loop
@@ -1993,6 +2019,9 @@
             }
             else if (clientTick > 15){
               clientTickDiv.style.color = "red";
+            }
+            else{
+              clientTickDiv.style.color = "white";
             }
             clientTickDiv.textContent = "Client Tick Time: " + Math.round(clientTick * 10) / 10 + "ms";//change to 1 decimal place
             clientTick = performance.now() - starting;
