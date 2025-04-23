@@ -1683,6 +1683,14 @@
                 ctx.rotate(this.rotation);
                 ctx.fillStyle = this.color;
                 ctx.strokeStyle = this.outline;
+                if (this.isHit){
+                  this.shade += 0.01;
+                  if (this.shade > this.maxshade){
+                    this.shade = this.maxshade;
+                  }
+                  ctx.fillStyle = pSBC ( this.shade, this.color );
+                  ctx.strokeStyle = pSBC ( this.shade, this.outline );
+                }
                 ctx.lineJoin = "round";//to make shape corners round
                 ctx.lineWidth = 4;
 
@@ -1776,6 +1784,15 @@
                     );
                     ctx.fill();
                 numberOfObjectsDrawn++;
+                if (this.isHit){
+                  this.isHit = false;//reset every loop AFTER drawing
+                }
+                else if (this.shade!=0){//if not hit, reduce shade
+                  this.shade -= 0.01;
+                  if (this.shade < 0){
+                    this.shade = 0;
+                  }
+                }
             }
 
             isOnScreen(x, y) {
