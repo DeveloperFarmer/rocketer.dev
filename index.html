@@ -447,9 +447,15 @@
             animation-name: opacityFade;/*whenever you change the display from none to block*/
             animation-duration: .5s;
         }
-
         #playButton:hover {
             background-color: #48f083;
+        }
+        #respawnInfo {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            font-size: 2vmin;
+            -webkit-transform: translateY(-50%) translateX(-50%);
         }
         #connecting {
           position: absolute;
@@ -752,6 +758,7 @@
         <div id="regionArrow1">&lt;</div>
         <div id="regionArrow2">&gt;</div>
     </div>
+    <div id="respawnInfo">You will respawn at level <span id="respawnLvl">0</span></div>
     <div id="left-buttons" class="hsFlexbox">
       <button id="reddit" class="hsButtons">
         <span class="material-icons hsIcons" onclick="window.open('https://www.reddit.com/r/rocketer/')">
@@ -972,6 +979,9 @@
             if (shortValue % 1 != 0) shortValue = shortValue.toFixed(1);
             return shortValue + suffixes[suffixNum];
           }
+          else{
+            return score;
+          }
         }
         // Player class
         class Player {
@@ -1176,7 +1186,7 @@
                             enemy.isHit = true;
                             this.isHit = true;
                             if (enemy.health <= 0) {
-                                this.owner.score += 1000;
+                                this.owner.score += 100000;//bots give 0.1m score
                                 score = abbreviateScore(this.owner.score);
                                 scoreElement.textContent = `Score: ${score}`;
                                 //createParticles(enemy.x, enemy.y, enemy.color, enemy.outline, 15);
@@ -1197,8 +1207,7 @@
                             this.isHit = true;
                             if (shape.health <= 0) {
                                 // Add score based on shape type
-                                const points = shapescores[shape.type];
-                                this.owner.score += points;
+                                this.owner.score += shapescores[shape.type];
                                 score = abbreviateScore(this.owner.score);
                                 scoreElement.textContent = `Score: ${score}`;
 
@@ -1537,19 +1546,19 @@
                     3500
                 ];
                 const shapescores = [
-                    10,
-                    5,
-                    20,
-                    30,
-                    50,
-                    150,
-                    500,
-                    2000,
-                    5000,
-                    9000,
-                    14000,
-                    20000
-                ]
+                    1250,
+                    250,
+                    5250,
+                    21250,
+                    85250,
+                    341250,
+                    1365250,
+                    5461250,
+                    21845250,
+                    87381250,
+                    349525250,
+                    1398101250
+                ]//copied from scenexe, do not modify
                 const shapeRotationSpeed = [
                   0.002,
                   0.01,
