@@ -1237,6 +1237,8 @@
             }
         }
 
+        const possibleBotColors = ["#dbab1a","#db861e","#db571e"];
+        const possibleBotOutlines = ["#bd8d00","#bd6800","#bd3900"];//when convert hex to rgb, the rgb outline should be 30 less than rgb color, e.g. outline is rgb(0,0,0) then color is rgb(30,30,30)
         // Enemy class
         class Enemy {
             constructor() {
@@ -1261,11 +1263,14 @@
                         break;
                 }
                 
-                const hslColor = Math.random() * 60;
                 const botRadius = 20 + Math.random() * 30;
                 this.radius = botRadius;
-                this.color = `hsl(${hslColor}, 70%, 50%)`;
-                this.outline = `hsl(${hslColor}, 50%, 50%)`;//darker saturation
+                let botType = Math.floor(Math.random() * possibleBotColors.length);
+                //const hslColor = Math.random() * 60;
+                //this.color = `hsl(${hslColor}, 70%, 50%)`;
+                //this.outline = `hsl(${hslColor}, 50%, 50%)`;//darker saturation
+                this.color = possibleBotColors[botType];
+                this.outline = possibleBotOutlines[botType];
                 this.speed = 1 + Math.random() * 2;
                 const health = 100;
                 this.health = health;
@@ -1280,6 +1285,9 @@
                 if (botID > 10000){//max 10k bots, also prevent ID from getting too big
                   botID = 0;
                 }
+                this.shade = 0;//shade indicates how white it turns when colliding
+                this.maxshade = 0.5;//bots turn 50% whiter when hit
+                this.isHit = false;
             }
 
             update() {
@@ -1360,6 +1368,16 @@
                     // Draw enemy body
                     ctx.fillStyle = this.color;
                     ctx.strokeStyle = this.outline;
+                    if (this.isHit){//if bot collided with player or bullet
+                      this.shade += (this.maxshade/25);//make bot whiter
+                      if (this.shade > this.maxshade){
+                        this.shade = this.maxshade;
+                      }
+                    }
+                    if (this.shade>0){//even if not hit, still need to animate from whitish color to normal bot color
+                      ctx.fillStyle = pSBC ( this.shade, this.color );
+                      ctx.strokeStyle = pSBC ( this.shade, this.outline );
+                    }
                     ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
@@ -1393,6 +1411,15 @@
                     );
                     ctx.fill();
                     numberOfObjectsDrawn++;
+                    if (this.isHit){
+                      this.isHit = false;//reset every loop AFTER drawing
+                    }
+                    else if (this.shade!=0){//if not hit, reduce shade
+                      this.shade -= (this.maxshade/25);
+                      if (this.shade < 0){
+                        this.shade = 0;
+                      }
+                    }
                 }
             }
             
