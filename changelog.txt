@@ -3,6 +3,7 @@ ALPHA 0.0.7 - April 23, 2025
 - Added shape collision
 - Added enemy collision
 - Added shape movement
+- Added shape mass
 
 ALPHA 0.0.6 - April 22, 2025
 - Home screen looks more like scenexe now
