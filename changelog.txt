@@ -1,3 +1,9 @@
+ALPHA 0.0.7 - April 23, 2025
+- Added joining server waiting screen
+- Added shape collision
+- Added enemy collision
+- Added shape movement
+
 ALPHA 0.0.6 - April 22, 2025
 - Home screen looks more like scenexe now
 - Added player spawn particle effect, removed shape death particle effect
