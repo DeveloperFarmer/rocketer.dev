@@ -651,6 +651,14 @@
             width: 100%;
             display: none;
       }
+      #loadingWords {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        -webkit-transform: translateY(-50%) translateX(-50%);
+        font-size: 4vmin;
+        font-weight: 900;
+      }
     </style>
 </head>
 <body>
@@ -755,6 +763,7 @@
     <div id="blackScreen"></div>
     <div id="modal" class="modal"><h1 id="message-popup-title" class="modalText">Error</h1><hr><p id="message-popup-text"  class="modalTextSmall">Accounts will be added soon</p><hr><button id="ok-button" class="modalButton" onclick="closeModal()">OK</button></div>
     <div id="modal2" class="modal"><h1 class="modalText">Feedback/Bugs</h1><hr><p class="modalTextSmall">Please join our Discord server!</p><hr><button class="modalButton" onclick="closeModal2()">OK</button></div>
+    <div id="loadingWords">Joining Server...</div>
   
     <script>
         // Canvas setup
@@ -774,6 +783,7 @@
         const gamemodeTitle = document.getElementById('gamemodeTitle');
         const gamemodeTitleAnimation = document.getElementById('gamemodeTitleAnimation');//for animating purposes
         const oval = document.getElementById('ovalAnimation');//also for the animation
+        const clientTickDiv = document.getElementById('clienttick');
         document.getElementById('exit-changelog').addEventListener("click", () => {
           fullchangelog.style.display = "none";
         });
@@ -1880,6 +1890,7 @@
         // Game loop
         function gameLoop() {
             if (isGamePaused) return;//dont do anything if at death screen
+            starting = Date.now();//for client tick time
             numberOfObjectsDrawn = 0;
             // Clear canvas by drawing over
             ctx.fillStyle = '#CDCDCD';
@@ -1943,6 +1954,15 @@
                   fps >= 60 ? 'high' : 
                   fps >= 30 ? 'medium' : 'low';
             }
+            //update tick time
+            if (clientTick > 5){
+              clientTickDiv.style.color = "yellow";
+            }
+            else if (clientTick > 15){
+              clientTickDiv.style.color = "red";
+            }
+            clientTickDiv.textContent = "Client Tick Time: " + clientTick + "ms";
+            clientTick = Date.now() - starting;
 
             requestAnimationFrame(gameLoop);
         }
