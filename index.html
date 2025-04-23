@@ -793,10 +793,10 @@
         const shapes = [];
         let MAX_SHAPES = 50;
         let MAX_BOTS = 10;
-        const gamemodeList = ["PvE arena","Free For All","2 Teams","4 Teams"];
-        const gamemodeColorsLight = ["#D82BCF","#F04F54","#BE7FF5","#00E06C"];
-        const gamemodeColors = ["#BA0DB1","#D23136","#A061D7","#00C24E"];//for home screen
-        const serverLocations = ["local","Sweden","Sweden","Sweden"]
+        const gamemodeList = ["PvE arena","Free For All","2 Teams","4 Teams","Tank Editor"];
+        const gamemodeColorsLight = ["#D82BCF","#F04F54","#BE7FF5","#00E06C","#00B0E1"];
+        const gamemodeColors = ["#BA0DB1","#D23136","#A061D7","#00C24E","#0092C3"];//for home screen
+        const serverLocations = ["local","Sweden","Sweden","Sweden","Sweden"]
         let currentGamemodeID = 0;//PvE
         let gamemode = gamemodeList[currentGamemodeID];
         document.getElementById('gamemodeSelector').style.backgroundColor = gamemodeColors[currentGamemodeID];
@@ -891,6 +891,8 @@
         //other debug stuff
         let numberOfObjectsDrawn = 0;
         let debugState = "close";
+        let clientTick = "?.?ms";
+        let starting = 0;
         
         //death stuff
         let isGamePaused = false;
