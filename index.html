@@ -656,7 +656,7 @@
         top: 50%;
         left: 50%;
         -webkit-transform: translateY(-50%) translateX(-50%);
-        font-size: 4vmin;
+        font-size: 7vmin;
         font-weight: 900;
       }
     </style>
@@ -1890,7 +1890,7 @@
         // Game loop
         function gameLoop() {
             if (isGamePaused) return;//dont do anything if at death screen
-            starting = Date.now();//for client tick time
+            starting = performance.now();//for client tick time
             numberOfObjectsDrawn = 0;
             // Clear canvas by drawing over
             ctx.fillStyle = '#CDCDCD';
@@ -1961,8 +1961,8 @@
             else if (clientTick > 15){
               clientTickDiv.style.color = "red";
             }
-            clientTickDiv.textContent = "Client Tick Time: " + clientTick + "ms";
-            clientTick = Date.now() - starting;
+            clientTickDiv.textContent = "Client Tick Time: " + Math.round(clientTick * 10) / 10 + "ms";//change to 1 decimal place
+            clientTick = performance.now() - starting;
 
             requestAnimationFrame(gameLoop);
         }
