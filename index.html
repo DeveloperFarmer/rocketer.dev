@@ -1505,6 +1505,7 @@
                 //add support for bigger shapes in the future
 
                 //make hex colors lighter shade, needed for collision
+                //Huge thank you to: https://github.com/PimpTrizkit/PJs/wiki/12.-Shade,-Blend-and-Convert-a-Web-Color-(pSBC.js)
                 const pSBC=(p,c0,c1,l)=>{
                     let r,g,b,P,f,t,h,i=parseInt,m=Math.round,a=typeof(c1)=="string";
                     if(typeof(p)!="number"||p<-1||p>1||typeof(c0)!="string"||(c0[0]!='r'&&c0[0]!='#')||(c1&&!a))return null;
@@ -1529,6 +1530,7 @@
                     if(h)return"rgb"+(f?"a(":"(")+r+","+g+","+b+(f?","+m(a*1000)/1000:"")+")";
                     else return"#"+(4294967296+r*16777216+g*65536+b*256+(f?m(a*255):0)).toString(16).slice(1,f?undefined:-2)
                 }
+                const shadeAnimationSpeed = 0.02;
 
         class Shape {
             constructor(x, y) {
@@ -1596,6 +1598,9 @@
                 this.circleSpeed = shapeRotationSpeed[shapetype];
                 this.circleAngle = Math.random() * Math.PI * 2;
                 this.mass = shapeMass[shapetype];//relative mass
+                if (shapetype > 5){//nonagon, decagon, hendecagon etc. dont turn very white upon collision with bullets or players
+                  
+                }
                 this.shade = 0;//shade indicates how white it turns when colliding
                 this.maxshade = 0.5;//50% whiteness (log, not linear)
                 this.isHit = false;
@@ -1683,11 +1688,13 @@
                 ctx.rotate(this.rotation);
                 ctx.fillStyle = this.color;
                 ctx.strokeStyle = this.outline;
-                if (this.isHit){
-                  this.shade += 0.01;
+                if (this.isHit){//if shape collided with player or bullet
+                  this.shade += shadeAnimationSpeed;//make shape whiter
                   if (this.shade > this.maxshade){
                     this.shade = this.maxshade;
                   }
+                }
+                if (this.shade>0){//even if not hit, still need to animate from whitish color to normal shape color
                   ctx.fillStyle = pSBC ( this.shade, this.color );
                   ctx.strokeStyle = pSBC ( this.shade, this.outline );
                 }
@@ -1788,7 +1795,7 @@
                   this.isHit = false;//reset every loop AFTER drawing
                 }
                 else if (this.shade!=0){//if not hit, reduce shade
-                  this.shade -= 0.01;
+                  this.shade -= shadeAnimationSpeed;
                   if (this.shade < 0){
                     this.shade = 0;
                   }
