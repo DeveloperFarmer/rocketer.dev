@@ -1130,6 +1130,9 @@
                 this.lifetime = 100;
                 this.damage = owner.bulletDamage;
                 this.health = owner.bulletPenetration;
+                this.shade = 0;//shade indicates how white it turns when colliding
+                this.maxshade = 0.3;//bullets turn 30% whiter when hit
+                this.isHit = false;
             }//add bullet offset in the future
 
             update() {
@@ -1146,6 +1149,8 @@
                             // Hit enemy
                             enemy.health -= this.damage;
                             this.health--;//reduce bullet health
+                            enemy.isHit = true;
+                            this.isHit = true;
                             if (enemy.health <= 0) {
                                 this.owner.score += 10;
                                 score += 10;
@@ -1165,6 +1170,7 @@
                             shape.health -= this.damage;
                             this.health--;//reduce bullet health
                             shape.isHit = true;
+                            this.isHit = true;
                             if (shape.health <= 0) {
                                 // Add score based on shape type
                                 const points = shapescores[shape.type];
@@ -1189,6 +1195,7 @@
                         player.health -= this.damage;
                         player.healingValue = 0;//reset the healing delay time
                         this.health--;//reduce bullet health
+                        this.isHit = true;
                         if (player.health <= 0) {
                             // Game over
                             showDeathScreen(score);
@@ -1227,12 +1234,31 @@
                     screenY + this.radius > 0 && screenY - this.radius < canvas.height) {
                     ctx.fillStyle = this.color;
                     ctx.strokeStyle = this.outline;
+                    if (this.isHit){//if bullet collided with something
+                      this.shade += (this.maxshade/25);//make it whiter
+                      if (this.shade > this.maxshade){
+                        this.shade = this.maxshade;
+                      }
+                    }
+                    if (this.shade>0){//even if not hit, still need to animate from whitish color to normal bot color
+                      ctx.fillStyle = pSBC ( this.shade, this.color );
+                      ctx.strokeStyle = pSBC ( this.shade, this.outline );
+                    }
                     ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
                     numberOfObjectsDrawn++;
+                    if (this.isHit){
+                      this.isHit = false;//reset every loop AFTER drawing
+                    }
+                    else if (this.shade!=0){//if not hit, reduce shade
+                      this.shade -= (this.maxshade/25);
+                      if (this.shade < 0){
+                        this.shade = 0;
+                      }
+                    }
                 }
             }
         }
@@ -1286,7 +1312,7 @@
                   botID = 0;
                 }
                 this.shade = 0;//shade indicates how white it turns when colliding
-                this.maxshade = 0.5;//bots turn 50% whiter when hit
+                this.maxshade = 0.3;//bots turn 30% whiter when hit
                 this.isHit = false;
             }
 
@@ -1624,7 +1650,7 @@
                 this.circleSpeed = shapeRotationSpeed[shapetype];
                 this.circleAngle = Math.random() * Math.PI * 2;
                 this.mass = shapeMass[shapetype];//relative mass
-                let maxshade = 0.5;//shapes turn 50% whiter when hit  (log, not linear)
+                let maxshade = 0.3;//shapes turn 30% whiter when hit  (log, not linear)
                 if (shapetype > 5){//nonagon, decagon, hendecagon etc. dont turn very white upon collision with bullets or players
                   maxshade = 0.03;
                 }
