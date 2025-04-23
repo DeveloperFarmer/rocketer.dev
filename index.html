@@ -452,10 +452,11 @@
         }
         #respawnInfo {
             position: absolute;
-            top: 60%;
+            top: 61%;
             left: 50%;
             font-size: 2vmin;
             -webkit-transform: translateY(-50%) translateX(-50%);
+            display: none;
         }
         #connecting {
           position: absolute;
@@ -948,6 +949,7 @@
         
         //death stuff
         let isGamePaused = false;
+        let startPlayTime = 0;
       
         //home screen (hs) background canvas stuff
         let hsMAP_SIZE = 3000;
@@ -2126,6 +2128,10 @@
         function showDeathScreen(finalScore) {
             isGamePaused = true;
             document.getElementById('finalScore').textContent = finalScore;
+            let timeplayed = Date.now() - startPlayTime;
+            let datee = new Date(0);
+            datee.setSeconds(timeplayed / 1000); // specify value for SECONDS here
+            timeplayed = datee.toISOString().substring(11, 19);
             document.getElementById('deathScreen').classList.remove('hidden');
         }
 
@@ -2184,7 +2190,8 @@
             dimensionElement.textContent = `Dimension: ${gamemode}`;
             document.getElementById('restartButton').addEventListener('click', restartGame);
             document.getElementById('continueButton').addEventListener('click', returnToHomeScreen);
-            connectedToServer()
+            connectedToServer();
+            startPlayTime = Date.now();
         }
       
         function connectedToServer(){
@@ -2464,9 +2471,9 @@
           subtitle.style.display = "block";
           document.getElementById('subsubtitle').style.display = "block";
           document.getElementById('gamemodeSelector').style.display = "block";
-          document.getElementById('left-buttons').style.display = "block";
-          document.getElementById('top-buttons').style.display = "block";
-          document.getElementById('right-buttons').style.display = "block";
+          document.getElementById('left-buttons').style.display = "flex";//FLEX, NOT BLOCK (CUZ its a flexbox)
+          document.getElementById('top-buttons').style.display = "flex";
+          document.getElementById('right-buttons').style.display = "flex";
           document.getElementById('score').style.display = "none";
           fpsCounter.style.display = "none";
           let allOtherDebugDivs = document.querySelectorAll(".debug");
@@ -2475,6 +2482,7 @@
           }
           debugState = "close";
           document.getElementById('deathScreen').classList.add('hidden');
+          document.getElementById('respawnInfo').style.display = "block";
         }
     </script>
 </body>

@@ -6,6 +6,9 @@ ALPHA 0.0.7 - April 23, 2025
 - Added shape mass
 - Added shape, enemy, and bullet whitening when hit
 - Improved the bot colors
+- Fixed a flexbox bug
+- Added more respawning functionality
+- Changed shape xp to scenexe's
 
 ALPHA 0.0.6 - April 22, 2025
 - Home screen looks more like scenexe now
