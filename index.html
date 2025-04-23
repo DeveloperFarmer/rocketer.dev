@@ -1458,8 +1458,8 @@
                 //add support for bigger shapes in the future
         class Shape {
             constructor(x, y) {
-                this.x = x;
-                this.y = y;
+                this.x = 0;
+                this.y = 0;
                 const shapeChance = Math.floor(Math.random() * 101); //choose random number from 0 to 100
                 let shapetype = 0;  // 0=square, 1=triangle, 2=pentagon, 3=hexagon, 4=heptagon, n=(n+3)sides
                 if (shapeChance<15){//15/100 chance
@@ -1520,20 +1520,37 @@
                 for (let i = shapes.length - 1; i >= 0; i--) {
                     const shape = shapes[i];
                     if (this.id != shape.id){//different shapes
-                        const dist = Math.hypot(this.x - shape.x, this.y - shape.y);
-                        if (dist < this.size/2 + shape.size/2) {
-                            // 2 shapes touching each other
-                            const angle = Math.atan2(shape.y, shape.x);
-                            let speed = dist/2;
-                            if (speed < 1){
-                              speed = dist;
-                            }
-                            this.x += Math.cos(angle) * speed;
-                            this.y += Math.sin(angle) * speed;
+                        const dx = shape.x - this.x;
+                        const dy = shape.y - this.y;
+                        const dist = Math.hypot(dx, dy);
+                        const minDist = this.size/2 + shape.size/2;
+                        if (dist < minDist) {// 2 shapes touching each other
+                            const nx = dx / dist;
+                            const ny = dy / dist;
+                            const overlap = minDist - dist;
+                            const moveX = nx * overlap * 0.5;
+                            const moveY = ny * overlap * 0.5;
+                            // Apply separation (both shapes move half the distance)
+                            this.x -= moveX;
+                            this.y -= moveY;
+                            shape.x += moveX;
+                            shape.y += moveY;
+
+                            // Optional: Add some bounce effect
+                            const bounceFactor = 0.3;
+                            const relativeSpeed = 1; // Adjust as needed
+
+                            this.x -= nx * relativeSpeed * bounceFactor;
+                            this.y -= ny * relativeSpeed * bounceFactor;
+                            shape.x += nx * relativeSpeed * bounceFactor;
+                            shape.y += ny * relativeSpeed * bounceFactor;
                             console.log(shape.id +","+this.id)
                         }
                     }
                 }
+                // Map boundary check
+                this.x = Math.max(this.size/2, Math.min(MAP_WIDTH - this.size/2, this.x));
+                this.y = Math.max(this.size/2, Math.min(MAP_HEIGHT - this.size/2, this.y));
             }
 
             draw() {
