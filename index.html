@@ -2132,6 +2132,7 @@
             let datee = new Date(0);
             datee.setSeconds(timeplayed / 1000); // specify value for SECONDS here
             timeplayed = datee.toISOString().substring(11, 19);
+            document.getElementById('totalTime').textContent = timeplayed;
             document.getElementById('deathScreen').classList.remove('hidden');
         }
 
