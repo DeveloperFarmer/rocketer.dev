@@ -10,5 +10,6 @@ Next update: add home screen background in hctx, add body collision, add resize 
 add feature where clicking on the gamemode in the home screen will show the list of gamemodes, and add animation for gamemode region on gamemode select div
 
 FIX CLCIKING PLAY BUTTON AFTER EXITING DEATH SCREEN
+FIX DEVELOPER_ROCKETER BULLET JITTER (might be bcause of unnecessary lerping)
 
 Note: this file is for my reference, isnt used ingame
