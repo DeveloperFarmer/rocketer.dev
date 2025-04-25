@@ -1,3 +1,6 @@
+ALPHA 0.0.9 - April 25, 2025
+- Fixed bullet jitter in PvE
+
 ALPHA 0.0.8 - April 24, 2025
 - FFA server tick time is now rounded to 1 decimal place
 - Significant bandwidth optimization in FFA
