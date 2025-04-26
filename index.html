@@ -2285,7 +2285,7 @@
             console.log(window.innerWidth +","+window.innerHeight)
             let w = window.innerWidth;
             let h = window.innerHeight;
-            if (w>=h){
+            if (w/maxWidth*maxHeight >= h){//if screen is wider than or equal to a 1920x1080 ratio
               canvas.width = maxWidth;
               canvas.height = window.innerHeight/window.innerWidth*maxWidth;
             }
