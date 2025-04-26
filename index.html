@@ -1026,7 +1026,7 @@
         let score = 0;
         let fov = 1;
         let fovscale = 1;//the amount for canvas to scale, NOT same as FOV, e.g. if fov is 2, then fov scale is 1/2
-        let fovAnimation = 1;//slowly change this value to the actual fov value to cre
+        let fovAnimation = 1;//slowly change this value to the actual fov value to create nice zooming effect
         const players = [];
         const bullets = [];
         const enemies = [];
@@ -2082,8 +2082,8 @@
             }
 
             isOnScreen(x, y) {
-                return x + this.size > 0 && x - this.size < canvas.width &&
-                       y + this.size > 0 && y - this.size < canvas.height;
+                return (x + this.size)*fovscale > 0 && (x - this.size)*fovscale < canvas.width &&
+                       (y + this.size)*fovscale > 0 && (y - this.size)*fovscale < canvas.height;
             }
         }
 
@@ -2329,11 +2329,9 @@
           }
           else if (key == "o" && players.length > 0){
             fov++;
-            fovscale = 1/fov;
           }
           else if (key == "p" && players.length > 0){
             fov--;
-            fovscale = 1/fov;
           }
         }
       
@@ -2429,9 +2427,16 @@
             // Clear canvas by drawing over
             ctx.fillStyle = '#CDCDCD';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (fovAnimation != fov){
+              fovAnimation += (fov - fovAnimation)/5;
+              if (Math.abs(fov - fovAnimation) < 0.01){//use abs to get diff regardless of positive or negative diff
+                fovAnimation = fov;
+              }
+              fovscale = 1/fovAnimation;
+            }
             ctx.save();
             ctx.translate(canvas.width/2,canvas.height/2);//to scale from the middle of screen
-            ctx.scale(1/fov,1/fov);//scale for the ENTIRE GAME LOOP, if fov is 2, then scale by 1/2 so everything is smaller
+            ctx.scale(fovscale,fovscale);//scale for the ENTIRE GAME LOOP, if fov is 2, then scale by 1/2 so everything is smaller
             ctx.translate(-canvas.width/2,-canvas.height/2);//translate back to normal
             drawGrid();
             drawMapBoundary();//draw area outside map (translucent rectangles so that grids also change color)
