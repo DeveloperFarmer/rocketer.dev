@@ -2162,10 +2162,9 @@
         function drawGrid() {//only for game, not home screen
             ctx.strokeStyle = GRID_LINE_COLOR;
             ctx.lineWidth = 4;
-            
-            // Calculate visible grid area
             const cameraXwithFOV = players[0].x - canvas.width/2 * fov;
             const cameraYwithFOV = players[0].y - canvas.height/2 * fov;
+            // Calculate visible grid area
             const startX = Math.floor(cameraXwithFOV / GRID_SIZE) * GRID_SIZE;
             const startY = Math.floor(cameraYwithFOV / GRID_SIZE) * GRID_SIZE;
             
@@ -2176,16 +2175,16 @@
             
             // Draw vertical lines
             for (let x = startX; x <= endX; x += GRID_SIZE) {
-                const screenX = x - cameraXwithFOV;
+                const screenX = x - cameraXwithFOV +canvas.width/2*(1-fov);
                 ctx.beginPath();
-                ctx.moveTo(screenX-canvas.width/2*(1-fov), -canvas.height/2*fov);
+                ctx.moveTo(screenX, -canvas.height/2*fov);
                 ctx.lineTo(screenX, canvas.height * fov);
                 ctx.stroke();
             }
             
             // Draw horizontal lines
             for (let y = startY; y <= endY; y += GRID_SIZE) {
-                const screenY = y - cameraYwithFOV;
+                const screenY = y - cameraYwithFOV +canvas.height/2*(1-fov);
                 ctx.beginPath();
                 ctx.moveTo(-canvas.width/2*fov, screenY);
                 ctx.lineTo(canvas.width * fov, screenY);
@@ -2195,15 +2194,18 @@
       
         function drawMapBoundary() {// Draw area outside the map (where camera can go beyond)
             ctx.save();
+            ctx.translate(-canvas.width/2*(fov-1),-canvas.height/2*(fov-1));
             ctx.fillStyle = 'rgba(95, 103, 108, 0.5)';
+            const cameraXwithFOV = players[0].x - canvas.width/2 * fov;
+            const cameraYwithFOV = players[0].y - canvas.height/2 * fov;
             // Top border
-            ctx.fillRect(-cameraX-canvas.width/2,-cameraY,MAP_WIDTH+canvas.width,Math.min(0, cameraY));//Math.min so that only draw if cameraY < 0
+            ctx.fillRect(-cameraXwithFOV-canvas.width/2,-cameraYwithFOV,MAP_WIDTH+canvas.width,Math.min(0, cameraYwithFOV));//Math.min so that only draw if cameraY < 0
             // Bottom border
-            ctx.fillRect(-cameraX-canvas.width/2,MAP_HEIGHT - cameraY,MAP_WIDTH+canvas.width,canvas.height);
+            ctx.fillRect(-cameraXwithFOV-canvas.width/2,MAP_HEIGHT - cameraYwithFOV,MAP_WIDTH+canvas.width,canvas.height);
             // Left border
-            ctx.fillRect(-cameraX,-cameraY,Math.min(0, cameraX),MAP_HEIGHT);//only draw if cameraX < 0
+            ctx.fillRect(-cameraXwithFOV,-cameraYwithFOV,Math.min(0, cameraXwithFOV),MAP_HEIGHT);//only draw if cameraX < 0
             // Right border
-            ctx.fillRect(MAP_WIDTH - cameraX,-cameraY,canvas.width,MAP_HEIGHT);
+            ctx.fillRect(MAP_WIDTH - cameraXwithFOV,-cameraYwithFOV,canvas.width,MAP_HEIGHT);
             ctx.restore();
         }
       
