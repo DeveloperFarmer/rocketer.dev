@@ -722,6 +722,7 @@
       /* The switch - the box around the slider */
       .switch {
         position: relative;
+        top: 1.5vmin;/*line-height only seem to affect the text, so we'll add this to shift it next to the text*/
         display: inline-block;
         width: 60px;
         height: 25px;
@@ -885,30 +886,30 @@
         <div id="settingstextdiv" class="popUp">
           <h1>Settings</h1>
           <hr />
-          <div style="overflow: auto; height: 73vh; width: 23vw; text-align: center; font-size: 2vmin;font-weight: 400;line-height:3;">
+          <div style="overflow: auto; height: 73vh; width: 24.5vw; text-align: center; font-size: 2vmin;font-weight: 400;line-height:3;">
             <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Names &amp; Chat</h3><hr>
             Show Chat&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
-            Show Names&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
-            Clickable Chat Links
-            Show Own Name
-            Silent Typing
-            Show Typing Indicators
-            <hr><h3 style="text-align: left;">Debug Mode</h3><hr>
-            Show IDs
-            Show Tick Time
-            Show Server Name
-            Show Player Count
-            Show Global Player Count
-            Show FPS
-            Show Ping
-            Show Position
-            Show Extra Performance Info
-            Show Hitboxes
-            <hr><h3 style="text-align: left;">Graphics</h3><hr>
-            Show Minimap
-            Show Percentages on Health Bars
-            Show Health Bar on HUD
-            <hr><h3 style="text-align: left;">Keybinds</h3><hr>
+            Show Names&emsp;<label class="switch"><input type="checkbox" settingid="showname" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Clickable Chat Links&emsp;<label class="switch"><input type="checkbox" settingid="clickablechatlinks" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Own Name&emsp;<label class="switch"><input type="checkbox" settingid="showownname" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Silent Typing&emsp;<label class="switch"><input type="checkbox" settingid="silenttyping" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Typing Indicators&emsp;<label class="switch"><input type="checkbox" settingid="showtypingindicators" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Debug Mode</h3><hr>
+            Show IDs&emsp;<label class="switch"><input type="checkbox" settingid="showids" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Tick Time&emsp;<label class="switch"><input type="checkbox" settingid="showticktime" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Server Name&emsp;<label class="switch"><input type="checkbox" settingid="showservername" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Player Count&emsp;<label class="switch"><input type="checkbox" settingid="showplayercount" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Global Player Count&emsp;<label class="switch"><input type="checkbox" settingid="showglobalplayercount" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show FPS&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Ping&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Position&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Extra Performance Info&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Hitboxes&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Graphics</h3><hr>
+            Show Minimap&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Percentages on Health Bars&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            Show Health Bar on HUD&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
+            <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Keybinds</h3><hr>
             Escape
             Enter
             Open Command
