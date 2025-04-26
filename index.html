@@ -1286,9 +1286,11 @@
                 // Convert world coordinates to screen coordinates
                 const screenX = this.x - cameraX;
                 const screenY = this.y - cameraY;
+                const screenXwithfov = canvas.width/2 - (players[0].x - this.x)*fovscale;
+                const screenYwithfov = canvas.height/2 - (players[0].y - this.y)*fovscale;
                 
                 // Only draw if on screen
-                if (this.isOnScreen(screenX, screenY)) {
+                if (this.isOnScreen(screenXwithfov, screenYwithfov)) {
                     // Draw tank barrel
                     ctx.strokeStyle = '#7B7B7B';
                     ctx.fillStyle = '#999999'
@@ -1338,8 +1340,8 @@
             }
             
             isOnScreen(x, y) {
-                return (x + this.radius)*fov > 0 && (x - this.radius)*fov < canvas.width*fov &&
-                       (y + this.radius)*fov > 0 && (y - this.radius)*fov < canvas.height*fov;
+                return x + this.radius*fovscale > 0 && x - this.radius*fovscale < canvas.width*fov &&
+                       y + this.radius*fovscale > 0 && y - this.radius*fovscale < canvas.height*fov;
             }
         }
 
@@ -1454,9 +1456,11 @@
                 // Convert world coordinates to screen coordinates
                 const screenX = this.x - cameraX;
                 const screenY = this.y - cameraY;
+                const screenXwithfov = canvas.width/2 - (players[0].x - this.x)*fovscale;
+                const screenYwithfov = canvas.height/2 - (players[0].y - this.y)*fovscale;
                 
                 // Only draw if on screen
-                if (this.isOnScreen(screenX, screenY)) {
+                if (this.isOnScreen(screenXwithfov, screenYwithfov)) {
                     ctx.fillStyle = this.color;
                     ctx.strokeStyle = this.outline;
                     if (this.isHit){//if bullet collided with something
@@ -1488,8 +1492,8 @@
             }
             
             isOnScreen(x, y) {
-                return (x + this.radius)*fov > 0 && (x - this.radius)*fov < canvas.width*fov &&
-                       (y + this.radius)*fov > 0 && (y - this.radius)*fov < canvas.height*fov;
+                return x + this.radius*fovscale > 0 && x - this.radius*fovscale < canvas.width*fov &&
+                       y + this.radius*fovscale > 0 && y - this.radius*fovscale < canvas.height*fov;
             }
         }
 
@@ -1682,8 +1686,8 @@
             }
             
             isOnScreen(x, y) {
-                return (x + this.radius)*fov > 0 && (x - this.radius)*fov < canvas.width*fov &&
-                       (y + this.radius)*fov > 0 && (y - this.radius)*fov < canvas.height*fov;
+                return x + this.radius*fovscale > 0 && x - this.radius*fovscale < canvas.width*fov &&
+                       y + this.radius*fovscale > 0 && y - this.radius*fovscale < canvas.height*fov;
             }
         }
       
@@ -2155,7 +2159,7 @@
             enemies.push(new Enemy());
         }
         
-        function drawGrid() {
+        function drawGrid() {//only for game, not home screen
             ctx.strokeStyle = GRID_LINE_COLOR;
             ctx.lineWidth = 4;
             
