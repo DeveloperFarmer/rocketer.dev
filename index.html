@@ -1618,9 +1618,11 @@
                 // Convert world coordinates to screen coordinates
                 const screenX = this.x - cameraX;
                 const screenY = this.y - cameraY;
+                const screenXwithfov = canvas.width/2 - (players[0].x - this.x)*fovscale;
+                const screenYwithfov = canvas.height/2 - (players[0].y - this.y)*fovscale;
                 
                 // Only draw if on screen
-                if (this.isOnScreen(screenX, screenY)) {
+                if (this.isOnScreen(screenXwithfov, screenYwithfov)) {
                     // Draw enemy body
                     ctx.fillStyle = this.color;
                     ctx.strokeStyle = this.outline;
@@ -1961,15 +1963,15 @@
             }
 
             draw() {
-                //const screenX = this.x - cameraX;
-                //const screenY = this.y - cameraY;
-                const screenX = canvas.width/2 - players[0].x + this.x;
-                const screenY = canvas.height/2 - players[0].y + this.y;
+                const screenX = this.x - cameraX;
+                const screenY = this.y - cameraY;
+                const screenXwithfov = canvas.width/2 - (players[0].x - this.x)*fovscale;
+                const screenYwithfov = canvas.height/2 - (players[0].y - this.y)*fovscale;
 
-                if (!this.isOnScreen(screenX, screenY)) return;
+                if (!this.isOnScreen(screenXwithfov, screenYwithfov)) return;
 
                 ctx.save();
-                ctx.translate(screenX, screenY);
+                ctx.translate(screenX, screenY);//already scaled in gameloop, so dont need to scale
                 ctx.rotate(this.rotation);
                 ctx.fillStyle = this.color;
                 ctx.strokeStyle = this.outline;
@@ -2088,8 +2090,8 @@
             }
 
             isOnScreen(x, y) {
-                return (x + this.size/2)*fov > 0 && (x - this.size/2)*fov < canvas.width*fov &&
-                       (y + this.size/2)*fov > 0 && (y - this.size/2)*fov < canvas.height*fov;
+                return x + this.size/2*fovscale > 0 && x - this.size/2*fovscale < canvas.width*fov &&
+                       y + this.size/2*fovscale > 0 && y - this.size/2*fovscale < canvas.height*fov;
             }
         }
 
