@@ -780,6 +780,43 @@
         transition: .4s;
         border-radius: 50%;
       }
+      
+      #notifFlex {
+        position: fixed;
+        top: 15px;
+        left: 0px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      /*above is to style the notification container, below is to style the notification*/
+      .alert {
+        color: white;
+        opacity: 0.75;
+        text-align: center;
+        font-weight: 900;
+        font-family: "Roboto", sans-serif;
+        border-radius: 0.6vw;
+        font-size: 1.3vw; /*the words change size based on browser width*/
+        padding: 2.5px 15px;
+        margin: 6px;
+        animation-name: animateNotif;
+        animation-duration: 1s;
+        transition-timing-function: ease-in-out;
+      }
+      @keyframes animateNotif {
+        0% {
+          opacity: 0;
+          max-height: 0;/*dont use height*/
+        }
+        50% {
+          opacity: 0.75;
+        }
+        100% {
+          max-height: 100px;/*set this value to a value that will be bigger than the height is*/
+        }
+      }
     </style>
 </head>
 <body>
@@ -806,6 +843,7 @@
     <div id="shapenumber" class="debug">Number of shapes: 0</div>
     <div id="dimension" class="debug">Dimension: PvE</div>
     <div id="drawnEntities" class="debug">Drawn Entities: xx</div>
+    <div id="notifFlex"></div>
     <div id="deathScreen" class="hidden">
         <div class="death-content-top">
             <h1 style="font-size: 5vmin;">You died!</h1>
@@ -911,27 +949,27 @@
             Show Health Bar on HUD&emsp;<label class="switch"><input type="checkbox" settingid="showhealthbarHUD" onclick="updateTempSettings()"><span class="slider round"></span></label><br>
             <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Keybinds</h3><hr>
             Escape&emsp;<button id="1" class="modalButton">ESCAPE</button><br>
-            Enter&emsp;<button id="escape" class="modalButton">ENTER</button><br>
-            Open Command&emsp;<button id="escape" class="modalButton">SLASH</button><br>
-            Quick Chat&emsp;<button id="escape" class="modalButton">ESCAPE</button><br>
-            Shoot&emsp;<button id="escape" class="modalButton">ESCAPE</button><br>
-            Repel Drones&emsp;<button id="escape" class="modalButton">ESCAPE</button><br>
-            Move Up&emsp;<button id="escape" class="modalButton">ESCAPE</button><br>
-            Move Down&emsp;<button id="escape" class="modalButton">ESCAPE</button><br>
-            Move Left&emsp;<button id="escape" class="modalButton">ESCAPE</button><br>
-            Move Right&emsp;<button id="escape" class="modalButton">ESCAPE</button><br>
-            Move Up (alternate)
-            Move Down (alternate)
-            Move Left (alternate)
-            Move Right (alternate)
-            Toggle Auto Fire
-            Toggle Auto Spin
-            Toggle Spin Lock
-            Toggle Passive Mode
-            Toggle Debug Mode
-            Open Weapon Upgrade Tree
-            Open Body Upgrade Tree
-            Open Settings (In-Game)
+            Enter&emsp;<button id="2" class="modalButton">ENTER</button><br>
+            Open Command&emsp;<button id="3" class="modalButton">SLASH</button><br>
+            Quick Chat&emsp;<button id="4" class="modalButton">T</button><br>
+            Shoot&emsp;<button id="5" class="modalButton">SPACE / MOUSE DOWN</button><br>
+            Repel Drones&emsp;<button id="6" class="modalButton">SHIFT</button><br>
+            Move Up&emsp;<button id="7" class="modalButton">W</button><br>
+            Move Down&emsp;<button id="8" class="modalButton">A</button><br>
+            Move Left&emsp;<button id="9" class="modalButton">S</button><br>
+            Move Right&emsp;<button id="10" class="modalButton">D</button><br>
+            Move Up (alternate)&emsp;<button id="11" class="modalButton">UP ARROW</button><br>
+            Move Down (alternate)&emsp;<button id="12" class="modalButton">DOWN ARROW</button><br>
+            Move Left (alternate)&emsp;<button id="13" class="modalButton">LEFT ARROW</button><br>
+            Move Right (alternate)&emsp;<button id="14" class="modalButton">RIGHT ARROW</button><br>
+            Toggle Auto Fire&emsp;<button id="15" class="modalButton">E</button><br>
+            Toggle Auto Spin&emsp;<button id="16" class="modalButton">C</button><br>
+            Toggle Spin Lock&emsp;<button id="17" class="modalButton">X</button><br>
+            Toggle Passive Mode&emsp;<button id="18" class="modalButton">V</button><br>
+            Toggle Debug Mode&emsp;<button id="19" class="modalButton">M</button><br>
+            Open Weapon Upgrade Tree&emsp;<button id="20" class="modalButton">Y</button><br>
+            Open Body Upgrade Tree&emsp;<button id="21" class="modalButton">U</button><br>
+            Open Settings (In-Game)&emsp;<button id="22" class="modalButton">O</button><br>
             <hr>
           </div>
           <hr /><button id="exit-settings-apply" class="modalButton">APPLY</button>&emsp;<button id="exit-settings-cancel" class="modalButton">CANCEL</button>
@@ -2640,107 +2678,107 @@
         //BELOW IS MULTIPLAYER CODE (COPIED FROM OLD ROCKETER)
       
         function multiplayer(){
-        //THIS IS THE CLIENT CODE
-var connected = "no";
-var connectedopacity = 1.0;
-var mainMenuOpacity = 0;
-var gameStart = 0; //gamestart variable outside so that can access in play button onclick in code above
-var drawAreaX = 0; //these two variable placed outside so that can access in mousemove event listener
-var drawAreaY = 0;
-var px = 0;
-var py = 0;
-var oldcamerax = 0;
-var oldcameray = 0;
-var canLogIn = 0; //used for account log in and sign ups
-var accusername = 0;
-var accpassword = 0;
-var accdesc = 0;
-var acctype = "error";
-var loggedInAccount = {};
-var clientAngle = 0;
-var mobile = "no";
-var mobileSentMousePress = "no";
-var crDarknessSize = 0;//darkness growth and shrink in crossroads
-var darknessGrowth = "yes";//determine if growing or shrinking
-var barrelsDarkness = [];//list of barrels in decreasing angle for crossroads darkness
-var correspondingBarrelHeight = {};//height of barrel for crossroads darkness
+        
+        var connected = "no";
+        var connectedopacity = 1.0;
+        var mainMenuOpacity = 0;
+        var gameStart = 0; //gamestart variable outside so that can access in play button onclick in code above
+        var drawAreaX = 0; //these two variable placed outside so that can access in mousemove event listener
+        var drawAreaY = 0;
+        var px = 0;
+        var py = 0;
+        var oldcamerax = 0;
+        var oldcameray = 0;
+        var canLogIn = 0; //used for account log in and sign ups
+        var accusername = 0;
+        var accpassword = 0;
+        var accdesc = 0;
+        var acctype = "error";
+        var loggedInAccount = {};
+        var clientAngle = 0;
+        var mobile = "no";
+        var mobileSentMousePress = "no";
+        var crDarknessSize = 0;//darkness growth and shrink in crossroads
+        var darknessGrowth = "yes";//determine if growing or shrinking
+        var barrelsDarkness = [];//list of barrels in decreasing angle for crossroads darkness
+        var correspondingBarrelHeight = {};//height of barrel for crossroads darkness
 
-var gateTimer = 0.5;//animation for gates
-var startGate = gateTimer;
-var endGate = 9;
-var gatearrow = [90,70,40,20];
+        var gateTimer = 0.5;//animation for gates
+        var startGate = gateTimer;
+        var endGate = 9;
+        var gatearrow = [90,70,40,20];
 
-//animate player chats
-var chatlist = {};
-var typingAnimation = 20;
+        //animate player chats
+        var chatlist = {};
+        var typingAnimation = 20;
 
-//animate shape health bar length
-var shapeHealthBar = {};
+        //animate shape health bar length
+        var shapeHealthBar = {};
 
-//animate skill points number font size
-var extraFontSize = 0;
-var oldskillpointnumber = 0;
+        //animate skill points number font size
+        var extraFontSize = 0;
+        var oldskillpointnumber = 0;
 
-var achievementList;
-var achcolors;
+        var achievementList;
+        var achcolors;
 
-//keep track of number of upgrade buttons for ignore button to position correctly
-var maxnumberofbuttons = 0;
-var maxnumberofbuttonsb = 0;
+        //keep track of number of upgrade buttons for ignore button to position correctly
+        var maxnumberofbuttons = 0;
+        var maxnumberofbuttonsb = 0;
 
-var barrelnumberid = 1;//for tank editor display id. the actual ids for barrels are different
-var assetnumberid = 1;
-var gadgetnumberid = 1;
+        var barrelnumberid = 1;//for tank editor display id. the actual ids for barrels are different
+        var assetnumberid = 1;
+        var gadgetnumberid = 1;
 
-//buttons for skill points
-var skillpointsbutton = [
-  {hover: "no", clickable: "no",},
-  {hover: "no", clickable: "no",},
-  {hover: "no", clickable: "no",},
-  {hover: "no", clickable: "no",},
-  {hover: "no", clickable: "no",},
-  {hover: "no", clickable: "no",},
-  {hover: "no", clickable: "no",},
-  {hover: "no", clickable: "no",},
-];
+        //buttons for skill points
+        var skillpointsbutton = [
+          {hover: "no", clickable: "no",},
+          {hover: "no", clickable: "no",},
+          {hover: "no", clickable: "no",},
+          {hover: "no", clickable: "no",},
+          {hover: "no", clickable: "no",},
+          {hover: "no", clickable: "no",},
+          {hover: "no", clickable: "no",},
+          {hover: "no", clickable: "no",},
+        ];
 
-var skillpointsanimation = [0,0,0,0,0,0,0,0];//animate width slowly towards actual position
+        var skillpointsanimation = [0,0,0,0,0,0,0,0];//animate width slowly towards actual position
 
-var levelwhenignorew = -1;//level when u clicked the ignore button
-var levelwhenignoreb = -1;//level when u clicked the ignore button
+        var levelwhenignorew = -1;//level when u clicked the ignore button
+        var levelwhenignoreb = -1;//level when u clicked the ignore button
 
-//store player body color for upgrade buttons and tree to have same color
-var playerBodyCol = "";
-var playerBodyOutline = "";
+        //store player body color for upgrade buttons and tree to have same color
+        var playerBodyCol = "";
+        var playerBodyOutline = "";
 
-//ensure that animation run at same speed for different fps
-var prevLoopTime = 0;
-var deltaTime = 1;
+        //ensure that animation run at same speed for different fps
+        var prevLoopTime = 0;
+        var deltaTime = 1;
 
-function createNotif(text,color,timer){
-  const notifications = document.getElementById("notifFlex");
-  const notifone = document.createElement("div");
-  notifone.className = "alert";
-  notifone.innerText = text;
-  notifone.style.backgroundColor = color;
-  notifications.prepend(notifone);//prepend is appendchild but insert at top
-  setTimeout(() => {
-    notifone.remove();
-  }, timer);
-}
+        const notifications = document.getElementById("notifFlex");
+        function createNotif(text,color,timer){
+          const notifone = document.createElement("div");
+          notifone.className = "alert";
+          notifone.innerText = text;
+          notifone.style.backgroundColor = color;
+          notifications.prepend(notifone);//prepend is appendchild but insert at top
+          setTimeout(() => {
+            notifone.remove();
+          }, timer);
+        }
 
-if (
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  )
-) {
-  // true for mobile device
-  createNotif("Your device is detected as a mobile device","darkorange",5000)
-  mobile = "yes";
-} else {
-  // false for not mobile device
-  console.log("not a mobile user");
-}
+        if (
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          )
+        ) {
+          // true for mobile device
+          createNotif("Your device is detected as a mobile device","darkorange",5000)
+          mobile = "yes";
+        } else {
+          // false for not mobile device
+          console.log("not a mobile user");
+        }
 
 //stores latest date of changelog update
 var dateUpdate = "Loading changelog...";
