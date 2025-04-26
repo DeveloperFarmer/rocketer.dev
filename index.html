@@ -2178,7 +2178,7 @@
             for (let x = startX; x <= endX; x += GRID_SIZE) {
                 const screenX = x - cameraXwithFOV;
                 ctx.beginPath();
-                ctx.moveTo(screenX, 0);
+                ctx.moveTo(screenX, -canvas.width/2/fov);
                 ctx.lineTo(screenX, canvas.height * fov);
                 ctx.stroke();
             }
@@ -2187,7 +2187,7 @@
             for (let y = startY; y <= endY; y += GRID_SIZE) {
                 const screenY = y - cameraYwithFOV;
                 ctx.beginPath();
-                ctx.moveTo(0, screenY);
+                ctx.moveTo(-canvas.height/2/fov, screenY);
                 ctx.lineTo(canvas.width * fov, screenY);
                 ctx.stroke();
             }
