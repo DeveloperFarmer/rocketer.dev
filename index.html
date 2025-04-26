@@ -300,28 +300,6 @@
           padding: 0px;
           margin: .5vmin;    
         }
-        #full-changelog {
-            position: absolute;
-            top: 0%;
-            left: 0%;
-            line-height: 1.5;
-            background-color: rgba(0, 0, 0, .5);
-            height: 100%;
-            width: 100%;
-            font-weight: 900;
-            display: none;
-        }
-        #changelogtextdiv {
-          padding: 2vmin 3vmin;
-          background-color: rgba(0, 0, 0, .5);
-          border: .5vmin solid black;
-          border-radius: .5vmin;
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          -webkit-transform: translateY(-50%) translateX(-50%);
-          text-align: center;
-        }
         #openChangelogButton {
           background:none;
           border:none;
@@ -334,6 +312,28 @@
         #openChangelogButton:hover {
           text-decoration:underline;
           color: rgb(0, 123, 255);
+        }
+        .popUpBackground {
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            line-height: 1.5;
+            background-color: rgba(0, 0, 0, .5);
+            height: 100%;
+            width: 100%;
+            font-weight: 900;
+            display: none;
+        }
+        .popUp {
+          padding: 2vmin 3vmin;
+          background-color: rgba(0, 0, 0, .5);
+          border: .5vmin solid black;
+          border-radius: .5vmin;
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          -webkit-transform: translateY(-50%) translateX(-50%);
+          text-align: center;
         }
         .debug {/*debug closed by default*/
             display: none;
@@ -806,21 +806,21 @@
         </span>
       </button>
       <button id="settings" class="hsButtons">
-        <span class="material-icons hsIcons" onclick="accounts()">
+        <span class="material-icons hsIcons" onclick="openSettings()">
         settings
         </span>
       </button>
     </div>
-    <div id="full-changelog">
-        <div id="changelogtextdiv">
+    <div id="full-changelog" class="popUpBackground">
+        <div id="changelogtextdiv" class="popUp">
           <h1>Changelog</h1>
           <hr />
           <p style="overflow: auto; height: 70vh; width: 70vw; text-align: left; font-size: 2vmin;font-weight: 400;">- Loading changelog...</p>
           <hr /><button id="exit-changelog" class="modalButton">BACK</button>
         </div>
     </div>
-    <div id="full-settings">
-        <div id="settingstextdiv">
+    <div id="full-settings" class="popUpBackground">
+        <div id="settingstextdiv" class="popUp">
           <h1>Settings</h1>
           <hr />
           <p style="overflow: auto; height: 70vh; width: 70vw; text-align: left; font-size: 2vmin;font-weight: 400;">
@@ -871,7 +871,7 @@
             Open Settings (In-Game)
             <hr>
           </p>
-          <hr /><button id="exit-settings" class="modalButton">BACK</button>
+          <hr /><button id="exit-settings-apply" class="modalButton">APPLY</button><button id="exit-settings-cancel" class="modalButton">CANCEL</button>
         </div>
     </div>
     <div id="blackScreen"></div>
@@ -894,6 +894,7 @@
         const changelogPreview = document.getElementById('changelogPreview');
         const subtitle = document.getElementById('subtitle');
         const fullchangelog = document.getElementById('full-changelog');
+        const settings = document.getElementById('full-settings');
         const gamemodeTitle = document.getElementById('gamemodeTitle');
         const gamemodeTitleAnimation = document.getElementById('gamemodeTitleAnimation');//for animating purposes
         const oval = document.getElementById('ovalAnimation');//also for the animation
@@ -901,6 +902,18 @@
         document.getElementById('exit-changelog').addEventListener("click", () => {
           fullchangelog.style.display = "none";
         });
+        //add a way to track settings changes later on
+        document.getElementById('exit-settings-apply').addEventListener("click", () => {
+          settings.style.display = "none";
+          //apply the changes
+        });
+        document.getElementById('exit-settings-cancel').addEventListener("click", () => {
+          settings.style.display = "none";
+          //undo all checkbox changes
+        });
+        function openSettings(){
+          settings.style.display = "block";
+        }
 
         // Set canvas to window size
         canvas.width = window.innerWidth;
