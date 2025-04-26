@@ -1025,6 +1025,8 @@
         // Game variables
         let score = 0;
         let fov = 1;
+        let fovscale = 1;//the amount for canvas to scale, NOT same as FOV, e.g. if fov is 2, then fov scale is 1/2
+        let fovAnimation = 1;//slowly change this value to the actual fov value to cre
         const players = [];
         const bullets = [];
         const enemies = [];
@@ -2327,9 +2329,11 @@
           }
           else if (key == "o" && players.length > 0){
             fov++;
+            fovscale = 1/fov;
           }
           else if (key == "p" && players.length > 0){
             fov--;
+            fovscale = 1/fov;
           }
         }
       
@@ -2426,8 +2430,9 @@
             ctx.fillStyle = '#CDCDCD';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.save();
-            ctx.transform()
-            ctx.scale();//scale for the ENTIRE GAME LOOP
+            ctx.translate(canvas.width/2,canvas.height/2);//to scale from the middle of screen
+            ctx.scale(1/fov,1/fov);//scale for the ENTIRE GAME LOOP, if fov is 2, then scale by 1/2 so everything is smaller
+            ctx.translate(-canvas.width/2,-canvas.height/2);//translate back to normal
             drawGrid();
             drawMapBoundary();//draw area outside map (translucent rectangles so that grids also change color)
           
@@ -2466,6 +2471,7 @@
                 spawnEnemy();
             }
           
+            ctx.restore();//restore the fov scaling (BEFORE minimap so that it will not be affected by FOV)
             //if debug is open, and if dimension is not crossroads or cavern:
             drawMinimap()
           
