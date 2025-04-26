@@ -2279,9 +2279,22 @@
         });
 
         // Window resize
+        const maxWidth = 1920;
+        const maxHeight = 1080;
         window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            console.log(window.innerWidth +","+window.innerHeight)
+            let w = window.innerWidth;
+            let h = window.innerHeight;
+            if (w>=h){
+              canvas.width = maxWidth;
+              canvas.height = window.innerHeight/window.innerWidth*maxWidth;
+            }
+            else{
+              canvas.width = window.innerWidth/window.innerHeight*maxHeight;
+              canvas.height = maxHeight;
+            }
+            //canvas.width = window.innerWidth;
+            //canvas.height = window.innerHeight;
         });
       
         function checkForKeybinds(key){//pressed a key, check if the key represents anything (except player movement)
