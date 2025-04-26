@@ -1284,8 +1284,8 @@
 
             draw() {
                 // Convert world coordinates to screen coordinates
-                const screenX = this.x*fovscale - cameraX;
-                const screenY = this.y*fovscale - cameraY;
+                const screenX = this.x*fov - cameraX;
+                const screenY = this.y*fov - cameraY;
                 
                 // Only draw if on screen
                 if (this.isOnScreen(screenX, screenY)) {
@@ -1338,8 +1338,8 @@
             }
             
             isOnScreen(x, y) {
-                return x + this.radius > 0 && x - this.radius < canvas.width &&
-                       y + this.radius > 0 && y - this.radius < canvas.height;
+                return x + this.radius*fov > 0 && x - this.radius*fov < canvas.width &&
+                       y + this.radius*fov > 0 && y - this.radius*fov < canvas.height;
             }
         }
 
@@ -1452,12 +1452,11 @@
 
             draw() {
                 // Convert world coordinates to screen coordinates
-                const screenX = this.x*fovscale - cameraX;
-                const screenY = this.y*fovscale - cameraY;
+                const screenX = this.x*fov - cameraX;
+                const screenY = this.y*fov - cameraY;
                 
                 // Only draw if on screen
-                if (screenX + this.radius > 0 && screenX - this.radius < canvas.width &&
-                    screenY + this.radius > 0 && screenY - this.radius < canvas.height) {
+                if (this.isOnScreen(screenX, screenY)) {
                     ctx.fillStyle = this.color;
                     ctx.strokeStyle = this.outline;
                     if (this.isHit){//if bullet collided with something
@@ -1486,6 +1485,11 @@
                       }
                     }
                 }
+            }
+            
+            isOnScreen(x, y) {
+                return x + this.radius*fov > 0 && x - this.radius*fov < canvas.width &&
+                       y + this.radius*fov > 0 && y - this.radius*fov < canvas.height;
             }
         }
 
@@ -1612,8 +1616,8 @@
 
             draw() {
                 // Convert world coordinates to screen coordinates
-                const screenX = this.x*fovscale - cameraX;
-                const screenY = this.y*fovscale - cameraY;
+                const screenX = this.x*fov - cameraX;
+                const screenY = this.y*fov - cameraY;
                 
                 // Only draw if on screen
                 if (this.isOnScreen(screenX, screenY)) {
@@ -1676,8 +1680,8 @@
             }
             
             isOnScreen(x, y) {
-                return x + this.radius > 0 && x - this.radius < canvas.width &&
-                       y + this.radius > 0 && y - this.radius < canvas.height;
+                return x + this.radius*fov > 0 && x - this.radius*fov < canvas.width &&
+                       y + this.radius*fov > 0 && y - this.radius*fov < canvas.height;
             }
         }
       
@@ -2082,8 +2086,8 @@
             }
 
             isOnScreen(x, y) {
-                return x + this.size*fov > 0 && x - this.size*fov < canvas.width &&
-                       y + this.size*fov > 0 && y - this.size*fov < canvas.height;
+                return x + this.size/2*fov > 0 && x - this.size/2*fov < canvas.width &&
+                       y + this.size/2*fov > 0 && y - this.size/2*fov < canvas.height;
             }
         }
 
@@ -2116,8 +2120,8 @@
 
             draw() {
                 // Convert world coordinates to screen coordinates
-                const screenX = this.x*fovscale - cameraX;
-                const screenY = this.y*fovscale - cameraY;
+                const screenX = this.x*fov - cameraX;
+                const screenY = this.y*fov - cameraY;
                 
                 // Only draw if on screen
                 if (screenX + this.radius > 0 && screenX - this.radius < canvas.width &&
