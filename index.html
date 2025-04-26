@@ -1244,8 +1244,8 @@
                 }
                 
                 // Centre the camera on the player
-                cameraX = this.x*fov - canvas.width / 2;
-                cameraY = this.y*fov - canvas.height / 2;
+                cameraX = this.x - canvas.width / 2;
+                cameraY = this.y - canvas.height / 2;
                 
                 // Keep camera within map bounds (add this as a setting in the future)
                 //cameraX = Math.max(0, Math.min(MAP_WIDTH - canvas.width, cameraX));
@@ -1284,8 +1284,8 @@
 
             draw() {
                 // Convert world coordinates to screen coordinates
-                const screenX = this.x*fov - cameraX;
-                const screenY = this.y*fov - cameraY;
+                const screenX = this.x - cameraX;
+                const screenY = this.y - cameraY;
                 
                 // Only draw if on screen
                 if (this.isOnScreen(screenX, screenY)) {
@@ -1338,8 +1338,8 @@
             }
             
             isOnScreen(x, y) {
-                return x + this.radius*fov > 0 && x - this.radius*fov < canvas.width &&
-                       y + this.radius*fov > 0 && y - this.radius*fov < canvas.height;
+                return (x + this.radius)*fov > 0 && (x - this.radius)*fov < canvas.width*fov &&
+                       (y + this.radius)*fov > 0 && (y - this.radius)*fov < canvas.height*fov;
             }
         }
 
@@ -1452,8 +1452,8 @@
 
             draw() {
                 // Convert world coordinates to screen coordinates
-                const screenX = this.x*fov - cameraX;
-                const screenY = this.y*fov - cameraY;
+                const screenX = this.x - cameraX;
+                const screenY = this.y - cameraY;
                 
                 // Only draw if on screen
                 if (this.isOnScreen(screenX, screenY)) {
@@ -1488,8 +1488,8 @@
             }
             
             isOnScreen(x, y) {
-                return x + this.radius*fov > 0 && x - this.radius*fov < canvas.width &&
-                       y + this.radius*fov > 0 && y - this.radius*fov < canvas.height;
+                return (x + this.radius)*fov > 0 && (x - this.radius)*fov < canvas.width*fov &&
+                       (y + this.radius)*fov > 0 && (y - this.radius)*fov < canvas.height*fov;
             }
         }
 
@@ -1616,8 +1616,8 @@
 
             draw() {
                 // Convert world coordinates to screen coordinates
-                const screenX = this.x*fov - cameraX;
-                const screenY = this.y*fov - cameraY;
+                const screenX = this.x - cameraX;
+                const screenY = this.y - cameraY;
                 
                 // Only draw if on screen
                 if (this.isOnScreen(screenX, screenY)) {
@@ -1680,8 +1680,8 @@
             }
             
             isOnScreen(x, y) {
-                return x + this.radius*fov > 0 && x - this.radius*fov < canvas.width &&
-                       y + this.radius*fov > 0 && y - this.radius*fov < canvas.height;
+                return (x + this.radius)*fov > 0 && (x - this.radius)*fov < canvas.width*fov &&
+                       (y + this.radius)*fov > 0 && (y - this.radius)*fov < canvas.height*fov;
             }
         }
       
@@ -1961,8 +1961,10 @@
             }
 
             draw() {
-                const screenX = this.x*fov - cameraX;
-                const screenY = this.y*fov - cameraY;
+                //const screenX = this.x - cameraX;
+                //const screenY = this.y - cameraY;
+                const screenX = canvas.width/2 - players[0].x + this.x;
+                const screenY = canvas.height/2 - players[0].y + this.y;
 
                 if (!this.isOnScreen(screenX, screenY)) return;
 
@@ -2086,8 +2088,8 @@
             }
 
             isOnScreen(x, y) {
-                return x + this.size/2*fov > 0 && x - this.size/2*fov < canvas.width &&
-                       y + this.size/2*fov > 0 && y - this.size/2*fov < canvas.height;
+                return (x + this.size/2)*fov > 0 && (x - this.size/2)*fov < canvas.width*fov &&
+                       (y + this.size/2)*fov > 0 && (y - this.size/2)*fov < canvas.height*fov;
             }
         }
 
@@ -2120,8 +2122,8 @@
 
             draw() {
                 // Convert world coordinates to screen coordinates
-                const screenX = this.x*fov - cameraX;
-                const screenY = this.y*fov - cameraY;
+                const screenX = this.x - cameraX;
+                const screenY = this.y - cameraY;
                 
                 // Only draw if on screen
                 if (screenX + this.radius > 0 && screenX - this.radius < canvas.width &&
