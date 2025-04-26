@@ -1225,9 +1225,10 @@
                 this.y = Math.max(this.radius, Math.min(MAP_HEIGHT - this.radius, this.y));
 
                 // Angle towards mouse
-                const mouseWorldX = mouseX + cameraX;
-                const mouseWorldY = mouseY + cameraY;
-                this.angle = Math.atan2(mouseWorldY - this.y, mouseWorldX - this.x);
+                //const mouseWorldX = mouseX + cameraX;
+                //const mouseWorldY = mouseY + cameraY;
+                //this.angle = Math.atan2(mouseWorldY - this.y, mouseWorldX - this.x);//old code that doesnt work after adding screen resizing
+                this.angle = Math.atan2(mouseY - window.innerHeight/2, mouseX - window.innerWidth/2);
 
                 // Reload
                 if (this.bulletCooldown > 0) {
@@ -2424,6 +2425,9 @@
             // Clear canvas by drawing over
             ctx.fillStyle = '#CDCDCD';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.transform()
+            ctx.scale();//scale for the ENTIRE GAME LOOP
             drawGrid();
             drawMapBoundary();//draw area outside map (translucent rectangles so that grids also change color)
           
