@@ -2198,14 +2198,16 @@
             ctx.fillStyle = 'rgba(95, 103, 108, 0.5)';
             const cameraXwithFOV = players[0].x - canvas.width/2 * fov;
             const cameraYwithFOV = players[0].y - canvas.height/2 * fov;
+            const cameraXwithFOVopp = players[0].x + canvas.width/2 * fov;
+            const cameraYwithFOVopp = players[0].y + canvas.height/2 * fov;
             // Top border
-            ctx.fillRect(-cameraXwithFOV-canvas.width/2,-cameraYwithFOV,MAP_WIDTH+canvas.width,Math.min(0, cameraYwithFOV));//Math.min so that only draw if cameraY < 0
+            ctx.fillRect(0,-cameraYwithFOV,MAP_WIDTH*fov+cameraYwithFOVopp,Math.min(0, cameraYwithFOV));//Math.min so that only draw if cameraY < 0
             // Bottom border
-            ctx.fillRect(-cameraXwithFOV-canvas.width/2,MAP_HEIGHT - cameraYwithFOV,MAP_WIDTH+canvas.width,canvas.height);
+            ctx.fillRect(0,MAP_HEIGHT - cameraYwithFOV,MAP_WIDTH+canvas.width,Math.max(0, cameraYwithFOVopp));
             // Left border
             ctx.fillRect(-cameraXwithFOV,-cameraYwithFOV,Math.min(0, cameraXwithFOV),MAP_HEIGHT);//only draw if cameraX < 0
             // Right border
-            ctx.fillRect(MAP_WIDTH - cameraXwithFOV,-cameraYwithFOV,canvas.width,MAP_HEIGHT);
+            ctx.fillRect(MAP_WIDTH - cameraXwithFOV,-cameraYwithFOV,Math.max(0, cameraXwithFOVopp),MAP_HEIGHT);
             ctx.restore();
         }
       
