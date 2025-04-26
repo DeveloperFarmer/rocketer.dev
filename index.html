@@ -2164,11 +2164,11 @@
             ctx.lineWidth = 4;
             
             // Calculate visible grid area
-            const startX = Math.floor(cameraX / GRID_SIZE) * GRID_SIZE;
-            const startY = Math.floor(cameraY / GRID_SIZE) * GRID_SIZE;
+            const startX = Math.floor(cameraX * fov / GRID_SIZE) * GRID_SIZE;
+            const startY = Math.floor(cameraY * fov / GRID_SIZE) * GRID_SIZE;
             
-            const endX = Math.min(MAP_WIDTH, startX + canvas.width + GRID_SIZE);
-            const endY = Math.min(MAP_HEIGHT, startY + canvas.height + GRID_SIZE);
+            const endX = Math.min(MAP_WIDTH, startX + canvas.width * fov + GRID_SIZE);
+            const endY = Math.min(MAP_HEIGHT, startY + canvas.height * fov + GRID_SIZE);
             
             // Draw vertical lines
             for (let x = startX; x <= endX; x += GRID_SIZE) {
