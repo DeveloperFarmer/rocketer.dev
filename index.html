@@ -2164,27 +2164,31 @@
             ctx.lineWidth = 4;
             
             // Calculate visible grid area
-            const startX = Math.floor(cameraX * fov / GRID_SIZE) * GRID_SIZE;
-            const startY = Math.floor(cameraY * fov / GRID_SIZE) * GRID_SIZE;
+            const cameraXwithFOV = players[0].x - canvas.width/2 * fov;
+            const cameraYwithFOV = players[0].y - canvas.height/2 * fov;
+            const startX = Math.floor(cameraXwithFOV / GRID_SIZE) * GRID_SIZE;
+            const startY = Math.floor(cameraYwithFOV / GRID_SIZE) * GRID_SIZE;
             
-            const endX = Math.min(MAP_WIDTH, startX + canvas.width * fov + GRID_SIZE);
-            const endY = Math.min(MAP_HEIGHT, startY + canvas.height * fov + GRID_SIZE);
+            //const endX = Math.min(MAP_WIDTH, startX + canvas.width * fov + GRID_SIZE);
+            //const endY = Math.min(MAP_HEIGHT, startY + canvas.height * fov + GRID_SIZE);
+            const endX = startX + canvas.width * fov + GRID_SIZE;
+            const endY = startY + canvas.height * fov + GRID_SIZE;
             
             // Draw vertical lines
             for (let x = startX; x <= endX; x += GRID_SIZE) {
-                const screenX = x - cameraX;
+                const screenX = x - cameraXwithFOV;
                 ctx.beginPath();
                 ctx.moveTo(screenX, 0);
-                ctx.lineTo(screenX, canvas.height);
+                ctx.lineTo(screenX, canvas.height * fov);
                 ctx.stroke();
             }
             
             // Draw horizontal lines
             for (let y = startY; y <= endY; y += GRID_SIZE) {
-                const screenY = y - cameraY;
+                const screenY = y - cameraYwithFOV;
                 ctx.beginPath();
                 ctx.moveTo(0, screenY);
-                ctx.lineTo(canvas.width, screenY);
+                ctx.lineTo(canvas.width * fov, screenY);
                 ctx.stroke();
             }
         }
