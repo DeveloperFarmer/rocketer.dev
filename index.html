@@ -1024,6 +1024,7 @@
 
         // Game variables
         let score = 0;
+        let fov = 1;
         const players = [];
         const bullets = [];
         const enemies = [];
@@ -2256,8 +2257,8 @@
         let mouseDown = false;
 
         canvas.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
+            mouseX = e.pageX;
+            mouseY = e.pageY;
         });
 
         canvas.addEventListener('mousedown', () => {
@@ -2287,10 +2288,14 @@
             if (w/maxWidth*maxHeight >= h){//if screen is wider than or equal to a 1920x1080 ratio
               canvas.width = maxWidth;
               canvas.height = window.innerHeight/window.innerWidth*maxWidth;
+              hcanvas.width = maxWidth;
+              hcanvas.height = window.innerHeight/window.innerWidth*maxWidth;
             }
             else{
               canvas.width = window.innerWidth/window.innerHeight*maxHeight;
               canvas.height = maxHeight;
+              hcanvas.width = window.innerWidth/window.innerHeight*maxHeight;
+              hcanvas.height = maxHeight;
             }
         }
         window.addEventListener('resize', () => {
@@ -2318,6 +2323,12 @@
               }
               debugState = "open";
             }
+          }
+          else if (key == "o" && players.length > 0){
+            fov++;
+          }
+          else if (key == "p" && players.length > 0){
+            fov--;
           }
         }
       
