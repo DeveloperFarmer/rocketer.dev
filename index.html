@@ -2780,41 +2780,6 @@
           console.log("not a mobile user");
         }
 
-//stores latest date of changelog update
-var dateUpdate = "Loading changelog...";
-var gameversion = "Loading...";
-var recentUpdate = "";
-
-fetch('/changelog.txt')//get the changelog txt file
-.then(function(response) {
-  response.text().then(function(text) {
-    let newChangelog = text;
-    document.getElementById("changelogwords").innerHTML = newChangelog;
-    //get date of latest update, which can be found between hr and br tags
-    let dateIndex = newChangelog.indexOf("<hr>") + 4; //4 refers to number of characters inside "<hr>"
-    let dateIndex2 = newChangelog.indexOf("<span");
-    dateUpdate = "CHANGELOG - " + newChangelog.slice(dateIndex, dateIndex2); //text between <hr> and <span
-    let dateIndex3 = newChangelog.indexOf("-"); //find the first occurence of dash in changelog. dash is between the alpha and update date
-    gameversion = newChangelog.slice(dateIndex, dateIndex3);
-    let dateIndex4 = newChangelog.indexOf("<br>") + 4;
-    let dateIndex5 = newChangelog.indexOf("</span");
-    recentUpdate = newChangelog.slice(dateIndex4, dateIndex5);
-
-    //let myString = recentUpdate.substring(0,recentUpdate.split('<br>', 7).join('<br>').length);//get first 7 lines of recent changelog, minus 8 to remove unneccesary <br><br>
-    let myString = recentUpdate.substring(0, recentUpdate.length - 8);//remove <br>
-    myString = dateUpdate + "<p>" + myString + "...</p>View the full update by clicking the green button";
-    document.getElementById("changelogDisplay").innerHTML = myString;//show changelog on homepage at top left corner
-    
-    document.getElementById("subtitle").style.display = "block";
-    document.getElementById("subtitle").innerHTML = gameversion;
-  });
-});
-
-//when use settings to change shape color theme
-function changetheme(selectObject) {
-  colortheme = selectObject.value;
-}
-
 var canvasPercentageWidth = 100;
 var canvasPercentageHeight = 100;
 document.addEventListener("contextmenu", (event) =>
@@ -3043,7 +3008,7 @@ function removeTypingIndicator(){
 var keylock = "no";
 
 //hard-coded shape colors so that server does not need to keep sending colors for all the shapes
-var colortheme = "default";
+var colortheme = "default";//remove
 const shapecolors = {
   //based on number of sides
   3: {
