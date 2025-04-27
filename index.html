@@ -2633,11 +2633,11 @@
             }
             const size = shapesizes[shapetype];
             hctx.save();
-            //hctx.translate(x-hsCameraX, y-hsCameraY);
-            let middleOfScreenX = (hsCameraX + hcanvas.width/2)/zoomScale;
-            let middleOfScreenY = (hsCameraY + hcanvas.height/2)/zoomScale;
+            hctx.translate(x-hsCameraX, y-hsCameraY);
+            let middleOfScreenX = hsCameraX + hcanvas.width/2/zoomScale;
+            let middleOfScreenY = hsCameraY + hcanvas.height/2/zoomScale;
             //hctx.translate(middleOfScreenX-(middleOfScreenX-(x-hsCameraX))/zoomScale, middleOfScreenY-(middleOfScreenY-(y-hsCameraY))/zoomScale);
-            hctx.translate(hcanvas.width/2/zoomScale, hcanvas.height/2/zoomScale);
+            //hctx.translate((x-hsCameraX-hcanvas.width/2), (y-hsCameraY-hcanvas.height/2));
             hctx.rotate(rot/180*Math.PI);
             hctx.fillStyle = shapecolors[shapetype];
             hctx.strokeStyle = shapeoutlines[shapetype];
@@ -2667,7 +2667,7 @@
             hctx.save();
             hctx.translate(hcanvas.width/2, hcanvas.height/2);//translate to middle of screen so that scale from there
             hctx.scale(zoomScale,zoomScale);//zoom animations
-            hctx.translate(-hcanvas.width/2/zoomScale, -hcanvas.height/2/zoomScale);//translate back
+            hctx.translate(-hcanvas.width/2/zoom, -hcanvas.height/2/zoom);//translate back
             drawGridHomeScreen();//(no need draw boundary of map)
             //now draw the stuff
             if (gamemode == "PvE arena"){
