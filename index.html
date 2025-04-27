@@ -611,6 +611,11 @@
         font-size: 4.5vmin;
         text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
       }
+      .hsImage {
+        object-fit: contain;
+        width: 5vmin;
+        height: 5vmin;
+      }
       
       /* Tooltip text Right*/
       .hsButtons .tooltiptext {
@@ -952,15 +957,11 @@
     </div>
     <div id="top-buttons" class="hsFlexbox">
       <button id="star" class="hsButtons">
-        <span class="material-icons hsIcons" onclick="accounts()">
-        star
-        </span>
+        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconStar.png?v=1745762544465" alt="Achievements" class="hsImage" onclick="accounts()">
         <span class="tooltiptext">Achievements</span>
       </button>
       <button id="person" class="hsButtons">
-        <span class="material-icons hsIcons" onclick="accounts()">
-        person
-        </span>
+        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconStar.png?v=1745762544465" alt="Profile" class="hsImage" onclick="accounts()">
         <span class="tooltiptext">Account</span>
       </button>
       <button id="settings" class="hsButtons">
