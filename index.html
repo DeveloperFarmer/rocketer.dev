@@ -615,21 +615,23 @@
       /* Tooltip text */
       .hsButtons .tooltiptext {
         opacity: 0;
-        width: 120px;
         background-color: black;
         color: #fff;
         font-family: Roboto;
         font-weight: 700;
-        text-align: center;
+        font-size: 2vmin;
         padding: 0 0.5vmin;
-        border-radius: 6px;
+        text-align: center;
+        border-radius: 0.5vmin;
         position: absolute;
         z-index: 1;
+        transition: all 0.2s ease-out;
       }
 
       /* Show the tooltip text when you mouse over the tooltip container */
       .hsButtons:hover .tooltiptext {
         opacity: 1;
+        transform: translateX(calc(-50%-7.8vmin))
       }
       
       .modal{
@@ -921,11 +923,13 @@
         <span class="material-icons hsIcons" onclick="accounts()">
         star
         </span>
+        <span class="tooltiptext">Achievements</span>
       </button>
       <button id="person" class="hsButtons">
         <span class="material-icons hsIcons" onclick="accounts()">
         person
         </span>
+        <span class="tooltiptext">Account</span>
       </button>
       <button id="settings" class="hsButtons">
         <span class="material-icons hsIcons" onclick="openSettings()">
