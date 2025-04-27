@@ -2654,6 +2654,11 @@
             //start drawing the homescreen if not ingame
             hctx.fillStyle = '#CDCDCD';
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
+            let zoom = 1/fov;
+            hctx.save();
+            hctx.translate(hcanvas.width/2, hcanvas.height/2);//translate to middle of screen so that scale from there
+            hctx.scale(zoom,zoom);//zoom animations
+            hctx.translate(hcanvas.width/2, hcanvas.height/2);//translate back
             drawGridHomeScreen();//(no need draw boundary of map)
             //now draw the stuff
             if (gamemode == "PvE arena"){
@@ -2672,7 +2677,7 @@
               drawPolygon(3,1046,1288,0)
               drawPolygon(3,2790,2069,0)
             }
-          
+            hctx.restore();//restore zoom
             hctx.fillStyle = 'rgba(0,0,0,.5)';//make homescreen background darker
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
             //now move the camera
@@ -12810,10 +12815,6 @@ function changeGamemode(dir){
         else{
           //if press enter at homepage, enter the game
           gameStart = 1;
-          currentGmSelector.hover1 = "no";
-          currentGmSelector.hover2 = "no";
-          currentGmSelector.hover3 = "no";
-          currentGmSelector.hover4 = "no";
           randomNotif();
         }
       } else if (e.key == "y" || e.key == "Y") {
@@ -13079,139 +13080,6 @@ function changeGamemode(dir){
       } else if (gameStart > 0 && gameStart <= 0.5) {
         //if on homepage
         //check for mouse touch with gamemode selection arrows
-        //note that arrow1x and the other properties are in terms of total canvas width and height, and not the actual position
-        if (
-          mousex >
-            currentGmSelector.arrow1x * window.innerWidth -
-              ((currentGmSelector.fontSize1 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousex <
-            currentGmSelector.arrow1x * window.innerWidth +
-              ((currentGmSelector.fontSize1 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousey <
-            currentGmSelector.arrow1y * window.innerHeight +
-              ((currentGmSelector.fontSize1 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousey >
-            currentGmSelector.arrow1y * window.innerHeight -
-              ((currentGmSelector.fontSize1 / canvas.width) *
-                window.innerWidth) /
-                2
-        ) {
-          currentGmSelector.hover1 = "yes";
-          hcanvas.style.cursor = "pointer";
-        } else {
-          currentGmSelector.hover1 = "no";
-          if (currentGmSelector.hover2 == "no" && currentGmSelector.hover3 == "no" && currentGmSelector.hover4 == "no") {
-            //if both arrows not hovered
-            hcanvas.style.cursor = "auto";
-          }
-        }
-        
-       
-        if (
-          mousex >
-            currentGmSelector.arrow2x * window.innerWidth -
-              ((currentGmSelector.fontSize2 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousex <
-            currentGmSelector.arrow2x * window.innerWidth +
-              ((currentGmSelector.fontSize2 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousey <
-            currentGmSelector.arrow2y * window.innerHeight +
-              ((currentGmSelector.fontSize2 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousey >
-            currentGmSelector.arrow2y * window.innerHeight -
-              ((currentGmSelector.fontSize2 / canvas.width) *
-                window.innerWidth) /
-                2
-        ) {
-          currentGmSelector.hover2 = "yes";
-          hcanvas.style.cursor = "pointer";
-        } else {
-          currentGmSelector.hover2 = "no";
-          if (currentGmSelector.hover1 == "no" && currentGmSelector.hover3 == "no" && currentGmSelector.hover4 == "no") {
-            //if both arrows not hovered
-            hcanvas.style.cursor = "auto";
-          }
-        }
-        
-        //check for mouse touch with region selection arrows
-        if (
-          mousex >
-            currentGmSelector.arrow3x * window.innerWidth -
-              ((currentGmSelector.fontSize3 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousex <
-            currentGmSelector.arrow3x * window.innerWidth +
-              ((currentGmSelector.fontSize3 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousey <
-            currentGmSelector.arrow3y * window.innerHeight +
-              ((currentGmSelector.fontSize3 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousey >
-            currentGmSelector.arrow3y * window.innerHeight -
-              ((currentGmSelector.fontSize3 / canvas.width) *
-                window.innerWidth) /
-                2
-        ) {
-          currentGmSelector.hover3 = "yes";
-          hcanvas.style.cursor = "pointer";
-        } else {
-          currentGmSelector.hover3 = "no";
-          if (currentGmSelector.hover1 == "no" && currentGmSelector.hover2 == "no" && currentGmSelector.hover4 == "no" ) {
-            //if both arrows not hovered
-            hcanvas.style.cursor = "auto";
-          }
-        }
-        
-        if (
-          mousex >
-            currentGmSelector.arrow4x * window.innerWidth -
-              ((currentGmSelector.fontSize4 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousex <
-            currentGmSelector.arrow4x * window.innerWidth +
-              ((currentGmSelector.fontSize4 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousey <
-            currentGmSelector.arrow4y * window.innerHeight +
-              ((currentGmSelector.fontSize4 / canvas.width) *
-                window.innerWidth) /
-                2 &&
-          mousey >
-            currentGmSelector.arrow4y * window.innerHeight -
-              ((currentGmSelector.fontSize4 / canvas.width) *
-                window.innerWidth) /
-                2
-        ) {
-          currentGmSelector.hover4 = "yes";
-          hcanvas.style.cursor = "pointer";
-        } else {
-          currentGmSelector.hover4 = "no";
-          if (currentGmSelector.hover1 == "no" && currentGmSelector.hover2 == "no" && currentGmSelector.hover3 == "no") {
-            //if both arrows not hovered
-            hcanvas.style.cursor = "auto";
-          }
-        }
-        if(currentGmSelector.hover1 == "yes" || currentGmSelector.hover2 == "yes" || currentGmSelector.hover3 == "yes" || currentGmSelector.hover4 == "yes") {
-          hcanvas.style.cursor = "pointer";
-        }
       }
     });
 
@@ -13582,65 +13450,8 @@ function changeGamemode(dir){
           }
         }
         if (gameStart > 0 && gameStart <= 0.5) {
-        if (
-            mousex >
-              currentGmSelector.arrow1x * window.innerWidth -
-                ((currentGmSelector.fontSize1 / canvas.width) *
-                  window.innerWidth) /
-                  2 &&
-            mousex <
-              currentGmSelector.arrow1x * window.innerWidth +
-                ((currentGmSelector.fontSize1 / canvas.width) *
-                  window.innerWidth) /
-                  2 &&
-            mousey <
-              currentGmSelector.arrow1y * window.innerHeight +
-                ((currentGmSelector.fontSize1 / canvas.width) *
-                  window.innerWidth) /
-                  2 &&
-            mousey >
-              currentGmSelector.arrow1y * window.innerHeight -
-                ((currentGmSelector.fontSize1 / canvas.width) *
-                  window.innerWidth) /
-                  2
-          ) {
-            currentGmSelector.hover1 = "yes";
-          } else {
-            currentGmSelector.hover1 = "no";
-          }
-          if (
-            mousex >
-              currentGmSelector.arrow2x * window.innerWidth -
-                ((currentGmSelector.fontSize2 / canvas.width) *
-                  window.innerWidth) /
-                  2 &&
-            mousex <
-              currentGmSelector.arrow2x * window.innerWidth +
-                ((currentGmSelector.fontSize2 / canvas.width) *
-                  window.innerWidth) /
-                  2 &&
-            mousey <
-              currentGmSelector.arrow2y * window.innerHeight +
-                ((currentGmSelector.fontSize2 / canvas.width) *
-                  window.innerWidth) /
-                  2 &&
-            mousey >
-              currentGmSelector.arrow2y * window.innerHeight -
-                ((currentGmSelector.fontSize2 / canvas.width) *
-                  window.innerWidth) /
-                  2
-          ) {
-            currentGmSelector.hover2 = "yes";
-          } else {
-            currentGmSelector.hover2 = "no";
-          }
+          //old codefor gamemode selector arrows
         }
-        //mobile gamemode change
-        if (currentGmSelector.hover2 == "yes") {
-        changeGamemode("left")
-      } else if (currentGmSelector.hover1 == "yes") {
-        changeGamemode("right")
-      }
       }
 
     });
@@ -19959,7 +19770,7 @@ function changeGamemode(dir){
       ) {
         //if skill points is supposed to be shown or animating
         hctx.save();
-      if(currentGmSelector.gamemode == "3") {
+      if(currentGmSelector.gamemode == "3") {//if tank editor
       hctx.translate(60, hcanvas.height);//bottom left of screen + 60px while in tank editor
       } else {
       hctx.translate(0, hcanvas.height);//bottom left of screen
