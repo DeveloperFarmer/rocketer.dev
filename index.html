@@ -612,7 +612,7 @@
         text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
       }
       
-      /* Tooltip text */
+      /* Tooltip text Right*/
       .hsButtons .tooltiptext {
         opacity: 0;
         background-color: black;
@@ -624,6 +624,7 @@
         text-align: center;
         border-radius: 0.5vmin;
         position: absolute;
+        right: 0;
         z-index: 1;
         transition: all 0.2s ease-out;
       }
@@ -631,7 +632,28 @@
       /* Show the tooltip text when you mouse over the tooltip container */
       .hsButtons:hover .tooltiptext {
         opacity: 1;
-        transform: translateX(calc(-50%-7.8vmin))
+        transform: translateX(-7.2vmin)
+      }
+      
+      /* Tooltip text Left*/
+      .hsButtons .tooltiptext2 {
+        opacity: 0;
+        background-color: black;
+        color: #fff;
+        font-family: Roboto;
+        font-weight: 700;
+        font-size: 2vmin;
+        padding: 0 0.5vmin;
+        text-align: center;
+        border-radius: 0.5vmin;
+        position: absolute;
+        left: 0;/*this is diff from right tooltip*/
+        z-index: 1;
+        transition: all 0.2s ease-out;
+      }
+      .hsButtons:hover .tooltiptext2 {
+        opacity: 1;
+        transform: translateX(7.2vmin)/*this also changed*/
       }
       
       .modal{
@@ -907,11 +929,13 @@
         <span class="material-icons hsIcons" onclick="window.open('https://www.reddit.com/r/rocketer/')">
         reddit
         </span>
+        <span class="tooltiptext2">Subreddit</span>
       </button>
       <button id="discord" class="hsButtons">
         <span class="material-icons hsIcons" onclick="window.open('https://discord.com/invite/R83VfCXDFN')">
         discord
         </span>
+        <span class="tooltiptext2">Discord Server</span>
       </button>
     </div>
     <div id="right-buttons" class="hsFlexbox">
