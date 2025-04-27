@@ -2335,15 +2335,22 @@
       
         function drawGridHomeScreen() {//ONLY FOR HOMSCREEN
             hctx.strokeStyle = GRID_LINE_COLOR;
+            hctx.strokeStyle = "red";
             hctx.lineWidth = 4;
-            const startX = Math.floor(hsCameraX / GRID_SIZE) * GRID_SIZE;
-            const startY = Math.floor(hsCameraY / GRID_SIZE) * GRID_SIZE;
-            const endX = Math.min(hsMAP_SIZE, startX + hcanvas.width + GRID_SIZE);
-            const endY = Math.min(hsMAP_SIZE, startY + hcanvas.height + GRID_SIZE);
+            //hsCameraX and hsCameraY are the coords of the top left corner of a reactangle. This rectangle becomes smaller when zooming out, but always centered in the middle of your screen
+            //now we need to find the real coords of the top left corner of your screen, not this rectangle
+            //const realX = hsCameraX+hcanvas.width/2-hcanvas.width/2*zoom;
+            //const realY = hsCameraY+hcanvas.height/2-hcanvas.height/2*zoom;
+            const realX = hsCameraX/zoom;
+            const realY = hsCameraY;
+            const startX = Math.floor(realX / GRID_SIZE) * GRID_SIZE;
+            const startY = Math.floor(realY / GRID_SIZE) * GRID_SIZE;
+            const endX = Math.min(hsMAP_SIZE, startX + hcanvas.width*zoom + GRID_SIZE);
+            const endY = Math.min(hsMAP_SIZE, startY + hcanvas.height*zoom + GRID_SIZE);
             
             // Draw vertical lines
             for (let x = startX; x <= endX; x += GRID_SIZE) {
-                const screenX = x - hsCameraX;
+                const screenX = x - realX;
                 hctx.beginPath();
                 hctx.moveTo(screenX, 0);
                 hctx.lineTo(screenX, hcanvas.height);
@@ -2352,7 +2359,7 @@
             
             // Draw horizontal lines
             for (let y = startY; y <= endY; y += GRID_SIZE) {
-                const screenY = y - hsCameraY;
+                const screenY = y - realY;
                 hctx.beginPath();
                 hctx.moveTo(0, screenY);
                 hctx.lineTo(hcanvas.width, screenY);
@@ -2667,7 +2674,7 @@
             hctx.save();
             hctx.translate(hcanvas.width/2, hcanvas.height/2);//translate to middle of screen so that scale from there
             hctx.scale(zoomScale,zoomScale);//zoom animations
-            hctx.translate(-hcanvas.width/2/zoom, -hcanvas.height/2/zoom);//translate back
+            hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back
             drawGridHomeScreen();//(no need draw boundary of map)
             //now draw the stuff
             if (gamemode == "PvE arena"){
