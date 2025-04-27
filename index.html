@@ -332,7 +332,7 @@
         }
         #not-signed-in-text {
           position: fixed;
-          top: 1.5vmin;
+          top: 1vmin;
           right: 7vmin;
           font-size: max(3vh,15px);
         }
@@ -346,6 +346,8 @@
             width: 100%;
             font-weight: 900;
             display: none;
+            animation-name: opacityFade;
+            animation-duration: .5s;
         }
         .popUp {
           padding: 2vmin 3vmin;
@@ -357,6 +359,8 @@
           left: 50%;
           -webkit-transform: translateY(-50%) translateX(-50%);
           text-align: center;
+          animation-name: dropFromTop;
+          animation-duration: .5s;
         }
         .debug {/*debug closed by default*/
             display: none;
@@ -988,7 +992,7 @@
         <span class="tooltiptext">Account</span>
       </button>
       <button id="settings" class="hsButtons">
-        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconSettings.png?v=1745762626908" alt="Settings" class="hsImage" onclick="accounts()">
+        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconSettings.png?v=1745762626908" alt="Settings" class="hsImage" onclick="openSettings()">
         <span class="tooltiptext">Settings</span>
       </button>
     </div>
@@ -1081,6 +1085,7 @@
         const gamemodeTitleAnimation = document.getElementById('gamemodeTitleAnimation');//for animating purposes
         const oval = document.getElementById('ovalAnimation');//also for the animation
         const clientTickDiv = document.getElementById('clienttick');
+        const signupdiv = document.getElementById('not-signed-in-text');
         document.getElementById('exit-changelog').addEventListener("click", () => {
           fullchangelog.style.display = "none";
         });
@@ -2699,6 +2704,7 @@
           document.getElementById('left-buttons').style.display = "none";
           document.getElementById('top-buttons').style.display = "none";
           document.getElementById('right-buttons').style.display = "none";
+          signupdiv.style.display = "none";
           //add game divs
           document.getElementById('score').style.display = "block";
           //open debug
@@ -2808,6 +2814,7 @@
           document.getElementById('left-buttons').style.display = "flex";//FLEX, NOT BLOCK (CUZ its a flexbox)
           document.getElementById('top-buttons').style.display = "flex";
           document.getElementById('right-buttons').style.display = "flex";
+          signupdiv.style.display = "block";
           document.getElementById('score').style.display = "none";
           fpsCounter.style.display = "none";
           let allOtherDebugDivs = document.querySelectorAll(".debug");

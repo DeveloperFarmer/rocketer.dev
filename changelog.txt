@@ -2,6 +2,8 @@ ALPHA 0.0.11 - April 27, 2025
 - Added tooltips for buttons on the home screen
 - You can press 'o' and 'p' to adjust FOV in PvE. This is a temporary feature.
 - Added modal animation
+- Changed to scenexe's icons (thanks acropolis)
+- Other minor changes
 
 ALPHA 0.0.10 - April 26, 2025
 - Added non-functioning settings
