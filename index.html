@@ -964,6 +964,7 @@
         <div id="regionArrow2">&gt;</div>
     </div>
     <div id="respawnInfo">You will respawn at level <span id="respawnLvl">0</span></div>
+    <div id="not-signed-in-text"><button id="login" class="otherlinks">Log In</button> - <button id="signup" class="otherlinks">Sign Up</button></div>
     <div id="left-buttons" class="hsFlexbox">
       <button id="reddit" class="hsButtons">
         <span class="material-icons hsIcons" onclick="window.open('https://www.reddit.com/r/rocketer/')">
@@ -996,7 +997,6 @@
         <span class="tooltiptext">Settings</span>
       </button>
     </div>
-    <div id="not-signed-in-text"><button id="login" class="otherlinks">Log In</button> - <button id="signup" class="otherlinks">Sign Up</button></div>
     <div id="full-changelog" class="popUpBackground">
         <div id="changelogtextdiv" class="popUp">
           <h1>Changelog</h1>
@@ -2833,7 +2833,6 @@
         function multiplayer(){
         
         var connected = "no";
-        var connectedopacity = 1.0;
         var mainMenuOpacity = 0;
         var gameStart = 0; //gamestart variable outside so that can access in play button onclick in code above
         var drawAreaX = 0; //these two variable placed outside so that can access in mousemove event listener
@@ -2933,35 +2932,9 @@
           console.log("not a mobile user");
         }
 
-var canvasPercentageWidth = 100;
-var canvasPercentageHeight = 100;
-document.addEventListener("contextmenu", (event) =>
-  event.preventDefault()
-);//contextmenu is right click popup
-
-function canvasResizing() {
-  //resize game canvas, note that home page canvas doesn not resize
-  if ((window.innerWidth / 1920) * 1080 < window.innerHeight) {
-    //height more than width
-    canvas.style.height = "100%";
-    canvas.style.top = "0%";
-    canvasPercentageHeight = 100;
-    let calculationwidth =
-      (((window.innerHeight / 1080) * 1920) / window.innerWidth) * 100;
-    canvas.style.width = calculationwidth + "%";
-    canvas.style.left = -(calculationwidth - 100) / 2 + "%";
-    canvasPercentageWidth = calculationwidth;
-  } else {
-    //width more than height
-    canvas.style.width = "100%";
-    canvas.style.left = "0%";
-    canvasPercentageWidth = 100;
-    let calculationheight = (((window.innerWidth / 1920) * 1080) / window.innerHeight) * 100;
-    canvas.style.height = calculationheight + "%";
-    canvas.style.top = -(calculationheight - 100) / 2 + "%";
-    canvasPercentageHeight = calculationheight;
-  }
-}
+        document.addEventListener("contextmenu", (event) =>
+          event.preventDefault()
+        );//contextmenu is right click popup
 
 var gamemodes = ["Free For All", "2 Teams", "4 Teams", "Tank Editor"]; //all the gamemodes available
 var gamemodecolors = ["#f04f54", "#BE7FF5", "#00E06C", "#38B764"]; //must be in same order as gamemode list
@@ -8167,7 +8140,7 @@ var socket = "null";
   //calculating canvas resizing for different screen sizes
   //remember to fix buttons afterwards
   //window.innerWidth
-  canvasResizing();
+  //canvasResizing();//removed
   canvas.width = 1920;
   canvas.height = 1080;
 
@@ -12588,7 +12561,6 @@ function changeGamemode(dir){
         socket.close();//disconnect from current server
         playButton.style.display = "none";
         nameInput.style.display = "none";
-        connectedopacity = 0;//allow opacity animation to start
         connected = "no";
         gamemodeBgFoV[currentGmSelector.gamemode] = 0.1;
         connectServer(serverlist[gamemodes[currentGmSelector.gamemode]],"no")
@@ -12620,7 +12592,6 @@ function changeGamemode(dir){
         socket.close();//disconnect from current server
         playButton.style.display = "none";
         nameInput.style.display = "none";
-        connectedopacity = 0;
         connected = "no";
         gamemodeBgFoV[currentGmSelector.gamemode] = 0.1;
         connectServer(serverlist[gamemodes[currentGmSelector.gamemode]],"no")
@@ -13304,29 +13275,6 @@ function changeGamemode(dir){
       }
     });
   }
-
-  $(window).resize(function () {
-    //resize canvas when browser window is resized
-    canvasResizing();
-    
-    //move play button and gamename
-    scaleMainMenuUI();
-  });
-  
-  function scaleMainMenuUI(){
-    //move play button and gamename
-    let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
-    let resizeDiffY = 1/window.innerHeight*hcanvas.height;
-    //resize based on position of gamemode selector
-    //document.getElementById("play").style.top = "calc(45% + " + ((hcanvas.height / 100) * 9.5)*resizeDiffY/resizeDiffX/hcanvas.height*window.innerHeight + "px)";
-    document.getElementById("play").style.top = "calc(47.5% + " + ((hcanvas.height / 100) * 7.4)*resizeDiffY/resizeDiffX/hcanvas.height*window.innerHeight + "px)";
-    document.getElementById("gamename").style.top = "calc(47.5% + " + ((hcanvas.height / 100) * 6.9)*resizeDiffY/resizeDiffX/hcanvas.height*window.innerHeight + "px)";
-    document.getElementById("respawnScoreDiv").style.top = "calc(47.5% + " + ((hcanvas.height / 100) * 12.5)*resizeDiffY/resizeDiffX/hcanvas.height*window.innerHeight + "px)";
-    document.getElementById("chat").style.top = "calc(" + ((hcanvas.height / 100) * 28)*resizeDiffY/resizeDiffX/hcanvas.height*window.innerHeight + "px)";
-  }
-
-//do it once
-scaleMainMenuUI();
 
   //mobile touch
   if (mobile == "yes") {
@@ -14231,390 +14179,10 @@ scaleMainMenuUI();
             }
           }
 
-        //drawing gamemode selector
-        hctx.save();
-        //let yStretch = resizeDiffX/resizeDiffY;//scale to prevent squished width, but will cause position to change
-        var w = (hcanvas.width / 100) * 20;
-        var h = (hcanvas.width / 100) * 6.5;
-        var r = hcanvas.width / 100 / 3;//higher number means less round
-        var x = hcanvas.width / 2 - w / 2;
-        var y = (hcanvas.height / 100) * 40.5;
-        let translatedX = x + w/2;
-        let translatedY = y + h/2;
-        hctx.translate(translatedX, translatedY);//0 is now at this coords
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        x = -w/2;
-        y = -h/2;
-
-        if (currentGmSelector.transition == 3){
-          hctx.fillStyle = gamemodecolors[currentGmSelector.gamemode]; //color of current gamemode
-        }
-        else{
-          //gamemode transition
-          //lerp between colors when changing gamemode
-          //currentGmSelector.transition go from -1 to 3
-          if (currentGmSelector.animateDir == "right") {
-            if (currentGmSelector.transition < 0){
-              currentGmSelector.colorLerp = 0;
-            }
-            else if (currentGmSelector.colorLerp < 1){
-              currentGmSelector.colorLerp += 0.05;
-            }
-            
-            var rgbNew = colorInterpolate(gamemodecolors[currentGmSelector.prevgamemode], gamemodecolors[currentGmSelector.gamemode], currentGmSelector.colorLerp);
-          }
-          else{
-            if (currentGmSelector.transition > 1){
-              currentGmSelector.colorLerp = 1;
-            }
-            else if (currentGmSelector.colorLerp > 0){
-              currentGmSelector.colorLerp -= 0.05;
-            }
-            
-            var rgbNew = colorInterpolate(gamemodecolors[currentGmSelector.gamemode], gamemodecolors[currentGmSelector.prevgamemode], currentGmSelector.colorLerp);
-          }
-          hctx.fillStyle = `rgb( ${rgbNew.r}, ${rgbNew.g}, ${rgbNew.b})`;
-        }
-
-        hctx.strokeStyle = "black";
-        hctx.lineWidth = 8;
-        hctxroundRectangle(x,y,r,w,h);
-        //now draw the bottom part of the gamemode selector (the area with darker color)
-        h = (hcanvas.width / 100) * 3.25;
-        y = (hcanvas.height / 100) * 46.2 - translatedY;
-
-        if (currentGmSelector.transition == 3){
-          hctx.fillStyle = gamemodecolorsdark[currentGmSelector.gamemode]; //color of current gamemode
-        }
-        else{
-          //gamemode transition
-          if (currentGmSelector.animateDir == "right") {
-            var rgbNew = colorInterpolate(gamemodecolorsdark[currentGmSelector.prevgamemode], gamemodecolorsdark[currentGmSelector.gamemode], currentGmSelector.colorLerp);
-          }
-          else{
-            var rgbNew = colorInterpolate(gamemodecolorsdark[currentGmSelector.gamemode], gamemodecolorsdark[currentGmSelector.prevgamemode], currentGmSelector.colorLerp);
-          }
-          hctx.fillStyle = `rgb( ${rgbNew.r}, ${rgbNew.g}, ${rgbNew.b})`;
-        }
-
-        hctxroundRectangleFill(x,y,r,w,h);
-
-        hctx.lineWidth = 3;
-        hctx.fillStyle = "white";
-        hctx.font = "900 60px Yantramanav";
-        hctx.textBaseline = "middle"; //make arrows and gamemode word draw with coordinates in the center of the text
-        hctx.fillText(
-          "Gamemode",
-          hcanvas.width / 2 - translatedX,
-          (hcanvas.height / 100) * 37 - translatedY
-        );
-        hctx.strokeText(
-          "Gamemode",
-          hcanvas.width / 2 - translatedX,
-          (hcanvas.height / 100) * 37 - translatedY
-        );
-      hctx.lineWidth = 6.5;
-        hctx.font = "900 40px Roboto";
-        //gamemodes[currentGmSelector.gamemode] refers to the current gamemode shown on the screen
-        if (
-          currentGmSelector.prevgamemode != currentGmSelector.gamemode
-        ) {
-          //animating text opacity when changing gamemode
-          var prevAlpha = hctx.globalAlpha; //store prev transparency
-          if (currentGmSelector.transition < 0.5) {
-            if (currentGmSelector.animateDir == "right") {
-              //write prev gamemode
-              var transparency = 1 - (currentGmSelector.transition + 1.1);
-              if (transparency < 0) {
-                transparency = 0;
-              }
-              hctx.globalAlpha = transparency;
-              hctx.strokeText(
-                gamemodes[currentGmSelector.prevgamemode],
-                hcanvas.width * currentGmSelector.textX - translatedX,
-                hcanvas.height * currentGmSelector.textY - translatedY
-              );
-              hctx.fillText(
-                gamemodes[currentGmSelector.prevgamemode],
-                hcanvas.width * currentGmSelector.textX - translatedX,
-                hcanvas.height * currentGmSelector.textY - translatedY
-              );
-            } else {
-              //write new gamemode
-              hctx.globalAlpha = 0.5 - currentGmSelector.transition;
-              hctx.strokeText(
-                gamemodes[currentGmSelector.gamemode],
-                hcanvas.width * currentGmSelector.textX - translatedX,
-                hcanvas.height * currentGmSelector.textY - translatedY
-              );
-              hctx.fillText(
-                gamemodes[currentGmSelector.gamemode],
-                hcanvas.width * currentGmSelector.textX - translatedX,
-                hcanvas.height * currentGmSelector.textY - translatedY
-              );
-            }
-          } else {
-            if (currentGmSelector.animateDir == "right") {
-              //write new gamemode
-              hctx.globalAlpha = currentGmSelector.transition - 0.5;
-              hctx.strokeText(
-                gamemodes[currentGmSelector.gamemode],
-                hcanvas.width * currentGmSelector.textX - translatedX,
-                hcanvas.height * currentGmSelector.textY - translatedY
-              );
-              hctx.fillText(
-                gamemodes[currentGmSelector.gamemode],
-                hcanvas.width * currentGmSelector.textX - translatedX,
-                hcanvas.height * currentGmSelector.textY - translatedY
-              );
-            } else {
-              //write prev gamemode
-              var transparency = currentGmSelector.transition - 1;
-              if (transparency < 0) {
-                transparency = 0;
-              }
-              hctx.globalAlpha = transparency;
-              hctx.strokeText(
-                gamemodes[currentGmSelector.prevgamemode],
-                hcanvas.width * currentGmSelector.textX - translatedX,
-                hcanvas.height * currentGmSelector.textY - translatedY
-              );
-              hctx.fillText(
-                gamemodes[currentGmSelector.prevgamemode],
-                hcanvas.width * currentGmSelector.textX - translatedX,
-                hcanvas.height * currentGmSelector.textY - translatedY
-              );
-            }
-          }
-          hctx.globalAlpha = prevAlpha;
-        } else {
-          hctx.strokeText(
-            gamemodes[currentGmSelector.gamemode],
-            hcanvas.width * currentGmSelector.textX - translatedX,
-            hcanvas.height * currentGmSelector.textY - translatedY
-          );
-          hctx.fillText(
-            gamemodes[currentGmSelector.gamemode],
-            hcanvas.width * currentGmSelector.textX - translatedX,
-            hcanvas.height * currentGmSelector.textY - translatedY
-          );
-        }
-        hctx.fillStyle = currentGmSelector.arrowColor;
-      
-        //arrow growing animation for arrow 1
-        if (
-          currentGmSelector.fontSize1 >
-            currentGmSelector.defaultfontSize &&
-          currentGmSelector.hover1 == "no"
-        ) {
-          currentGmSelector.fontSize1--;
-        } else if (
-          currentGmSelector.fontSize1 <
-            currentGmSelector.animatedfontSize &&
-          currentGmSelector.hover1 == "yes"
-        ) {
-          currentGmSelector.fontSize1++;
-        }
-        hctx.font = "700 " + currentGmSelector.fontSize1 + "px Roboto";
-        hctx.strokeText(
-          "<",
-          hcanvas.width * currentGmSelector.arrow1x - translatedX,
-          hcanvas.height * currentGmSelector.arrow1y - translatedY
-        );
-        hctx.fillText(
-          "<",
-          hcanvas.width * currentGmSelector.arrow1x - translatedX,
-          hcanvas.height * currentGmSelector.arrow1y - translatedY
-        );
-        //growing animation for arrow 2
-        if (
-          currentGmSelector.fontSize2 >
-            currentGmSelector.defaultfontSize &&
-          currentGmSelector.hover2 == "no"
-        ) {
-          currentGmSelector.fontSize2--;
-        } else if (
-          currentGmSelector.fontSize2 <
-            currentGmSelector.animatedfontSize &&
-          currentGmSelector.hover2 == "yes"
-        ) {
-          currentGmSelector.fontSize2++;
-        }
-        hctx.font = "700 " + currentGmSelector.fontSize2 + "px Roboto";
-        hctx.strokeText(
-          ">",
-          hcanvas.width * currentGmSelector.arrow2x - translatedX,
-          hcanvas.height * currentGmSelector.arrow2y - translatedY
-        );
-        hctx.fillText(
-          ">",
-          hcanvas.width * currentGmSelector.arrow2x - translatedX,
-          hcanvas.height * currentGmSelector.arrow2y - translatedY
-        );
-        hctx.globalAlpha = 1.0; //reset transparency
-      
-      
-      
-      
-      
-  
-      
-      
-        //now draw region selector
-        //region selector code has not been added
-        var gamemodeservers = ["Virginia #1"];
-        if(currentGmSelector.gamemode == 3) {
-          gamemodeservers[gamemodeservers.length] = "Virginia #2";
-        }
-        hctx.font = "700 20px Roboto";
-        hctx.lineWidth = 6;
-        hctx.strokeText(
-          "Region - Server",//Region
-          hcanvas.width / 2 - translatedX,
-          (hcanvas.height / 100) * 47.8 - translatedY
-        );
-        hctx.fillText(
-          "Region - Server",//Region
-          hcanvas.width / 2 - translatedX,
-          (hcanvas.height / 100) * 47.8 - translatedY
-        );
-        hctx.font = "700 26px Roboto";
-      
-        if(gamemodeservers.length <= 1) {
-          hctx.strokeText(
-            gamemodeservers[0],
-            hcanvas.width / 2 - translatedX,
-            (hcanvas.height / 100) * 50.5 - translatedY
-          );
-          hctx.fillText(
-            gamemodeservers[0],
-            hcanvas.width / 2 - translatedX,
-            (hcanvas.height / 100) * 50.5 - translatedY
-          );
-        } else {
-        hctx.strokeText(
-          gamemodeservers[currentGamemodeRegion],
-          hcanvas.width / 2 - translatedX,
-          (hcanvas.height / 100) * 50.5 - translatedY
-        );
-        hctx.fillText(
-          gamemodeservers[currentGamemodeRegion],
-          hcanvas.width / 2 - translatedX,
-          (hcanvas.height / 100) * 50.5 - translatedY
-        );
-        }
-
-      if(gamemodeservers.length <= 1) {
-        hctx.font = "900 35px Roboto";
-        hctx.fillStyle = "darkgrey";
-        hctx.lineWidth = 6.5;
-        hctx.strokeText(
-          "<",
-          (hcanvas.width / 100) * 45.5 - translatedX,
-          (hcanvas.height / 100) * 50.5 - translatedY
-        );
-        hctx.fillText(
-          "<",
-          (hcanvas.width / 100) * 45.5 - translatedX,
-          (hcanvas.height / 100) * 50.5 - translatedY
-        );
-        hctx.strokeText(
-          ">",
-          (hcanvas.width / 100) * 54.5 - translatedX,
-          (hcanvas.height / 100) * 50.5 - translatedY
-        );
-        hctx.fillText(
-          ">",
-          (hcanvas.width / 100) * 54.5 - translatedX,
-          (hcanvas.height / 100) * 50.5 - translatedY
-        );
-        } else {
-      
-      
-      
-              //region selector
-        //arrow growing animation for arrow 3
-        if (
-          currentGmSelector.fontSize3 >
-            currentGmSelector.defaultfontSize2 &&
-          currentGmSelector.hover3 == "no"
-        ) {
-          currentGmSelector.fontSize3--;
-        } else if (
-          currentGmSelector.fontSize3 <
-            currentGmSelector.animatedfontSize2 &&
-          currentGmSelector.hover3 == "yes"
-        ) {
-          currentGmSelector.fontSize3++;
-        }
-        hctx.font = "700 " + currentGmSelector.fontSize3 + "px Roboto";
-        hctx.strokeText(
-          "<",
-          hcanvas.width * currentGmSelector.arrow3x - translatedX,
-          hcanvas.height * currentGmSelector.arrow3y - translatedY
-        );
-        hctx.fillText(
-          "<",
-          hcanvas.width * currentGmSelector.arrow3x - translatedX,
-          hcanvas.height * currentGmSelector.arrow3y - translatedY
-        );
-        //growing animation for arrow 2
-        if (
-          currentGmSelector.fontSize4 >
-            currentGmSelector.defaultfontSize2 &&
-          currentGmSelector.hover4 == "no"
-        ) {
-          currentGmSelector.fontSize4--;
-        } else if (
-          currentGmSelector.fontSize4 <
-            currentGmSelector.animatedfontSize2 &&
-          currentGmSelector.hover4 == "yes"
-        ) {
-          currentGmSelector.fontSize4++;
-        }
-        hctx.font = "700 " + currentGmSelector.fontSize4 + "px Roboto";
-        hctx.strokeText(
-          ">",
-          hcanvas.width * currentGmSelector.arrow4x - translatedX,
-          hcanvas.height * currentGmSelector.arrow4y - translatedY
-        );
-        hctx.fillText(
-          ">",
-          hcanvas.width * currentGmSelector.arrow4x - translatedX,
-          hcanvas.height * currentGmSelector.arrow4y - translatedY
-        );
-        hctx.globalAlpha = 1.0; //reset transparency
-      
-      
-        }
-      
-      
-      
-        if (connected == "no" || connectedopacity > 0) {
-          hctx.globalAlpha = connectedopacity;
-          hctx.font = "900 60px Roboto";
-          hctx.fillStyle = "white";
-          hctx.strokeText(
-            "Connecting...",
-            hcanvas.width / 2 - translatedX,
-            (hcanvas.height / 100) * 58 - translatedY
-          );
-          hctx.fillText(
-            "Connecting...",
-            hcanvas.width / 2 - translatedX,
-            (hcanvas.height / 100) * 58 - translatedY
-          );
-          if (connected == "yes") {
-            connectedopacity -= 0.1;//disappear animation
-          }
-          else if (connectedopacity < 1){
-            connectedopacity += 0.1;//appear animation
-          }
-          hctx.globalAlpha = 1.0;
-        }
-        hctx.restore();
+        //old code for canvas drawing of gamemode selector was here
         hctx.textBaseline = "alphabetic"; //change back
         hctx.lineJoin = "miter"; //change back
+      
     } else if (gameStart >= 1 && gameStart < 2.1) {
       //if client clicked play already but server havent replied
       if (gameStart == 1) {
