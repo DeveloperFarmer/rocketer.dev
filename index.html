@@ -611,6 +611,27 @@
         font-size: 4.5vmin;
         text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
       }
+      
+      /* Tooltip text */
+      .hsButtons .tooltiptext {
+        opacity: 0;
+        width: 120px;
+        background-color: black;
+        color: #fff;
+        font-family: Roboto;
+        font-weight: 700;
+        text-align: center;
+        padding: 0 0.5vmin;
+        border-radius: 6px;
+        position: absolute;
+        z-index: 1;
+      }
+
+      /* Show the tooltip text when you mouse over the tooltip container */
+      .hsButtons:hover .tooltiptext {
+        opacity: 1;
+      }
+      
       .modal{
         line-height: 1.5;
         font-size: 1vmin;
@@ -910,6 +931,7 @@
         <span class="material-icons hsIcons" onclick="openSettings()">
         settings
         </span>
+        <span class="tooltiptext">Settings</span>
       </button>
     </div>
     <div id="full-changelog" class="popUpBackground">
