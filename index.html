@@ -313,6 +313,29 @@
           text-decoration:underline;
           color: rgb(0, 123, 255);
         }
+        .otherlinks {
+          background:none;
+          border:none;
+          margin:0;
+          padding:0;
+          cursor: pointer;
+          font-size: max(3vh,15px);
+          text-shadow: -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, 2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000, -2px 2px 0 #000, -2px 0 0 #000;
+          font-weight: 900;
+          font-family: "Roboto", sans-serif;
+          color: rgb(0, 176, 225);
+          display: inline;/*make the button not jump to the next line*/
+        }
+        .otherlinks:hover {
+          text-decoration:underline;
+          color: rgb(0, 123, 255);
+        }
+        #not-signed-in-text {
+          position: fixed;
+          top: 1.5vmin;
+          right: 7vmin;
+          font-size: max(3vh,15px);
+        }
         .popUpBackground {
             position: absolute;
             top: 0%;
@@ -961,16 +984,15 @@
         <span class="tooltiptext">Achievements</span>
       </button>
       <button id="person" class="hsButtons">
-        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconStar.png?v=1745762544465" alt="Profile" class="hsImage" onclick="accounts()">
+        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconProfile.png?v=1745762589212" alt="Profile" class="hsImage" onclick="accounts()">
         <span class="tooltiptext">Account</span>
       </button>
       <button id="settings" class="hsButtons">
-        <span class="material-icons hsIcons" onclick="openSettings()">
-        settings
-        </span>
+        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconSettings.png?v=1745762626908" alt="Settings" class="hsImage" onclick="accounts()">
         <span class="tooltiptext">Settings</span>
       </button>
     </div>
+    <div id="not-signed-in-text"><button id="login" class="otherlinks">Log In</button> - <button id="signup" class="otherlinks">Sign Up</button></div>
     <div id="full-changelog" class="popUpBackground">
         <div id="changelogtextdiv" class="popUp">
           <h1>Changelog</h1>
