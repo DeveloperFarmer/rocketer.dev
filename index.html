@@ -106,7 +106,7 @@
             height: 12%;
             width: 39.5vmin;
             -webkit-transform: translateY(-50%) translateX(-50%);
-            background-color: #BA0DB1;
+            background-color: #a2a2a2;
             /*background-image: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, rgba(225,225,225,0.5) 51%);/*create a lighter shade for the top part of the button, #D82BCF*/
             font-size: 4vmin;
             font-weight: 900;
@@ -123,7 +123,7 @@
             left: 0;
             height: 50%;
             width: 100%;
-            background-color: #d82bcf;
+            background-color: #c0c0c0;
             border-radius: 0.5vmin;
             white-space: nowrap;
             transition: all .3s ease-out;
@@ -674,6 +674,12 @@
         top: 50%;
         -webkit-transform: translateY(-50%) translateX(-50%);
         display:none;
+        animation-name: dropFromTop;
+        animation-duration: .5s;
+      }
+      @keyframes dropFromTop {
+          from {top: 0;}
+          to {top: 50%;}
       }
       .modalButton{
         text-shadow: -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, 2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000, -2px 2px 0 #000, -2px 0 0 #000;
@@ -713,13 +719,15 @@
         padding: 0.5vw;
       }
       #blackScreen {
-            position: absolute;
-            top: 0%;
-            left: 0%;
-            background-color: rgba(0, 0, 0, .5);
-            height: 100%;
-            width: 100%;
-            display: none;
+        position: absolute;
+        top: 0%;
+        left: 0%;
+        background-color: rgba(0, 0, 0, .5);
+        height: 100%;
+        width: 100%;
+        display: none;
+        animation-name: opacityFade;
+        animation-duration: .5s;
       }
       #loadingWords {
         position: fixed;
