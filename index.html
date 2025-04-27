@@ -2633,7 +2633,8 @@
             }
             const size = shapesizes[shapetype];
             hctx.save();
-            hctx.translate(x-hsCameraX, y-hsCameraY);
+            //hctx.translate(x-hsCameraX, y-hsCameraY);
+            hctx.translate(hsMAP_SIZE/2-hsCameraX, hsMAP_SIZE/2-hsCameraY);
             hctx.rotate(rot/180*Math.PI);
             hctx.fillStyle = shapecolors[shapetype];
             hctx.strokeStyle = shapeoutlines[shapetype];
@@ -2649,16 +2650,20 @@
         }
       
         //drawing canvas for homescreen background
+        let zoom = 2;
         function homeScreenLoop() {
             if (players.length > 0) return;//dont do anything if ingame
             //start drawing the homescreen if not ingame
             hctx.fillStyle = '#CDCDCD';
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
-            let zoom = 1/fov;
+            if (zoom > 1){
+              zoom -= 0.01;
+            }
+            let zoomScale = 1/zoom;
             hctx.save();
-            hctx.translate(hcanvas.width/2, hcanvas.height/2);//translate to middle of screen so that scale from there
+            hctx.translate(hcanvas.width/2+hsCameraX, hcanvas.height/2+hsCameraY);//translate to middle of screen so that scale from there
             hctx.scale(zoom,zoom);//zoom animations
-            hctx.translate(hcanvas.width/2, hcanvas.height/2);//translate back
+            hctx.translate(-hcanvas.width/2/zoom-hsCameraX/zoom, -hcanvas.height/2/zoom-hsCameraY/zoom);//translate back
             drawGridHomeScreen();//(no need draw boundary of map)
             //now draw the stuff
             if (gamemode == "PvE arena"){
@@ -2681,8 +2686,8 @@
             hctx.fillStyle = 'rgba(0,0,0,.5)';//make homescreen background darker
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
             //now move the camera
-            hsCameraX = hsMAP_SIZE/2 + rotationRadius*Math.cos(rotationAngle/180*Math.PI) - canvas.width / 2;
-            hsCameraY = hsMAP_SIZE/2 + rotationRadius*Math.sin(rotationAngle/180*Math.PI) - canvas.height / 2;
+            hsCameraX = hsMAP_SIZE/2 + rotationRadius*Math.cos(rotationAngle/180*Math.PI) - hcanvas.width / 2;
+            hsCameraY = hsMAP_SIZE/2 + rotationRadius*Math.sin(rotationAngle/180*Math.PI) - hcanvas.height / 2;
             //rotationAngle++;//good for testing
             rotationAngle+=0.2;
             if(rotationAngle>=360){
