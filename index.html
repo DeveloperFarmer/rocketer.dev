@@ -3050,7 +3050,21 @@
           settingsList = JSON.parse(localStorage.settings);
         }
           
-          //add new settings code
+        //now we update the divs (the switches)
+        for (const settingProp in settingsList) {//loop through all settings
+          if (settingsList[settingProp] === true){
+            document.querySelector('input[settingid="'+settingProp+'"]').setAttribute('checked','true');
+          }
+          else if (settingsList[settingProp] === false){
+            document.querySelector('input[settingid="'+settingProp+'"]').removeAttribute('checked');
+          }
+          else if (typeof settingProp === 'number'){//keybind (pro)
+            newsettings[settingProp] = settingsList[settingProp];
+          }
+          else{//invalid property value
+            //e
+          }
+        }
 var spawnduneparticle = "yes";//dune particles on by default
 var spawncrossroadsparticle = "yes";//crossroads particles on by default
 var spawnradparticle = "yes";//rad particles on by default
