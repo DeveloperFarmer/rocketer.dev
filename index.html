@@ -3031,8 +3031,26 @@
           localStorage.settings = JSON.stringify(settingsList);
         }
         else if (Object.keys(JSON.parse(localStorage.settings)).length != Object.keys(settingsList).length){//there are new or removed settings!
-          
+          let newsettings = {};
+          let oldsettings = JSON.parse(localStorage.settings);
+          for (const settingProp in settingsList) {//loop through new settings
+            if (oldsettings.hasOwnProperty(settingProp)){//this setting existed, didnt change
+              newsettings[settingProp] = oldsettings[settingProp];
+            }
+            else{//new setting!
+              newsettings[settingProp] = settingsList[settingProp];
+            }
+          }
+          //now update the settings
+          settingsList = newsettings;
+          localStorage.settings = JSON.stringify(newsettings);
+          console.log("Updated settings. This is due to an update.")
         }
+        else{//usual
+          settingsList = JSON.parse(localStorage.settings);
+        }
+          
+          //add new settings code
 var spawnduneparticle = "yes";//dune particles on by default
 var spawncrossroadsparticle = "yes";//crossroads particles on by default
 var spawnradparticle = "yes";//rad particles on by default
