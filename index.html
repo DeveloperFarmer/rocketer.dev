@@ -1069,13 +1069,13 @@
     <script type="module" src="./index.js"></script>
     <script type="module">
       //html file cannot access functions inside a module js file, only a normal js file
-      import { closeModal,closeModal2,openSettings,accounts,bugs,updateTempSettings } from "./index.js";
+      import { closeModal,closeModal2,openSettings,accounts,bugs,changeGamemode } from "./index.js";//add updateTempSettings later
       window.closeModal = closeModal;
       window.closeModal2 = closeModal2;
       window.openSettings = openSettings;
       window.accounts = accounts;
       window.bugs = bugs;
-      window.updateTempSettings = updateTempSettings;
+      //window.updateTempSettings = updateTempSettings;
       window.changeGamemode = changeGamemode;
     </script>
   </body>

@@ -819,7 +819,7 @@ console.log(bodyupgrades);
                 const pSBC=(p,c0,c1,l)=>{
                     let r,g,b,P,f,t,h,i=parseInt,m=Math.round,a=typeof(c1)=="string";
                     if(typeof(p)!="number"||p<-1||p>1||typeof(c0)!="string"||(c0[0]!='r'&&c0[0]!='#')||(c1&&!a))return null;
-                    if(!this.pSBCr)this.pSBCr=(d)=>{
+                    if(!pSBCr) var pSBCr=(d)=>{
                         let n=d.length,x={};
                         if(n>9){
                             [r,g,b,a]=d=d.split(","),n=d.length;
@@ -832,7 +832,7 @@ console.log(bodyupgrades);
                             if(n==9||n==5)x.r=d>>24&255,x.g=d>>16&255,x.b=d>>8&255,x.a=m((d&255)/0.255)/1000;
                             else x.r=d>>16,x.g=d>>8&255,x.b=d&255,x.a=-1
                         }return x};
-                    h=c0.length>9,h=a?c1.length>9?true:c1=="c"?!h:false:h,f=this.pSBCr(c0),P=p<0,t=c1&&c1!="c"?this.pSBCr(c1):P?{r:0,g:0,b:0,a:-1}:{r:255,g:255,b:255,a:-1},p=P?p*-1:p,P=1-p;
+                    h=c0.length>9,h=a?c1.length>9?true:c1=="c"?!h:false:h,f=pSBCr(c0),P=p<0,t=c1&&c1!="c"?pSBCr(c1):P?{r:0,g:0,b:0,a:-1}:{r:255,g:255,b:255,a:-1},p=P?p*-1:p,P=1-p;
                     if(!f||!t)return null;
                     if(l)r=m(P*f.r+p*t.r),g=m(P*f.g+p*t.g),b=m(P*f.b+p*t.b);
                     else r=m((P*f.r**2+p*t.r**2)**0.5),g=m((P*f.g**2+p*t.g**2)**0.5),b=m((P*f.b**2+p*t.b**2)**0.5);
