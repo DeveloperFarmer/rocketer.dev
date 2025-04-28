@@ -2966,23 +2966,35 @@
         var safeZone = 2000;
         var safeZoneColor = "rgba(133, 194, 212, .5)";
 
-//keep track of the previous mouse position, and only send the new mouse position when there is a difference of 5px (or else mousemove event listener will trigger every 1px of movement)
-var oldmousex = 0;
-var oldmousey = 0;
-var prevSendMouse = 0;
+        //keep track of the previous mouse position, and only send the new mouse position when there is a difference of 5px (or else mousemove event listener will trigger every 1px of movement)
+        var oldmousex = 0;
+        var oldmousey = 0;
+        var prevSendMouse = 0;
 
-//client runtime
-var duration = "-";
+        //keep track of old player tank and body type to spawn particle when upgrading
+        var oldtank = "";
+        var oldbody = "";
 
-//keep track of old player tank and body type to spawn particle when upgrading
-var oldtank = "";
-var oldbody = "";
-
-//keep track of portal sizes when player touch it
-var portalwidths = {};
-//keep track of radiant shape colors
-var radiantShapes = {};
-var crossroadRadians = 0;
+        //keep track of portal sizes when player touch it
+        var portalwidths = {};
+        //keep track of radiant shape colors
+        var radiantShapes = {};
+        var crossroadRadians = 0;
+          
+        //store settings in computer so that always same when open browser
+        let settingsList = {//default settings
+          showchat: true,
+          showname: true,
+          clickablechatlinks: true,
+          showownname: false,
+          silentTyping: false,
+          showtypingindicators: true,
+          showids:
+          showticktime:
+          showservername:
+          showplayercount:
+          showglobalplayercount:
+        }
 if(localStorage.settings == undefined) {
 	localStorage.settings = JSON.stringify({"spawnduneparticle":"yes","spawncrossroadsparticle":"yes","spawnradparticle":"yes","showStaticMobName":"no","showMinionMobName":"no","showshapeinfo":"no","radiantSizeRange":5,"theme":"default",showstats:"no",});
 }
@@ -19941,15 +19953,15 @@ function changeGamemode(dir){
         }
         hctx.strokeText("Server Tick Time: " + serverCodeTime + "ms", 0, 76/resizeDiffX);
         hctx.fillText("Server Tick Time: " + serverCodeTime + "ms", 0, 76/resizeDiffX);
-        if (duration < 5) {
+        if (clientTick < 5) {
           hctx.fillStyle = "white";
-        } else if (duration < 10) {
+        } else if (clientTick < 10) {
           hctx.fillStyle = "orange";
         } else {
           hctx.fillStyle = "red";
         }
-        hctx.strokeText("Client Tick Time: " + duration + "ms", 0, 114/resizeDiffX);
-        hctx.fillText("Client Tick Time: " + duration + "ms", 0, 114/resizeDiffX);
+        hctx.strokeText("Client Tick Time: " + clientTick + "ms", 0, 114/resizeDiffX);
+        hctx.fillText("Client Tick Time: " + clientTick + "ms", 0, 114/resizeDiffX);
         hctx.fillStyle = "white";
         hctx.strokeText("Player Count: " + playerCount, 0, 152/resizeDiffX);
         hctx.fillText("Player Count: " + playerCount, 0, 152/resizeDiffX);
@@ -19995,7 +20007,7 @@ function changeGamemode(dir){
   //}, 30); //check every 30ms //dont use setinterval anymore
 
 
-      duration = Date.now() - starting; //client code runtime
+      clientTick = Date.now() - starting; //client code runtime
   }
 
 requestInterval(screenDrawLoop,10);//number refers to delay between redraws, e.g. 16 = 60fps
