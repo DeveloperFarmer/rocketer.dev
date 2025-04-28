@@ -8116,7 +8116,7 @@ var socket = "null";
     socket.onclose = function(event) {
       console.log('Disconnected: ',event);
       if (reconnectToDefault != "yes"){//if not purposely disconnecting to respawn in ffa
-        if (teleportingTransition != "yes" && currentGmSelector.prevgamemode == currentGmSelector.gamemode && currentGmSelector.gamemode != 3){//if not teleporting, and not switching gamemodes
+        if (teleportingTransition != "yes"){
           //disconnect notification
           //when socket disconnect, this is automatically triggered
           createNotif("Disconnected. Reload the page.","rgb(150,0,0)",10000)
@@ -8145,7 +8145,7 @@ var socket = "null";
   }
   }
   connectServer(serverlist["Free For All"],"no")
-  gamemodeBgFoV[currentGmSelector.gamemode] = 0.1;
+  //gamemodeBgFoV[currentGmSelector.gamemode] = 0.1;
 
 
   //GAME CANVAS
@@ -12566,95 +12566,19 @@ var socket = "null";
 
 function changeGamemode(dir){
   if (dir == "right") {
-        currentGmSelector.transition = -1.1; //turn on animation for background black oval thingy
-        currentGmSelector.animateDir = "right";
-        
-        if (currentGmSelector.gamemode - 1 >= 0) {
-          currentGmSelector.gamemode--;
-        } else {
-          currentGmSelector.gamemode = gamemodes.length - 1;
-        }
+        //removed unnessarry stuff
         //disconnect and connect to newly selected gamemode
         socket.close();//disconnect from current server
         playButton.style.display = "none";
         nameInput.style.display = "none";
         connected = "no";
-        gamemodeBgFoV[currentGmSelector.gamemode] = 0.1;
         connectServer(serverlist[gamemodes[currentGmSelector.gamemode]],"no")
-        if (currentGmSelector.gamemode == 0){
-          gamelocation = "arena"
-        }
-        else if (currentGmSelector.gamemode == 1){
-          gamelocation = "2tdm"
-        }
-        else if (currentGmSelector.gamemode == 2){
-          gamelocation = "4tdm"
-        }
-        else if (currentGmSelector.gamemode == 3){
-          gamelocation = "tank-editor"
-        }
-        console.log("Connecting to "+serverlist[gamemodes[currentGmSelector.gamemode]])
-        joinedWhichGM = gamemodes[currentGmSelector.gamemode];//respawn in the gamemode which you spawned in after you died
+        console.log("Connecting to "+gamemode)
+        joinedWhichGM = gamemode;//respawn in the gamemode which you spawned in after you died
       } else if (dir == "left") {
-        currentGmSelector.transition = 2.1;
-        currentGmSelector.animateDir = "left";
-        if (currentGmSelector.gamemode + 1 < gamemodes.length) {
-          //if have one more gamemode to the right
-          currentGmSelector.gamemode++;
-        } else {
-          //no more gamemodes, so go back to first one
-          currentGmSelector.gamemode = 0;
-        }
-        //disconnect and connect to newly selected gamemode
-        socket.close();//disconnect from current server
-        playButton.style.display = "none";
-        nameInput.style.display = "none";
-        connected = "no";
-        gamemodeBgFoV[currentGmSelector.gamemode] = 0.1;
-        connectServer(serverlist[gamemodes[currentGmSelector.gamemode]],"no")
-        if (currentGmSelector.gamemode == 0){
-          gamelocation = "arena"
-        }
-        else if (currentGmSelector.gamemode == 1){
-          gamelocation = "2tdm"
-        }
-        else if (currentGmSelector.gamemode == 2){
-          gamelocation = "4tdm"
-        }
-        else if (currentGmSelector.gamemode == 3){
-          gamelocation = "tank-editor"
-        }
-        console.log("Connecting to "+serverlist[gamemodes[currentGmSelector.gamemode]])
-        joinedWhichGM = gamemodes[currentGmSelector.gamemode];//respawn in the gamemode which you spawned in after you died
+        
       } else if (dir == "regionright") {
-        //disconnect and connect to newly selected gamemode
-        var gmServers = 1;
-        if(currentGmSelector.gamemode == 3) {
-          ++gmServers;
-        }
-        ++currentGamemodeRegion;
-        if(currentGamemodeRegion+1 > gmServers) {
-          currentGamemodeRegion = 0;
-        }
-        socket.close();//disconnect from current server
-        playButton.style.display = "none";
-        nameInput.style.display = "none";
-        connected = "no";
-        connectServer(serverlist[gamemodes[currentGmSelector.gamemode]],"no")
-        if (currentGmSelector.gamemode == 0){
-          gamelocation = "arena"
-        }
-        else if (currentGmSelector.gamemode == 1){
-          gamelocation = "2tdm"
-        }
-        else if (currentGmSelector.gamemode == 2){
-          gamelocation = "4tdm"
-        }
-        else if (currentGmSelector.gamemode == 3){
-          gamelocation = "tank-editor"
-        }
-        console.log("Connecting to "+serverlist[gamemodes[currentGmSelector.gamemode]][currentGamemodeRegion])
-        joinedWhichGM = gamemodes[currentGmSelector.gamemode];//respawn in the gamemode which you spawned in after you died
+        
       } else if (dir == "regionleft") {
         //disconnect and connect to newly selected gamemode
         var gmServers = 1;
