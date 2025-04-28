@@ -1,5 +1,6 @@
-      console.log(window.bodyUpgrades)
-      console.log(weaponUpgrades)
+import { bodyupgrades,weaponupgrades } from "./tankUpgrades.js";      
+console.log(bodyupgrades);
+      console.log(weaponupgrades);
         // Canvas setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -1688,6 +1689,7 @@
             }).then(function (AU) {
               (function (AP) {
                 var AR = "";
+                var WI = "";
                 for (var AQ = ("CHANGELOG - " + (WI = AP.split("\n\r\n"))[0]).split("\n"), AB = 0; AB < AQ.length; AB++) {
                   if (!AQ[AB].startsWith("    ")) {
                     AR += AR == "" ? AQ[AB] : "<br />" + AQ[AB];

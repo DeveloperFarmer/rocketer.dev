@@ -1,4 +1,5 @@
-window.bodyupgrades = {//use variable so that it is accessible in the main js code
+export const bodyupgrades = {//use export so that it is accessible in the main js code
+  //note that export only works for modules, i.e. in the html code, the js scripts must have type="module"
   //hardcoded for the upgrade tree. Omit unneccessary properties that dont affect visuals. Remove aura barrels.
   base: {
     upgradeTo: ['raider','wall','sentry'],//needed for upgrade tree (decide which tank to grey out)
@@ -1057,7 +1058,7 @@ window.bodyupgrades = {//use variable so that it is accessible in the main js co
     upgradeTo: ['oven','pounder','chainsaw','lightning','meteor','satellite'],
   },
 };
-var weaponupgrades = {
+export const weaponupgrades = {
   //weapon upgrades for upgrade tree is hardcoded into client. if change in server, remember to change here too
   node: {
     barrels: {},
