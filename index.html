@@ -2989,15 +2989,50 @@
           showownname: false,
           silentTyping: false,
           showtypingindicators: true,
-          showids:
-          showticktime:
-          showservername:
-          showplayercount:
-          showglobalplayercount:
+          showids: false,
+          showticktime: true,
+          showservername: true,
+          showplayercount: true,
+          showglobalplayercount: true,
+          showfps: true,
+          showping: true,
+          showposition: false,
+          showextraperformanceinfo: false,
+          showhitboxes: true,
+          showminimap: true,
+          showhealthpercentages: false,
+          showhealthbarHUD: false,
+          1: "ESCAPE",
+          2: "ENTER",
+          3: "SLASH",
+          4: "T",
+          5: "SPACE / MOUSE DOWN",
+          6: "SHIFT",
+          7: "W",
+          8: "A",
+          9: "S",
+          10: "D",
+          11: "UP ARROW",
+          12: "DOWN ARROW",
+          13: "LEFT ARROW",
+          14: "RIGHT ARROW",
+          15: "E",
+          16: "C",
+          17: "X",
+          18: "V",
+          19: "M",
+          20: "Y",
+          21: "U",
+          22: "O",
         }
-if(localStorage.settings == undefined) {
-	localStorage.settings = JSON.stringify({"spawnduneparticle":"yes","spawncrossroadsparticle":"yes","spawnradparticle":"yes","showStaticMobName":"no","showMinionMobName":"no","showshapeinfo":"no","radiantSizeRange":5,"theme":"default",showstats:"no",});
-}
+        
+        if(localStorage.settings == undefined) {
+          //localStorage.settings = JSON.stringify({"spawnduneparticle":"yes","spawncrossroadsparticle":"yes","spawnradparticle":"yes","showStaticMobName":"no","showMinionMobName":"no","showshapeinfo":"no","radiantSizeRange":5,"theme":"default",showstats:"no",});
+          localStorage.settings = JSON.stringify(settingsList);
+        }
+        else if (Object.keys(JSON.parse(localStorage.settings)).length != Object.keys(settingsList).length){//there are new or removed settings!
+          
+        }
 var spawnduneparticle = "yes";//dune particles on by default
 var spawncrossroadsparticle = "yes";//crossroads particles on by default
 var spawnradparticle = "yes";//rad particles on by default
