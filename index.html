@@ -2953,56 +2953,18 @@
           event.preventDefault()
         );//contextmenu is right click popup
 
-var gamemodes = ["Free For All", "2 Teams", "4 Teams", "Tank Editor"]; //all the gamemodes available
-var gamemodecolors = ["#f04f54", "#BE7FF5", "#00E06C", "#38B764"]; //must be in same order as gamemode list
-var gamemodecolorsdark = ["#D23136", "#A061D7", "#00C24E", "#1A9946"]; //darker colors for the gamemodes (the bottom part of the gamemode display)
-var gamemodeBgFoV = [1,1,1,1];//FoV for main menu background, 1 refer to default
-var currentGmSelector = {
-  //everything is hcanvas.width*property value
-  textX: 0.5,
-  textY: 0.44,
-  gamemode: 0, //index in array gamemodes
-  prevgamemode: 0, //for animating purposes
-  arrowColor: "white",
-  //arrowColor: "darkgrey",//use darkgrey if only have one gamemode
-  fontSize1: 60,
-  fontSize2: 60,
-  fontSize3: 40,
-  fontSize4: 40,
-  defaultfontSize: 60,
-  animatedfontSize: 70,
-  defaultfontSize2: 40,
-  animatedfontSize2: 50,
-  hover1: "no",
-  hover2: "no",
-  hover3: "no",
-  hover4: "no",
-  arrow1x: 0.415,
-  arrow1y: 0.44,
-  arrow2x: 0.585,
-  arrow2y: 0.44,
-  arrow3x: 0.455,
-  arrow3y: 0.505,
-  arrow4x: 0.545,
-  arrow4y: 0.505,
-  transition: 0,
-  animateDir: "right", //direction of transition
-  colorLerp: 1,
-};
 
-var currentGamemodeRegion = 0;
+        var teleportingTransition = "no";//transition for teleporting
+        var teleportingLocation = "error";
+        var oldteleportingLocation = "error";
+        var teleportingcount = 0;//moves the black background and the transparency animation
+        var reconnectToDefault = "no";//when die, reconnect to spawning server, e.g. ffa
 
-var teleportingTransition = "no";//transition for teleporting
-var teleportingLocation = "error";
-var oldteleportingLocation = "error";
-var teleportingcount = 0;//moves the black background and the transparency animation
-var reconnectToDefault = "no";//when die, reconnect to spawning server, e.g. ffa
-
-//for the tank editor
-var shownEditButton = "no";
-var openedUI = "no";
-var safeZone = 2000;
-var safeZoneColor = "rgba(133, 194, 212, .5)";
+        //for the tank editor
+        var shownEditButton = "no";
+        var openedUI = "no";
+        var safeZone = 2000;
+        var safeZoneColor = "rgba(133, 194, 212, .5)";
 
 //keep track of the previous mouse position, and only send the new mouse position when there is a difference of 5px (or else mousemove event listener will trigger every 1px of movement)
 var oldmousex = 0;
@@ -7193,9 +7155,6 @@ var socket = "null";
     }
   }
   function connectServer(whichserver,teleportingYN){//'wss://developer-rocketer.glitch.me/'
-  if(typeof whichserver == "object") {
-    whichserver = whichserver[currentGamemodeRegion];
-  }
   socket = new WebSocket(whichserver);
   socket.binaryType = "arraybuffer";//receive uint8array instead of blob (when servre compresses game data)
     console.log("Connecting to server...")
@@ -12572,7 +12531,7 @@ function changeGamemode(dir){
         playButton.style.display = "none";
         nameInput.style.display = "none";
         connected = "no";
-        connectServer(serverlist[gamemodes[currentGmSelector.gamemode]],"no")
+        connectServer(serverlist[gamemode],"no")
         console.log("Connecting to "+gamemode)
         joinedWhichGM = gamemode;//respawn in the gamemode which you spawned in after you died
       } else if (dir == "left") {
@@ -12580,34 +12539,6 @@ function changeGamemode(dir){
       } else if (dir == "regionright") {
         
       } else if (dir == "regionleft") {
-        //disconnect and connect to newly selected gamemode
-        var gmServers = 1;
-        if(currentGmSelector.gamemode == 3) {
-          ++gmServers;
-        }
-        --currentGamemodeRegion;
-        if(currentGamemodeRegion < 0) {
-          currentGamemodeRegion = gmServers-1;
-        }
-        socket.close();//disconnect from current server
-        playButton.style.display = "none";
-        nameInput.style.display = "none";
-        connected = "no";
-        connectServer(serverlist[gamemodes[currentGmSelector.gamemode]],"no")
-        if (currentGmSelector.gamemode == 0){
-          gamelocation = "arena"
-        }
-        else if (currentGmSelector.gamemode == 1){
-          gamelocation = "2tdm"
-        }
-        else if (currentGmSelector.gamemode == 2){
-          gamelocation = "4tdm"
-        }
-        else if (currentGmSelector.gamemode == 3){
-          gamelocation = "tank-editor"
-        }
-        console.log("Connecting to "+serverlist[gamemodes[currentGmSelector.gamemode]][currentGamemodeRegion])
-        joinedWhichGM = gamemodes[currentGmSelector.gamemode];//respawn in the gamemode which you spawned in after you died
       }
 }
 
@@ -13028,15 +12959,6 @@ function changeGamemode(dir){
 
     //mouse release listener
     $("html").mouseup(function (e) {
-      if (currentGmSelector.hover2 == "yes") {
-        changeGamemode("left")
-      } else if (currentGmSelector.hover1 == "yes") {
-        changeGamemode("right")
-      } else if (currentGmSelector.hover3 == "yes" && currentGmSelector.gamemode == 3) {
-        changeGamemode("regionleft")
-      } else if (currentGmSelector.hover4 == "yes" && currentGmSelector.gamemode == 3) {
-        changeGamemode("regionright")
-      }
       var packet = JSON.stringify(["mouseReleased", e.which]);
       socket.send(packet);
       if (openedUI=="no"){
@@ -13787,8 +13709,9 @@ function changeGamemode(dir){
         hctx.restore();
       }
       function drawBg(gm){
-        let gmView = gamemodeBgFoV[gm];
-        let gmName = gamemodes[gm];
+        //let gmView = gamemodeBgFoV[gm];//removed
+        let gmView = 1;
+        let gmName = gamemodeList[gm];
         hctx.save();
         hctx.translate(topleftcornerX+hcanvas.width/2, topleftcornerY+hcanvas.height/2);//middle of screen
         hctx.scale(gmView, gmView);//scale for man menu fov
@@ -13808,86 +13731,9 @@ function changeGamemode(dir){
         hctx.restore();
       }
 
-      //objects on the homepage background
-      if (currentGmSelector.transition != 3){
-        hctx.save()
-        hctx.translate(hcanvas.width * (currentGmSelector.transition + 1.1),0)
-        if (currentGmSelector.animateDir == "right") {
-          drawBg(currentGmSelector.prevgamemode)
-        }
-        else{
-          drawBg(currentGmSelector.gamemode)
-        }
-        hctx.restore();
-        hctx.save()
-        hctx.translate(hcanvas.width * (currentGmSelector.transition - 1.1)-hcanvas.width,0)
-        if (currentGmSelector.animateDir == "right") {
-          drawBg(currentGmSelector.gamemode)
-        }
-        else{
-          drawBg(currentGmSelector.prevgamemode)
-        }
-        hctx.restore();
-      }
-      else{
-        drawBg(currentGmSelector.gamemode)
-      }
       
-      if (gamemodeBgFoV[currentGmSelector.gamemode] < 1){
-        gamemodeBgFoV[currentGmSelector.gamemode] += (1 - gamemodeBgFoV[currentGmSelector.gamemode])/10*deltaTime;
-      }
-      else if ((1 - gamemodeBgFoV[currentGmSelector.gamemode])<0.0001){//very close to 1
-        gamemodeBgFoV[currentGmSelector.gamemode] = 1;
-      }
-      else{
-        gamemodeBgFoV[currentGmSelector.gamemode] = 1;
-      }
         hctx.lineJoin = "miter"; //change back
-        hctx.fillStyle = "rgba(0,0,0,.5)"; //make background darker
-        hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
-
-        //for transition when pressing arrow to change gamemode
-        if (
-          currentGmSelector.transition >= -1.1 &&
-          currentGmSelector.transition <= 2.1
-        ) {
-          hctx.fillStyle = "black";
-          hctx.beginPath();
-          hctx.ellipse(
-            hcanvas.width * currentGmSelector.transition,
-            hcanvas.height / 2,
-            hcanvas.width / 1.5,
-            hcanvas.height,
-            0,
-            0,
-            Math.PI * 2
-          ); //draw oval
-          hctx.fill();
-          if (currentGmSelector.animateDir == "right") {
-            let diff = (2.1-currentGmSelector.transition);
-            let amountMove = diff/5*deltaTime;
-            if (diff < 0.0005){
-              amountMove = diff;
-            }
-            currentGmSelector.transition += amountMove;
-          } else {
-            let diff = (currentGmSelector.transition-(-1.1));
-            let amountMove = diff/5*deltaTime;
-            if (diff < 0.0005){
-              amountMove = diff;
-            }
-            currentGmSelector.transition -= amountMove;
-          }
-        }
-        if (
-          currentGmSelector.transition >= 2.1 ||
-          currentGmSelector.transition <= -1.1
-        ) {
-          currentGmSelector.transition = 3; //turns off the animation
-          currentGmSelector.prevgamemode = currentGmSelector.gamemode;
-        }
-
-        //hctx.lineJoin = "round";
+      //removed home screen drawing stuff
         hctx.fillStyle = "white";
         hctx.strokeStyle = "black";
         hctx.lineWidth = 6;
@@ -19706,7 +19552,7 @@ function changeGamemode(dir){
       ) {
         //if skill points is supposed to be shown or animating
         hctx.save();
-      if(currentGmSelector.gamemode == "3") {//if tank editor
+      if(gamemode == "Tank Editor") {//if tank editor
       hctx.translate(60, hcanvas.height);//bottom left of screen + 60px while in tank editor
       } else {
       hctx.translate(0, hcanvas.height);//bottom left of screen
@@ -19765,7 +19611,7 @@ function changeGamemode(dir){
             hcanvas.width - skillpointspos - width - 20,
             hcanvas.height - 15.5 - 40
           );
-          if(currentGmSelector.gamemode == "3") {
+          if(gamemode == "Tank Editor") {
           hctx.strokeText(
             "x" + extraPoints,
             skillpointspos + width + 20 + 60,
@@ -20111,16 +19957,7 @@ function changeGamemode(dir){
         hctx.fillText("Global Player Count: " + globalPlayerCount, 0, 190/resizeDiffX);
         hctx.strokeText("Dimension: " + gamelocation, 0, 228/resizeDiffX);
         hctx.fillText("Dimension: " + gamelocation, 0, 228/resizeDiffX);
-        var gamemodeservers = ["Virginia #1"];
-        if(currentGmSelector.gamemode == 3) {
-          gamemodeservers[gamemodeservers.length] = "Virginia #2";
-        }
-        var region;
-        if(gamemodeservers.length <= 1) {
-          region = gamemodeservers[0];
-        } else {
-          region = gamemodeservers[currentGamemodeRegion];
-        }
+        let region = "Virginia #1";
         hctx.strokeText("Region: " + region, 0, 266/resizeDiffX);
         hctx.fillText("Region: " + region, 0, 266/resizeDiffX);
 
