@@ -3123,203 +3123,8 @@
 
         var keylock = "no";
 
-//hard-coded shape colors so that server does not need to keep sending colors for all the shapes
-var colortheme = "default";//remove
-var shapeHit = {};//animate change in color when shapes get hit, for all gamemodes except PvE (PvE have it stored in the shape object itself)
-                
-const shapecolors = {
-  //based on number of sides
-  3: {
-    name: "triangle",
-    default: {
-      color: "#FFE46B",
-      outline: "#E1C64D",
-      hitcolor: "#FFF87F",
-      hitoutline: "#f5da61",
-    },
-    oldtheme: {
-      color: "#EFEF91",
-      outline: "#D1D173",
-      hitcolor: "#ffffa5",
-      hitoutline: "#e5e587",
-    },
-  },
-  4: {
-    name: "square",
-    default: {
-      color: "#FC7676",
-      outline: "#DE5858",
-      hitcolor: "#ff8a8a",
-      hitoutline: "#f26c6c",
-    },
-    oldtheme: {
-      color: "#EF9791",
-      outline: "#D1797D",
-      hitcolor: "#ffaba5",
-      hitoutline: "#e58d91",
-    },
-  },
-  5: {
-    name: "pentagon",
-    default: {
-      color: "#768CFC",
-      outline: "#586EDE",
-      hitcolor: "#95abff",
-      hitoutline: "#778de1",
-    },
-    oldtheme: {
-      color: "#A1A4E9",
-      outline: "#8386CB",
-      hitcolor: "#b5b7fd",
-      hitoutline: "#9799df",
-    },
-  },
-  6: {
-    name: "hexagon",
-    default: {
-      color: "#FCA644",
-      outline: "#DE8826",
-      hitcolor: "#ffb958",
-      hitoutline: "#f29c3a",
-    },
-    oldtheme: {
-      color: "#FFD38E",
-      outline: "#E1B570",
-      hitcolor: "#ffe8a2",
-      hitoutline: "#f5ca84",
-    },
-  },
-  7: {
-    name: "heptagon",
-    default: {
-      color: "#38B764",
-      outline: "#1A9946",
-      hitcolor: "#4ccb78",
-      hitoutline: "#2ead5a",
-    },
-    oldtheme: {
-      color: "#C4DC9E",
-      outline: "#A6BE80",
-      hitcolor: "#d8f0b2",
-      hitoutline: "#bad294",
-    },
-  },
-  8: {
-    name: "octagon",
-    default: {
-      color: "#4A66BD",
-      outline: "#2C489F",
-      hitcolor: "#5e7bd1",
-      hitoutline: "#545cb3",
-    },
-    oldtheme: {
-      color: "#FF8BC0",
-      outline: "#E16DA2",
-      hitcolor: "#ff9fd4",
-      hitoutline: "#f581b5",
-    },
-  },
-  9: {
-    name: "nonagon",
-    default: {
-      color: "#5D275D",
-      outline: "#3F093F",
-      hitcolor: "#713b71",
-      hitoutline: "#531d53",
-    },
-    oldtheme: {
-      color: "#9256FF",
-      outline: "#7438EB",
-      hitcolor: "#a66aff",
-      hitoutline: "#884cff",
-    },
-  },
-  10: {
-    name: "decagon",
-    default: {
-      color: "#1A1C2C",
-      outline: "#00000E",
-      hitcolor: "#2e3040",
-      hitoutline: "#141422",
-    },
-    oldtheme: {
-      color: "#DFD4FF",
-      outline: "#B6B5B5",
-      hitcolor: "#f3e8ff",
-      hitoutline: "#cac9c9",
-    },
-  },
-  11: {
-    name: "hendecagon",
-    default: {
-      color: "#060011",
-      outline: "#000000",
-      hitcolor: "#1a1425",
-      hitoutline: "#141414",
-    },
-    oldtheme: {
-      color: "#8DEDED",
-      outline: "#6FE1E1",
-      hitcolor: "#a1ffff",
-      hitoutline: "#83f5f5",
-    },
-  },
-  12: {
-    name: "dodecagon",
-    default: {
-      color: "#403645",
-      outline: "#221827",
-      hitcolor: "#544a59",
-      hitoutline: "#362c3b",
-    },
-    oldtheme: {
-      color: "#F1882B",
-      outline: "#db7c27",
-      hitcolor: "#ff9c3f",
-      hitoutline: "#ef8f3b",
-    },
-  },
-  13: {
-    name: "tridecagon",
-    default: {
-      color: "#EDEDFF",
-      outline: "#CFCFE1",
-      hitcolor: "#EDEDFF", //same color when hit or else it will be completely white
-      hitoutline: "#CFCFE1",
-    },
-    oldtheme: {
-      color: "#BEF0CE",
-      outline: "#abd9ba",
-      hitcolor: "#d2ffe2",
-      hitoutline: "#bfedce",
-    },
-  },
-  14: {
-    name: "dodecagon",
-    default: {
-      color: "#000000",
-      outline: "#000000",
-      hitcolor: "#000000", //same color when hit
-      hitoutline: "#000000",
-    },
-    oldtheme: {},
-  },
-  "-5": {
-    name: "star",
-    default: {
-      color: "#ebc334",
-      outline: "#ebb134",
-      hitcolor: "#ffe252",
-      hitoutline: "#ffce52",
-    },
-    oldtheme: {
-      color: "#ebc334",
-      outline: "#ebb134",
-      hitcolor: "#ffe252",
-      hitoutline: "#ffce52",
-    },
-  },
-};
+        var shapeHit = {};//animate change in color when shapes get hit, for all gamemodes except PvE (PvE have it stored in the shape object itself)
+
 const botcolors = {
   //get colors based on dune mob name
   Cluster: {
@@ -10905,9 +10710,16 @@ var socket = "null";
               object.blue +
               ")";
           } else {
-            ctx.fillStyle = shapecolors[object.sides][colortheme].color;
+            let shapetype = object.sides - 3;
+            if (object.sides == 4){
+              shapetype = 0;
+            }
+            else if (object.sides == 3){
+              shapetype = 1;
+            }
+            ctx.fillStyle = shapecolors[shapetype];
             if (object.sides==10||object.sides==11||object.sides==14){//these shapes are very dark, cannot see health bar
-              ctx.fillStyle = shapecolors[12][colortheme].color;//use ddecagon's grey color for health bar
+              ctx.fillStyle = shapecolors[9];//use dodecagon's grey color for health bar
             }
           }
           ctx.beginPath();
@@ -10962,7 +10774,14 @@ var socket = "null";
         else if (object.radtier == 5){
           name = "Highly Radiant "
         }
-        name += shapecolors[object.sides].name;
+        let shapetype = object.sides - 3;
+        if (object.sides == 4){
+          shapetype = 0;
+        }
+        else if (object.sides == 3){
+          shapetype = 1;
+        }
+        name += shapeNames[shapetype];
         ctx.strokeText(
          name,
           drawingX,
@@ -13549,8 +13368,15 @@ function changeGamemode(dir){
           );
           hctx.scale(zoomamount, zoomamount*resizeDiffY/resizeDiffX);
           hctx.rotate((angle * Math.PI) / 180);
-          hctx.fillStyle = shapecolors[sides][colortheme].color;
-          hctx.strokeStyle = shapecolors[sides][colortheme].outline;
+          let shapetype = sides - 3;
+          if (sides == 4){
+            shapetype = 0;
+          }
+          else if (sides == 3){
+            shapetype = 1;
+          }
+          hctx.fillStyle = shapecolors[shapetype];
+          hctx.strokeStyle = shapeoutlines[shapetype];
           hctx.beginPath();
           hctx.moveTo(width, 0);
           for (var i = 1; i <= sides + 1; i += 1) {
