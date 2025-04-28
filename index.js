@@ -33,7 +33,7 @@ console.log(bodyupgrades);
           settings.style.display = "none";
           cancelSettings();
         });
-        function openSettings(){
+        export function openSettings(){
           settings.style.display = "block";
         }
 
@@ -74,7 +74,7 @@ console.log(bodyupgrades);
         const keys = {};
       
         //function for changing gamemode on home screen
-        function changeGamemode(type) {
+        export function changeGamemode(type) {
           if (gamemodeTitle.classList.contains("animateNext")||gamemodeTitle.classList.contains("animateNext")||oval.classList.contains("left")||oval.classList.contains("right")) return;//dont do anything if it is currently animating (might break the current animation)
           if (type == "n"){//next gamemode
             currentGamemodeID++;
@@ -1738,19 +1738,19 @@ console.log(bodyupgrades);
         }
         loadChangelog();
       
-        function accounts(){//not ready yet
+        export function accounts(){//not ready yet
           document.getElementById('modal').style.display = "block";
           document.getElementById('blackScreen').style.display = "block";
         }
-        function bugs(){//ingame method to report bugs, not ready yet
+        export function bugs(){//ingame method to report bugs, not ready yet
           document.getElementById('modal2').style.display = "block";
           document.getElementById('blackScreen').style.display = "block";
         }
-        function closeModal(){
+        export function closeModal(){
           document.getElementById('modal').style.display = "none";
           document.getElementById('blackScreen').style.display = "none";
         }
-        function closeModal2(){
+        export function closeModal2(){
           document.getElementById('modal2').style.display = "none";
           document.getElementById('blackScreen').style.display = "none";
         }
@@ -2003,6 +2003,8 @@ console.log(bodyupgrades);
           }
         }
           
+        //export function updateTempSettings(e){//user changed a setting, but DONT change the actual setting until the user clicks the "apply" button
+          //EXPORT IT LATER after merging the code
         function updateTempSettings(e){//user changed a setting, but DONT change the actual setting until the user clicks the "apply" button
           let thisSetting = e.target.settingid;
           if (settingsList.hasOwnProperty(thisSetting)){//if a legit setting
@@ -2029,7 +2031,7 @@ console.log(bodyupgrades);
         }
         function applySettings(){//update settings
           for (const settingProp in temporarySettings) {
-            settingsList[thisSetting] = temporarySettings[thisSetting];
+            settingsList[settingProp] = temporarySettings[settingProp];
           }
           localStorage.settings = JSON.stringify(settingsList);
           temporarySettings = {};
@@ -2037,7 +2039,7 @@ console.log(bodyupgrades);
         function cancelSettings(){//cancel settings + undo all switches
           for (const settingProp in temporarySettings) {
             //undo the switches
-            if (settingsList[thisSetting] === true){//if switch was on before making the changes
+            if (settingsList[settingProp] === true){//if switch was on before making the changes
               document.querySelector('input[settingid="'+settingProp+'"]').setAttribute('checked','true');
             }
             else{
