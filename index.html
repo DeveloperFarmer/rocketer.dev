@@ -3126,6 +3126,7 @@
 //hard-coded shape colors so that server does not need to keep sending colors for all the shapes
 var colortheme = "default";//remove
 var shapeHit = {};//animate change in color when shapes get hit, for all gamemodes except PvE (PvE have it stored in the shape object itself)
+                
 const shapecolors = {
   //based on number of sides
   3: {
@@ -10778,11 +10779,29 @@ var socket = "null";
         }
         ctx.fillStyle = shapecolors[shapetype];
         ctx.strokeStyle = shapeoutlines[shapetype];
-        if (object.hit > 0) {
-          //if shape is hit
-          ctx.fillStyle = shapecolors[object.sides][colortheme].hitcolor;
-          ctx.strokeStyle =
-            shapecolors[object.sides][colortheme].hitoutline;
+        
+        if (object.hit > 0){//if shape is hit
+          if (!shapeHit.hasOwnProperty(id)){
+            shapeHit[id] = 0;
+          }
+          let maxshade = 0.3;//shapes turn 30% whiter when hit  (log, not linear)
+          if (object.sides > 8){//nonagon, decagon, hendecagon etc. dont turn very white upon collision with bullets or players
+            maxshade = 0.03;
+          }
+          shapeHit[id] += (maxshade/25);//make shape whiter
+          if (shapeHit[id] > maxshade){
+            shapeHit[id] = maxshade;
+          }
+        }
+        else if (shapeHit[id] > 0){
+          shapeHit[id] -= (maxshade/25);//make shape whiter
+          if (shapeHit[id] < 0.00001){
+            shapeHit[id] = 0;
+          }
+        }
+        if (shapeHit[id]>0){//even if not hit, still need to animate from whitish color to normal shape color
+          ctx.fillStyle = pSBC ( shapeHit[id], shapecolors[shapetype] );
+          ctx.strokeStyle = pSBC ( shapeHit[id], shapeoutlines[shapetype] );
         }
       }
       ctx.lineJoin = "round"; //make corners of shape round
