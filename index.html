@@ -1092,11 +1092,11 @@
         //add a way to track settings changes later on
         document.getElementById('exit-settings-apply').addEventListener("click", () => {
           settings.style.display = "none";
-          //apply the changes
+          applySettings();
         });
         document.getElementById('exit-settings-cancel').addEventListener("click", () => {
           settings.style.display = "none";
-          //undo all checkbox changes
+          cancelSettings();
         });
         function openSettings(){
           settings.style.display = "block";
@@ -3069,126 +3069,48 @@
           
         function updateTempSettings(e){//user changed a setting, but DONT change the actual setting until the user clicks the "apply" button
           let thisSetting = e.target.settingid;
-          if (settingsList.hasOwnProperty(thisSetting)){
-            
+          if (settingsList.hasOwnProperty(thisSetting)){//if a legit setting
+            if (temporarySettings.hasOwnProperty(thisSetting)){//this user changed this setting before, but havent applied changes
+              if (temporarySettings[thisSetting] === true){
+                temporarySettings[thisSetting] = false;
+              }
+              else{
+                temporarySettings[thisSetting] = true;
+              }
+            }
+            else{//first time changing this setting (since the last time the user clicked 'apply')
+              if (settingsList[thisSetting] === true){
+                temporarySettings[thisSetting] = false;
+              }
+              else{
+                temporarySettings[thisSetting] = true;
+              }
+            }
           }
           else{
             console.log("AN ERROR OCCURRED WHEN UPDATING SETTINGS: INVALID SETTING " + thisSetting)
           }
         }
-var spawnduneparticle = "yes";//dune particles on by default
-var spawncrossroadsparticle = "yes";//crossroads particles on by default
-var spawnradparticle = "yes";//rad particles on by default
-var showStaticMobName = "no";//don't show rock's names by default
-var showMinionMobName = "no";//dont show dune's minion names, eg. pursuers
-var showshapeinfo = "no";//dont show shape id and rad tier
-var showstats = "no";
+        function applySettings(){//update settings
+          for (const settingProp in temporarySettings) {
+            settingsList[thisSetting] = temporarySettings[thisSetting];
+          }
+          localStorage.settings = JSON.stringify(settingsList);
+          temporarySettings = {};
+        }
+        function cancelSettings(){//cancel settings + undo all switches
+          for (const settingProp in temporarySettings) {
+            //undo the switches
+            if (settingsList[thisSetting] === true){//if switch was on before making the changes
+              document.querySelector('input[settingid="'+settingProp+'"]').setAttribute('checked','true');
+            }
+            else{
+              document.querySelector('input[settingid="'+settingProp+'"]').removeAttribute('checked');
+            }
+          }
+          temporarySettings = {};
+        }
 
-var settings = JSON.parse(localStorage.settings);
-spawnduneparticle = settings.spawnduneparticle;
-spawncrossroadsparticle = settings.spawncrossroadsparticle;
-spawnradparticle = settings.spawnradparticle;
-showStaticMobName = settings.showStaticMobName;
-showMinionMobName = settings.showMinionMobName;
-showstats = settings.showstats;
-showshapeinfo = settings.showshapeinfo;
-document.querySelector('#radiantSizeRange').value = settings.radiantSizeRange;
-document.querySelector('#theme').value = settings.theme;
-
-function updateSettings() {
-settings.spawnduneparticle = spawnduneparticle;
-settings.spawncrossroadsparticle = spawncrossroadsparticle;
-settings.spawnradparticle = spawnradparticle;
-settings.showStaticMobName = showStaticMobName;
-settings.showMinionMobName = showMinionMobName;
-settings.showstats = showstats;
-settings.showshapeinfo = showshapeinfo;
-settings.radiantSizeRange = document.querySelector('#radiantSizeRange').value;
-settings.theme = document.querySelector('#theme').value;
-
-function getCheckBox(settingid) {
-if(settings[settingid] == "yes") {
-document.querySelector('input[settingid="'+settingid+'"]').setAttribute('checked','true');
-} else {
-document.querySelector('input[settingid="'+settingid+'"]').removeAttribute('checked');
-}
-}
-  
-getCheckBox("spawnduneparticle");
-getCheckBox("spawncrossroadsparticle");
-getCheckBox("spawnradparticle");
-getCheckBox("showStaticMobName");
-getCheckBox("showMinionMobName");
-getCheckBox("showstats");
-getCheckBox("showshapeinfo");
-  
-  
-localStorage.settings = JSON.stringify(settings);
-}
-updateSettings()
-function toggleParticle(){
-  if (spawnduneparticle=="yes"){
-    spawnduneparticle = "no";
-  }
-  else{
-    spawnduneparticle = "yes";
-  }
-  updateSettings()
-}
-function toggleCrParticle(){
-  if (spawncrossroadsparticle=="yes"){
-    spawncrossroadsparticle = "no";
-  }
-  else{
-    spawncrossroadsparticle = "yes";
-  }
-  updateSettings()
-}
-function toggleName(){
-  if (showshapeinfo=="yes"){
-    showshapeinfo = "no";
-  }
-  else{
-    showshapeinfo = "yes";
-  }
-  updateSettings()
-}
-function toggleRadParticle(){
-  if (spawnradparticle=="yes"){
-    spawnradparticle = "no";
-  }
-  else{
-    spawnradparticle = "yes";
-  }
-  updateSettings()
-}
-function toggleStatic(){
-  if (showStaticMobName=="yes"){
-    showStaticMobName = "no";
-  }
-  else{
-    showStaticMobName = "yes";
-  }
-  updateSettings()
-}
-function toggleMinion(){
-  if (showMinionMobName=="yes"){
-    showMinionMobName = "no";
-  }
-  else{
-    showMinionMobName = "yes";
-  }
-  updateSettings()
-}
-function toggleStats(){
-  if (showstats=="yes"){
-    showstats = "no";
-  }
-  else{
-    showstats = "yes";
-  }
-  updateSettings()
-}
 
 
 function sendTypingIndicator(){
