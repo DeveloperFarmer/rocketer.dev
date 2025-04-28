@@ -3112,20 +3112,20 @@
         }
 
 
+        function sendTypingIndicator(){
+          const packet = JSON.stringify(["chat", "typingAnim"]);
+          socket.send(packet)
+        }
+        function removeTypingIndicator(){
+          const packet = JSON.stringify(["removeTyping"]);
+          socket.send(packet)
+        }
 
-function sendTypingIndicator(){
-  var packet = JSON.stringify(["chat", "typingAnim"]);
-  socket.send(packet)
-}
-function removeTypingIndicator(){
-  var packet = JSON.stringify(["removeTyping"]);
-  socket.send(packet)
-}
-
-var keylock = "no";
+        var keylock = "no";
 
 //hard-coded shape colors so that server does not need to keep sending colors for all the shapes
 var colortheme = "default";//remove
+var shapeHit = {};//animate change in color when shapes get hit, for all gamemodes except PvE (PvE have it stored in the shape object itself)
 const shapecolors = {
   //based on number of sides
   3: {
@@ -7912,7 +7912,14 @@ var socket = "null";
         hctx.font = "700 30px Roboto";
         if (typeof killer == "number") {
           //killer is a number, which is numer of sides of a shape
-          killer = shapecolors[killer].name;
+          let shapetype = killer - 3;
+          if (killer == 4){
+            shapetype = 0;
+          }
+          else if (killer == 3){
+            shapetype = 1;
+          }
+          killer = shapeNames[shapetype];
         }
         hctx.strokeText(
           "You were killed by " + killer,
@@ -10762,8 +10769,15 @@ var socket = "null";
       } else {
         //if not radiant
         //get shape colors in client code based on theme
-        ctx.fillStyle = shapecolors[object.sides][colortheme].color;
-        ctx.strokeStyle = shapecolors[object.sides][colortheme].outline;
+        let shapetype = object.sides - 3;
+        if (object.sides == 4){
+          shapetype = 0;
+        }
+        else if (object.sides == 3){
+          shapetype = 1;
+        }
+        ctx.fillStyle = shapecolors[shapetype];
+        ctx.strokeStyle = shapeoutlines[shapetype];
         if (object.hit > 0) {
           //if shape is hit
           ctx.fillStyle = shapecolors[object.sides][colortheme].hitcolor;

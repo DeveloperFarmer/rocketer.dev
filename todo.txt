@@ -12,4 +12,6 @@ add feature where clicking on the gamemode in the home screen will show the list
 FIX CLCIKING PLAY BUTTON AFTER EXITING DEATH SCREEN
 FIX DEVELOPER_ROCKETER BULLET JITTER (might be bcause of unnecessary lerping)
 
+REMOVE STAR SHAPE (both client and server)
+
 Note: this file is for my reference, isnt used ingame
