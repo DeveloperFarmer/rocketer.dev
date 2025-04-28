@@ -1,4 +1,4 @@
-var bodyupgrades = {//use variable so that it is accessible in the main js code
+window.bodyupgrades = {//use variable so that it is accessible in the main js code
   //hardcoded for the upgrade tree. Omit unneccessary properties that dont affect visuals. Remove aura barrels.
   base: {
     upgradeTo: ['raider','wall','sentry'],//needed for upgrade tree (decide which tank to grey out)
