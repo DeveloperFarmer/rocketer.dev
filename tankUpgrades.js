@@ -3413,3 +3413,98 @@ export const weaponupgrades = {
     upgradeTo: ['battler','pinnace'],
   },
 };
+
+export const bodyColors = {//side note: color when hit or have spawn protection has values in RGB is 20 higher)
+  blue: {
+    col: "#00B0E1",
+    outline: "#0092C3",
+  },
+  green: {
+    col: "#00E06C",
+    outline: "#00C24E",
+  },
+  red: {
+    col: "#F04F54",
+    outline: "#b33b3f",
+  },
+  purple: {
+    col: "#BE7FF5",
+    outline: "#A061D7",
+  },
+  magenta: {
+    col: "#D82BCF",
+    outline: "#BA0DB1",
+  },
+  fallen: {
+    col: "#C0C0C0",
+    outline: "#A2A2A2",
+  },
+  eternal: {
+    col: "#934c93",
+    outline: "#660066",
+  },
+  celestial: {
+    col: "#F177DD",
+    outline: "#D359BF",
+  },
+  barrel: {
+    col: "#999999",
+    outline: "#7B7B7B",
+  },
+  asset: {
+    col: "#5F676C",
+    outline: "#41494E",
+  },
+  triangle: {
+    col: "#FFE46B",
+    outline: "#E1C64D",
+  },
+  square: {
+    col: "#FC7676",
+    outline: "#DE5858",
+  },
+  pentagon: {
+    col: "#768CFC",
+    outline: "#586EDE",
+  },
+  hexagon: {
+    col: "#FCA644",
+    outline: "#DE8826",
+  },
+  heptagon: {
+    col: "#38B764",
+    outline: "#1A9946",
+  },
+  octagon: {
+    col: "#4A66BD",
+    outline: "#2C489F",
+  },
+  nonagon: {
+    col: "#5D275D",
+    outline: "#3F093F",
+  },
+  decagon: {
+    col: "#1A1C2C",
+    outline: "#00000E",
+  },
+  hendecagon: {
+    col: "#060011",
+    outline: "#000000",
+  },
+  dodecagon: {
+    col: "#403645",
+    outline: "#221827",
+  },
+  tridecagon: {
+    col: "#EDEDFF",
+    outline: "#CFCFE1",
+  },
+  tetradecagon: {
+    col: "#000000",
+    outline: "#000000",
+  },
+  transparent: {
+    col: "transparent",
+    outline: "transparent",
+  }
+};

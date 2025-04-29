@@ -1,4 +1,4 @@
-import { bodyupgrades,weaponupgrades } from "./tankUpgrades.js";      
+import { bodyupgrades,weaponupgrades,bodyColors } from "./tankUpgrades.js";      
 console.log(bodyupgrades);
       console.log(weaponupgrades);
         // Canvas setup
@@ -1574,10 +1574,6 @@ console.log(bodyupgrades);
             const size = shapesizes[shapetype];
             hctx.save();
             hctx.translate(x-hsCameraX, y-hsCameraY);
-            let middleOfScreenX = hsCameraX + hcanvas.width/2/zoomScale;
-            let middleOfScreenY = hsCameraY + hcanvas.height/2/zoomScale;
-            //hctx.translate(middleOfScreenX-(middleOfScreenX-(x-hsCameraX))/zoomScale, middleOfScreenY-(middleOfScreenY-(y-hsCameraY))/zoomScale);
-            //hctx.translate((x-hsCameraX-hcanvas.width/2), (y-hsCameraY-hcanvas.height/2));
             hctx.rotate(rot/180*Math.PI);
             hctx.fillStyle = shapecolors[shapetype];
             hctx.strokeStyle = shapeoutlines[shapetype];
@@ -1592,31 +1588,14 @@ console.log(bodyupgrades);
             hctx.restore();
         }
 
-        function drawFakePlayer(team,tanktype,x,y,rot){//only for home screen background
-            if (team == "celestial"){
-              hctx.fillStyle = shapecolors[shapetype];
-              hctx.strokeStyle = shapeoutlines[shapetype];
-            }
-            else if (team == "blue"){
-              hctx.fillStyle = shapecolors[shapetype];
-              hctx.strokeStyle = shapeoutlines[shapetype];
-            }
-            const size = shapesizes[shapetype];
-            hctx.save();
+        function drawFakePlayer(team,tanktype,x,y,rot,size){//only for home screen background
+            hctx.save();//add tank type later
             hctx.translate(x-hsCameraX, y-hsCameraY);
-            let middleOfScreenX = hsCameraX + hcanvas.width/2/zoomScale;
-            let middleOfScreenY = hsCameraY + hcanvas.height/2/zoomScale;
-            //hctx.translate(middleOfScreenX-(middleOfScreenX-(x-hsCameraX))/zoomScale, middleOfScreenY-(middleOfScreenY-(y-hsCameraY))/zoomScale);
-            //hctx.translate((x-hsCameraX-hcanvas.width/2), (y-hsCameraY-hcanvas.height/2));
             hctx.rotate(rot/180*Math.PI);
-            hctx.fillStyle = shapecolors[shapetype];
-            hctx.strokeStyle = shapeoutlines[shapetype];
+            hctx.fillStyle = bodyColors[team].col;
+            hctx.strokeStyle = bodyColors[team].outline;
             hctx.beginPath();
-            for (let i = 0; i < sides; i++) {
-                const angle = (i * Math.PI * 2 / sides) - Math.PI/2;
-                hctx.lineTo(Math.cos(angle) * size/2,Math.sin(angle) * size/2);
-            }
-            hctx.closePath();
+            ctx.arc(0, 0, size/2, 0, Math.PI * 2);
             hctx.fill();
             hctx.stroke();
             hctx.restore();
@@ -1647,11 +1626,24 @@ console.log(bodyupgrades);
             hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back
             drawGridHomeScreen();//(no need draw boundary of map)
             //now draw the stuff
+            hctx.lineJoin = "round";//to make shape corners round
+            hctx.lineWidth = 4;
+            //drawPolygon(sides,x,y,rot)
+            //drawFakePlayer(team,tanktype,x,y,rot,size)
+            //map size is 3000
             if (drawingGamemode == 0){//PvE arena
-              hctx.lineJoin = "round";//to make shape corners round
-              hctx.lineWidth = 4;
-              //drawPolygon(sides,x,y,rot)
-              //map size is 3000
+              drawPolygon(11,2276,1677,0)
+              drawPolygon(9,1500,1500,0)
+              drawPolygon(8,776,1450,0)
+              drawPolygon(7,776,1050,0)
+              drawPolygon(6,1790,1069,0)
+              drawPolygon(5,1399,1997,0)
+              drawPolygon(4,1784,1967,0)
+              drawPolygon(3,776,1910,0)
+              drawPolygon(3,1046,1288,0)
+              drawPolygon(3,2790,2069,0)
+            }
+            else if (drawingGamemode == 1){//FFA
               drawPolygon(11,2276,1677,0)
               drawPolygon(9,1500,1500,0)
               drawPolygon(8,776,1450,0)
