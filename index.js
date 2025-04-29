@@ -1690,10 +1690,11 @@ console.log(bodyupgrades);
               drawFakePlayer("celestial","pulsar","chasm",1470,1530,55,90)
             }
             else if (drawingGamemode == 2){//2tdm
-              drawPolygon(9,2100,1700,55)
+              drawPolygon(9,2100,2200,55)
+              drawPolygon(8,450,1700,350)//correct one
+              drawPolygon(7,750,1350,350)//correct one
               drawPolygon(7,1200,2000,350)
-              drawPolygon(7,1200,2000,350)
-              drawPolygon(5,1200,2000,350)
+              drawPolygon(5,900,1800,350)//correct
               drawFakePlayer("red","assassin","artillery",890,2000,45,60)
               drawFakePlayer("red","penta","saw",750,2150,45,70)
               drawFakePlayer("red","alpha","saw",1100,1450,70,70)
@@ -1714,12 +1715,12 @@ console.log(bodyupgrades);
               drawFakePlayer("green","streamliner","saw",1400,1700,20,70)
               drawFakePlayer("blue","beta","thorn",1200,1800,20,60)
               drawFakePlayer("blue","annihilator","bastion",1370,1850,290,70)
-              drawFakePlayer("blue","gunner","artillery",2500,2050,45,60)
-              drawFakePlayer("blue","octo","quadruplet",1470,1050,170,70)
-              drawFakePlayer("blue","emperor","mothership",890,1050,60,70)
-              drawFakePlayer("blue","executive","ziggurat",890,1050,60,70)
-              drawFakePlayer("blue","horizon","fabricator",1470,1050,170,70)
-              drawFakePlayer("blue","split","wall",1470,1050,170,50)
+              drawFakePlayer("blue","gunner","artillery",1300,1950,45,60)
+              drawFakePlayer("blue","octo","quadruplet",1000,1650,170,70)
+              drawFakePlayer("blue","emperor","mothership",1200,2000,60,70)
+              drawFakePlayer("blue","executive","ziggurat",1000,1050,60,70)
+              drawFakePlayer("blue","horizon","fabricator",1000,1970,170,70)
+              drawFakePlayer("blue","split","wall",800,1900,170,50)
               drawFakePlayer("blue","duo","turret",1250,1650,170,50)
             }//increase x value to move right, increase y value to move downwards
             hctx.restore();//restore zoom
