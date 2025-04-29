@@ -1609,15 +1609,6 @@ console.log(bodyupgrades);
                         hctx.stroke();
                 }
           
-          
-            hctx.beginPath();
-            for (let i = 0; i < sides; i++) {
-                const angle = (i * Math.PI * 2 / sides) - Math.PI/2;
-                hctx.lineTo(Math.cos(angle) * size/2,Math.sin(angle) * size/2);
-            }
-            hctx.closePath();
-            hctx.fill();
-            hctx.stroke();
             hctx.restore();
         }
 
@@ -1677,13 +1668,14 @@ console.log(bodyupgrades);
               drawPolygon(3,2790,2069,0)
             }
             else if (drawingGamemode == 0){//FFA
+              drawPolygon(10,600,1500,30)
               drawPolygon(9,2100,1700,55)
               drawPolygon(8,1000,1700,30)
-              drawPolygon(7,776,1050,0)
-              drawPolygon(5,1399,1997,0)
-              drawPolygon(4,1300,1967,0)
-              drawPolygon(4,1230,1910,0)
-              drawPolygon(3,1270,1288,0)
+              drawPolygon(7,1200,2000,350)
+              drawPolygon(5,999,1897,0)
+              drawPolygon(4,1300,1580,50)
+              drawPolygon(4,1230,1600,340)
+              drawPolygon(3,1270,1530,0)
             }
             hctx.restore();//restore zoom
             if (darknessValue < 0.5){
