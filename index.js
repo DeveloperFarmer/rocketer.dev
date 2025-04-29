@@ -1577,6 +1577,39 @@ console.log(bodyupgrades);
             hctx.rotate(rot/180*Math.PI);
             hctx.fillStyle = shapecolors[shapetype];
             hctx.strokeStyle = shapeoutlines[shapetype];
+            switch(shapetype) {
+                    case 0: // Square
+                        hctx.fillRect(-size/2, -size/2, size, size);
+                        hctx.strokeRect(-size/2, -size/2, size, size);
+                        break;
+                    case 1: // Triangle
+                        hctx.beginPath();
+                        for (let i = 0; i < 3; i++) {
+                            const angle = (i * Math.PI * 2 / 3) - Math.PI/2;
+                            hctx.lineTo(
+                                Math.cos(angle) * size/2,
+                                Math.sin(angle) * size/2
+                            );
+                        }
+                        hctx.closePath();
+                        hctx.fill();
+                        hctx.stroke();
+                        break;
+                    default: // All other polygons
+                        hctx.beginPath();
+                        for (let i = 0; i < sides; i++) {
+                            const angle = (i * Math.PI * 2 / sides) - Math.PI/2;
+                            hctx.lineTo(
+                                Math.cos(angle) * size/2,
+                                Math.sin(angle) * size/2
+                            );
+                        }
+                        hctx.closePath();
+                        hctx.fill();
+                        hctx.stroke();
+                }
+          
+          
             hctx.beginPath();
             for (let i = 0; i < sides; i++) {
                 const angle = (i * Math.PI * 2 / sides) - Math.PI/2;
@@ -1631,7 +1664,7 @@ console.log(bodyupgrades);
             //drawPolygon(sides,x,y,rot)
             //drawFakePlayer(team,tanktype,x,y,rot,size)
             //map size is 3000
-            if (drawingGamemode == 0){//PvE arena
+            if (drawingGamemode == 10){//PvE arena
               drawPolygon(11,2276,1677,0)
               drawPolygon(9,1500,1500,0)
               drawPolygon(8,776,1450,0)
@@ -1643,17 +1676,14 @@ console.log(bodyupgrades);
               drawPolygon(3,1046,1288,0)
               drawPolygon(3,2790,2069,0)
             }
-            else if (drawingGamemode == 1){//FFA
-              drawPolygon(11,2276,1677,0)
-              drawPolygon(9,1500,1500,0)
-              drawPolygon(8,776,1450,0)
+            else if (drawingGamemode == 0){//FFA
+              drawPolygon(9,2100,1700,55)
+              drawPolygon(8,1000,1700,30)
               drawPolygon(7,776,1050,0)
-              drawPolygon(6,1790,1069,0)
               drawPolygon(5,1399,1997,0)
-              drawPolygon(4,1784,1967,0)
-              drawPolygon(3,776,1910,0)
-              drawPolygon(3,1046,1288,0)
-              drawPolygon(3,2790,2069,0)
+              drawPolygon(4,1300,1967,0)
+              drawPolygon(4,1230,1910,0)
+              drawPolygon(3,1270,1288,0)
             }
             hctx.restore();//restore zoom
             if (darknessValue < 0.5){
