@@ -1691,10 +1691,10 @@ console.log(bodyupgrades);
             }
             else if (drawingGamemode == 2){//2tdm
               drawPolygon(9,2100,2200,55)
-              drawPolygon(8,450,1700,350)//correct one
-              drawPolygon(7,750,1350,350)//correct one
-              drawPolygon(7,1200,2000,350)
-              drawPolygon(5,900,1800,350)//correct
+              drawPolygon(8,450,1700,350)
+              drawPolygon(7,750,1350,350)
+              drawPolygon(7,2100,1200,350)
+              drawPolygon(5,900,1800,350)
               drawFakePlayer("red","assassin","artillery",890,2000,45,60)
               drawFakePlayer("red","penta","saw",750,2150,45,70)
               drawFakePlayer("red","alpha","saw",1100,1450,70,70)
@@ -1707,7 +1707,7 @@ console.log(bodyupgrades);
               drawFakePlayer("red","arc","artillery",890,1050,60,60)
               drawFakePlayer("red","marksman","saw",1470,1050,170,70)
               drawFakePlayer("red","riot","inferno",1470,1050,170,70)
-              
+              //fix red position
               
               drawFakePlayer("blue","conglomerate","thorn",1300,1300,45,60)
               drawFakePlayer("blue","manager","castle",1300,1400,45,60)

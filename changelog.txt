@@ -1,6 +1,7 @@
 ALPHA 0.0.13 - April 29, 2025
 - Fixed a rendering bug on the home screen canvas
 - Added zoom and darkness animations to the home screen
+- Added entities in the home screen background for PvE, FFA, and 2tdm
 
 ALPHA 0.0.12 - April 28, 2025
 - Many code changes that does not affect functionality
