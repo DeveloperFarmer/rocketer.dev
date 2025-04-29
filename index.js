@@ -1681,14 +1681,14 @@ console.log(bodyupgrades);
               drawFakePlayer("red","split","wall",890,2000,45,50)
               drawFakePlayer("red","beta","thorn",750,2150,45,60)
               //change cooords later
-              drawFakePlayer("red","alpha","saw",750,2150,45,60)
-              drawFakePlayer("red","annihilator","ziggurat",750,2150,45,60)
-              drawFakePlayer("red","emperor","mothership",750,2150,45,60)
-              drawFakePlayer("red","wave","saw",750,2150,45,60)
-              drawFakePlayer("red","palisade","bombard",750,2150,45,60)
-              drawFakePlayer("red","riot","inferno",750,2150,45,60)
-              drawFakePlayer("celestial","pulsar","chasm",750,2150,45,60)
-            }
+              drawFakePlayer("red","alpha","saw",1100,1450,70,70)
+              drawFakePlayer("red","annihilator","ziggurat",1400,2050,20,70)
+              drawFakePlayer("red","emperor","mothership",2000,1250,20,70)
+              drawFakePlayer("red","wave","saw",2200,1350,290,70)
+              drawFakePlayer("red","palisade","bombard",750,2150,45,70)
+              drawFakePlayer("red","riot","inferno",750,2150,170,70)
+              drawFakePlayer("celestial","pulsar","chasm",750,2150,55,90)
+            }//decrease y value to move upwards, increase x value to move right
             hctx.restore();//restore zoom
             if (darknessValue < 0.5){
               darknessValue += 0.02;
