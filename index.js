@@ -1692,6 +1692,8 @@ console.log(bodyupgrades);
             else if (drawingGamemode == 2){//2tdm
               drawPolygon(9,2100,1700,55)
               drawPolygon(7,1200,2000,350)
+              drawPolygon(7,1200,2000,350)
+              drawPolygon(5,1200,2000,350)
               drawFakePlayer("red","assassin","artillery",890,2000,45,60)
               drawFakePlayer("red","penta","saw",750,2150,45,70)
               drawFakePlayer("red","alpha","saw",1100,1450,70,70)
@@ -1707,17 +1709,18 @@ console.log(bodyupgrades);
               
               
               drawFakePlayer("blue","conglomerate","thorn",890,2000,45,60)
-              drawFakePlayer("blue","manager","castle",750,2150,45,60)
-              drawFakePlayer("blue","quadro","ziggurat",1100,1450,70,70)
-              drawFakePlayer("blue","streamliner","saw",1400,2050,20,70)
-              drawFakePlayer("blue","beta","thorn",1980,1250,20,60)
-              drawFakePlayer("blue","annihilator","bastion",2200,1350,290,70)
+              drawFakePlayer("blue","manager","castle",1300,1700,45,60)
+              drawFakePlayer("blue","quadro","ziggurat",1350,1700,70,70)
+              drawFakePlayer("green","streamliner","saw",1400,1700,20,70)
+              drawFakePlayer("blue","beta","thorn",1200,1800,20,60)
+              drawFakePlayer("blue","annihilator","bastion",1370,1850,290,70)
               drawFakePlayer("blue","gunner","artillery",2500,2050,45,60)
-              drawFakePlayer("blue","minigun","ziggurat",1470,1050,170,70)
-              drawFakePlayer("blue","trio","artillery",890,1050,60,60)
-              drawFakePlayer("blue","arc","artillery",890,1050,60,60)
-              drawFakePlayer("blue","marksman","saw",1470,1050,170,70)
-              drawFakePlayer("blue","riot","inferno",1470,1050,170,70)
+              drawFakePlayer("blue","octo","quadruplet",1470,1050,170,70)
+              drawFakePlayer("blue","emperor","mothership",890,1050,60,70)
+              drawFakePlayer("blue","executive","ziggurat",890,1050,60,70)
+              drawFakePlayer("blue","horizon","fabricator",1470,1050,170,70)
+              drawFakePlayer("blue","split","wall",1470,1050,170,50)
+              drawFakePlayer("blue","duo","turret",1250,1650,170,50)
             }//increase x value to move right, increase y value to move downwards
             hctx.restore();//restore zoom
             if (darknessValue < 0.5){
