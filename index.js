@@ -1657,7 +1657,7 @@ console.log(bodyupgrades);
             //drawPolygon(sides,x,y,rot)
             //drawFakePlayer(team,tanktype,x,y,rot,size)
             //map size is 3000
-            if (drawingGamemode == 10){//PvE arena
+            if (drawingGamemode == 0){//PvE arena
               drawPolygon(11,2276,1677,0)
               drawPolygon(9,1500,1500,0)
               drawPolygon(8,776,1450,0)
@@ -1669,7 +1669,7 @@ console.log(bodyupgrades);
               drawPolygon(3,1046,1288,0)
               drawPolygon(3,2790,2069,0)
             }
-            else if (drawingGamemode == 0){//FFA
+            else if (drawingGamemode == 1){//FFA
               drawPolygon(10,600,1500,30)
               drawPolygon(9,2100,1700,55)
               drawPolygon(8,1000,1700,30)
@@ -1680,15 +1680,15 @@ console.log(bodyupgrades);
               drawPolygon(3,1270,1530,0)
               drawFakePlayer("red","split","wall",890,2000,45,50)
               drawFakePlayer("red","beta","thorn",750,2150,45,60)
-              //change cooords later
               drawFakePlayer("red","alpha","saw",1100,1450,70,70)
               drawFakePlayer("red","annihilator","ziggurat",1400,2050,20,70)
-              drawFakePlayer("red","emperor","mothership",2000,1250,20,70)
+              drawFakePlayer("red","emperor","mothership",1980,1250,20,70)
               drawFakePlayer("red","wave","saw",2200,1350,290,70)
-              drawFakePlayer("red","palisade","bombard",750,2150,45,70)
-              drawFakePlayer("red","riot","inferno",750,2150,170,70)
-              drawFakePlayer("celestial","pulsar","chasm",750,2150,55,90)
-            }//decrease y value to move upwards, increase x value to move right
+              drawFakePlayer("red","palisade","bombard",2500,2050,45,70)
+              drawFakePlayer("red","riot","inferno",1470,1050,170,70)
+              drawFakePlayer("red","marksman","saw",890,1050,60,70)
+              drawFakePlayer("celestial","pulsar","chasm",1470,1530,55,90)
+            }//increase x value to move right, increase y value to move downwards
             hctx.restore();//restore zoom
             if (darknessValue < 0.5){
               darknessValue += 0.02;
