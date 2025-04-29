@@ -1708,9 +1708,9 @@ console.log(bodyupgrades);
               drawFakePlayer("red","riot","inferno",1470,1050,170,70)
               
               
-              drawFakePlayer("blue","conglomerate","thorn",890,2000,45,60)
-              drawFakePlayer("blue","manager","castle",1300,1700,45,60)
-              drawFakePlayer("blue","quadro","ziggurat",1350,1700,70,70)
+              drawFakePlayer("blue","conglomerate","thorn",1300,1300,45,60)
+              drawFakePlayer("blue","manager","castle",1300,1400,45,60)
+              drawFakePlayer("blue","quadro","ziggurat",1350,1500,70,70)
               drawFakePlayer("green","streamliner","saw",1400,1700,20,70)
               drawFakePlayer("blue","beta","thorn",1200,1800,20,60)
               drawFakePlayer("blue","annihilator","bastion",1370,1850,290,70)
