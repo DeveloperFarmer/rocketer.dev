@@ -71,6 +71,8 @@ console.log(bodyupgrades);
         regionTitle.textContent = serverLocations[currentGamemodeID];
         if (currentGamemodeID == 0){//no connecting required for PvE
           document.getElementById('connecting').style.display = "none";
+          document.getElementById('playButton').style.display = "block";
+          document.getElementById('display-name-input').style.display = "block";
         }
         const keys = {};
       
@@ -1612,14 +1614,14 @@ console.log(bodyupgrades);
             hctx.restore();
         }
 
-        function drawFakePlayer(team,tanktype,x,y,rot,size){//only for home screen background
+        function drawFakePlayer(team,weapontype,bodytype,x,y,rot,size){//only for home screen background
             hctx.save();//add tank type later
             hctx.translate(x-hsCameraX, y-hsCameraY);
             hctx.rotate(rot/180*Math.PI);
             hctx.fillStyle = bodyColors[team].col;
             hctx.strokeStyle = bodyColors[team].outline;
             hctx.beginPath();
-            ctx.arc(0, 0, size/2, 0, Math.PI * 2);
+            hctx.arc(0, 0, size/2, 0, Math.PI * 2);
             hctx.fill();
             hctx.stroke();
             hctx.restore();
@@ -1676,6 +1678,8 @@ console.log(bodyupgrades);
               drawPolygon(4,1300,1580,50)
               drawPolygon(4,1230,1600,340)
               drawPolygon(3,1270,1530,0)
+              drawFakePlayer("red","split","wall",890,2000,45,50)
+              drawFakePlayer("red","split","wall",890,2000,45,50)
             }
             hctx.restore();//restore zoom
             if (darknessValue < 0.5){
