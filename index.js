@@ -1679,7 +1679,15 @@ console.log(bodyupgrades);
               drawPolygon(4,1230,1600,340)
               drawPolygon(3,1270,1530,0)
               drawFakePlayer("red","split","wall",890,2000,45,50)
-              drawFakePlayer("red","split","wall",890,2000,45,50)
+              drawFakePlayer("red","beta","thorn",750,2150,45,60)
+              //change cooords later
+              drawFakePlayer("red","alpha","saw",750,2150,45,60)
+              drawFakePlayer("red","annihilator","ziggurat",750,2150,45,60)
+              drawFakePlayer("red","emperor","mothership",750,2150,45,60)
+              drawFakePlayer("red","wave","saw",750,2150,45,60)
+              drawFakePlayer("red","palisade","bombard",750,2150,45,60)
+              drawFakePlayer("red","riot","inferno",750,2150,45,60)
+              drawFakePlayer("celestial","pulsar","chasm",750,2150,45,60)
             }
             hctx.restore();//restore zoom
             if (darknessValue < 0.5){
