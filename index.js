@@ -18,6 +18,7 @@ console.log(bodyupgrades);
         const settings = document.getElementById('full-settings');
         const gamemodeTitle = document.getElementById('gamemodeTitle');
         const gamemodeTitleAnimation = document.getElementById('gamemodeTitleAnimation');//for animating purposes
+        const regionTitle = document.getElementById('regionTitle');
         const oval = document.getElementById('ovalAnimation');//also for the animation
         const clientTickDiv = document.getElementById('clienttick');
         const signupdiv = document.getElementById('not-signed-in-text');
@@ -94,6 +95,7 @@ console.log(bodyupgrades);
           //gamemodeTitle.textContent = gamemode;//dont change immediately, only after animation
           gamemodeTitleAnimation.textContent = gamemode;
           regionTitle.textContent = serverLocations[currentGamemodeID];
+          zoom = animationZoomValue;//reset zoom animation
           if (type == "n"){
             gamemodeTitle.classList.toggle('animateNext');
             gamemodeTitleAnimation.classList.toggle('animateNext');
@@ -1594,7 +1596,8 @@ console.log(bodyupgrades);
         let animationZoomValue = 1.8;//always start from this zoom value, then zoom in
         let zoom = animationZoomValue;
         let zoomScale = 1/zoom;
-        let brightness = 1;
+        let darknessValue = 0;//scren slowly become darker when opening website
+        let drawingGamemode = currentGamemodeID;//the gamemode that is being drawn on home screen. While gamemode changes immediately when clicking arrow, this value changes after 0.6 seconda (when black oval is half way across the screen)
         function homeScreenLoop() {
             if (players.length > 0) return;//dont do anything if ingame
             //start drawing the homescreen if not ingame
@@ -1614,7 +1617,7 @@ console.log(bodyupgrades);
             hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back
             drawGridHomeScreen();//(no need draw boundary of map)
             //now draw the stuff
-            if (gamemode == "PvE arena"){
+            if (drawingGamemode == 0){//PvE arena
               hctx.lineJoin = "round";//to make shape corners round
               hctx.lineWidth = 4;
               //drawPolygon(sides,x,y,rot)
@@ -1631,7 +1634,10 @@ console.log(bodyupgrades);
               drawPolygon(3,2790,2069,0)
             }
             hctx.restore();//restore zoom
-            hctx.fillStyle = 'rgba(0,0,0,.5)';//make homescreen background darker
+            if (darknessValue < 0.5){
+              darknessValue += 0.02;
+            }
+            hctx.fillStyle = 'rgba(0,0,0,'+darknessValue+')';//make homescreen background darker
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
             //now move the camera
             hsCameraX = hsMAP_SIZE/2 + rotationRadius*Math.cos(rotationAngle/180*Math.PI) - hcanvas.width / 2;
