@@ -95,7 +95,7 @@ console.log(bodyupgrades);
           //gamemodeTitle.textContent = gamemode;//dont change immediately, only after animation
           gamemodeTitleAnimation.textContent = gamemode;
           regionTitle.textContent = serverLocations[currentGamemodeID];
-          zoom = animationZoomValue;//reset zoom animation
+          setTimeout(function(){ drawingGamemode = currentGamemodeID;zoom = animationZoomValue; }, 400);//change gamemode drawing on home screen 0.4 seconds later (when black oval is 1/3 across the screen) + reset zoom animation
           if (type == "n"){
             gamemodeTitle.classList.toggle('animateNext');
             gamemodeTitleAnimation.classList.toggle('animateNext');
@@ -1570,6 +1570,36 @@ console.log(bodyupgrades);
             }
             else if (sides == 3){
               shapetype = 1;
+            }
+            const size = shapesizes[shapetype];
+            hctx.save();
+            hctx.translate(x-hsCameraX, y-hsCameraY);
+            let middleOfScreenX = hsCameraX + hcanvas.width/2/zoomScale;
+            let middleOfScreenY = hsCameraY + hcanvas.height/2/zoomScale;
+            //hctx.translate(middleOfScreenX-(middleOfScreenX-(x-hsCameraX))/zoomScale, middleOfScreenY-(middleOfScreenY-(y-hsCameraY))/zoomScale);
+            //hctx.translate((x-hsCameraX-hcanvas.width/2), (y-hsCameraY-hcanvas.height/2));
+            hctx.rotate(rot/180*Math.PI);
+            hctx.fillStyle = shapecolors[shapetype];
+            hctx.strokeStyle = shapeoutlines[shapetype];
+            hctx.beginPath();
+            for (let i = 0; i < sides; i++) {
+                const angle = (i * Math.PI * 2 / sides) - Math.PI/2;
+                hctx.lineTo(Math.cos(angle) * size/2,Math.sin(angle) * size/2);
+            }
+            hctx.closePath();
+            hctx.fill();
+            hctx.stroke();
+            hctx.restore();
+        }
+
+        function drawFakePlayer(team,tanktype,x,y,rot){//only for home screen background
+            if (team == "celestial"){
+              hctx.fillStyle = shapecolors[shapetype];
+              hctx.strokeStyle = shapeoutlines[shapetype];
+            }
+            else if (team == "blue"){
+              hctx.fillStyle = shapecolors[shapetype];
+              hctx.strokeStyle = shapeoutlines[shapetype];
             }
             const size = shapesizes[shapetype];
             hctx.save();
