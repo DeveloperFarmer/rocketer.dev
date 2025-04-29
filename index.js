@@ -1688,6 +1688,20 @@ console.log(bodyupgrades);
               drawFakePlayer("red","riot","inferno",1470,1050,170,70)
               drawFakePlayer("red","marksman","saw",890,1050,60,70)
               drawFakePlayer("celestial","pulsar","chasm",1470,1530,55,90)
+            }
+            else if (drawingGamemode == 2){//2tdm
+              drawPolygon(9,2100,1700,55)
+              drawPolygon(7,1200,2000,350)
+              drawFakePlayer("red","assassin","artillery",890,2000,45,50)
+              drawFakePlayer("red","penta","saw",750,2150,45,60)
+              drawFakePlayer("red","alpha","saw",1100,1450,70,70)
+              drawFakePlayer("red","annihilator","ziggurat",1400,2050,20,70)
+              drawFakePlayer("red","emperor","mothership",1980,1250,20,70)
+              drawFakePlayer("red","wave","saw",2200,1350,290,70)
+              drawFakePlayer("red","palisade","bombard",2500,2050,45,70)
+              drawFakePlayer("red","riot","inferno",1470,1050,170,70)
+              drawFakePlayer("red","marksman","saw",890,1050,60,70)
+              drawFakePlayer("celestial","pulsar","chasm",1470,1530,55,90)
             }//increase x value to move right, increase y value to move downwards
             hctx.restore();//restore zoom
             if (darknessValue < 0.5){
