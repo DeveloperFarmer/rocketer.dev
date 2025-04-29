@@ -1591,15 +1591,21 @@ console.log(bodyupgrades);
         }
       
         //drawing canvas for homescreen background
-        let zoom = 2;
+        let animationZoomValue = 1.8;//always start from this zoom value, then zoom in
+        let zoom = animationZoomValue;
         let zoomScale = 1/zoom;
+        let brightness = 1;
         function homeScreenLoop() {
             if (players.length > 0) return;//dont do anything if ingame
             //start drawing the homescreen if not ingame
             hctx.fillStyle = '#CDCDCD';
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
             if (zoom > 1){
-              zoom -= 0.01;
+              //zoom -= 0.005;
+              zoom -= (zoom - 1)/13;
+              if (zoom < 1.001){
+                zoom = 1;
+              }
               zoomScale = 1/zoom;
             }
             hctx.save();
