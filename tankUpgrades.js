@@ -1,6 +1,9 @@
 export const bodyupgrades = {//use export so that it is accessible in the main js code
   //note that export only works for modules, i.e. in the html code, the js scripts must have type="module"
   //hardcoded for the upgrade tree. Omit unneccessary properties that dont affect visuals. Remove aura barrels.
+  //IF CHANGE STUFF IN THE SERVER, REMEMBER TO CHANGE HERE TOO
+  //this is only used for upgrade tree, NOT buttons and the actual game
+  //tank names with hyphen need inverted commas, e.g. "auto-guard"
   base: {
     upgradeTo: ['raider','wall','sentry'],//needed for upgrade tree (decide which tank to grey out)
   },
@@ -3507,4 +3510,190 @@ export const bodyColors = {//side note: color when hit or have spawn protection 
     col: "transparent",
     outline: "transparent",
   }
+};
+
+
+export const botcolors = {
+  //get colors based on dune mob name
+  Cluster: {
+    color: "#00ffff",
+    outline: "#09d3fb",
+    specialty: "",
+    static: "no",
+    minion: "no",
+  },
+  Pursuer: {
+    color: "#00ffff",
+    outline: "#09d3fb",
+    specialty: "",
+    static: "no",
+    minion: "yes",
+  },
+  Crasher: {
+    color: "#00ffff",
+    outline: "#09d3fb",
+    specialty: "",
+    static: "no",
+    minion: "yes",
+  },
+  Champion: {
+    color: "#00ffff",
+    outline: "#09d3fb",
+    specialty: "",
+    static: "no",
+    minion: "no",
+  },
+  Infestor: {
+    color: "#916f6f",
+    outline: "#6c5353",
+    specialty: "",
+    static: "no",
+    minion: "no",
+  },
+  Pillbox: {
+    color: "#916f6f",
+    outline: "#6c5353",
+    specialty: "bullet knockback",
+    static: "no",
+    minion: "yes",
+  },
+  Leech: {
+    color: "#916f6f",
+    outline: "#6c5353",
+    specialty: "lifesteal",
+    static: "no",
+    minion: "yes",
+  },
+
+  "Cavern Protector": {
+    color: "#FFE46B",
+    outline: "#E1C64D",
+    specialty: "",
+    static: "no",
+    minion: "no",
+  },
+  "Abyssling": {
+    color: "#FFE46B",
+    outline: "#E1C64D",
+    specialty: "",
+    static: "no",
+    minion: "no",
+  },
+
+
+  Legion: {
+    color: "#e9ac7a",
+    outline: "#d99b68",
+    specialty: "",
+    static: "no",
+    minion: "no",
+  },
+  Booster: {
+    color: "#e9ac7a",
+    outline: "#d99b68",
+    specialty: "",
+    static: "no",
+    minion: "no",
+  },
+  'Mega-Crasher': {
+    color: "#bf3939",
+    outline: "#B22222",
+    specialty: "",
+  },
+  Spike: {
+    color: "#123573",
+    outline: "#0c2859",
+    specialty: "it hurts",
+  },
+  Mortar: {
+    color: "#001a47",
+    outline: "#001333",
+    specialty: "it hurts even more",
+  },
+  Rogue: {
+    color: "#731582",
+    outline: "#581063",
+    specialty: "lifesteal",
+  },
+  Shield: {
+    color: "#c79b4e",
+    outline: "#a6803d",
+    specialty: "bullet knockback",
+  },
+  Grower: {
+    color: "#9400D3",
+    outline: "#62008B",
+    specialty: "grows when it deals damage",
+  },
+  Protector: {
+    color: "#D5CE67",
+    outline: "#ABA552",
+    specialty: "sniper",
+  },
+  Boss: {
+    color: "#86775F",
+    outline: "#404040",
+    specialty: "rarely spawns",
+  },
+  King: {
+    color: "#47048a",
+    outline: "#830ff7",
+    specialty: "high health",
+  },
+  Titan: {
+    color: "#a03333",
+    outline: "#791a1a",
+    specialty: "superior health",
+  },
+  Sultan: {
+    color: "#0003b3",
+    outline: "#00027a",
+    specialty: "Upgraded Titan",
+  },
+  Beast: {
+    color: "#B5D648",
+    outline: "#5B692C",
+    specialty: "Insane health",
+  },
+  Wall: {
+    color: "#3b2b20",
+    outline: "#8a6950",
+    specialty: "bullet knockback",
+  },
+
+  Rock: {
+    color: "#909090",
+    outline: "#5c5c5c",
+    specialty: "",
+    static: "yes",
+    minion: "no",
+  },
+  Gravel: {
+    color: "#909090",
+    outline: "#5c5c5c",
+    specialty: "",
+    static: "yes",
+    minion: "no",
+  },
+  Boulder: {
+    color: "#505250",
+    outline: "#000000",
+    specialty: "",
+    static: "yes",
+    minion: "no",
+  },
+  Mountain: {
+    color: "#b8683b",
+    outline: "#87563a",
+    specialty: "",
+    static: "yes",
+    minion: "no",
+  },
+  Cactus: {
+    color: "#60b560",
+    outline: "#428042",
+    specialty: "",
+    static: "yes",
+    minion: "no",
+  },
 };

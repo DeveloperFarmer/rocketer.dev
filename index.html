@@ -16,7 +16,7 @@
             margin: 0;
             overflow: hidden;
             background-color: #222;
-            text-shadow: -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, 2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000, -2px 2px 0 #000, -2px 0 0 #000;
+            text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
             font-weight: 700;
             font-family: "Roboto", sans-serif;
             color: white;
@@ -65,47 +65,48 @@
             position: absolute;
             top: 2%;
             left: 1%;
-            font-size: max(2vh,10px);
+            font-size: 2vmin;
             font-weight: 900;
             line-height: 1.5;
+            width: 35vw;/*maximum width of the text to prevent long lines of changelog on home screen, and also for mobile users*/
         }
         #hometitle {
             position: absolute;
             top: 4.5%;
             left: 50%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
-            font-size: max(7vh,35px);
-            letter-spacing: 0.2vh;
-            text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 7vmin;
+            letter-spacing: 0.2vmin;
+            text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
         }
         #subtitle {
             position: absolute;
-            top: calc(6.5% + max(3.5vh,17.5px));
+            top: calc(6.5% + 3.5vmin);
             left: 50%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
-            font-size: max(3.5vh,15.25px);
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 3.5vmin;
             font-weight: 400;
-            letter-spacing: 0.2vh;
-            text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+            letter-spacing: 0.2vmin;
+            text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
         }
         #subsubtitle {
             position: absolute;
-            top: 35%;
+            top: calc(55% - 20vmin);
             left: 50%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
-            font-size: 5.5vh;
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 5.5vmin;
             font-weight: 400;
-            letter-spacing: 0.2vh;
-            text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+            letter-spacing: 0.2vmin;
+            text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
             font-family: "Yantramanav";
         }
         #gamemodeSelector {
             position: absolute;
-            top: 44%;
+            top: calc(55% - 11vmin);
             left: 50%;
-            height: 12%;
+            height: 12vmin;
             width: 39.5vmin;
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             background-color: #a2a2a2;
             /*background-image: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, rgba(225,225,225,0.5) 51%);/*create a lighter shade for the top part of the button, #D82BCF*/
             font-size: 4vmin;
@@ -114,7 +115,7 @@
             border: .5vmin solid black;
             border-radius: 1vmin;
             white-space: nowrap;
-            text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+            text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
             transition: all .3s ease-out;
         }
         #gamemodeSelectorLighterColor {
@@ -132,7 +133,7 @@
             position: absolute;
             top: 25%;
             left: 50%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             transition: font-size .3s ease-out;
         }
         #gamemodeTitle:hover {
@@ -144,7 +145,7 @@
             top: 25%;
             left: -50%;
             opacity: 0;/*hide it until animation occurs (this allows two gamemode words to appear during animation when you click the arrow button left or right)*/
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
         }
         #gamemodeTitle.animatePrev{/*change to previous gamemode*/
           animation-name: fadeOutOldGamemodePrev;
@@ -218,21 +219,21 @@
             position: absolute;
             top: 60%;
             left: 50%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             font-size: 2vmin;
         }
         #regionTitle {
             position: absolute;
             top: 83%;
             left: 50%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             font-size: 2.5vmin;
         }
         #gamemodeArrow1 {
             position: absolute;
             top: 25%;
             left: 7%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             font-size: 6vmin;
             transition: all 0.3s ease-out;
             cursor: pointer;
@@ -241,7 +242,7 @@
             position: absolute;
             top: 25%;
             left: 93%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             font-size: 6vmin;
             transition: all 0.3s ease-out;
             cursor: pointer;
@@ -250,7 +251,7 @@
             position: absolute;
             top: 83%;
             left: 27%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             color: lightgrey;
             transition: all 0.3s ease-out;
             /*cursor: pointer;*/
@@ -259,7 +260,7 @@
             position: absolute;
             top: 83%;
             left: 73%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             color: lightgrey;
             transition: all 0.3s ease-out;
             /*cursor: pointer;*/
@@ -319,8 +320,8 @@
           margin:0;
           padding:0;
           cursor: pointer;
-          font-size: max(3vh,15px);
-          text-shadow: -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, 2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000, -2px 2px 0 #000, -2px 0 0 #000;
+          font-size: 3vmin;
+          text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
           font-weight: 900;
           font-family: "Roboto", sans-serif;
           color: rgb(0, 176, 225);
@@ -334,7 +335,7 @@
           position: fixed;
           top: 1vmin;
           right: 7vmin;
-          font-size: max(3vh,15px);
+          font-size: 3vmin;
         }
         .popUpBackground {
             position: absolute;
@@ -357,7 +358,7 @@
           position: fixed;
           top: 50%;
           left: 50%;
-          -webkit-transform: translateY(-50%) translateX(-50%);
+          transform: translateY(-50%) translateX(-50%);
           text-align: center;
           animation-name: dropFromTop;
           animation-duration: .5s;
@@ -367,7 +368,7 @@
         }
         .debugopen {/*change to this class to open the debug*/
             position: absolute;
-            font-size: max(2.1vh,15px);
+            font-size: 2.1vmin;
             left: 20px;
             display: block;
         }
@@ -375,48 +376,48 @@
             position: absolute;
             bottom: 3%;
             left: 0%;
-            font-size: max(2.5vh,20px); /*the words change size based on browser height, but minimum size is 20px (use max because if 20px more than 2.5vh, then use 20px)*/
+            font-size: 2.5vmin;
             text-align: center;
             width: 100%;
             display: none;
         }
         #mapSize {
-            top: 57%;
+          top: calc(17% + 40vmin);
         }
         #botnumber{
-            top: 49%;
+          top: calc(17% + 32vmin);
         }
         #shapenumber{
-            top: 53%;
+          top: calc(17% + 36vmin);
         }
         #dimension {
-            top: 41%;
+          top: calc(17% + 24vmin);
         }
         #drawnEntities {
-            top: 45%;
+          top: calc(17% + 28vmin);
         }
         #ping {
           top: 17%;
         }
-      #playercount {
-        top: 33%;
-      }
-      #globalplayercount {
-        top: 37%;
-      }
-      #servertick {
-        top: 25%;
-      }
-      #clienttick {
-        top: 29%;
-      }
+        #playercount {
+          top: calc(17% + 16vmin);
+        }
+        #globalplayercount {
+          top: calc(17% + 20vmin);
+        }
+        #servertick {
+          top: calc(17% + 8vmin);
+        }
+        #clienttick {
+          top: calc(17% + 12vmin);
+        }
         #fpsCounter {
-            position: absolute;
-            top: 21%;
-            left: 20px;
-            color: #ccc;
-            font-size: max(2.1vh,15px);
-            display: none;
+          position: absolute;
+          top: calc(17% + 4vmin);
+          left: 20px;
+          color: #ccc;
+          font-size: 2.1vmin;
+          display: none;
         }
         #fpsCounter.high { color: #2ecc71; }  /* Green for 60 FPS */
         #fpsCounter.medium { color: #f39c12; } /* Yellow for 30-59 FPS */
@@ -436,6 +437,8 @@
             font-weight: 900;
             text-align: center;
             line-height: 0.5;
+            animation-name: opacityFade;
+            animation-duration: .7s;
         }
         .death-content-top {
             position: fixed;
@@ -444,6 +447,12 @@
             width: 100%;
             height: 30%;
             line-height: 1;
+            animation-name: deathScreenDropDown;
+            animation-duration: .7s;
+        }
+        @keyframes deathScreenDropDown {
+          from {bottom: 160%;}
+          to {bottom: 60%;}
         }
         .death-content-bottom {
             position: fixed;
@@ -451,6 +460,12 @@
             top: 50%;
             width: 100%;
             height: 30%;
+            animation-name: deathScreenDropDown2;
+            animation-duration: .7s;
+        }
+        @keyframes deathScreenDropDown2 {
+          from {top: -50%;}
+          to {top: 50%;}
         }
 
         #deathScreen.hidden {
@@ -477,7 +492,7 @@
             position: absolute;
             top: 55%;
             left: calc(50% + 15.3vmin);
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             background-color: rgb(56, 183, 100);
             color: white;
             border: none;
@@ -486,7 +501,7 @@
             font-size: 3vmin;
             font-weight: 900;
             font-family: "Roboto", sans-serif;
-            border-radius: 5px;
+            border-radius: .5vmin;
             cursor: pointer;
             transition: background-color 0.3s;
             animation-name: opacityFade;/*whenever you change the display from none to block*/
@@ -501,19 +516,19 @@
             top: 61%;
             left: 50%;
             font-size: 2vmin;
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             display: none;
         }
         #connecting {
           position: absolute;
           top: 55%;
           left: 50%;
-          -webkit-transform: translateY(-50%) translateX(-50%);
+          transform: translateY(-50%) translateX(-50%);
           text-align:center;
           font-size: 6vmin;
           font-weight: 900;
           font-family: "Roboto", sans-serif;
-          text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+          text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
           animation-name: opacityFade;
           animation-duration: .5s;
         }
@@ -525,7 +540,7 @@
             position: absolute;
             top: 55%;
             left: 50%;
-            -webkit-transform: translateY(-50%) translateX(-50%);
+            transform: translateY(-50%) translateX(-50%);
             width: 28.5vmin;
             padding-left: 1vmin;
             padding-top: 1.1vmin;
@@ -542,8 +557,7 @@
         }
         /*input box styling*/
         input:focus {
-            outline: none;
-            border: none;
+          outline: none;
         }
         ::placeholder {
           color: #b9b9b9;
@@ -634,7 +648,7 @@
         font-size: 3vmin;
         font-weight: 700;
         font-family: "Roboto", sans-serif;
-        text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+        text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
       }
       .material-icons.hsIcons {
         font-size: 4.5vmin;
@@ -649,6 +663,7 @@
       /* Tooltip text Right*/
       .hsButtons .tooltiptext {
         opacity: 0;
+        visibility: hidden; /*prevent tooltip itself (button div's child) from having hover detection, only button have hover detection*/
         background-color: black;
         color: #fff;
         font-family: Roboto;
@@ -666,6 +681,7 @@
       /* Show the tooltip text when you mouse over the tooltip container */
       .hsButtons:hover .tooltiptext {
         opacity: 1;
+        visibility: visible;
         transform: translateX(-7.2vmin)
       }
       
@@ -706,7 +722,7 @@
         position: fixed;
         text-align: center;
         top: 50%;
-        -webkit-transform: translateY(-50%) translateX(-50%);
+        transform: translateY(-50%) translateX(-50%);
         display:none;
         animation-name: dropFromTop;
         animation-duration: .5s;
@@ -716,21 +732,21 @@
           to {top: 50%;}
       }
       .modalButton{
-        text-shadow: -2px -2px 0 #000, 0 -2px 0 #000, 2px -2px 0 #000, 2px 0 0 #000, 2px 2px 0 #000, 0 2px 0 #000, -2px 2px 0 #000, -2px 0 0 #000;
-          font-weight: 900;
-          font-family: "Roboto", sans-serif;
-          color: #fff;
-          font-size: 1.8vmin;
-          border: .5vmin solid black;
-          border-radius: 1vmin;
-          background-color: rgba(0, 0, 0, .5);
-          padding: .5vmin 1vmin;
-          /*Hover transition*/
-          -webkit-transition: all 0.3s ease-out;
-          -moz-transition: all 0.3s ease-out;
-          -o-transition: all 0.3s ease-out;
-          transition: all 0.3s ease-out;
-          cursor: pointer;
+        text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
+        font-weight: 900;
+        font-family: "Roboto", sans-serif;
+        color: #fff;
+        font-size: 1.8vmin;
+        border: .5vmin solid black;
+        border-radius: 1vmin;
+        background-color: rgba(0, 0, 0, .5);
+        padding: .5vmin 1vmin;
+        /*Hover transition*/
+        -webkit-transition: all 0.3s ease-out;
+        -moz-transition: all 0.3s ease-out;
+        -o-transition: all 0.3s ease-out;
+        transition: all 0.3s ease-out;
+        cursor: pointer;
       }
       .modalButton:hover {
           background-color: rgba(69,69,69,.5);
@@ -771,7 +787,7 @@
         width: 100%;
         font-size: 10vmin;
         font-weight: 900;
-        text-shadow: -3px -3px 0 #000, 0 -3px 0 #000, 3px -3px 0 #000, 3px 0 0 #000, 3px 3px 0 #000, 0 3px 0 #000, -3px 3px 0 #000, -3px 0 0 #000;
+        text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
         line-height: 1.5;
         display: none;
       }
@@ -779,26 +795,26 @@
         position: fixed;
         left: 50%;
         top: 47%;
-        -webkit-transform: translateY(-50%) translateX(-50%);
-          animation-name: opacityFade;
-          animation-duration: 1s;
+        transform: translateY(-50%) translateX(-50%);
+        animation-name: opacityFade;
+        animation-duration: 1s;
         display: none;
       }
       #loadingWords2 {
         position: fixed;
         left: 50%;
         top: 55%;
-        -webkit-transform: translateY(-50%) translateX(-50%);
+        transform: translateY(-50%) translateX(-50%);
         font-size: 2.5vmin;
-          animation-name: opacityFade;
-          animation-duration: 1s;
+        animation-name: opacityFade;
+        animation-duration: 1s;
         display: none;
       }
       #loadingWords3 {
         position: fixed;
         left: 50%;
         top: 59%;
-        -webkit-transform: translateY(-50%) translateX(-50%);
+        transform: translateY(-50%) translateX(-50%);
         font-size: 2vmin;
           animation-name: opacityFade;
           animation-duration: 1s;
@@ -832,8 +848,6 @@
       }
 
       input:checked + .slider:before {
-        -webkit-transform: translateX(34px);
-        -ms-transform: translateX(34px);
         transform: translateX(34px);
       }
 
@@ -847,7 +861,6 @@
         bottom: 0;
         background-color: black;
         border: none;
-        -webkit-transition: .4s;
         transition: .4s;
         border-radius: 25px;
         height: 25px;
@@ -863,7 +876,6 @@
         left: 4px;
         bottom: 4px;
         background-color: white;
-        -webkit-transition: .4s;
         transition: .4s;
         border-radius: 50%;
       }
@@ -882,27 +894,246 @@
         color: white;
         opacity: 0.75;
         text-align: center;
-        font-weight: 900;
+        font-weight: 700;
         font-family: "Roboto", sans-serif;
-        border-radius: 0.6vw;
-        font-size: 1.3vw; /*the words change size based on browser width*/
-        padding: 2.5px 15px;
-        margin: 6px;
+        border-radius: 1vmin;
+        font-size: 2.6vmin; /*the words change size based on browser width*/
+        padding: 0.25vmin 1.5vmin;
+        margin: 0.3vmin;
         animation-name: animateNotif;
-        animation-duration: 1s;
+        animation-duration: .5s;
         transition-timing-function: ease-in-out;
+        text-shadow: none;
       }
-      @keyframes animateNotif {
+      @keyframes animateNotif {/*fade in*/
         0% {
           opacity: 0;
           max-height: 0;/*dont use height*/
         }
-        50% {
-          opacity: 0.75;
-        }
         100% {
-          max-height: 100px;/*set this value to a value that will be bigger than the height is*/
+          opacity: 0.75;
+          max-height: 3.5vmin;/*set this value to a value that will be bigger than the height is*/
         }
+      }
+      @keyframes animateNotifRemove {/*fade out*/
+        0% {opacity: 0.75;}
+        100% {opacity: 0;}
+      }
+      .translucentInput {
+          width: 28vmin;
+          padding: 0.5vmin;
+          font-size: 2vmin;
+          font-weight: 400;
+          font-family: "Roboto", sans-serif;
+          border: .5vmin solid black;
+          border-radius: 1vmin;
+          background-color: rgba(0, 0, 0, .5);
+          color: white;
+          margin-top: 1vmin;
+          margin-bottom: 1vmin;
+      }
+      .loader {
+        position: relative;
+        left: calc(50% - 1.5vmin);
+        border: 0.5vmin solid lightgrey;
+        border-radius: 50%;
+        border-top: 0.5vmin solid transparent;
+        width: 3vmin;
+        height: 3vmin;
+        margin-top: 2vmin;
+        animation: spin 2s linear infinite;
+        display: none;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .quickchatsectors {/*the container*/
+        height: 25vmin;/*height should be half of width to make a semicircle. this is assuming there is always more than 2 quickchats (scenexe had minimum 4)*/
+        width: 50vmin;
+        overflow: hidden;/*hide the 'cropped' part of the semicricle. it isnt actually cropped, just hidden outside when you rotate it*/
+        position: fixed;
+        transition: all 0.3s ease-out;
+        transform-origin: 50% 100%;/*for transform scale during transition*/
+        pointer-events: none; /* Disables hover on the parent */
+        font-size: 13vmin;
+        color: #3c3c3c;/*color of the cross*/
+        text-shadow: -0.5vmin -0.5vmin 0 #000, 0 -0.5vmin 0 #000, 0.5vmin -0.5vmin 0 #000, 0.5vmin 0 0 #000, 0.5vmin 0.5vmin 0 #000, 0 0.5vmin 0 #000, -0.5vmin 0.5vmin 0 #000, -0.5vmin 0 0 #000;
+        border-bottom: 0.5vmin solid black;/*need border bottom cuz the actual outline of the semicircle will get partially cropped out when you crop part of it to make a sector*/
+        border-image: linear-gradient(to left, #000 50%, transparent 50%) 100% 1;/*when you rotate the semicricle, only half of the bottom border is gone (the radius, not the diameter), so use border image to make half of the border transparent*/
+      }
+      .quickchatsectors::before {/*the semicircle, cropped into sector*/
+        height: inherit;
+        width: inherit;
+        position: absolute;
+        content: "";
+        border-radius: 25vmin 25vmin 0 0;/*THIS NEEDS TO BE EQUAL TO THE QUICKCHATSECTORS HEIGHT*/
+        background-color: rgba(0, 0, 0, .5);
+        outline: 0.5vmin solid black;/*dont use border, use outline (cuz the border will get cropped out when you crop out the unwanted angle to create the secctor)*/
+        outline-offset: -0.5vmin;/*should equal to the outline width above*/
+        transform-origin: 50% 100%;
+        transform: rotate(90deg); /*THIS SHOULD BE (180 - ANGLE OF SECTOR), e.g. a 40 degree sector should be rotate(140deg), reason is because the original sector is 180 degree, and this crops out the 140 degree*/
+        transition: all 0.3s ease-out;
+        pointer-events: auto; /* Re-enables hover ONLY on ::before */
+        cursor: pointer;
+      }
+      .quickchatsectors:hover::before {/*hover must be in front of before pseudo element because element cannot detect hover, only container*/
+        background-color: rgba(30, 30, 30, .5);/*only the pseudo element, not the whole container, cuz the container is a rectangle with no background*/
+      }
+      #quickchat1 {/*the top right quadrant*/
+        bottom: 50%;
+        left: calc(50% - 25vmin);
+        animation-name: growing1;/*animation when you open quick chat*/
+        animation-duration: .5s;
+      }
+      @keyframes growing1 {
+          from {transform: scale(0.1);opacity: 0;}
+          to {transform: scale(1);opacity:1;}
+      }
+      #quickchat1:hover:not(:has(.qcmore:hover)) {/*when mouse hover, scale the container UNLESS it is hovering over the three dots*/
+        transform: scale(1.1);
+      }
+      #quickchat2 {/*the top left quadrant*/
+        bottom: 50%;
+        left: calc(50% - 24.5vmin);
+        transform: scaleX(-1);
+        animation-name: growing2;
+        animation-duration: .5s;
+      }
+      @keyframes growing2 {
+          from {transform: scale(-0.1,0.1);opacity: 0;}
+          to {transform: scale(-1,1);opacity:1;}
+      }
+      #quickchat2:hover:not(:has(.qcmore:hover)) {
+        transform: scale(-1.1,1.1);/*because quickchat2 is horizontally flipped*/
+      }
+      #quickchat3 {/*bottom right*/
+        bottom: calc(50% + 0.5vmin);
+        left: calc(50% - 25vmin);
+        transform: scaleY(-1);
+        animation-name: growing3;
+        animation-duration: .5s;
+      }
+      @keyframes growing3 {
+          from {transform: scale(0.1,-0.1);opacity: 0;}
+          to {transform: scale(1,-1);opacity:1;}
+      }
+      #quickchat3:hover:not(:has(.qcmore:hover)) {
+        transform: scale(1.1,-1.1);/*because quickchat3 is vertically flipped*/
+      }
+      #quickchat4 {/*bottom left*/
+        bottom: calc(50% + 0.5vmin);
+        left: calc(50% - 24.5vmin);
+        transform: scale(-1);
+        animation-name: growing4;
+        animation-duration: .5s;
+      }
+      @keyframes growing4 {
+          from {transform: scale(-0.1);opacity: 0;}
+          to {transform: scale(-1);opacity:1;}
+      }
+      #quickchat4:hover:not(:has(.qcmore:hover)) {
+        transform: scale(-1.1);
+      }
+      .thecross {
+        position: absolute;
+        right: 8.5vmin;
+        top: 3.5vmin;
+      }
+      .actualqc {
+        position: absolute;
+        right: 12.5vmin;
+        top: 12.5vmin;
+        color: white;
+        font-size: 3vmin;
+        font-weight: 700;
+        text-align: center;
+        text-shadow: none;
+      }
+      .qcmore {
+        position: absolute;
+        right: 1vmin;
+        top: 1vmin;
+        color: lightgrey;
+        font-size: 3vmin;
+        line-height: 1.5vmin;
+        font-weight: 900;
+        text-align: center;
+        text-shadow: none;
+        pointer-events: auto; /* Re-enables hover*/
+        cursor: pointer;
+        background-color: rgba(0, 0, 0, .5);
+        border: 0.5vmin solid black;
+        border-radius: 50%;
+        width: 3vmin;
+        height: 3vmin;
+        transition: all 0.3s ease-out;
+        display: none;
+      }
+      .qcmore:hover {
+        transform: scale(1.5);
+        background-color: rgba(30, 30, 30, .5);
+      }
+      .qcnumber {
+        position: absolute;
+        right: 20vmin;
+        top: 20vmin;
+        color: white;
+        font-size: 3vmin;
+        text-shadow: none;
+        display: none;
+      }
+      .qcnumber.two {/*div is flipped, so text will be flipped too, so now we flip the text back*/
+        transform: scaleX(-1);
+      }
+      .qcnumber.three {
+        transform: scaleY(-1);
+      }
+      .qcnumber.four {
+        transform: scale(-1);
+      }
+      .actualqc.two {/*div is flipped, so text will be flipped too, so now we flip the text back*/
+        transform: scaleX(-1);
+      }
+      .actualqc.three {
+        transform: scaleY(-1);
+      }
+      .actualqc.four {
+        transform: scale(-1);
+      }
+      #quickchattext {
+        position: absolute;
+        top: 13vmin;
+        left: 50%;
+        transform: translateY(-50%) translateX(-50%);
+        font-size: 5vmin;
+        text-shadow: -0.5vmin -0.5vmin 0 #000, 0 -0.5vmin 0 #000, 0.5vmin -0.5vmin 0 #000, 0.5vmin 0 0 #000, 0.5vmin 0.5vmin 0 #000, 0 0.5vmin 0 #000, -0.5vmin 0.5vmin 0 #000, -0.5vmin 0 0 #000;
+        animation-name: falling;
+        animation-duration: .5s;
+      }
+      @keyframes falling {
+          from {top: 0;}
+          to {top: 13vmin;}
+      }
+      #quickchat {
+        display: none;
+      }
+
+      #chat {/*the chat box ingame*/
+        position: fixed;
+        top: 25.5vmin;
+        right: 0.5vmin;
+        width: 22.5vmin;
+        font-size: 1.9vmin;
+        font-weight: 400;
+        font-family: "Roboto", sans-serif;
+        padding: 0.6vmin 0.3vmin;
+        background-color: rgba(15,15,15, .75);
+        border: 0.23vw solid #000000;
+        border-radius: 1vmin;
+        color: white;
       }
     </style>
 </head>
@@ -930,6 +1161,7 @@
     <div id="shapenumber" class="debug">Number of shapes: 0</div>
     <div id="dimension" class="debug">Dimension: PvE</div>
     <div id="drawnEntities" class="debug">Drawn Entities: xx</div>
+    <input type="text" enterkeyhint="send" autocomplete="off" id="chat" placeholder="Click or press ENTER" onfocus="sendTypingIndicator()" onblur="removeTypingIndicator()" />
     <div id="notifFlex"></div>
     <div id="deathScreen" class="hidden">
         <div class="death-content-top">
@@ -940,7 +1172,7 @@
             <p style="font-size: 2.5vmin;">Level <span id="finalLvl">???</span> <span id="playerUpgrade">???-???</span></p>
             <br><p style="font-size: 2.5vmin;">Time Played: <span id="totalTime">??:??:??</span></p>
             <p style="font-size: 2.5vmin;">Score: <span id="finalScore">0</span></p>
-            <p style="font-size: 2.5vmin;">Kills: <span id="totalKills">0</span></p>
+            <p style="font-size: 2.5vmin;">Kills: <span id="totalKills">?</span></p>
             <button id="restartButton" class="deathScreenButton">Play Again</button>
             <button id="continueButton" class="deathScreenButton">Continue</button>
         </div>
@@ -966,7 +1198,14 @@
         <div id="regionArrow2">&gt;</div>
     </div>
     <div id="respawnInfo">You will respawn at level <span id="respawnLvl">0</span></div>
-    <div id="not-signed-in-text"><button id="login" class="otherlinks">Log In</button> - <button id="signup" class="otherlinks">Sign Up</button></div>
+    <div id="not-signed-in-text"><button id="loginButton" class="otherlinks">Log In</button> - <button id="signupButton" class="otherlinks">Sign Up</button></div>
+    <div id="quickchat">
+      <div id="quickchattext">Quick Chat</div>
+      <div id="quickchat1" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc"></span><div class="qcmore">...</div><span class="qcnumber">1</span></div>
+      <div id="quickchat2" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc two"></span><div class="qcmore">...</div><span class="qcnumber two">2</span></div>
+      <div id="quickchat3" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc three"></span><div class="qcmore">...</div><span class="qcnumber three">3</span></div>
+      <div id="quickchat4" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc four"></span><div class="qcmore">...</div><span class="qcnumber four">4</span></div>
+    </div>
     <div id="left-buttons" class="hsFlexbox">
       <button id="reddit" class="hsButtons">
         <span class="material-icons hsIcons" onclick="window.open('https://www.reddit.com/r/rocketer/')">
@@ -1065,22 +1304,60 @@
     <div id="blackScreen"></div>
     <div id="modal" class="modal"><h1 id="message-popup-title" class="modalText">Error</h1><hr><p id="message-popup-text"  class="modalTextSmall">Accounts will be added soon</p><hr><button id="ok-button" class="modalButton" onclick="closeModal()">OK</button></div>
     <div id="modal2" class="modal"><h1 class="modalText">Feedback/Bugs</h1><hr><p class="modalTextSmall">Please join our Discord server!</p><hr><button class="modalButton" onclick="closeModal2()">OK</button></div>
-    <div id="modal3" class="modal"><h1 class="modalText">Disconnected</h1><hr><p class="modalTextSmall">An unexpected error occurred while connecting to the server.</p><hr><button class="modalButton" onclick="closeModal3()">RECONNECT</button></div>
+    <div id="modal3" class="modal"><h1 class="modalText">Disconnected</h1><hr><p class="modalTextSmall">An unexpected error occurred. Try reloading the page.</p><hr><button class="modalButton" onclick="closeModal3()">RECONNECT</button></div>
+    <div id="modal3a" class="modal"><h1 class="modalText">Connection Error</h1><hr><p class="modalTextSmall" id="modal3aErr">An unexpected error occurred. Try reloading the page.</p><hr><button class="modalButton" onclick="closeModal3a()">RECONNECT</button></div>
     <div id="modal4" class="modal"><h1 class="modalText">Too Many Connections</h1><hr><p class="modalTextSmall">You have too many connections to this server from your IP address. Either close one of your other connections or join another server.</p><hr><button class="modalButton" onclick="closeModal4()">OK</button></div>
+    <div id="quickchatmsg" class="modal"><h1 class="modalText">Create Quick Chat Message</h1><hr><input class="translucentInput" placeholder="Message" maxlength="750" id="createQuickChat"></input><hr><button class="modalButton" onclick="createquickchat()">CREATE</button>&emsp;<button class="modalButton" onclick="closeModalquickchat()">CANCEL</button></div>
+    <div id="modal7" class="modal"><h1 class="modalText">Mobile support is experimental</h1><hr><p class="modalTextSmall">Some features may not work properly on this device.</p><hr><button class="modalButton" onclick="closeModal7()">OK</button></div>
+    <div id="login" class="modal" style="overflow:hidden;">
+      <h1 class="modalText">Log In</h1><hr>
+      <input class="translucentInput" placeholder="Username" maxlength="100" id="loginuser"></input><br>
+      <input class="translucentInput" placeholder="Password" maxlength="100" id="loginpw" type="password"></input><br>
+      <p class="modalTextSmall" style="line-height:1.5;">Show Password&emsp;<label class="switch" style="top:0.2vmin;"><input type="checkbox" onclick="togglePasswordVisibility()"><span class="slider round"></span></label></p><br><hr>
+      <button class="modalButton" onclick="login()">LOG IN</button>&emsp;<button class="modalButton" onclick="closeModal5()">CANCEL</button>
+      <div class="loader" id="loginLoading"></div>
+    </div>
+    <div id="signup" class="modal" style="overflow:hidden;">
+      <h1 class="modalText">Sign Up</h1><hr>
+      <input class="translucentInput" placeholder="Username" maxlength="100" id="signupuser"></input><br>
+      <input class="translucentInput" placeholder="Password" maxlength="100" id="signuppw" type="password" onblur="checkPw()"></input><br>
+      <input class="translucentInput" placeholder="Confirm Password" maxlength="100" id="confirmpw" type="password" onblur="checkPw()"></input>
+      <p class="modalTextSmall" style="line-height:1.5;margin-top:0;padding-top:0;">
+        <span id="pwWrong" style="font-size:1.5vmin;display:none;">Passwords do not match.<br></span><br>
+        Show Password&emsp;<label class="switch" style="top:0.2vmin;"><input type="checkbox" onclick="togglePasswordVisibility()"><span class="slider round"></span></label>
+      </p><br><hr>
+      <button class="modalButton" onclick="signup()">SIGN UP</button>&emsp;<button class="modalButton" onclick="closeModal6()">CANCEL</button>
+      <div class="loader" id="signupLoading"></div>
+    </div>
     <div id="loadingWords"><span id="loadingWords1">Joining Server...</span><span id="loadingWords2">If this takes too long, there might be a problem with the server or your connection.</span><span id="loadingWords3">Reloading the page may fix the problem.</span></div>
   
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script type="module" src="./tankUpgrades.js"></script>
     <script type="module" src="./index.js"></script>
     <script type="module">
       //html file cannot access functions inside a module js file, only a normal js file
-      import { closeModal,closeModal2,openSettings,accounts,bugs,changeGamemode } from "./index.js";//add updateTempSettings later
+      import { closeModal,closeModal2,closeModal3,closeModal3a,closeModal5,closeModal6,closeModal7,closeModalquickchat,openModalquickchat,createquickchat,openSettings,accounts,bugs,changeGamemode,togglePasswordVisibility,checkPw,login,signup } from "./index.js";//add updateTempSettings and closemodal3 etc. later
       window.closeModal = closeModal;
       window.closeModal2 = closeModal2;
+      window.closeModal3 = closeModal3;
+      window.closeModal3a = closeModal3a;
+      window.closeModal5 = closeModal5;
+      window.closeModal6 = closeModal6;
+      window.closeModal7 = closeModal7;
       window.openSettings = openSettings;
       window.accounts = accounts;
       window.bugs = bugs;
       //window.updateTempSettings = updateTempSettings;
+      //window.sendTypingIndicator = sendTypingIndicator;
+      //window.removeTypingIndicator = removeTypingIndicator;
       window.changeGamemode = changeGamemode;
+      window.togglePasswordVisibility = togglePasswordVisibility;
+      window.checkPw = checkPw;
+      window.login = login;
+      window.signup = signup;
+      window.createquickchat = createquickchat;
+      window.closeModalquickchat = closeModalquickchat;
+      window.openModalquickchat = openModalquickchat;
     </script>
   </body>
 </html>

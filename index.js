@@ -22,6 +22,10 @@ console.log(bodyupgrades);
         const oval = document.getElementById('ovalAnimation');//also for the animation
         const clientTickDiv = document.getElementById('clienttick');
         const signupdiv = document.getElementById('not-signed-in-text');
+        const playButton = document.getElementById("playButton");
+        const nameInput = document.getElementById("display-name-input");
+        const quickchat = document.getElementById("quickchat");
+        const darken = document.getElementById('blackScreen');
         document.getElementById('exit-changelog').addEventListener("click", () => {
           fullchangelog.style.display = "none";
         });
@@ -37,6 +41,55 @@ console.log(bodyupgrades);
         export function openSettings(){
           settings.style.display = "block";
         }
+        export function togglePasswordVisibility() {
+          let x = document.getElementById("loginpw");
+          if (x.type === "password") {
+            x.type = "text";
+          } else {
+            x.type = "password";
+          }
+          x = document.getElementById("signuppw");
+          if (x.type === "password") {
+            x.type = "text";
+          } else {
+            x.type = "password";
+          }
+          x = document.getElementById("confirmpw");
+          if (x.type === "password") {
+            x.type = "text";
+          } else {
+            x.type = "password";
+          }
+        }
+        export function checkPw(){//triggers when input box blurred (when user clicks outside the input box), checks if the password and confirm password are the same
+          let f = document.getElementById("signuppw");
+          let x = document.getElementById("confirmpw");
+          let c = document.getElementById("pwWrong");
+          if (f.value != x.value){
+            x.style.borderColor = "#f44c54";//make border red
+            c.style.display = "block";
+          }
+          else{
+            x.style.borderColor = "black";
+            c.style.display = "none";
+          }
+        }
+        export function login(){
+          document.getElementById("loginLoading").style.display = "block";
+          //send log in request to server
+        }
+        export function signup(){
+          document.getElementById("signupLoading").style.display = "block";
+          //send sign up request to server
+        }
+        document.getElementById('loginButton').addEventListener("click", () => {
+          document.getElementById("login").style.display = "block";
+          darken.style.display = "block";
+        });
+        document.getElementById('signupButton').addEventListener("click", () => {
+          document.getElementById("signup").style.display = "block";
+          darken.style.display = "block";
+        });
 
         // Set canvas to window size
         canvas.width = window.innerWidth;
@@ -49,7 +102,7 @@ console.log(bodyupgrades);
         let fov = 1;
         let fovscale = 1;//the amount for canvas to scale, NOT same as FOV, e.g. if fov is 2, then fov scale is 1/2
         let fovAnimation = 1;//slowly change this value to the actual fov value to create nice zooming effect
-        const players = [];
+        let players = [];//for pve this will be the actual player obj, for oher multiplayer, this is the leaderboard
         const bullets = [];
         const enemies = [];
         const particles = [];
@@ -58,7 +111,7 @@ console.log(bodyupgrades);
         let MAX_BOTS = 10;
         let shapeID = 0;
         let botID = 0;
-        const gamemodeList = ["PvE arena","Free For All","2 Teams","4 Teams","Tank Editor"];
+        const gamemodeList = ["PvE arena","Free For All","2 Teams","4 Teams","Tank Editor"];//DO NOT CHANGE THE ORDER AND THE NAMES
         const gamemodeColorsLight = ["#D82BCF","#F04F54","#BE7FF5","#00E06C","#00B0E1"];
         const gamemodeColors = ["#BA0DB1","#D23136","#A061D7","#00C24E","#0092C3"];//for home screen
         const serverLocations = ["local","Sweden","Sweden","Sweden","Sweden"]
@@ -71,14 +124,15 @@ console.log(bodyupgrades);
         regionTitle.textContent = serverLocations[currentGamemodeID];
         if (currentGamemodeID == 0){//no connecting required for PvE
           document.getElementById('connecting').style.display = "none";
-          document.getElementById('playButton').style.display = "block";
-          document.getElementById('display-name-input').style.display = "block";
+          playButton.style.display = "block";
+          nameInput.style.display = "block";
         }
         const keys = {};
       
         //function for changing gamemode on home screen
         export function changeGamemode(type) {
           if (gamemodeTitle.classList.contains("animateNext")||gamemodeTitle.classList.contains("animateNext")||oval.classList.contains("left")||oval.classList.contains("right")) return;//dont do anything if it is currently animating (might break the current animation)
+          let previousGamemodeID = currentGamemodeID;
           if (type == "n"){//next gamemode
             currentGamemodeID++;
             if (currentGamemodeID >= gamemodeList.length){
@@ -110,14 +164,21 @@ console.log(bodyupgrades);
           }
           if (currentGamemodeID != 0){//not PvE, so need to connect to server
             //remove player button and name input, put connecting...
-            document.getElementById('playButton').style.display = "none";
-            document.getElementById('display-name-input').style.display = "none";
+            playButton.style.display = "none";
+            nameInput.style.display = "none";
             document.getElementById('connecting').style.display = "block";
+            if (previousGamemodeID != 0){//if previous gamemode wasnt PvE, then need to disconnect from the server
+              socket.close();//disconnect from current server
+            }
+            connected = "no";
+            connectServer(serverlist[gamemode],"no")
+            console.log("Connecting to "+gamemode)
+            joinedWhichGM = gamemode;//respawn in the gamemode which you spawned in after you died
             //might want to animate the gamemode region too...
           }
           else{
-            document.getElementById('playButton').style.display = "block";
-            document.getElementById('display-name-input').style.display = "block";
+            playButton.style.display = "block";
+            nameInput.style.display = "block";
             document.getElementById('connecting').style.display = "none";
           }
         }
@@ -205,12 +266,12 @@ console.log(bodyupgrades);
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.radius = 28;//30 looked a little too big
+                this.radius = 24;
                 this.color = '#00B0E1';
-                this.outline = '#0092C3'
-                this.speed = 5;
+                this.outline = '#0092C3';
+                this.speed = 3;
                 this.angle = 0;
-                const health = 100;
+                let health = 100;
                 this.health = health;
                 this.maxhealth = health;
                 this.healSpeed = health/60/8;//takes 8 seconds to fully heal from 0 to max health
@@ -219,13 +280,13 @@ console.log(bodyupgrades);
                 this.bulletCooldown = 0;
                 this.bulletCooldownMax = 30;
                 this.score = 0;
-                this.barrelLength = 50;
-                this.barrelWidth = 20;
+                this.barrelLength = 48;
+                this.barrelWidth = 23;
                 this.barrelOffset = 0;
-                this.bulletDamage = 5;
-                this.bulletSpeed = 7;
+                this.bulletDamage = 10.5;
+                this.bulletSpeed = 4;
                 this.bodyDamage = 3;
-                this.bulletPenetration = 10;
+                this.bulletPenetration = 10.5;
             }
 
             update() {
@@ -320,6 +381,7 @@ console.log(bodyupgrades);
                     ctx.strokeStyle = '#7B7B7B';
                     ctx.fillStyle = '#999999'
                     ctx.lineWidth = 4;
+                    ctx.lineJoin = 'round';
                     ctx.save();
                     ctx.translate(screenX, screenY);
                     ctx.rotate(this.angle);
@@ -330,7 +392,6 @@ console.log(bodyupgrades);
                     // Draw tank body
                     ctx.fillStyle = this.color;
                     ctx.strokeStyle = this.outline;
-                    ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
@@ -451,7 +512,8 @@ console.log(bodyupgrades);
                         this.isHit = true;
                         if (player.health <= 0) {
                             // Game over
-                            showDeathScreen(score);
+                            let lvl = convertXPtoLevel(player.score);
+                            showDeathScreen(score,"bot",lvl,"mono","base");
                         }
                         //else{
                           //return true; // Mark for removal
@@ -746,18 +808,18 @@ console.log(bodyupgrades);
                     '#000000'
                 ];
                 const shapehealths = [
-                    50,
-                    25,//NOTE: triangle is second in the list, but it is the smallest and least health
-                    85,
-                    170,
-                    350,
-                    1050,
-                    3500,
-                    14000,
-                    35000,
-                    63000,
-                    98000,
-                    140000
+                    126,
+                    35,//NOTE: triangle is second in the list, but it is the smallest and least health
+                    454,
+                    1633,
+                    5879,
+                    21163,
+                    76187,
+                    274275,
+                    987338,
+                    3554598,
+                    12796555,
+                    46067596
                 ];
                 const shapesizes = [
                     35,
@@ -1132,10 +1194,10 @@ console.log(bodyupgrades);
                 this.color = color;
                 this.outline = outline;
                 //this.radius = Math.random() * 3 + 1;
-                this.radius = Math.random() * 5 + 10;
+                this.radius = Math.random() * 10 + 5;
                 this.dx = (Math.random() - 0.5) * 5;
                 this.dy = (Math.random() - 0.5) * 5;
-                this.lifetime = 40 + Math.random() * 10;
+                this.lifetime = 30 + Math.random() * 10;
                 this.alpha = 1;
             }
 
@@ -1163,7 +1225,6 @@ console.log(bodyupgrades);
                     ctx.globalAlpha = this.alpha;
                     ctx.fillStyle = this.color;
                     ctx.strokeStyle = this.outline;
-                    ctx.strokeStyle = this.color;
                     ctx.beginPath();
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
@@ -1306,7 +1367,7 @@ console.log(bodyupgrades);
         let mouseX = 0;
         let mouseY = 0;
         let mouseDown = false;
-
+/*
         canvas.addEventListener('mousemove', (e) => {
             mouseX = e.pageX;
             mouseY = e.pageY;
@@ -1329,7 +1390,7 @@ console.log(bodyupgrades);
         window.addEventListener('keyup', (e) => {
             keys[e.key] = false;
         });
-
+*/
         // Window resize
         const maxWidth = 1920;
         const maxHeight = 1080;
@@ -1350,12 +1411,12 @@ console.log(bodyupgrades);
             }
         }
         window.addEventListener('resize', () => {
+          if (gamemode == "PvE arena"){
             resizeCanvas();
-            //canvas.width = window.innerWidth;
-            //canvas.height = window.innerHeight;
+          }
         });
         resizeCanvas();
-      
+      /*
         function checkForKeybinds(key){//pressed a key, check if the key represents anything (except player movement)
           if (key == "m" && players.length > 0){//if ingame and press m
             if (debugState == "open"){//close the debug
@@ -1378,11 +1439,20 @@ console.log(bodyupgrades);
           else if (key == "o" && players.length > 0){
             fov++;
           }
-          else if (key == "p" && players.length > 0){
+          else if (key == "p" && players.length > 0 && fov >= 2){
             fov--;
           }
+          else if (key == "t" && players.length > 0){//toggle quick chat
+            if (quickchat.style.display == "block"){
+              quickchat.style.display = "none";
+            }
+            else{//if display is none or " "
+              //js will return display as " " because it cant read the css, unless you set it using js before
+              quickchat.style.display = "block";
+            }
+          }
         }
-      
+      */
         function spawnShape() {
             shapes.push(new Shape(
                 Math.random() * MAP_WIDTH,
@@ -1390,7 +1460,7 @@ console.log(bodyupgrades);
             ));
         }
       
-        function showDeathScreen(finalScore) {
+        function showDeathScreen(finalScore,killer,lvl,tank,body) {
             isGamePaused = true;
             document.getElementById('finalScore').textContent = finalScore;
             let timeplayed = Date.now() - startPlayTime;
@@ -1398,7 +1468,15 @@ console.log(bodyupgrades);
             datee.setSeconds(timeplayed / 1000); // specify value for SECONDS here
             timeplayed = datee.toISOString().substring(11, 19);
             document.getElementById('totalTime').textContent = timeplayed;
+            document.getElementById('killer').textContent = killer;
+            document.getElementById('finalLvl').textContent = lvl;
+            document.getElementById('playerUpgrade').textContent = tank+"-"+body;
             document.getElementById('deathScreen').classList.remove('hidden');
+            quickchat.style.display = "none";
+        }
+        function convertXPtoLevel(xp){
+          let level = Math.floor(Math.log((xp+1250/3)/500)*(1/Math.log(1.2)))+1;//same as scenexe2 lvling system, but xp + 1250/3 (same as scenexe)
+          return level;
         }
 
         function restartGame() {
@@ -1614,7 +1692,8 @@ console.log(bodyupgrades);
             hctx.restore();
         }
 
-        function drawFakePlayer(team,weapontype,bodytype,x,y,rot,size){//only for home screen background
+        function drawFakePlayer2(team,weapontype,bodytype,x,y,rot,size){//only for home screen background
+          //integrate into drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which)
             hctx.save();//add tank type later
             hctx.translate(x-hsCameraX, y-hsCameraY);
             hctx.rotate(rot/180*Math.PI);
@@ -1658,16 +1737,16 @@ console.log(bodyupgrades);
             //drawFakePlayer(team,tanktype,x,y,rot,size)
             //map size is 3000
             if (drawingGamemode == 0){//PvE arena
-              drawPolygon(11,2276,1677,0)
-              drawPolygon(9,1500,1500,0)
-              drawPolygon(8,776,1450,0)
-              drawPolygon(7,776,1050,0)
-              drawPolygon(6,1790,1069,0)
-              drawPolygon(5,1399,1997,0)
-              drawPolygon(4,1784,1967,0)
-              drawPolygon(3,776,1910,0)
-              drawPolygon(3,1046,1288,0)
-              drawPolygon(3,2790,2069,0)
+              drawPolygon(11,2276,1677,3)
+              drawPolygon(9,1500,1500,236)
+              drawPolygon(8,776,1450,261)
+              drawPolygon(7,776,1050,195)
+              drawPolygon(6,1790,1069,56)
+              drawPolygon(5,1399,1997,228)
+              drawPolygon(4,1784,1967,319)
+              drawPolygon(3,776,1910,249)
+              drawPolygon(3,1046,1288,91)
+              drawPolygon(3,2790,2069,204)
             }
             else if (drawingGamemode == 1){//FFA
               drawPolygon(10,600,1500,30)
@@ -1678,51 +1757,88 @@ console.log(bodyupgrades);
               drawPolygon(4,1300,1580,50)
               drawPolygon(4,1230,1600,340)
               drawPolygon(3,1270,1530,0)
-              drawFakePlayer("red","split","wall",890,2000,45,50)
-              drawFakePlayer("red","beta","thorn",750,2150,45,60)
-              drawFakePlayer("red","alpha","saw",1100,1450,70,70)
-              drawFakePlayer("red","annihilator","ziggurat",1400,2050,20,70)
-              drawFakePlayer("red","emperor","mothership",1980,1250,20,70)
-              drawFakePlayer("red","wave","saw",2200,1350,290,70)
-              drawFakePlayer("red","palisade","bombard",2500,2050,45,70)
-              drawFakePlayer("red","riot","inferno",1470,1050,170,70)
-              drawFakePlayer("red","marksman","saw",890,1050,60,70)
-              drawFakePlayer("celestial","pulsar","chasm",1470,1530,55,90)
+              drawFakePlayer2("red","split","wall",890,2000,45,50)
+              drawFakePlayer2("red","beta","thorn",750,2150,45,60)
+              drawFakePlayer2("red","alpha","saw",1100,1450,70,70)
+              drawFakePlayer2("red","annihilator","ziggurat",1400,2050,20,70)
+              drawFakePlayer2("red","emperor","mothership",1980,1250,20,70)
+              drawFakePlayer2("red","wave","saw",2200,1350,290,70)
+              drawFakePlayer2("red","palisade","bombard",2500,2050,45,70)
+              drawFakePlayer2("red","riot","inferno",1470,1050,170,70)
+              drawFakePlayer2("red","marksman","saw",890,1050,60,70)
+              drawFakePlayer2("celestial","pulsar","chasm",1470,1530,55,90)
             }
             else if (drawingGamemode == 2){//2tdm
               drawPolygon(9,2100,2200,55)
               drawPolygon(8,450,1700,350)
               drawPolygon(7,750,1350,350)
-              drawPolygon(7,2100,1200,350)
+              drawPolygon(7,1900,1200,350)
               drawPolygon(5,900,1800,350)
-              drawFakePlayer("red","assassin","artillery",890,2000,45,60)
-              drawFakePlayer("red","penta","saw",750,2150,45,70)
-              drawFakePlayer("red","alpha","saw",1100,1450,70,70)
-              drawFakePlayer("red","amalgam","bastion",1400,2050,20,70)
-              drawFakePlayer("red","blockade","artillery",1980,1250,20,60)
-              drawFakePlayer("red","palisade","bombard",2200,1350,290,70)
-              drawFakePlayer("red","palisade","bombard",2500,2050,45,70)
-              drawFakePlayer("red","minigun","ziggurat",1470,1050,170,70)
-              drawFakePlayer("red","trio","artillery",890,1050,60,60)
-              drawFakePlayer("red","arc","artillery",890,1050,60,60)
-              drawFakePlayer("red","marksman","saw",1470,1050,170,70)
-              drawFakePlayer("red","riot","inferno",1470,1050,170,70)
-              //fix red position
+              drawFakePlayer2("red","assassin","artillery",1600,1150,225,60)
+              drawFakePlayer2("red","penta","saw",1680,1400,90,70)
+              drawFakePlayer2("red","alpha","saw",1600,1700,270,70)
+              drawFakePlayer2("red","amalgam","bastion",1625,1600,260,70)
+              drawFakePlayer2("red","blockade","artillery",1900,1560,45,60)
+              drawFakePlayer2("red","palisade","bombard",1830,1650,290,70)
+              drawFakePlayer2("red","minigun","ziggurat",1600,1840,280,70)
+              drawFakePlayer2("red","trio","artillery",1830,1860,270,60)
+              drawFakePlayer2("red","arc","artillery",1715,1940,60,60)
+              drawFakePlayer2("red","marksman","saw",2250,1250,170,70)
+              drawFakePlayer2("red","riot","inferno",2400,1750,170,70)
               
-              drawFakePlayer("blue","conglomerate","thorn",1300,1300,45,60)
-              drawFakePlayer("blue","manager","castle",1300,1400,45,60)
-              drawFakePlayer("blue","quadro","ziggurat",1350,1500,70,70)
-              drawFakePlayer("green","streamliner","saw",1400,1700,20,70)
-              drawFakePlayer("blue","beta","thorn",1200,1800,20,60)
-              drawFakePlayer("blue","annihilator","bastion",1370,1850,290,70)
-              drawFakePlayer("blue","gunner","artillery",1300,1950,45,60)
-              drawFakePlayer("blue","octo","quadruplet",1000,1650,170,70)
-              drawFakePlayer("blue","emperor","mothership",1200,2000,60,70)
-              drawFakePlayer("blue","executive","ziggurat",1000,1050,60,70)
-              drawFakePlayer("blue","horizon","fabricator",1000,1970,170,70)
-              drawFakePlayer("blue","split","wall",800,1900,170,50)
-              drawFakePlayer("blue","duo","turret",1250,1650,170,50)
+              drawFakePlayer2("blue","conglomerate","thorn",1300,1300,45,60)
+              drawFakePlayer2("blue","manager","castle",1300,1400,45,60)
+              drawFakePlayer2("blue","quadro","ziggurat",1350,1500,70,70)
+              drawFakePlayer2("blue","streamliner","saw",1400,1700,20,70)
+              drawFakePlayer2("blue","beta","thorn",1200,1800,20,60)
+              drawFakePlayer2("blue","annihilator","bastion",1370,1850,290,70)
+              drawFakePlayer2("blue","gunner","artillery",1300,1950,45,60)
+              drawFakePlayer2("blue","octo","quadruplet",1000,1650,170,70)
+              drawFakePlayer2("blue","emperor","mothership",1200,2000,60,70)
+              drawFakePlayer2("blue","executive","ziggurat",1000,1050,60,70)
+              drawFakePlayer2("blue","horizon","fabricator",1000,1970,170,70)
+              drawFakePlayer2("blue","split","wall",800,1900,170,50)
+              drawFakePlayer2("blue","duo","turret",1250,1650,170,50)
+            }
+            else if (drawingGamemode == 3){//4tdm
+              drawPolygon(10,1600,1700,55)
+              drawPolygon(10,1050,1000,0)
+              drawPolygon(7,750,1700,350)
+              drawPolygon(5,2300,1700,350)
+              drawFakePlayer2("red","trio","castle",1500,2000,30,60)
+              drawFakePlayer2("red","palisade","bombard",1400,1930,10,70)
+              drawFakePlayer2("red","penta","saw",800,2130,315,70)
+              drawFakePlayer2("purple","mono","sentry",750,1550,170,50)
+              drawFakePlayer2("purple","annihilator","bombard",1300,1600,100,70)
+              drawFakePlayer2("purple","riot","saw",1350,1450,135,70)
+              drawFakePlayer2("purple","flank","fortress",1470,1430,135,50)
+              drawFakePlayer2("purple","horizon","ziggurat",550,1130,280,70)
+              drawFakePlayer2("green","overlord","battleship",1700,1390,180,60)
+              drawFakePlayer2("green","shrapnel","inferno",1850,1450,170,70)
+              drawFakePlayer2("green","gunner","artillery",1900,1550,260,60)
+              drawFakePlayer2("green","trapper","smasher",1870,1650,260,50)
+              drawFakePlayer2("green","mono","node",2300,1100,45,50)
+              drawFakePlayer2("blue","manufacturer","saw",2100,1830,280,70)
+              drawFakePlayer2("blue","arsenal","ziggurat",1880,1930,305,70)
+              drawFakePlayer2("blue","spread","triplet",1780,1950,325,60)
+            }
+            else if (drawingGamemode == 4){//tank editor
+              hctx.fillStyle = "rgba(89, 168, 192, 0.3)";//draw safe zone
+              hctx.fillRect(1200-hsCameraX,1550-hsCameraY,1500,1500);
+              drawPolygon(10,1900,2100,0)
+              drawPolygon(9,1300,2250,0)
+              drawPolygon(8,2200,1650,0)
+              drawPolygon(7,1900,1450,0)
+              drawPolygon(6,1100,1750,0)
+              drawPolygon(6,1350,1950,0)
+              drawPolygon(5,650,1900,0)
+              drawPolygon(5,1750,1250,0)
+              drawPolygon(5,1100,2000,0)
+              drawPolygon(3,500,2075,0)
+              drawPolygon(3,650,1250,0)
+              drawFakePlayer2("blue","split","wall",1300,1600,10,50)
             }//increase x value to move right, increase y value to move downwards
+            //im assuming 0 degrees is pointing upwards, check this later
             hctx.restore();//restore zoom
             if (darknessValue < 0.5){
               darknessValue += 0.02;
@@ -1742,13 +1858,13 @@ console.log(bodyupgrades);
         }
         homeScreenLoop();
 
-        document.getElementById('playButton').addEventListener('click', startGame);
+        playButton.addEventListener('click', startGame);
         function startGame(){
-          // First time start game
+          state = "ingame";
           //remove home screen divs
-          document.getElementById('playButton').style.display = "none";
+          playButton.style.display = "none";
           hcanvas.style.display = "none";
-          document.getElementById('display-name-input').style.display = "none";
+          nameInput.style.display = "none";
           document.getElementById('connecting').style.display = "none";
           changelogPreview.style.display = "none";
           document.getElementById('hometitle').style.display = "none";
@@ -1781,8 +1897,54 @@ console.log(bodyupgrades);
               document.getElementById('loadingWords3').style.display = "block";
             }
           }, 15000);//if still on loading screen 15 seconds later, add the next loading screen words
-          init();
-          gameLoop();
+          if (currentGamemodeID == 0){
+            init();
+            gameLoop();
+          }
+          else{
+            //only do once
+            let yourName = nameInput.value;
+            let mySlurslist = ["n!g","nig","fag","f@g","fuck","fuk","porn","bitch","bich","dick","cunt","cock","penis","slut","pussy",];
+            for (i of mySlurslist) {
+              yourName = yourName.replace(i, "*".repeat(i.length));//if name has fuck, will become ****
+            }
+            let packet = JSON.stringify(["joinGame", yourName]);
+            socket.send(packet)
+            startPlayTime = Date.now();//needed to get time played
+
+            if (gamemode=="Tank Editor" && shownEditButton=="no"){
+              document.getElementById("openEditor").style.display = "block";
+              shownEditButton = "yes";
+            }
+            //clear list of objects
+            objects = {
+              wall: {},//walls drawn below everything
+              gate: {},
+              Fixedportal: {},
+              shape: {},
+              bot: {},
+            };//shapes and bots always below player, fixed portals always under everything
+            portals = {};
+            oldportals = {};
+            screenDrawLoop();//start the canvas drawing
+            try {//store name, so next time when open the game, will auto-fill the previous name
+              localStorage.prevname = yourName;
+            } catch (e) {
+              console.log("An error occured when saving your name: " + e);
+            }
+            if (mobile == "yes"){
+              /* Get the documentElement (<html>) to display the page in fullscreen */
+              let elem = document.body;
+              /* View in fullscreen */
+              if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+              } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+              } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+              }
+            }
+          }
         }
         function loadChangelog() {//copied from scenexe2 code, thanks cobalt
           return new Promise(function (AS) {
@@ -1842,24 +2004,82 @@ console.log(bodyupgrades);
       
         export function accounts(){//not ready yet
           document.getElementById('modal').style.display = "block";
-          document.getElementById('blackScreen').style.display = "block";
+          darken.style.display = "block";
         }
         export function bugs(){//ingame method to report bugs, not ready yet
           document.getElementById('modal2').style.display = "block";
-          document.getElementById('blackScreen').style.display = "block";
+          darken.style.display = "block";
         }
         export function closeModal(){
           document.getElementById('modal').style.display = "none";
-          document.getElementById('blackScreen').style.display = "none";
+          darken.style.display = "none";
         }
         export function closeModal2(){
           document.getElementById('modal2').style.display = "none";
-          document.getElementById('blackScreen').style.display = "none";
+          darken.style.display = "none";
         }
-        function returnToHomeScreen(){//return from death screen to home screen
-          document.getElementById('playButton').style.display = "block";
+        export function closeModal3(){//disconnected modal
+          document.getElementById('modal3').style.display = "none";
+          darken.style.display = "none";
+          //reconnect
+          connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in
+          gamemode = joinedWhichGM;
+        }
+        export function closeModal3a(){//connection error modal
+          document.getElementById('modal3a').style.display = "none";
+          darken.style.display = "none";
+          //reconnect
+          connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in
+          gamemode = joinedWhichGM;
+        }
+        export function closeModal5(){
+          document.getElementById("login").style.display = "none";
+          darken.style.display = "none";
+        }
+        export function closeModal6(){
+          document.getElementById("signup").style.display = "none";
+          darken.style.display = "none";
+        }
+        export function closeModal7(){
+          document.getElementById('modal7').style.display = "none";
+          darken.style.display = "none";
+        }
+        let quickchats = {};
+        export function openModalquickchat(){
+          quickchat.style.display = "none";
+          document.getElementById("quickchatmsg").style.display = "block";
+          darken.style.display = "block";
+        }
+        export function closeModalquickchat(){
+          quickchat.style.display = "block";
+          document.getElementById("quickchatmsg").style.display = "none";
+          darken.style.display = "none";
+        }
+        export function createquickchat(){
+          //add quick chat to the next slice, e.g. if first slice is filled, but user click the 3rd slice, still add to the 2nd slice
+          quickchat.style.display = "block";
+          document.getElementById("quickchatmsg").style.display = "none";
+          darken.style.display = "none";
+          let newquickchat = document.getElementById('createQuickChat').value;
+          if (newquickchat != "" && newquickchat.length < 750){//max length of chats are 750 (if change this, change on server side too)
+            if (Object.keys(quickchats).length < 4){//max 4 quick chats for now, cannot increase unless change the html div (need lots of changes though)
+              let id = Object.keys(quickchats).length+1;
+              quickchats[id] = newquickchat;
+              let parentID = "quickchat"+id;
+              document.querySelector('#'+parentID).querySelector('.actualqc').textContent = newquickchat;
+              document.querySelector('#'+parentID).querySelector('.thecross').style.display = "none";
+              document.querySelector('#'+parentID).querySelector('.qcmore').style.display = "block";
+              document.querySelector('#'+parentID).querySelector('.qcnumber').style.display = "block";
+            }
+          }
+        }
+        function returnToHomeScreen(type){//if type does not exist: return from death screen to home screen, or else if type is disconnect
+          state = "homepage";
+          if (!type){
+            //playButton.style.display = "block";
+            //nameInput.style.display = "block";//later gonna connect anyway
+          }
           hcanvas.style.display = "block";
-          document.getElementById('display-name-input').style.display = "block";
           //document.getElementById('connecting').style.display = "block";
           changelogPreview.style.display = "block";
           document.getElementById('hometitle').style.display = "block";
@@ -1878,18 +2098,37 @@ console.log(bodyupgrades);
           }
           debugState = "close";
           document.getElementById('deathScreen').classList.add('hidden');
-          document.getElementById('respawnInfo').style.display = "block";
+          if (!type){
+            document.getElementById('respawnInfo').style.display = "block";
+          }
+          
+          if (shownEditButton=="yes"){
+            document.getElementById("openEditor").style.display = "none";
+            shownEditButton = "no";
+          }
+
+          if (gamemode != "PvE arena"){
+            if (!type){
+              //if not already disconnected, only died and reconnecting to respawnable gamemode (if disconnect, user will get modal3 popup asking to reconnect)
+              reconnectToDefault = "yes";//prevent disconnect notification
+              socket.close();//disconnect from current server
+              connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in. If you spawned in FFA and died in 2tdm, you can only respawn in FFA
+              gamemode = joinedWhichGM;
+            }
+          }
+          else{//PvE singleplayer
+            playButton.style.display = "block";
+            nameInput.style.display = "block";
+          }
         }
       
         //ABOVE IS SINGLEPLAYER CODE
         //------------------------------------------------------------------------------------------------------------------------------------------------
         //BELOW IS MULTIPLAYER CODE (COPIED FROM OLD ROCKETER)
-      
-        function multiplayer(){
         
         var connected = "no";
         var mainMenuOpacity = 0;
-        var gameStart = 0; //gamestart variable outside so that can access in play button onclick in code above
+        var state = "homepage"; //homepage, ingame, or deathscreen
         var drawAreaX = 0; //these two variable placed outside so that can access in mousemove event listener
         var drawAreaY = 0;
         var px = 0;
@@ -1970,21 +2209,19 @@ console.log(bodyupgrades);
           notifone.style.backgroundColor = color;
           notifications.prepend(notifone);//prepend is appendchild but insert at top
           setTimeout(() => {
+            notifone.style.animation = "animateNotifRemove .5s";//0.5 seconds animation fade out
+          }, (timer-500));//0.5 seconds before removing
+          setTimeout(() => {
             notifone.remove();
           }, timer);
         }
 
-        if (
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent
-          )
-        ) {
-          // true for mobile device
-          createNotif("Your device is detected as a mobile device","darkorange",5000)
+        if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {//check if this is a mobile device
+          document.getElementById('modal7').style.display = "block";
           mobile = "yes";
         } else {
           // false for not mobile device
-          console.log("not a mobile user");
+          console.log("Not a mobile user. If you are, please report this as a bug.");
         }
 
         document.addEventListener("contextmenu", (event) =>
@@ -2025,7 +2262,7 @@ console.log(bodyupgrades);
           showname: true,
           clickablechatlinks: true,
           showownname: false,
-          silentTyping: false,
+          silenttyping: false,
           showtypingindicators: true,
           showids: false,
           showticktime: true,
@@ -2069,27 +2306,33 @@ console.log(bodyupgrades);
           //localStorage.settings = JSON.stringify({"spawnduneparticle":"yes","spawncrossroadsparticle":"yes","spawnradparticle":"yes","showStaticMobName":"no","showMinionMobName":"no","showshapeinfo":"no","radiantSizeRange":5,"theme":"default",showstats:"no",});
           localStorage.settings = JSON.stringify(settingsList);
         }
-        else if (Object.keys(JSON.parse(localStorage.settings)).length != Object.keys(settingsList).length){//there are new or removed settings!
-          let newsettings = {};
-          let oldsettings = JSON.parse(localStorage.settings);
-          for (const settingProp in settingsList) {//loop through new settings
-            if (oldsettings.hasOwnProperty(settingProp)){//this setting existed, didnt change
-              newsettings[settingProp] = oldsettings[settingProp];
-            }
-            else{//new setting!
-              newsettings[settingProp] = settingsList[settingProp];
-            }
+        else{
+          //check if stored settings and new settings are the same
+          let old = Object.keys(JSON.parse(localStorage.settings)).sort();
+          let current = Object.keys(settingsList).sort();//sort by alphabetical order to prevent differet ordering from causing mismatch
+          if (JSON.stringify(old) === JSON.stringify(current)){//usual
+            settingsList = JSON.parse(localStorage.settings);
           }
-          //now update the settings
-          settingsList = newsettings;
-          localStorage.settings = JSON.stringify(newsettings);
-          console.log("Updated settings. This is due to an update.")
-        }
-        else{//usual
-          settingsList = JSON.parse(localStorage.settings);
+          else{//update
+            let newsettings = {};
+            let oldsettings = JSON.parse(localStorage.settings);
+            for (const settingProp in settingsList) {//loop through new settings
+              if (oldsettings.hasOwnProperty(settingProp)){//this setting existed, didnt change
+                newsettings[settingProp] = oldsettings[settingProp];
+              }
+              else{//new setting!
+                newsettings[settingProp] = settingsList[settingProp];
+              }
+            }
+            //now update the settings
+            settingsList = newsettings;
+            localStorage.settings = JSON.stringify(newsettings);
+            console.log("Updated settings. This is due to an update.")
+          }
         }
           
         //now we update the divs (the switches)
+        console.log(settingsList)
         for (const settingProp in settingsList) {//loop through all settings
           if (settingsList[settingProp] === true){
             document.querySelector('input[settingid="'+settingProp+'"]').setAttribute('checked','true');
@@ -2097,7 +2340,15 @@ console.log(bodyupgrades);
           else if (settingsList[settingProp] === false){
             document.querySelector('input[settingid="'+settingProp+'"]').removeAttribute('checked');
           }
-          else if (typeof settingProp === 'number'){//keybind (properties are numbers)
+          else if (settingProp.startsWith("1")||
+          settingProp.startsWith("2")||
+          settingProp.startsWith("3")||
+          settingProp.startsWith("4")||
+          settingProp.startsWith("5")||
+          settingProp.startsWith("6")||
+          settingProp.startsWith("7")||
+          settingProp.startsWith("8")||
+          settingProp.startsWith("9")){//keybind (properties are numbers, but obj prop names are converted to strings)
             //settingsList[settingProp];//add function to change keybinds in the future
           }
           else{//invalid property value
@@ -2165,11677 +2416,6645 @@ console.log(bodyupgrades);
 
         var shapeHit = {};//animate change in color when shapes get hit, for all gamemodes except PvE (PvE have it stored in the shape object itself)
 
-        const botcolors = {
-          //get colors based on dune mob name
-          Cluster: {
-            color: "#00ffff",
-            outline: "#09d3fb",
-            specialty: "",
-            static: "no",
-            minion: "no",
-          },
-          Pursuer: {
-            color: "#00ffff",
-            outline: "#09d3fb",
-            specialty: "",
-            static: "no",
-            minion: "yes",
-          },
-          Crasher: {
-            color: "#00ffff",
-            outline: "#09d3fb",
-            specialty: "",
-            static: "no",
-            minion: "yes",
-          },
-          Champion: {
-            color: "#00ffff",
-            outline: "#09d3fb",
-            specialty: "",
-            static: "no",
-            minion: "no",
-          },
-          Infestor: {
-            color: "#916f6f",
-            outline: "#6c5353",
-            specialty: "",
-            static: "no",
-            minion: "no",
-          },
-          Pillbox: {
-            color: "#916f6f",
-            outline: "#6c5353",
-            specialty: "bullet knockback",
-            static: "no",
-            minion: "yes",
-          },
-          Leech: {
-            color: "#916f6f",
-            outline: "#6c5353",
-            specialty: "lifesteal",
-            static: "no",
-            minion: "yes",
-          },
-
-          "Cavern Protector": {
-            color: "#FFE46B",
-            outline: "#E1C64D",
-            specialty: "",
-            static: "no",
-            minion: "no",
-          },
-          "Abyssling": {
-            color: "#FFE46B",
-            outline: "#E1C64D",
-            specialty: "",
-            static: "no",
-            minion: "no",
-          },
-
-
-          Legion: {
-            color: "#e9ac7a",
-            outline: "#d99b68",
-            specialty: "",
-            static: "no",
-            minion: "no",
-          },
-          Booster: {
-            color: "#e9ac7a",
-            outline: "#d99b68",
-            specialty: "",
-            static: "no",
-            minion: "no",
-          },
-          'Mega-Crasher': {
-            color: "#bf3939",
-            outline: "#B22222",
-            specialty: "",
-          },
-          Spike: {
-            color: "#123573",
-            outline: "#0c2859",
-            specialty: "it hurts",
-          },
-          Mortar: {
-            color: "#001a47",
-            outline: "#001333",
-            specialty: "it hurts even more",
-          },
-          Rogue: {
-            color: "#731582",
-            outline: "#581063",
-            specialty: "lifesteal",
-          },
-          Shield: {
-            color: "#c79b4e",
-            outline: "#a6803d",
-            specialty: "bullet knockback",
-          },
-          Grower: {
-            color: "#9400D3",
-            outline: "#62008B",
-            specialty: "grows when it deals damage",
-          },
-          Protector: {
-            color: "#D5CE67",
-            outline: "#ABA552",
-            specialty: "sniper",
-          },
-          Boss: {
-            color: "#86775F",
-            outline: "#404040",
-            specialty: "rarely spawns",
-          },
-          King: {
-            color: "#47048a",
-            outline: "#830ff7",
-            specialty: "high health",
-          },
-          Titan: {
-            color: "#a03333",
-            outline: "#791a1a",
-            specialty: "superior health",
-          },
-          Sultan: {
-            color: "#0003b3",
-            outline: "#00027a",
-            specialty: "Upgraded Titan",
-          },
-          Beast: {
-            color: "#B5D648",
-            outline: "#5B692C",
-            specialty: "Insane health",
-          },
-          Wall: {
-            color: "#3b2b20",
-            outline: "#8a6950",
-            specialty: "bullet knockback",
-          },
-
-          Rock: {
-            color: "#909090",
-            outline: "#5c5c5c",
-            specialty: "",
-            static: "yes",
-            minion: "no",
-          },
-          Gravel: {
-            color: "#909090",
-            outline: "#5c5c5c",
-            specialty: "",
-            static: "yes",
-            minion: "no",
-          },
-          Boulder: {
-            color: "#505250",
-            outline: "#000000",
-            specialty: "",
-            static: "yes",
-            minion: "no",
-          },
-          Mountain: {
-            color: "#b8683b",
-            outline: "#87563a",
-            specialty: "",
-            static: "yes",
-            minion: "no",
-          },
-          Cactus: {
-            color: "#60b560",
-            outline: "#428042",
-            specialty: "",
-            static: "yes",
-            minion: "no",
-          },
-        };
-
-function getTanksThatCanUpgradeTo(list,tankname){//for upgrade tree
-  //get an array of tanks that can upgrade to in the future (these tanks wont be greyed out on upgrade tree)
-  let listOfBodyUpgrades = [];
-  
-  function findChildBodyUpgrade(tank){
-    for (const upgrade of tank){
-      listOfBodyUpgrades.push(upgrade)
-      try{
-        let thisTank = list[upgrade].upgradeTo;
-        findChildBodyUpgrade(thisTank)
-      }
-      catch(err){}
-    }
-  }
-  
-  try{
-    let thisTank = list[tankname].upgradeTo;
-    listOfBodyUpgrades.push(tankname)
-    findChildBodyUpgrade(thisTank)
-  }
-  catch(err){}
-  return listOfBodyUpgrades;
-}
-
-//getTanksThatCanUpgradeTo(bodyupgrades,'basic')
-var previousWeapon = '';//check if tank type changed
-var previousBody = '';
-var weaponCanUpgradeTo = [];
-var bodyCanUpgradeTo = [];
-
-//for the upgrade tree
-var bodysize = 20; //size of tank on upgrade tree
-var bodyangle = 0; //angle of tank on upgrade tree in radians
-//client list of tanks, if change tank in server, remember to change here
-//this is only used for upgrade tree, NOT buttons and the actual game
-//tank names with hyphen need inverted commas, e.g. "auto-guard"
-          /*
-const bodyupgrades = {
-  //hardcoded for the upgrade tree. Omit unneccessary properties that dont affect visuals. Remove aura barrels.
-  base: {
-    upgradeTo: ['raider','wall','sentry'],//needed for upgrade tree (decide which tank to grey out)
-  },
-  smasher: {
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 6,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.25,
-      },
-    },
-    upgradeTo: ['spike','armory'],
-  },
-  spike: {
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 4,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.5,
-      },
-    },
-    upgradeTo: ['thorn'],
-  },
-  thorn: {
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 5,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.5,
-      },
-    },
-    upgradeTo: ['saw','battalion'],
-  },
-  saw: {
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 4,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.75,
-      },
-    },
-    upgradeTo: [],
-  },
-  armory: {
-    turretBaseSize: 0.6,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.6,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 6,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.25,
-      },
-    },
-    upgradeTo: ['brigade'],
-  },
-  brigade: {
-    turretBaseSize: 0.7,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.6,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 4,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.5,
-      },
-    },
-    upgradeTo: ['battalion'],
-  },
-  battalion: {
-    turretBaseSize: 0.7,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.7,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 5,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.5,
-      },
-    },
-    upgradeTo: [],
-  },
-  raider: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.6,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(253,118,118)",
-        outline: "rgb(222,88,88)",
-        size: 0.3,
-      },
-    },
-    upgradeTo: ['forge'],
-  },
-  forge: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.65,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(253,118,118)",
-        outline: "rgb(222,88,88)",
-        size: 0.35,
-      },
-    },
-    upgradeTo: ['foundry','mender','hail'],
-  },
-  foundry: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.7,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(253,118,118)",
-        outline: "rgb(222,88,88)",
-        size: 0.35,
-      },
-    },
-    upgradeTo: ['flame'],
-  },
-  flame: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.8,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(253,118,118)",
-        outline: "rgb(222,88,88)",
-        size: 0.4,
-      },
-    },
-    upgradeTo: ['inferno','juggernaut'],
-  },
-  inferno: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.9,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(253,118,118)",
-        outline: "rgb(222,88,88)",
-        size: 0.45,
-      },
-    },
-    upgradeTo: [],
-  },
-  juggernaut: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.75,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgba(120, 118, 194)",
-        outline: "rgba(90, 88, 164)",
-        size: 0.3,
-      },
-    },
-    upgradeTo: [],
-  },
-  mender: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.65,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 8,
-        color: "rgba(56,183,100)",
-        outline: "rgba(26,153,70)",
-        size: 0.3,
-      },
-    },
-    upgradeTo: ['remedy'],
-  },
-  remedy: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.75,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 8,
-        color: "rgba(56,183,100)",
-        outline: "rgba(26,153,70)",
-        size: 0.4,
-      },
-    },
-    upgradeTo: ['fabricator'],
-  },
-  fabricator: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.9,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 8,
-        color: "rgba(56,183,100)",
-        outline: "rgba(26,153,70)",
-        size: 0.45,
-      },
-    },
-    upgradeTo: [],
-  },
-  hail: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        size: 0.65,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgba(150, 208, 227)",
-        outline: "rgba(132, 190, 209)",
-        size: 0.3,
-      },
-    },
-    upgradeTo: ['blizzard'],
-  },
-  blizzard: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        size: 0.65,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgba(150, 208, 227)",
-        outline: "rgba(132, 190, 209)",
-        size: 0.3,
-      },
-    },
-    upgradeTo: ['snowstorm'],
-  },
-  snowstorm: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        size: 0.65,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgba(150, 208, 227)",
-        outline: "rgba(132, 190, 209)",
-        size: 0.3,
-      },
-    },
-    upgradeTo: [],
-  },
-  wall: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 6,
-        color: "default",
-        outline: "default",
-        size: 1.15,
-      },
-    },
-    upgradeTo: ['castle','smasher','propeller'],
-  },
-  castle: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 6,
-        color: "default",
-        outline: "default",
-        size: 1.2,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 6,
-        color: "default",
-        outline: "default",
-        size: 0.6,
-      },
-    },
-    upgradeTo: ['fortress'],
-  },
-  fortress: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 7,
-        color: "default",
-        outline: "default",
-        size: 1.2,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 7,
-        color: "default",
-        outline: "default",
-        size: 0.7,
-      },
-    },
-    upgradeTo: ['palace'],
-  },
-  palace: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 8,
-        color: "default",
-        outline: "default",
-        size: 1.1,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 6,
-        color: "default",
-        outline: "default",
-        size: 0.8,
-      },
-    },
-    upgradeTo: ['ziggurat'],
-  },
-  ziggurat: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 8,
-        color: "default",
-        outline: "default",
-        size: 1.1,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 6,
-        color: "default",
-        outline: "default",
-        size: 0.8,
-      },
-      assetThree: {
-        type: "above",
-        sides: 4,
-        color: "default",
-        outline: "default",
-        size: 0.4,
-      },
-    },
-    upgradeTo: [],
-  },
-  sentry: {
-    turretBaseSize: 0.4,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.5,
-        barrelHeight: 1,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['mono','hangar'],
-  },
-  mono: {
-    turretBaseSize: 0.6,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['bastion','turret','armory'],
-  },
-  bastion: {
-    turretBaseSize: 0.7,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.6,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['artillery'],
-  },
-  artillery: {
-    turretBaseSize: 0.7,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.9,
-        barrelHeight: 1.8,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['bombard','battalion'],
-  },
-  bombard: {
-    turretBaseSize: 0.7,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.9,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  turret: {
-    turretBaseSize: 0.7,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.6,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: -0.4,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.6,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0.4,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['triplet'],
-  },
-  triplet: {
-    turretBaseSize: 0.7,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: -0.4,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0.4,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.6,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['quadruplet'],
-  },
-  quadruplet: {
-    turretBaseSize: 0.7,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0.4,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: -0.4,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: -0.2,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0.2,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  hangar: {
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.75,
-        barrelHeight: 0.75,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['warship'],
-  },
-  warship: {
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.75,
-        barrelHeight: 0.75,
-        additionalAngle: 0,
-        x: 0.9,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 0.75,
-        barrelHeight: 0.75,
-        additionalAngle: 0,
-        x: -0.9,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['battleship'],
-  },
-  battleship: {
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.75,
-        barrelHeight: 0.75,
-        additionalAngle: 0,
-        x: 0.9,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 0.75,
-        barrelHeight: 0.75,
-        additionalAngle: 120/180*Math.PI,
-        x: 0.9,
-        barrelType: "drone",
-      },
-      barrelThree: {
-        barrelWidth: 0.75,
-        barrelHeight: 0.75,
-        additionalAngle: 240/180*Math.PI,
-        x: 0.9,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['mothership'],
-  },
-  mothership: {
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.75,
-        barrelHeight: 0.75,
-        additionalAngle: 0,
-        x: 0.9,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 0.75,
-        barrelHeight: 0.75,
-        additionalAngle: 90/180*Math.PI,
-        x: 0.9,
-        barrelType: "drone",
-      },
-      barrelThree: {
-        barrelWidth: 0.75,
-        barrelHeight: 0.75,
-        additionalAngle: 180/180*Math.PI,
-        x: 0.9,
-        barrelType: "drone",
-      },
-      barrelFour: {
-        barrelWidth: 0.75,
-        barrelHeight: 0.75,
-        additionalAngle: 270/180*Math.PI,
-        x: 0.9,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: [],
-  },
-  propeller: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        size: 0.3,
-      },
-    },
-    upgradeTo: ['thruster'],
-  },
-  thruster: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        size: 0.4,
-      },
-    },
-    upgradeTo: ['launcher'],
-  },
-  launcher: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        size: 0.5,
-      },
-    },
-    upgradeTo: ['rocketer'],
-  },
-  rocketer: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        size: 0.6,
-      },
-    },
-    upgradeTo: [],
-  },
-  oven: {
-    eternal: "yes",
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        outlineThickness: 5,
-        size: 0.7,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(250, 112, 112)",
-        outline: "rgba(227, 61, 61)",
-        outlineThickness: 5,
-        size: 0.4,
-      },
-    },
-    upgradeTo: ['heliosphere','corvus'],
-  },
-  chainsaw: {
-    eternal: "yes",
-    assets: {
-            assetOne: {
-              type: "under",
-              sides: 8,
-              color: "grey",
-              outline: "dimgrey",
-              outlineThickness: 5,
-              size: 1.2,
-            },
-          },
-    upgradeTo: ['blade'],
-  },
-  blade: {
-    eternal: "yes",
-    assets: {
-            assetOne: {
-              type: "under",
-              sides: 8,
-              color: "#383838",
-              outline: "black",
-              outlineThickness: 5,
-              size: 1.3,
-            },
-          },
-    upgradeTo: [],
-  },
-  pounder: {
-    eternal: "yes",
-    assets: {
-      assetTwo: {
-        type: "under",
-        sides: 6,
-        color: "slategrey",
-        outline: "black",
-        outlineThickness: 5,
-        size: 1.4,
-      },
-      assetOne: {
-        type: "under",
-        sides: 6,
-        color: "dimgrey",
-        outline: "black",
-        outlineThickness: 5,
-        size: 1.2,
-      },
-    },
-    upgradeTo: ['chasm'],
-  },
-  lightning: {
-    eternal: "yes",
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        outlineThickness: 5,
-        size: 0.5,
-      },
-    },
-    upgradeTo: ['firebolt'],
-  },
-  meteor: {
-    eternal: "yes",
-    turretBaseSize: 0.6,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: -0.3,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0.3,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['nebula'],
-  },
-  satellite: {
-    eternal: "yes",
-    turretBaseSize: 0.4,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.5,
-        barrelHeight: 1,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['triton'],
-  },
-  heliosphere: {
-    eternal: "yes",
-    assets: {
-      assetOne: {
-        //grey aura base asset
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        outlineThickness: 5,
-        size: 0.4, //in comparison to the player's width
-        angle: 0,
-        x: 0,
-        y: 0,
-      },
-      assetTwo: {
-        //red aura base asset
-        type: "above",
-        sides: 0,
-        color: "rgb(250, 112, 112)",
-        outline: "rgba(227, 61, 61)",
-        outlineThickness: 5,
-        size: 0.2, //in comparison to the player's width
-        angle: 0,
-        x: 0,
-        y: 0,
-      },
-      assetThree: {
-        //grey aura base asset
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        outlineThickness: 5,
-        size: 0.2, //in comparison to the player's width
-        angle: 0,
-        x: 0.7,
-        y: 0,
-      },
-      assetFour: {
-        //red aura base asset
-        type: "above",
-        sides: 0,
-        color: "rgb(250, 112, 112)",
-        outline: "rgba(227, 61, 61)",
-        outlineThickness: 5,
-        size: 0.1, //in comparison to the player's width
-        angle: 0,
-        x: 0.7,
-        y: 0,
-      },
-      assetFive: {
-        //grey aura base asset
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        outlineThickness: 5,
-        size: 0.2, //in comparison to the player's width
-        angle: 0,
-        x: -0.4,
-        y: -0.6,
-      },
-      assetSix: {
-        //red aura base asset
-        type: "above",
-        sides: 0,
-        color: "rgb(250, 112, 112)",
-        outline: "rgba(227, 61, 61)",
-        outlineThickness: 5,
-        size: 0.1, //in comparison to the player's width
-        angle: 0,
-        x: -0.4,
-        y: -0.6,
-      },
-      assetSeven: {
-        //grey aura base asset
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        outlineThickness: 5,
-        size: 0.2, //in comparison to the player's width
-        angle: 0,
-        x: -0.4,
-        y: 0.6,
-      },
-      assetEight: {
-        //red aura base asset
-        type: "above",
-        sides: 0,
-        color: "rgb(250, 112, 112)",
-        outline: "rgba(227, 61, 61)",
-        outlineThickness: 5,
-        size: 0.1, //in comparison to the player's width
-        angle: 0,
-        x: -0.4,
-        y: 0.6,
-      },
-    },
-    upgradeTo: [],
-  },
-  corvus: {
-    eternal: "yes",
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        outlineThickness: 5,
-        size: 0.8,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 8,
-        color: "rgba(56,183,100)",
-        outline: "rgba(26,153,70)",
-        outlineThickness: 5,
-        size: 0.5,
-      },
-    },
-    upgradeTo: [],
-  },
-  firebolt: {
-    eternal: "yes",
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        outlineThickness: 5,
-        size: 0.6, //in comparison to the player's width
-        angle: 0,
-        x: 0,
-        y: 0,
-      },
-    },
-    upgradeTo: [],
-  },
-  chasm: {
-    eternal: "yes",
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 6,
-        color: "#383838",
-        outline: "black",
-        outlineThickness: 5,
-        size: 1.3, //in comparison to the player's width
-        angle: 0,
-        x: 0,
-        y: 0,
-      },
-    },
-    upgradeTo: [],
-  },
-  nebula: {
-    eternal: "yes",
-    turretBaseSize: 0.6,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: -0.3,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0.3,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  triton: {
-    eternal: "yes",
-    turretBaseSize: 0.5,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.5,
-        barrelHeight: 1,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 0.3,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: [],
-  },
-  primordial: {
-    eternal: "yes",
-    upgradeTo: ['oven','pounder','chainsaw','lightning','meteor','satellite'],
-  },
-};
-const weaponupgrades = {
-  //weapon upgrades for upgrade tree is hardcoded into client. if change in server, remember to change here too
-  node: {
-    barrels: {},
-    upgradeTo: ['basic','guard','trapper'],
-  },
-  basic: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.8,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['twin','sniper','cannon','flank'],
-  },
-  twin: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: -0.6,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.8,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0.6,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['gunner','quad','split','stream'],
-  },
-  sniper: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.2,
-        barrelHeight: 2.4,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['targeter','marksman'],
-  },
-  cannon: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.4,
-        barrelHeight: 1.8,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['single'],
-  },
-  flank: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['tri-angle','quad'],
-  },
-  trapper: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.5,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['delta'],
-  },
-  delta: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.75,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['gamma','blockade','minelayer','warden'],
-  },
-  guard: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: .5,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['commander','overseer'],
-  },
-  gunner: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: -0.8,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: -0.3,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0.3,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0.8,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['blaster','rimfire','minesweeper'],
-  },
-  quad: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 270,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['octo'],
-  },
-  split: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.4,
-        additionalAngle: -30,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.4,
-        additionalAngle: 30,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.83,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['tower','rimfire'],
-  },
-  stream: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['jet'],
-  },
-  targeter: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['streamliner'],
-  },
-  marksman: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2.8,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['duel'],
-  },
-  single: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.5,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['destroyer'],
-  },
-  "tri-angle": {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 150,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 210,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['booster','fighter'],
-  },
-  gamma: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['beta'],
-  },
-  blockade: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.75,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelTwo: {
-        barrelWidth: 0.75,
-        barrelHeight: 2,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['barricade'],
-  },
-  minelayer: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.6,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "mine",
-      },
-    },
-    upgradeTo: ['engineer'],
-  },
-  barricade: {
-    barrels: {
-      barrelTwo: {
-        barrelWidth: 0.6,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelThree: {
-        barrelWidth: 0.6,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['riot'],
-  },
-  commander: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['director'],
-  },
-  director: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.25,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['manager','spawner'],
-  },
-  overseer: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.5,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.5,
-        additionalAngle: -90,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['protector'],
-  },
-  protector: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: -90,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['king'],
-  },
-  blaster: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: -0.6,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0.6,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['minigun','knockback'],
-  },
-  rimfire: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.7,
-        barrelHeight: 1.8,
-        additionalAngle: -15,
-        x: -0.6,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: -0.3,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0.3,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.7,
-        barrelHeight: 1.8,
-        additionalAngle: 15,
-        x: 0.6,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['centrefire'],
-  },
-  octo: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 45,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 135,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 225,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSeven: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 270,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelEight: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 315,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['cyclone','hex'],
-  },
-  tower: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.6,
-        additionalAngle: 40,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.6,
-        additionalAngle: -40,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.8,
-        additionalAngle: 20,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 1.8,
-        additionalAngle: -20,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['stronghold','centrefire'],
-  },
-  jet: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['flamethrower'],
-  },
-  streamliner: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 2.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.8,
-        barrelHeight: 2.25,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.8,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.75,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['conquerer'],
-  },
-  duel: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 3,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['hunter'],
-  },
-  destroyer: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 2,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['hex','harbinger','hybrid'],
-  },
-  hybrid: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.65,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.85,
-        barrelHeight: 1.6,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: [],
-  },
-  booster: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 135,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.72,
-        additionalAngle: 155,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 225,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 1.72,
-        additionalAngle: 205,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['guardian','comet'],
-  },
-  fighter: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.44,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 150,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 1.44,
-        additionalAngle: -90,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 210,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['wave','amalgam'],
-  },
-  beta: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.25,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['alpha'],
-  },
-  warden: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelTwo: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.4,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelThree: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.4,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelFour: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.4,
-        additionalAngle: 270,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['defender'],
-  },
-  engineer: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.8,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "mine",
-      },
-    },
-    upgradeTo: ['machine','manufacturer','detonator'],
-  },
-  manager: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.5,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['executive','CEO','hybrid'],
-  },
-  spawner: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.7,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "minion",
-      },
-    },
-    upgradeTo: ['factory'],
-  },
-  king: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: -120,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelThree: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['master','tyrant'],
-  },
-  factory: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "minion",
-      },
-    },
-    upgradeTo: [],
-  },
-  master: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: -90,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelThree: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelFour: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: [],
-  },
-  tyrant: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.5,
-        additionalAngle: -72,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.5,
-        additionalAngle: 72,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 1.5,
-        additionalAngle: -144,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 1.5,
-        additionalAngle: 144,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: [],
-  },
-  industry: {
-    eternal: "yes",
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "minion",
-      },
-      barrelTwo: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "minion",
-      },
-      barrelThree: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "minion",
-      },
-    },
-    upgradeTo: [],
-  },
-  battler: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.7,
-        barrelHeight: 1.8,
-        additionalAngle: -15,
-        x: -0.6,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: -0.3,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0.3,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.7,
-        barrelHeight: 1.8,
-        additionalAngle: 15,
-        x: 0.6,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1 ,
-        barrelHeight: 2,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: [],
-  },
-  pinnace: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0.3,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: -0.3,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.8,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.75,
-        barrelHeight: 2.25,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelFive: {
-        barrelWidth: 0.75,
-        barrelHeight: 1.5,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: [],
-  },
-  minigun: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.4,
-        barrelHeight: 2.3,
-        additionalAngle: 0,
-        x: -0.6,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 2.3,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 2.3,
-        additionalAngle: 0,
-        x: 0.6,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: -0.6,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0.6,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  knockback: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: -0.6,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0.6,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  centrefire: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.7,
-        barrelHeight: 1.6,
-        additionalAngle: -10,
-        x: -0.6,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.7,
-        barrelHeight: 1.6,
-        additionalAngle: 10,
-        x: 0.6,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.8,
-        additionalAngle: 0,
-        x: -0.3,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.8,
-        additionalAngle: 0,
-        x: 0.3,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 0.5,
-        barrelHeight: 2.2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  macrofire: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.7,
-        barrelHeight: 1.8,
-        additionalAngle: -25,
-        x: -0.6,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: -0.3,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0.3,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.7,
-        barrelHeight: 1.8,
-        additionalAngle: 25,
-        x: 0.6,
-        barrelType: "bullet",
-      },
-    },
-  },
-  cyclone: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 30,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 60,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 150,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSeven: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelEight: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 210,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelNine: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTen: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 270,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelEleven: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 300,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwelve: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.6,
-        additionalAngle: 330,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  stronghold: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 45,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: -45,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.6,
-        additionalAngle: 30,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 1.6,
-        additionalAngle: -30,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 1.8,
-        additionalAngle: 15,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 1,
-        barrelHeight: 1.8,
-        additionalAngle: -15,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSeven: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  flamethrower: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  conquerer: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 3,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.8,
-        barrelHeight: 2.75,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.8,
-        barrelHeight: 2.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 0.8,
-        barrelHeight: 2.25,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 0.8,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.75,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSeven: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  hunter: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 3.2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  hex: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.2,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1.2,
-        barrelHeight: 2,
-        additionalAngle: 60,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1.2,
-        barrelHeight: 2,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1.2,
-        barrelHeight: 2,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1.2,
-        barrelHeight: 2,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 1.2,
-        barrelHeight: 2,
-        additionalAngle: 300,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  harbinger: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 2,
-        barrelHeight: 2.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  guardian: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.9,
-        additionalAngle: 190,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.9,
-        additionalAngle: 170,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 2.05,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  comet: {
-    barrels: {
-      barrelSix: {
-        barrelWidth: 1,
-        barrelHeight: 1.34,
-        additionalAngle: 245,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSeven: {
-        barrelWidth: 1,
-        barrelHeight: 1.34,
-        additionalAngle: -245,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 135,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.72,
-        additionalAngle: 155,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 225,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 1.72,
-        additionalAngle: 205,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  wave: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.44,
-        additionalAngle: 100,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 145,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 1.44,
-        additionalAngle: -100,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: -145,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 1,
-        barrelHeight: 1.8,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: [],
-  },
-  amalgam: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1/5*4.2,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0.5,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1/5*4.2,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: -0.5,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1/1.5,
-        barrelHeight: 1.4,
-        additionalAngle: -20,
-        x: -0.4,
-        barrelType: "trap",
-      },
-      barrelFour: {
-        barrelWidth: 1/1.5,
-        barrelHeight: 1.4,
-        additionalAngle: 20,
-        x: 0.4,
-        barrelType: "trap",
-      },
-      barrelFive: {
-        barrelWidth: .5,
-        barrelHeight: 1.6,
-        additionalAngle: 140,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelSix: {
-        barrelWidth: .5,
-        barrelHeight: 1.6,
-        additionalAngle: 220,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: [],
-  },
-  alpha: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.5,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: [],
-  },
-  riot: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.6,
-        barrelHeight: 2.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelTwo: {
-        barrelWidth: 0.6,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelThree: {
-        barrelWidth: 0.6,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: [],
-  },
-  defender: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 60,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelFour: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelFive: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelSix: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 300,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['shrapnel'],
-  },
-  shrapnel: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 45,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelThree: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelFour: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 135,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelFive: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelSix: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 225,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelSeven: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 270,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelEight: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 315,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: [],
-  },
-  machine: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "mine",
-      },
-    },
-    upgradeTo: [],
-  },
-  manufacturer: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1 * 1.3,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "mine",
-      },
-    },
-    upgradeTo: [],
-  },
-  detonator: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "mine",
-      },
-    },
-    upgradeTo: [],
-  },
-  executive: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.7,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: [],
-  },
-  CEO: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 2,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: [],
-  },
-  hailstorm: {
-    eternal: "yes",
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['thunderstorm','cosmetic'],
-  },
-  bunker: {
-    eternal: "yes",
-    barrels: {
-      barrelTwo: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelThree: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.5,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelFour: {
-        barrelWidth: 0.5,
-        barrelHeight: 1.5,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['vault','asteroid','dynamite'],
-  },
-  chaos: {
-    eternal: "yes",
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.3,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.3,
-        additionalAngle: -90,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: ['mayhem','industry'],
-  },
-  bombshell: {
-    eternal: "yes",
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.5,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1.5,
-        barrelHeight: 1.2,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1.5,
-        barrelHeight: 1.2,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: ['demolisher'],
-  },
-  warrior: {
-    eternal: "yes",
-    barrels: {
-      barrelEight: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.44,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 1.44,
-        additionalAngle: -120,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 1,
-        barrelHeight: 1.8,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['veteran'],
-  },
-  thunderstorm: {
-    eternal: "yes",
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.9,
-        barrelHeight: 1.3,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.9,
-        barrelHeight: 1.3,
-        additionalAngle: 60,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.9,
-        barrelHeight: 1.3,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "bullet",
-      },
-
-      barrelFour: {
-        barrelWidth: 0.9,
-        barrelHeight: 1.3,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 0.9,
-        barrelHeight: 1.3,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 0.9,
-        barrelHeight: 1.3,
-        additionalAngle: 300,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  cosmetic: {
-    eternal: "yes",
-    barrels: {
-      barrelOne: {
-              barrelWidth: 0.9,
-              barrelHeight: 1.6,
-              additionalAngle: 180,
-              x: 0,
-              barrelType: "bullet",
-            },
-            barrelTwo: {
-              barrelWidth: 0.9,
-              barrelHeight: 1.6,
-              additionalAngle: 60,
-              x: 0,
-              barrelType: "bullet",
-            },
-            barrelThree: {
-              barrelWidth: 0.8,
-              barrelHeight: 1.3,
-              additionalAngle: 120,
-              x: 0,
-              barrelType: "bullet",
-            },
-
-            barrelFour: {
-              barrelWidth: 0.8,
-              barrelHeight: 1.3,
-              additionalAngle: 0,
-              x: 0,
-              barrelType: "bullet",
-            },
-            barrelFive: {
-              barrelWidth: 0.8,
-              barrelHeight: 1.3,
-              additionalAngle: 240,
-              x: 0,
-              barrelType: "bullet",
-            },
-            barrelSix: {
-              barrelWidth: 0.9,
-              barrelHeight: 1.6,
-              additionalAngle: 300,
-              x: 0,
-              barrelType: "bullet",
-            },
-    },
-    upgradeTo: [],
-  },
-  vault: {
-    eternal: "yes",
-    barrels: {
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 60,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelSix: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 300,
-        x: 0,
-        barrelType: "trap",
-      },
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: [],
-  },
-  asteroid: {
-    eternal: "yes",
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 1.5,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "mine",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.5,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "mine",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.5,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "mine",
-      },
-    },
-    upgradeTo: [],
-  },
-  mayhem: {
-    eternal: "yes",
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.3,
-        additionalAngle: 90,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelTwo: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.3,
-        additionalAngle: -90,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelThree: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.3,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelFour: {
-        barrelWidth: 0.67,
-        barrelHeight: 1.3,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "drone",
-      },
-    },
-    upgradeTo: [],
-  },
-  dynamite: {
-    eternal: "yes",
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "mine",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "mine",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "mine",
-      },
-    },
-    upgradeTo: [],
-  },
-  demolisher: {
-    eternal: "yes",
-    barrels: {
-      barrelOne: {
-        barrelWidth: 1.5,
-        barrelHeight: 1.3,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1.5,
-        barrelHeight: 1.3,
-        additionalAngle: 60,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1.5,
-        barrelHeight: 1.3,
-        additionalAngle: 120,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1.5,
-        barrelHeight: 1.3,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1.5,
-        barrelHeight: 1.3,
-        additionalAngle: 240,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 1.5,
-        barrelHeight: 1.3,
-        additionalAngle: 300,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    upgradeTo: [],
-  },
-  veteran: {
-    eternal: "yes",
-    barrels: {
-      barrelSeven: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 25,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelEight: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: -25,
-        x: 0,
-        barrelType: "drone",
-      },
-      barrelOne: {
-        barrelWidth: 1,
-        barrelHeight: 2,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 1,
-        barrelHeight: 1.44,
-        additionalAngle: 100,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: 145,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFour: {
-        barrelWidth: 1,
-        barrelHeight: 1.44,
-        additionalAngle: -100,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelFive: {
-        barrelWidth: 1,
-        barrelHeight: 1.4,
-        additionalAngle: -145,
-        x: 0,
-        barrelType: "bullet",
-      },
-      barrelSix: {
-        barrelWidth: 1,
-        barrelHeight: 1.8,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: [],
-  },
-  eternal: {
-    eternal: "yes",
-    upgradeTo: ['hailstorm','bunker','chaos','bombshell','warrior'],
-  },
-  minesweeper: {
-    barrels: {
-      barrelOne: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: -0.3,
-        barrelType: "bullet",
-      },
-      barrelTwo: {
-        barrelWidth: 0.4,
-        barrelHeight: 1.4,
-        additionalAngle: 0,
-        x: 0.3,
-        barrelType: "bullet",
-      },
-      barrelThree: {
-        barrelWidth: 0.75,
-        barrelHeight: 2,
-        additionalAngle: 180,
-        x: 0,
-        barrelType: "trap",
-      },
-    },
-    upgradeTo: ['battler','pinnace'],
-  },
-};
-*/
-//animating the background of homepage
-var backgroundWidth = 0;
-var backgroundHeight = 0;
-var step = 0;
-var radius = 0;
-var speed = 0.01;
-var zoomedWidth = 0;
-var zoomedHeight = 0;
-var xChange = 1;
-var yChange = 1;
-
-//check whether mouse is near left side of screen, which will make skillpoints appear
-var mouseToSkillPoints = "no";
-
-let defaultNotifColor = "rgb(50,50,50)";
-
-function randomNotif() {
-
-        //random notification when player joined game
-        let randomFunFact = [
-          "To get to the crossroads, rupture a portal without entering it",
-          "Press p for passive mode",
-          "Press f for fast rotation",
-          "You can enter the purple portals at lvl 100 only",
-          "Press h to toggle hitboxes",
-          "There is a tank that can slow down dune mobs",
-          "Juggernaut have purple auras that can suck in players, careful!",
-          "Blizzard slows down dune mobs",
-          "Some shapes are larger than usual, they give more score!",
-          "Detonator shoots traps that explode on death"
-        ]
-        let rando = randomFunFact[Math.floor(Math.random() * randomFunFact.length)]; //random fun fact
-        createNotif(rando,defaultNotifColor,3000)
-}
-
-//leaderboard player rotation
-var lbAngle = 0;
-
-//2tdm colors
-var teamColors = [];
-
-//team colors (copied from scenexe)
-var bodyColors = {
-  blue: {
-    col: "#00B0E1",
-    outline: "#0092C3",
-    hitCol: "#14c4f5",//color when hit or have spawn protection (values in RGB is 20 higher)
-    hitOutline: "#14a6d7",
-  },
-  green: {
-    col: "#00E06C",
-    outline: "#00C24E",
-    hitCol: "#14f480",
-    hitOutline: "#14d662",
-  },
-  red: {
-    col: "#F04F54",
-    outline: "#b33b3f",
-    hitCol: "#ff6368",
-    hitOutline: "#c74f53",
-  },
-  purple: {
-    col: "#BE7FF5",
-    outline: "#A061D7",
-    hitCol: "#d293ff",
-    hitOutline: "#b475eb",
-  },
-  magenta: {
-    col: "#D82BCF",
-    outline: "#BA0DB1",
-    hitCol: "#ec3fe3",
-    hitOutline: "#ce21c5",
-  },
-  fallen: {
-    col: "#C0C0C0",
-    outline: "#A2A2A2",
-    hitCol: "#d4d4d4",
-    hitOutline: "#b6b6b6",
-  },
-  eternal: {
-    col: "#934c93",
-    outline: "#660066",
-    hitCol: "#a760a7",
-    hitOutline: "#7a147a",
-  },
-  celestial: {
-    col: "#F177DD",
-    outline: "#D359BF",
-    hitCol: "#ff8bf1",
-    hitOutline: "#e76dd3",
-  },
-  barrel: {
-    col: "#999999",
-    outline: "#7B7B7B",
-    hitCol: "#adadad",
-    hitOutline: "#8f8f8f",
-  },
-  asset: {
-    col: "#5F676C",
-    outline: "#41494E",
-    hitCol: "#737b80",
-    hitOutline: "#555d62",
-  },
-  triangle: {
-    col: "#FFE46B",
-    outline: "#E1C64D",
-    hitCol: "#FFF87F",
-    hitOutline: "#f5da61",
-  },
-  square: {
-    col: "#FC7676",
-    outline: "#DE5858",
-    hitCol: "#ff8a8a",
-    hitOutline: "#f26c6c",
-  },
-  pentagon: {
-    col: "#768CFC",
-    outline: "#586EDE",
-    hitCol: "#95abff",
-    hitOutline: "#778de1",
-  },
-  hexagon: {
-    col: "#FCA644",
-    outline: "#DE8826",
-    hitCol: "#ffb958",
-    hitOutline: "#f29c3a",
-  },
-  heptagon: {
-    col: "#38B764",
-    outline: "#1A9946",
-    hitCol: "#4ccb78",
-    hitOutline: "#2ead5a",
-  },
-  octagon: {
-    col: "#4A66BD",
-    outline: "#2C489F",
-    hitCol: "#5e7bd1",
-    hitOutline: "#545cb3",
-  },
-  nonagon: {
-    col: "#5D275D",
-    outline: "#3F093F",
-    hitCol: "#713b71",
-    hitOutline: "#531d53",
-  },
-  decagon: {
-    col: "#1A1C2C",
-    outline: "#00000E",
-    hitCol: "#2e3040",
-    hitOutline: "#141422",
-  },
-  hendecagon: {
-    col: "#060011",
-    outline: "#000000",
-    hitCol: "#1a1425",
-    hitOutline: "#141414",
-  },
-  dodecagon: {
-    col: "#403645",
-    outline: "#221827",
-    hitCol: "#544a59",
-    hitOutline: "#362c3b",
-  },
-  tridecagon: {
-    col: "#EDEDFF",
-    outline: "#CFCFE1",
-    hitCol: "#EDEDFF", //same color when hit or else it will be completely white
-    hitOutline: "#CFCFE1",
-  },
-  tetradecagon: {
-    col: "#000000",
-    outline: "#000000",
-    hitCol: "#000000", //same color when hit
-    hitOutline: "#000000",
-  },
-  transparent: {
-    col: "transparent",
-    outline: "transparent",
-    hitCol: "transparent",
-    hitOutline: "transparent",
-  }
-}
-
-var socket = "null";
-  // Connect to server
-  if (window.location.href.includes("developer-rocketer")){//website is dev rocketer (used for testing)
-    createNotif("Connected to the developer's testing servers.","rgba(150,0,0)",5000)
-    createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)
-    var serverlist = {
-      "Free For All": "wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/",
-      "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
-      "4 Teams": "wss://devrocketer4tdm.devrocketer.repl.co/",
-      "Tank Editor": ["wss://devrocketereditor.devrocketer.repl.co/", "wss://devrocketereditor2.devrocketer.repl.co/"],
-      "dune": "wss://devrocketerdune.devrocketer.repl.co/",
-      "cavern": "wss://devrocketercavern.devrocketer.repl.co/",
-      "cr": "wss://devrocketercr.devrocketer.repl.co/",
-      "sanc": "wss://devrocketersanc.devrocketer.repl.co/",
-    }
-  }
-  else{//actual rocketer
-    var serverlist = {
-      "Free For All": "",
-      "2 Teams": "wss://rocketer2tdm.rocketer.repl.co/",
-      "4 Teams": "wss://rocketer4tdm.rocketer.repl.co/",
-      "Tank Editor": ["wss://rocketereditor.rocketer.repl.co/", "wss://rocketereditor2.rocketer.repl.co/"],
-      "dune": "wss://rocketerdune.rocketer.repl.co/",
-      "cavern": "wss://rocketercavern.rocketer.repl.co/",
-      "cr": "wss://rocketercr.rocketer.repl.co/",
-      "sanc": "wss://rocketersanc.rocketer.repl.co/",
-    }
-  }
-  function connectServer(whichserver,teleportingYN){//'wss://developer-rocketer.glitch.me/'
-  socket = new WebSocket(whichserver);
-  socket.binaryType = "arraybuffer";//receive uint8array instead of blob (when servre compresses game data)
-    console.log("Connecting to server...")
-  socket.onopen = function(event) {//connected
-
-    // Send a message to server
-    //socket.send('yo');
-
-    //connected
-    connected = "yes";
-    console.log("Connected!")
-    if (teleportingTransition!="yes"){//disconnected and reconnected, but not teleporting
-      playButton.style.display = "block";
-      nameInput.style.display = "block";
-    }
-    //retrieve world record from server
-    var packet = JSON.stringify(["wr"]);
-    socket.send(packet)
-    //check latency
-    var sentBack = "yes";
-    setInterval(function () {
-      if (sentBack == "yes") {
-        //dont ping again if server havent replied
-        start = Date.now();
-        var packet = JSON.stringify(["pingServer"]);
-        socket.send(packet)
-        sentBack = "no";
-      }
-    }, 1500); //every 1.5 second
-
-    if (teleportingYN=="yes"){
-      var packet = JSON.stringify(["teleporting",prevplayerstring]);
-      socket.send(packet)
-    }
-
-
-
-  //auto sign into account when open website
-  if (
-    localStorage.getItem("rocketerAccountp") &&
-    localStorage.getItem("rocketerAccountu")
-  ) {
-    const catss = localStorage.getItem("rocketerAccountp");
-    const dogss = localStorage.getItem("rocketerAccountu");
-    document.getElementById("signUp").style.display = "none";
-    document.getElementById("logIn").style.display = "none";
-    document.getElementById("accountText").innerHTML = "Logging in...";
-    document.getElementById("accountName").innerHTML = "Auto logging in...";
-    var packet = JSON.stringify(["logInOrSignUp", dogss, catss, "", "login"]);
-    socket.send(packet)
-  }
-
-    // Listen for stuff sent from server
-    socket.onmessage = function(event) {
-      let info = "";
-      let type = "";
-      try{
-        info = JSON.parse(event.data)
-        type = info[0];//different stuff sent to client from server
-        bandwidth += new TextEncoder().encode(event.data).length;
-      }
-      catch(err){//this packet was compressed using pako, so it cannot be parsed yet
-        //console.log(event.data)
-        info = JSON.parse(pako.inflate(event.data, { to: 'string' }));
-        type = info[0];//different stuff sent to client from server
-        bandwidth += event.data.byteLength;//client receives uint8array packet cuz it is compressed, get byte length using bytelength property
-      }
-
-
-      //update bandwidth
-      if (Date.now() - prevBandwidthUpdate > 1000) {
-          //if 1 second has passed
-          shownBandwidth = bandwidth; //update the bandwdth that is shown
-          prevBandwidthUpdate = Date.now();
-          bandwidth = 0;
-        }
-
-
-      if (type=="sendID"){//client sending player's id
-        let yourID = info[1];
-        playerstring = yourID;
-      }
-      else if (type=="youtuber"){
-        let icon = info[1];
-        let name = info[2];
-        let url = info[3];
-         //featured youtuber
-        document.getElementById("youtuberimage").src = icon;
-        document.getElementById("youtubername").innerHTML =
-          "Featured YouTuber:<br>" + name;
-        var channelurl = "https://youtube.com/" + url;
-        document.getElementById("featuredyoutuber").onclick = function () {
-          window.open(channelurl);
-        };
-      }
-      else if (type=="newNotification"){//create notification when server sends it
-        let text = info[1];
-        let color = info[2];
-        createNotif(text,color,5000)
-      }
-      else if (type=="tankButton"){
-        let dummyTank = info[1];
-        let button = info[2];
-        let realPlayer = info[3];
-        if (button == "button1") {
-          buttonTank[1] = dummyTank;
-          howManyButtonSentToClient = 1;
-          howManyButtonSentToServer = 0;
-          prevPlayerLvl = realPlayer.tankTypeLevel;
-        } else if (button == "button2") {
-          buttonTank[2] = dummyTank;
-          howManyButtonSentToClient = 2;
-          howManyButtonSentToServer = 0;
-          prevPlayerLvl = realPlayer.tankTypeLevel;
-        } else if (button == "button3") {
-          buttonTank[3] = dummyTank;
-          howManyButtonSentToClient = 3;
-          howManyButtonSentToServer = 0;
-          prevPlayerLvl = realPlayer.tankTypeLevel;
-        } else if (button == "button4") {
-          buttonTank[4] = dummyTank;
-          howManyButtonSentToClient = 4;
-          howManyButtonSentToServer = 0;
-          prevPlayerLvl = realPlayer.tankTypeLevel;
-        } else if (button == "button5") {
-          buttonTank[5] = dummyTank;
-          howManyButtonSentToClient = 5;
-          howManyButtonSentToServer = 0;
-          prevPlayerLvl = realPlayer.tankTypeLevel;
-        } else if (button == "button6") {
-          buttonTank[6] = dummyTank;
-          howManyButtonSentToClient = 6;
-          howManyButtonSentToServer = 0;
-          prevPlayerLvl = realPlayer.tankTypeLevel;
-        } else if (button == "button7") {
-          buttonTank[7] = dummyTank;
-          howManyButtonSentToClient = 7;
-          howManyButtonSentToServer = 0;
-          prevPlayerLvl = realPlayer.tankTypeLevel;
-        } else if (button == "button8") {
-          buttonTank[8] = dummyTank;
-          howManyButtonSentToClientb = 8;
-          howManyButtonSentToServerb = 0;
-          prevPlayerLvlb = realPlayer.bodyTypeLevel;
-        } else if (button == "button9") {
-          buttonTank[9] = dummyTank;
-          howManyButtonSentToClientb = 9;
-          howManyButtonSentToServerb = 0;
-          prevPlayerLvlb = realPlayer.bodyTypeLevel;
-        } else if (button == "button10") {
-          buttonTank[10] = dummyTank;
-          howManyButtonSentToClientb = 10;
-          howManyButtonSentToServerb = 0;
-          prevPlayerLvlb = realPlayer.bodyTypeLevel;
-        } else if (button == "button11") {
-          buttonTank[11] = dummyTank;
-          howManyButtonSentToClientb = 11;
-          howManyButtonSentToServerb = 0;
-          prevPlayerLvlb = realPlayer.bodyTypeLevel;
-        } else if (button == "button12") {
-          buttonTank[12] = dummyTank;
-          howManyButtonSentToClientb = 12;
-          howManyButtonSentToServerb = 0;
-          prevPlayerLvlb = realPlayer.bodyTypeLevel;
-        } else if (button == "button13") {
-          buttonTank[13] = dummyTank;
-          howManyButtonSentToClientb = 13;
-          howManyButtonSentToServerb = 0;
-          prevPlayerLvlb = realPlayer.bodyTypeLevel;
-        } else if (button == "button14") {
-          buttonTank[14] = dummyTank;
-          howManyButtonSentToClientb = 14;
-          howManyButtonSentToServerb = 0;
-          prevPlayerLvlb = realPlayer.bodyTypeLevel;
-        }
-      }
-      else if (type=="receiveWR"){
-        let recordHolder = info[1];
-        document.getElementById("wrwords").innerHTML =
-        "<span style='text-align: center;'><h3>World Record Holder</h3><hr></span><table><tr><th>1. " +
-        recordHolder[0].name +
-        "</th><th>" +
-        recordHolder[0].score +
-        " xp</th><th>" +
-        recordHolder[0].tank +
-        "</th></tr><tr><th>2. " +
-        recordHolder[1].name +
-        "</th><th>" +
-        recordHolder[1].score +
-        " xp</th><th>" +
-        recordHolder[1].tank +
-        "</th></tr><tr><th>3. " +
-        recordHolder[2].name +
-        "</th><th>" +
-        recordHolder[2].score +
-        " xp</th><th>" +
-        recordHolder[2].tank +
-        "</th></tr><tr><th>4. " +
-        recordHolder[3].name +
-        "</th><th>" +
-        recordHolder[3].score +
-        " xp</th><th>" +
-        recordHolder[3].tank +
-        "</th></tr><tr><th>5. " +
-        recordHolder[4].name +
-        "</th><th>" +
-        recordHolder[4].score +
-        " xp</th><th>" +
-        recordHolder[4].tank +
-        "</th></tr></table>";
-      }
-      else if (type=="accountView"){
-        let accountObject = info[1];
-        //if successfully log into an account, show the account
-        /*
-        name: accountname,
-  desc: description,
-  pw: password,
-  join: dateToday,
-  achievements: [],
-  topScore: 0,
-  star: 0,
-  pfp: "basic",
-  clr: "blue",
-  bg: "grey",
-  lastSeen: Date.now(),*/
-
-        loggedInAccount = accountObject;
-        var achievementsDescription = "";
-        function addAchievementDiv(color,color2,name,star,starcol,textcol,desc){
-          achievementsDescription += "<div class='achievementDiv' style='color:"+textcol+";margin:10px;background: linear-gradient(to bottom, "+color+" 50%, "+color2+" 0%);'><span style='font-size:1.5vw;width: 100%;'>"+name+"<span style='float:right;'><span class='material-icons' style='color: "+starcol+";font-size:1.2vw;'> star </span>"+star+"</span></span><br><br>"+desc+"</div>";
-        }
-        
-        achievementList = [//the order is the order that achievements appear on the account page (based on star awarded)
-          ['Welcome',5,'Create an account.',1],//name, star, description, achievement id
-          ['Explorer',5,'Enter a portal.',7],
-          ['Killer',20,'Kill a player by shooting.',2],
-          ['Ascended',20,'Enter the sanctuary.',13],
-          ['Rainbow',35,'Kill a radiant shape.',3],
-          ['Bomber',50,'Kill a shape with 10 or more sides.',8],
-          ['Giant',50,'Get 1 million xp in one run.',4],
-          ['Monstrous',75,'Get 10 million xp in one run.',5],
-          ['Titan',150,'Get 100 million xp in one run.',6],
-          ['Survivor',150,'Survive for 20 minutes in FFA. (Achievement given after death)',11],
-          ['Oh Node!',300,'Reach lvl 60 as a node.',9],
-          ['Shiny!',300,'Kill a radiant hendecagon.',10],
-          ['Champion',400,'Reach lvl 85.',14],
-          ['Victor',1500,'Survive for an hour in FFA. (Achievement given after death)',12],
-        ];
-        
-        let thingyy = accountObject.achievements.length + "/" + achievementList.length;
-        achcolors = [
-          ['rgb(242,219,120)','rgb(212,189,90)'],
-          ['rgb(126,146,247)','rgb(96,116,217)'],
-          ['rgb(123, 9, 123)','rgb(93, 0, 93)'],
-          ['rgb(194, 63, 63)','rgb(164, 33, 33)'],
-          ['rgb(81, 217, 225)','rgb(51, 187, 195)'],
-          ['rgb(39, 227, 170)','rgb(9, 197, 140)'],
-          ['rgb(184, 123, 181)','rgb(154, 93, 151)'],
-          ['rgb(222, 156, 58)','rgb(192, 126, 28)'],
-        ];//achievements have different colors based on difficulty
-        
-        for (var i = 0; i < achievementList.length; i++) {
-          let thisach = achievementList[i];
-          if (accountObject.achievements.includes(thisach[3])) {//have this achievement id
-            let star = thisach[1];//amount of stars awarded
-            let whichcolor = 0;
-            if (star <= 20){//if change this, remember to change below (just search for 'newach' in the code)
-              whichcolor = 0;
+        function getTanksThatCanUpgradeTo(list,tankname){//for upgrade tree
+          //get an array of tanks that can upgrade to in the future (these tanks wont be greyed out on upgrade tree)
+          let listOfBodyUpgrades = [];
+          
+          function findChildBodyUpgrade(tank){
+            for (const upgrade of tank){
+              listOfBodyUpgrades.push(upgrade)
+              try{
+                let thisTank = list[upgrade].upgradeTo;
+                findChildBodyUpgrade(thisTank)
+              }
+              catch(err){}
             }
-            else if (star <= 50){
-              whichcolor = 1;
-            }
-            else if (star <= 100){
-              whichcolor = 2;
-            }
-            else if (star <= 200){
-              whichcolor = 3;
-            }
-            else if (star <= 400){
-              whichcolor = 4;
-            }
-            else if (star <= 1500){
-              whichcolor = 5;
-            }
-            else{
-              whichcolor = 6;
-            }
-            addAchievementDiv(achcolors[whichcolor][0],achcolors[whichcolor][1],thisach[0],star,'gold','white',thisach[2])
           }
-          else{
-            addAchievementDiv('rgb(95,103,108)','rgb(65,73,78)',thisach[0],thisach[1],'rgba(192,192,192)','rgba(192,192,192)',thisach[2])
+          
+          try{
+            let thisTank = list[tankname].upgradeTo;
+            listOfBodyUpgrades.push(tankname)
+            findChildBodyUpgrade(thisTank)
+          }
+          catch(err){}
+          return listOfBodyUpgrades;
+        }
+
+        //getTanksThatCanUpgradeTo(bodyupgrades,'basic')
+        var previousWeapon = '';//check if tank type changed
+        var previousBody = '';
+        var weaponCanUpgradeTo = [];
+        var bodyCanUpgradeTo = [];
+
+        //for the upgrade tree
+        var bodysize = 20; //size of tank on upgrade tree
+        var bodyangle = 0; //angle of tank on upgrade tree in radians
+
+        //check whether mouse is near left side of screen, which will make skillpoints appear
+        var mouseToSkillPoints = "no";
+
+        let defaultNotifColor = "rgb(45,45,45)";
+        function randomNotif() {
+          //random notification when player joined game
+          let randomFunFact = [
+            "To get to the crossroads, rupture a portal without entering it.",
+            "Press p for passive mode.",
+            "Press f for fast rotation.",
+            "You can enter the purple portals at lvl 100 only.",
+            "Press h to toggle hitboxes.",
+            "Press t to open quick chat.",
+            "Juggernaut have purple auras that can suck in players, careful!",
+            "Blizzard slows down dune mobs.",
+            "Press the WASD or arrow keys to move.",
+            "Detonator shoots traps that explode on death."
+          ]
+          let rando = randomFunFact[Math.floor(Math.random() * randomFunFact.length)]; //random fun fact
+          createNotif(rando,defaultNotifColor,3000)
+        }
+
+        //leaderboard player rotation
+        var lbAngle = 0;
+
+        //2tdm colors
+        var teamColors = [];
+
+
+        var socket = "null";
+        // Connect to server
+        if (window.location.href.includes("developer-rocketer")||window.location.href.includes("offline-rocketer")||window.location.href.includes("127.0.0.1")){//this is a testing website, or local host
+          //createNotif("Connected to the developer's testing servers.","rgba(150,0,0)",5000)
+          //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)
+          var serverlist = {
+            "Free For All": "wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/",
+            "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
+            "4 Teams": "wss://devrocketer4tdm.devrocketer.repl.co/",
+            "Tank Editor": "wss://devrocketereditor.devrocketer.repl.co/",
+            "dune": "wss://devrocketerdune.devrocketer.repl.co/",
+            "cavern": "wss://devrocketercavern.devrocketer.repl.co/",
+            "cr": "wss://devrocketercr.devrocketer.repl.co/",
+            "sanc": "wss://devrocketersanc.devrocketer.repl.co/",
           }
         }
-        
-        
-        //NEW ACHIEVEMENTS TO ADD INGAME: 10 and above
-
-        //put password and username in local storage
-        try {
-          localStorage.setItem("rocketerAccountp", accountObject.pw);
-          localStorage.setItem("rocketerAccountu", accountObject.name);
-          const cat = localStorage.getItem("rocketerAccountp");
-          const dog = localStorage.getItem("rocketerAccountu");
-        } catch (e) {
-          console.log("An error occured when storing your password: " + e);
+        else{//actual rocketer
+          var serverlist = {
+            "Free For All": "",
+            "2 Teams": "wss://rocketer2tdm.rocketer.repl.co/",
+            "4 Teams": "wss://rocketer4tdm.rocketer.repl.co/",
+            "Tank Editor": ["wss://rocketereditor.rocketer.repl.co/", "wss://rocketereditor2.rocketer.repl.co/"],
+            "dune": "wss://rocketerdune.rocketer.repl.co/",
+            "cavern": "wss://rocketercavern.rocketer.repl.co/",
+            "cr": "wss://rocketercr.rocketer.repl.co/",
+            "sanc": "wss://rocketersanc.rocketer.repl.co/",
+          }
         }
-
-        document.getElementById("accountName").innerHTML = accountObject.name;
-        document.getElementById("accountText").style.textAlign = "left";
-        document.getElementById("accountText").innerHTML =
-          "<canvas id='pfp' style='float:left; width: 8vw; height: 8vw; padding-right: 1vw; padding-top: 1vw;'></canvas><div id='editoverlay' onclick='openeditpfp()'><br>Edit</div><br><span style='font-weight: 900;font-size: 2vw;'>" +
-          accountObject.name +
-          "</span><br><span class='material-icons' style='font-size: 1vw;color: gold;'> star </span>" +
-          accountObject.star +
-          "<br><br>" +
-          accountObject.desc +
-          "<br><br><hr><div style='width:100%;display:flex;flex-wrap: wrap;text-align: center;font-size:1vw;'><div style='width:25%;'><span style='font-size: 1.3vw;font-weight: 900;'>Joined</span><br>" +
-          accountObject.join + "</div><div style='width:25%;'>" + "<span style='font-size: 1.3vw;font-weight: 900;'>Last Online</span><br>0 seconds ago" + "</div><div style='width:25%;'>" + "<span style='font-size: 1.3vw;font-weight: 900;'>Achievements</span><br>" + thingyy + "</div><div style='width:25%;'>" + "<span style='font-size: 1.3vw;font-weight: 900;'>High score</span><br>" + accountObject.topScore +
-          "</div></div><hr><br><span style='width:100%;display:inline-block;font-weight: 900;font-size: 1.5vw;'>Achievements:<br><br></span>" +
-          "<div style='width:100%;display:flex;flex-wrap: wrap;'>"+
-          achievementsDescription +
-          "</div><br>Reload the page to view the latest account information.";
-        var pfpcanvas = document.getElementById("pfp");
-        pfpcanvas.width = "300"; //canvas coordinate width and height, not the actual canvas width and height
-        pfpcanvas.height = "300";
-        var pctx = pfpcanvas.getContext("2d");
-        var pfpPlayerX = 125;
-        var pfpPlayerY = 175;
-        pctx.fillStyle = "#CDCDCD"; //background
-        pctx.strokeStyle = "grey";
-        pctx.lineWidth = 5;
-        pctx.beginPath();
-        pctx.arc(150, 150, 148, 0, 2 * Math.PI);
-        pctx.fill();
-        pctx.stroke();
-        //draw grid
-        var pgridHeight = 150;
-        pctx.lineWidth = 15; //thickness of grid
-        //pctx.strokeStyle = "rgba(180, 180, 180, .2)";
-        pctx.strokeStyle = "#afafaf";
-        for (
-          let x = -pgridHeight - ((-pfpcanvas.width / 2) % pgridHeight);
-          x < pfpcanvas.width;
-          x += pgridHeight
-        ) {
-          pctx.moveTo(x, 0);
-          pctx.lineTo(x, pfpcanvas.height);
-        }
-        for (
-          let y = -pgridHeight - ((-pfpcanvas.height / 2) % pgridHeight);
-          y < pfpcanvas.height;
-          y += pgridHeight
-        ) {
-          pctx.moveTo(0, y);
-          pctx.lineTo(pfpcanvas.width, y);
-        }
-        pctx.stroke();
-        //crop grid to a circle
-        pctx.globalCompositeOperation = "destination-in";
-        pctx.beginPath();
-        pctx.arc(150, 150, 148, 0, 2 * Math.PI);
-        pctx.closePath();
-        pctx.fill();
-        pctx.globalCompositeOperation = "source-over"; //change back to default
-        //draw tank
-        pctx.lineJoin = "round";
-        let x = 150;
-        let y = 150;
-        let bodysize = 60;
-        let bodycolor = "#00B0E1";
-        let bodyoutline = "#0092C3";
-        let which = "weapon";
-        let name = accountObject.pfp;
-        let bodyangle = 45/180*Math.PI;
-        let temphctx = hctx;
-        hctx = pctx;//temporarily change hctx to pctx for function to work
-        drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which)
-        hctx = temphctx;
-        
-        //draw tanks on the UI for editing account pfp
-        let availablepfp = ['node','basic','trapper','guard','twin','sniper','cannon','flank','delta','commander','overseer']
-        for (let i = 0; i < availablepfp.length; i++) {
-          let divid = 'tank' + availablepfp[i];
-          let tempcanvas = document.getElementById(divid);
-          tempcanvas.width = "100"; //canvas coordinate width and height, not the actual canvas width and height
-          tempcanvas.height = "100";
-          let pctx = tempcanvas.getContext("2d");
-          pctx.lineJoin = "round";
-          let x = 50;
-          let y = 50;
-          let bodysize = 20;
-          let bodycolor = "#00B0E1";
-          let bodyoutline = "#0092C3";
-          let which = "weapon";
-          let name = availablepfp[i];
-          let bodyangle = 45/180*Math.PI;
-          pctx.lineWidth = 3;
-          let temphctx = hctx;
-          hctx = pctx;//temporarily change hctx to pctx for function to work
-          drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which)
-          hctx = temphctx;
-          pctx.fillStyle = "white";
-          pctx.strokeStyle = "black";
-          pctx.lineWidth = 7;
-          pctx.font = "900 20px Roboto";
-          pctx.textAlign = "center";
-          pctx.strokeText(availablepfp[i], 50, 90);
-          pctx.fillText(availablepfp[i], 50, 90);
-        }
-        
-        
-        //used to get the Last Online string, which currently isnt needed (cuz last seen is literally the time now)
-        /*
-        var lastSeenString = "";
-        const weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];//needed because date wll return number value, e.g. 0 for Sunday
-        var d = new Date(accountObject.lastSeen);
-        var day = weekday[d.getDay()];
-        lastSeenString += day+" "+d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear()+" "+ d.getHours()+":"+d.getMinutes()+":"+d.getSeconds();
-        */
-        //for editing account
-        accountUsername.value = accountObject.name;
-        accountPassword.value = accountObject.pw;
-        accountDesc.value = accountObject.desc;
-        document.getElementById("editAccount").style.display = "block";
-      }
-      else if (type=="newach"){//got a new achievement
-        let id = info[1];//id of the achievement gained
-        if (achievementList){//if this variable exists (if logged in)
-          for (var i = 0; i < achievementList.length; i++) {
-            let thisach = achievementList[i];
-            if (thisach[3] == id){//this is the achievement
-              let star = thisach[1];//amount of stars awarded
-              let whichcolor = 0;
-              if (star <= 20){
-                whichcolor = 0;
-              }
-              else if (star <= 50){
-                whichcolor = 1;
-              }
-              else if (star <= 100){
-                whichcolor = 2;
-              }
-              else if (star <= 200){
-                whichcolor = 3;
-              }
-              else if (star <= 400){
-                whichcolor = 4;
-              }
-              let color = achcolors[whichcolor][0];
-              let color2 = achcolors[whichcolor][1];
-              let name = thisach[0];
-              let desc = thisach[2];
-              let textcol = 'white';
-              let starcol = 'gold';
-              let div = document.createElement('div');
-              div.id = 'achnotifdiv';
-              div.innerHTML = "<div id='achnotiftext' class='achievementText'>New Achievement!</div><div id='achnotif' class='achievementNotif' style='color:"+textcol+";background: linear-gradient(to bottom, "+color+" 50%, "+color2+" 0%);'><span style='font-size:1.5vw;width: 100%;'>"+name+"<span style='float:right;'><span class='material-icons' style='color: "+starcol+";font-size:1.2vw;'> star </span>"+star+"</span></span><br><br>"+desc+"</div>";
-              document.body.appendChild(div);
-              setTimeout(function(){//remove div after some time
-                let x = document.getElementById("achnotifdiv");
-                if (x){
-                  x.remove();
+        function connectServer(whichserver,teleportingYN){
+            socket = new WebSocket(whichserver);
+            socket.binaryType = "arraybuffer";//receive uint8array instead of blob (when servre compresses game data)
+            console.log("Connecting to server...")
+            socket.onopen = function(event) {//connected to server
+                connected = "yes";
+                console.log("Connected!")
+                if (teleportingTransition!="yes"){//disconnected and reconnected, but not teleporting
+                  playButton.style.display = "block";
+                  nameInput.style.display = "block";
                 }
-              }, 5000);
-              break;
-            }
-          }
-        }
-      }
-      else if (type=="pong"){
-        //server reply after client ping to check latency
-        latency = Date.now() - start;
-        start = Date.now();
-        sentBack = "yes";
-      }
-      else if (type=="game"){
-        if(teleportingTransition=="yes"){//is teleporting, that's why re-connected
-          teleportingTransition = "no";
-          teleportingcount = 2.1;
-        }
-        let gameobjects = info[1];
-        let serverruntime = info[2];
-        let portalslist = info[3];
-        let servertime = info[4];//server's time when send packet. note that server and client time is different
+                //retrieve world record from server
+                var packet = JSON.stringify(["wr"]);
+                socket.send(packet)
+                //check latency
+                var sentBack = "yes";
+                setInterval(function () {
+                  if (sentBack == "yes") {
+                    //dont ping again if server havent replied
+                    start = Date.now();
+                    var packet = JSON.stringify(["pingServer"]);
+                    socket.send(packet)
+                    sentBack = "no";
+                  }
+                }, 1500); //every 1.5 second
 
-        //inflate the compressed game object list
-        //server only compress if packet size exceeds 1kb
-        //gameobjects = JSON.parse(pako.inflate(gameobjects, { to: 'string' }));
+                if (teleportingYN=="yes"){
+                  var packet = JSON.stringify(["teleporting",prevplayerstring]);
+                  socket.send(packet)
+                }
+                //auto sign into account when open website
+                if (
+                  localStorage.getItem("rocketerAccountp") &&
+                  localStorage.getItem("rocketerAccountu")
+                ) {
+                  const catss = localStorage.getItem("rocketerAccountp");
+                  const dogss = localStorage.getItem("rocketerAccountu");
+                  console.log("logging in...");
+                  var packet = JSON.stringify(["logInOrSignUp", dogss, catss, "", "login"]);
+                  socket.send(packet)
+                }
 
-        //update variables
-      oldportals = JSON.parse(JSON.stringify(portals));
-        for (const property in portalslist) {
-          if (portalslist[property] == "del") {
-            //server tells client that a portal is not shown on the screen anymore
-            delete portals[property];
-          } else {
-            if (!portals.hasOwnProperty(property)) {
-              portals[property] = { ...portalslist[property] };
-            } else {
-              for (const propertyy in portalslist[property]) {
-                portals[property][propertyy] =
-                  portalslist[property][propertyy];
-              }
-            }
-          }
-        }
-        //server doesnt send all the stuff that can be seen on your screen (will use a lot of bandwidth)
-        //instead, it sends the changes made to the things already on your screen (delete, add, change stuff)
-        //console.log(gameobjects)
-        //console.log(portalslist)
-        function loopobj(obj, actual){
-          for (const propertyy in obj) {
-                          if (
-                            typeof obj[propertyy] === 'object' &&
-                            !Array.isArray(obj[propertyy]) &&
-                            obj[propertyy] !== null
-                          ) {//property is an object
-                            if (!actual.hasOwnProperty(propertyy)){
-                              actual[propertyy] = {};
+                // Listen for stuff sent from server
+                socket.onmessage = function(event) {
+                  let info = "";
+                  let type = "";
+                  try{
+                    info = JSON.parse(event.data)
+                    type = info[0];//different stuff sent to client from server
+                    bandwidth += new TextEncoder().encode(event.data).length;
+                  }
+                  catch(err){//this packet was compressed using pako, so it cannot be parsed yet
+                    //console.log(event.data)
+                    info = JSON.parse(pako.inflate(event.data, { to: 'string' }));
+                    type = info[0];//different stuff sent to client from server
+                    bandwidth += event.data.byteLength;//client receives uint8array packet cuz it is compressed, get byte length using bytelength property
+                  }
+                  //update bandwidth
+                  if (Date.now() - prevBandwidthUpdate > 1000) {
+                    //if 1 second has passed
+                    shownBandwidth = bandwidth; //update the bandwdth that is shown
+                    prevBandwidthUpdate = Date.now();
+                    bandwidth = 0;
+                  }
+
+
+                  if (type=="sendID"){//client sending player's id
+                    let yourID = info[1];
+                    playerstring = yourID;
+                  }
+                  else if (type=="youtuber"){//re-add featured youtubers to the website in the future
+                    /*
+                    let icon = info[1];
+                    let name = info[2];
+                    let url = info[3];
+                    //featured youtuber
+                    document.getElementById("youtuberimage").src = icon;
+                    document.getElementById("youtubername").innerHTML =
+                      "Featured YouTuber:<br>" + name;
+                    var channelurl = "https://youtube.com/" + url;
+                    document.getElementById("featuredyoutuber").onclick = function () {
+                      window.open(channelurl);
+                    };
+                    */
+                  }
+                  else if (type=="newNotification"){//create notification when server sends it
+                    let text = info[1];
+                    let color = info[2];
+                    createNotif(text,color,5000);
+                  }
+                  else if (type=="tankButton"){
+                    let dummyTank = info[1];
+                    let button = info[2];
+                    let realPlayer = info[3];
+                    let buttonList = ["button1","button2","button3","button4","button5","button6","button7","button8","button9","button10","button11","button12","button13","button14"];
+                    if (buttonList.includes(button)){
+                      let num = buttonList.indexOf(button) + 1;//button1 will be 1 instead of 0 (first item in array is 0)
+                      buttonTank[num] = dummyTank;
+                      if (num < 8){
+                        howManyButtonSentToClient = num;
+                        howManyButtonSentToServer = 0;
+                        prevPlayerLvl = realPlayer.tankTypeLevel;
+                      }
+                      else{
+                        howManyButtonSentToClientb = num;
+                        howManyButtonSentToServerb = 0;
+                        prevPlayerLvlb = realPlayer.bodyTypeLevel;
+                      }
+                    }
+                  }
+                  else if (type=="receiveWR"){
+                    let recordHolder = info[1];//re-add world record leaderboard later on
+                    /*
+                    document.getElementById("wrwords").innerHTML =
+                    "<span style='text-align: center;'><h3>World Record Holder</h3><hr></span><table><tr><th>1. " +
+                    recordHolder[0].name +
+                    "</th><th>" +
+                    recordHolder[0].score +
+                    " xp</th><th>" +
+                    recordHolder[0].tank +
+                    "</th></tr><tr><th>2. " +
+                    recordHolder[1].name +
+                    "</th><th>" +
+                    recordHolder[1].score +
+                    " xp</th><th>" +
+                    recordHolder[1].tank +
+                    "</th></tr><tr><th>3. " +
+                    recordHolder[2].name +
+                    "</th><th>" +
+                    recordHolder[2].score +
+                    " xp</th><th>" +
+                    recordHolder[2].tank +
+                    "</th></tr><tr><th>4. " +
+                    recordHolder[3].name +
+                    "</th><th>" +
+                    recordHolder[3].score +
+                    " xp</th><th>" +
+                    recordHolder[3].tank +
+                    "</th></tr><tr><th>5. " +
+                    recordHolder[4].name +
+                    "</th><th>" +
+                    recordHolder[4].score +
+                    " xp</th><th>" +
+                    recordHolder[4].tank +
+                    "</th></tr></table>";
+                    */
+                  }
+                  else if (type=="accountView"){
+                    let accountObject = info[1];
+                    //if successfully log into an account, show the account
+                    //sample account obj:
+                    /*
+                    name: accountname,
+                    desc: description,
+                    pw: password,
+                    join: dateToday,
+                    achievements: [],
+                    topScore: 0,
+                    star: 0,
+                    pfp: "basic",
+                    clr: "blue",
+                    bg: "grey",
+                    lastSeen: Date.now(),*/
+
+                    loggedInAccount = accountObject;
+                    var achievementsDescription = "";
+                    function addAchievementDiv(color,color2,name,star,starcol,textcol,desc){
+                      achievementsDescription += "<div class='achievementDiv' style='color:"+textcol+";margin:10px;background: linear-gradient(to bottom, "+color+" 50%, "+color2+" 0%);'><span style='font-size:1.5vw;width: 100%;'>"+name+"<span style='float:right;'><span class='material-icons' style='color: "+starcol+";font-size:1.2vw;'> star </span>"+star+"</span></span><br><br>"+desc+"</div>";
+                    }
+        
+                    achievementList = [//the order is the order that achievements appear on the account page (based on star awarded)
+                      ['Welcome',5,'Create an account.',1],//name, star, description, achievement id
+                      ['Explorer',5,'Enter a portal.',7],
+                      ['Killer',20,'Kill a player by shooting.',2],
+                      ['Ascended',20,'Enter the sanctuary.',13],
+                      ['Rainbow',35,'Kill a radiant shape.',3],
+                      ['Bomber',50,'Kill a shape with 10 or more sides.',8],
+                      ['Giant',50,'Get 1 million xp in one run.',4],
+                      ['Monstrous',75,'Get 10 million xp in one run.',5],
+                      ['Titan',150,'Get 100 million xp in one run.',6],
+                      ['Survivor',150,'Survive for 20 minutes in FFA. (Achievement given after death)',11],
+                      ['Oh Node!',300,'Reach lvl 60 as a node.',9],
+                      ['Shiny!',300,'Kill a radiant hendecagon.',10],
+                      ['Champion',400,'Reach lvl 85.',14],
+                      ['Victor',1500,'Survive for an hour in FFA. (Achievement given after death)',12],
+                    ];
+        
+                    let thingyy = accountObject.achievements.length + "/" + achievementList.length;
+                    achcolors = [
+                      ['rgb(242,219,120)','rgb(212,189,90)'],
+                      ['rgb(126,146,247)','rgb(96,116,217)'],
+                      ['rgb(123, 9, 123)','rgb(93, 0, 93)'],
+                      ['rgb(194, 63, 63)','rgb(164, 33, 33)'],
+                      ['rgb(81, 217, 225)','rgb(51, 187, 195)'],
+                      ['rgb(39, 227, 170)','rgb(9, 197, 140)'],
+                      ['rgb(184, 123, 181)','rgb(154, 93, 151)'],
+                      ['rgb(222, 156, 58)','rgb(192, 126, 28)'],
+                    ];//achievements have different colors based on difficulty
+        
+                    for (var i = 0; i < achievementList.length; i++) {
+                      let thisach = achievementList[i];
+                      if (accountObject.achievements.includes(thisach[3])) {//have this achievement id
+                        let star = thisach[1];//amount of stars awarded
+                        let whichcolor = 0;
+                        if (star <= 20){//if change this, remember to change below (just search for 'newach' in the code)
+                          whichcolor = 0;
+                        }
+                        else if (star <= 50){
+                          whichcolor = 1;
+                        }
+                        else if (star <= 100){
+                          whichcolor = 2;
+                        }
+                        else if (star <= 200){
+                          whichcolor = 3;
+                        }
+                        else if (star <= 400){
+                          whichcolor = 4;
+                        }
+                        else if (star <= 1500){
+                          whichcolor = 5;
+                        }
+                        else{
+                          whichcolor = 6;
+                        }
+                        addAchievementDiv(achcolors[whichcolor][0],achcolors[whichcolor][1],thisach[0],star,'gold','white',thisach[2])
+                      }
+                      else{
+                        addAchievementDiv('rgb(95,103,108)','rgb(65,73,78)',thisach[0],thisach[1],'rgba(192,192,192)','rgba(192,192,192)',thisach[2])
+                      }
+                    }
+                    //NEW ACHIEVEMENTS TO ADD INGAME: 10 and above
+
+                    //put password and username in local storage
+                    try {
+                      localStorage.setItem("rocketerAccountp", accountObject.pw);
+                      localStorage.setItem("rocketerAccountu", accountObject.name);
+                      const cat = localStorage.getItem("rocketerAccountp");
+                      const dog = localStorage.getItem("rocketerAccountu");
+                    } catch (e) {
+                      console.log("An error occured when storing your password: " + e);
+                    }
+                    /*
+                    //RE-ADD THE DIVS, AND FIX THE drawfakeplayer function
+                    document.getElementById("accountName").innerHTML = accountObject.name;
+                    document.getElementById("accountText").style.textAlign = "left";
+                    document.getElementById("accountText").innerHTML =
+                      "<canvas id='pfp' style='float:left; width: 8vw; height: 8vw; padding-right: 1vw; padding-top: 1vw;'></canvas><div id='editoverlay' onclick='openeditpfp()'><br>Edit</div><br><span style='font-weight: 900;font-size: 2vw;'>" +
+                      accountObject.name +
+                      "</span><br><span class='material-icons' style='font-size: 1vw;color: gold;'> star </span>" +
+                      accountObject.star +
+                      "<br><br>" +
+                      accountObject.desc +
+                      "<br><br><hr><div style='width:100%;display:flex;flex-wrap: wrap;text-align: center;font-size:1vw;'><div style='width:25%;'><span style='font-size: 1.3vw;font-weight: 900;'>Joined</span><br>" +
+                      accountObject.join + "</div><div style='width:25%;'>" + "<span style='font-size: 1.3vw;font-weight: 900;'>Last Online</span><br>0 seconds ago" + "</div><div style='width:25%;'>" + "<span style='font-size: 1.3vw;font-weight: 900;'>Achievements</span><br>" + thingyy + "</div><div style='width:25%;'>" + "<span style='font-size: 1.3vw;font-weight: 900;'>High score</span><br>" + accountObject.topScore +
+                      "</div></div><hr><br><span style='width:100%;display:inline-block;font-weight: 900;font-size: 1.5vw;'>Achievements:<br><br></span>" +
+                      "<div style='width:100%;display:flex;flex-wrap: wrap;'>"+
+                      achievementsDescription +
+                      "</div><br>Reload the page to view the latest account information.";
+                    var pfpcanvas = document.getElementById("pfp");
+                    pfpcanvas.width = "300"; //canvas coordinate width and height, not the actual canvas width and height
+                    pfpcanvas.height = "300";
+                    var pctx = pfpcanvas.getContext("2d");
+                    var pfpPlayerX = 125;
+                    var pfpPlayerY = 175;
+                    pctx.fillStyle = "#CDCDCD"; //background
+                    pctx.strokeStyle = "grey";
+                    pctx.lineWidth = 5;
+                    pctx.beginPath();
+                    pctx.arc(150, 150, 148, 0, 2 * Math.PI);
+                    pctx.fill();
+                    pctx.stroke();
+                    //draw grid
+                    var pgridHeight = 150;
+                    pctx.lineWidth = 15; //thickness of grid
+                    //pctx.strokeStyle = "rgba(180, 180, 180, .2)";
+                    pctx.strokeStyle = "#afafaf";
+                    for (
+                      let x = -pgridHeight - ((-pfpcanvas.width / 2) % pgridHeight);
+                      x < pfpcanvas.width;
+                      x += pgridHeight
+                    ) {
+                      pctx.moveTo(x, 0);
+                      pctx.lineTo(x, pfpcanvas.height);
+                    }
+                    for (
+                      let y = -pgridHeight - ((-pfpcanvas.height / 2) % pgridHeight);
+                      y < pfpcanvas.height;
+                      y += pgridHeight
+                    ) {
+                      pctx.moveTo(0, y);
+                      pctx.lineTo(pfpcanvas.width, y);
+                    }
+                    pctx.stroke();
+                    //crop grid to a circle
+                    pctx.globalCompositeOperation = "destination-in";
+                    pctx.beginPath();
+                    pctx.arc(150, 150, 148, 0, 2 * Math.PI);
+                    pctx.closePath();
+                    pctx.fill();
+                    pctx.globalCompositeOperation = "source-over"; //change back to default
+                    //draw tank
+                    pctx.lineJoin = "round";
+                    let x = 150;
+                    let y = 150;
+                    let bodysize = 60;
+                    let bodycolor = "#00B0E1";
+                    let bodyoutline = "#0092C3";
+                    let which = "weapon";
+                    let name = accountObject.pfp;
+                    let bodyangle = 45/180*Math.PI;
+                    let temphctx = hctx;
+                    hctx = pctx;//temporarily change hctx to pctx for function to work
+                    drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which)
+                    hctx = temphctx;
+                    
+                    //draw tanks on the UI for editing account pfp
+                    let availablepfp = ['node','basic','trapper','guard','twin','sniper','cannon','flank','delta','commander','overseer']
+                    for (let i = 0; i < availablepfp.length; i++) {
+                      let divid = 'tank' + availablepfp[i];
+                      let tempcanvas = document.getElementById(divid);
+                      tempcanvas.width = "100"; //canvas coordinate width and height, not the actual canvas width and height
+                      tempcanvas.height = "100";
+                      let pctx = tempcanvas.getContext("2d");
+                      pctx.lineJoin = "round";
+                      let x = 50;
+                      let y = 50;
+                      let bodysize = 20;
+                      let bodycolor = "#00B0E1";
+                      let bodyoutline = "#0092C3";
+                      let which = "weapon";
+                      let name = availablepfp[i];
+                      let bodyangle = 45/180*Math.PI;
+                      pctx.lineWidth = 3;
+                      let temphctx = hctx;
+                      hctx = pctx;//temporarily change hctx to pctx for function to work
+                      drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which)
+                      hctx = temphctx;
+                      pctx.fillStyle = "white";
+                      pctx.strokeStyle = "black";
+                      pctx.lineWidth = 7;
+                      pctx.font = "900 20px Roboto";
+                      pctx.textAlign = "center";
+                      pctx.strokeText(availablepfp[i], 50, 90);
+                      pctx.fillText(availablepfp[i], 50, 90);
+                    }
+                    */
+        
+                    //used to get the Last Online string, which currently isnt needed (cuz last seen is literally the time now)
+                    //only needed when you can see other people's accounts in search function in future update
+                    /*
+                    var lastSeenString = "";
+                    const weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];//needed because date wll return number value, e.g. 0 for Sunday
+                    var d = new Date(accountObject.lastSeen);
+                    var day = weekday[d.getDay()];
+                    lastSeenString += day+" "+d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear()+" "+ d.getHours()+":"+d.getMinutes()+":"+d.getSeconds();
+                    */
+                    //for editing account
+                    accountUsername.value = accountObject.name;
+                    accountPassword.value = accountObject.pw;
+                    accountDesc.value = accountObject.desc;
+                    //document.getElementById("editAccount").style.display = "block";//RE-ADD
+                  }
+                  else if (type=="newach"){//got a new achievement
+                    let id = info[1];//id of the achievement gained
+                    if (achievementList){//if this variable exists (if logged in)
+                      for (var i = 0; i < achievementList.length; i++) {
+                        let thisach = achievementList[i];
+                        if (thisach[3] == id){//this is the achievement
+                          let star = thisach[1];//amount of stars awarded
+                          let whichcolor = 0;
+                          if (star <= 20){
+                            whichcolor = 0;
+                          }
+                          else if (star <= 50){
+                            whichcolor = 1;
+                          }
+                          else if (star <= 100){
+                            whichcolor = 2;
+                          }
+                          else if (star <= 200){
+                            whichcolor = 3;
+                          }
+                          else if (star <= 400){
+                            whichcolor = 4;
+                          }
+                          let color = achcolors[whichcolor][0];
+                          let color2 = achcolors[whichcolor][1];
+                          let name = thisach[0];
+                          let desc = thisach[2];
+                          let textcol = 'white';
+                          let starcol = 'gold';
+                          let div = document.createElement('div');
+                          div.id = 'achnotifdiv';
+                          div.innerHTML = "<div id='achnotiftext' class='achievementText'>New Achievement!</div><div id='achnotif' class='achievementNotif' style='color:"+textcol+";background: linear-gradient(to bottom, "+color+" 50%, "+color2+" 0%);'><span style='font-size:1.5vw;width: 100%;'>"+name+"<span style='float:right;'><span class='material-icons' style='color: "+starcol+";font-size:1.2vw;'> star </span>"+star+"</span></span><br><br>"+desc+"</div>";
+                          document.body.appendChild(div);
+                          setTimeout(function(){//remove div after some time
+                            let x = document.getElementById("achnotifdiv");
+                            if (x){
+                              x.remove();
                             }
-                            loopobj(obj[propertyy], actual[propertyy])
-                          }
-                          else if (obj[propertyy]=="del"){
-                            delete actual[propertyy];
-                          }
-                          else{
-                            actual[propertyy] = obj[propertyy];
+                          }, 5000);
+                          break;
+                        }
+                      }
+                    }
+                  }
+                  else if (type=="pong"){
+                    //server reply after client ping to check latency
+                    latency = Date.now() - start;
+                    start = Date.now();
+                    sentBack = "yes";
+                  }
+                  else if (type=="game"){
+                    if(teleportingTransition=="yes"){//is teleporting, that's why re-connected
+                      teleportingTransition = "no";
+                      teleportingcount = 2.1;
+                    }
+                    let gameobjects = info[1];
+                    let serverruntime = info[2];
+                    let portalslist = info[3];
+                    let servertime = info[4];
+                    //update variables
+                    oldportals = JSON.parse(JSON.stringify(portals));
+                    for (const property in portalslist) {
+                      if (portalslist[property] == "del") {
+                        //server tells client that a portal is not shown on the screen anymore
+                        delete portals[property];
+                      } else {
+                        if (!portals.hasOwnProperty(property)) {
+                          portals[property] = { ...portalslist[property] };
+                        } else {
+                          for (const propertyy in portalslist[property]) {
+                            portals[property][propertyy] =
+                              portalslist[property][propertyy];
                           }
                         }
-        }
+                      }
+                    }
+                    //server doesnt send all the stuff that can be seen on your screen (will use a lot of bandwidth)
+                    //instead, it sends the changes made to the things already on your screen (delete, add, change stuff)
+                    function loopobj(obj, actual){
+                      for (const propertyy in obj) {
+                        if (
+                          typeof obj[propertyy] === 'object' &&
+                          !Array.isArray(obj[propertyy]) &&
+                          obj[propertyy] !== null
+                        ) {//property is an object
+                          if (!actual.hasOwnProperty(propertyy)){
+                            actual[propertyy] = {};
+                          }
+                          loopobj(obj[propertyy], actual[propertyy])
+                        }
+                        else if (obj[propertyy]=="del"){
+                          delete actual[propertyy];
+                        }
+                        else{
+                          actual[propertyy] = obj[propertyy];
+                        }
+                      }
+                    }
         
-        oldobjects = JSON.parse(JSON.stringify(objects));
-        prevServerUpdateTime = latestServerUpdateTime;
-        //latestServerUpdateTime = Date.now();
-        if (latestServerUpdateTime == 0){
-          latestServerUpdateTime = Date.now();
-        }
-        else{
-          latestServerUpdateTime += (servertime - oldservertime);
-        }
-        //console.log(Date.now() - latestServerUpdateTime)
-        let diffTime = Date.now() - latestServerUpdateTime;
-        if (diffTime < 0){
-          latestServerUpdateTime = Date.now();
-        }
-        oldservertime = servertime;
+                    oldobjects = JSON.parse(JSON.stringify(objects));
+                    if (latestServerUpdateTime == 0){//for interpolation (need server's time to calculate movement)
+                      latestServerUpdateTime = Date.now();
+                    }
+                    else{
+                      latestServerUpdateTime += (servertime - oldservertime);
+                    }
+                    let diffTime = Date.now() - latestServerUpdateTime;
+                    if (diffTime < 0){
+                      latestServerUpdateTime = Date.now();
+                    }
+                    oldservertime = servertime;
 
-        for (const type in gameobjects) {
-          if (gameobjects[type]!="del"){
-            for (const property in gameobjects[type]) {
-              if (gameobjects[type][property] == "del") {
-                //server tells client that an object is not shown on the screen anymore
-                //add to list of dead objects
-                if (objects[type][property]){//if we have the dead object info
-                  let thisDeadObj = { ...objects[type][property] };
-                  thisDeadObj.type = type;
-                  thisDeadObj.id = property;
-                  listofdeadobjects.push(thisDeadObj);
+                    for (const type in gameobjects) {
+                      if (gameobjects[type]!="del"){
+                        for (const property in gameobjects[type]) {
+                          if (gameobjects[type][property] == "del") {
+                            //server tells client that an object is not shown on the screen anymore
+                            //add to list of dead objects
+                            if (objects[type][property]){//if we have the dead object info
+                              let thisDeadObj = { ...objects[type][property] };
+                              thisDeadObj.type = type;
+                              thisDeadObj.id = property;
+                              listofdeadobjects.push(thisDeadObj);
+                            }
+                            //delete actual object
+                            delete objects[type][property];
+                          } else {
+                            if (!(type in objects)) {
+                              //new object
+                              objects[type] = {};
+                              objects[type][property] = {
+                                ...gameobjects[type][property],
+                              };
+                            } else if (!(property in objects[type])) {
+                              //new object
+                              objects[type][property] = {
+                                ...gameobjects[type][property],
+                              };
+                            } else {
+                              //changed object
+                              loopobj(gameobjects[type][property], objects[type][property])
+                            }
+                          }
+                        }
+                      }
+                      else{
+                        objects[type]  = {};
+                      }
+                    }
+                    if (objects.player){
+                      if (playerstring in objects.player) {
+                        if (oldtank!=player.tankType || oldbody!=player.bodyType){//tank changed
+                          if ((oldtank!=""&&oldbody!="")||gamemode=="Free For All"||gamemode=="Tank Editor"||gamemode=="Cavern"){//particle when spawn only in these gamemodes
+                            //spawn particles when upgrade tank
+                            oldtank = player.tankType;
+                            oldbody = player.bodyType;
+                            slightshake = "yes";
+                            slightshakeIntensity = 1;
+                            let object = player;
+                            let playercolor = "";
+                            let playeroutline = "";
+                            if (object.team == "none") {
+                              playercolor = bodyColors.blue.col;
+                              playeroutline = bodyColors.blue.outline;
+                            } else if (bodyColors.hasOwnProperty(object.team)) {
+                                playercolor = bodyColors[object.team].col;
+                                playeroutline = bodyColors[object.team].outline;
+                            }
+                            if (object.developer == "yes") {//if a developer
+                              playercolor = object.color;
+                              playeroutline = object.outline;
+                            }
+                            for (let i = 0; i < 30; i++) {
+                              let angleRadians = (Math.floor(Math.random() * 360) * Math.PI) / 180; //convert to radians
+                              var randomDistFromCenter = Math.floor(Math.random() * player.width) - player.width/2;
+                              radparticles[particleID] = {
+                                angle: angleRadians,
+                                x: player.x + randomDistFromCenter * Math.cos(angleRadians),
+                                y: player.y - randomDistFromCenter * Math.sin(angleRadians),
+                                width: player.width/6 + Math.floor(Math.random() * player.width/4),
+                                height: player.width/6 + Math.floor(Math.random() * player.width/4),
+                                speed: 3 + Math.floor(Math.random() * 3),
+                                timer: 20 + Math.floor(Math.random() * 10),
+                                maxtimer: 200,
+                                color: playercolor,
+                                outline: playeroutline,
+                                type: "particle",
+                              };
+                              particleID++;
+                            }
+                          }
+                          else if (player.tankType && player.bodyType){
+                            oldtank = player.tankType;
+                            oldbody = player.bodyType;
+                          }
+                        }
+                        player = objects.player[playerstring]; //refers to the client's tank
+                      }
+                    }
+                    serverCodeTime = serverruntime;
+                    sentStuffBefore = "yes";
+                  }
+                  else if (type=="map"){//map size changed
+                    MAP_WIDTH = info[1];//code always uses map_width variable for now, change in the future if rectangular maps supported
+                    MAP_HEIGHT = info[1];//same cuz servers only support square maps, two variables cuz singleplayer PvE allows rectanglular maps
+                    mapSizeElement.textContent = `Map: ${MAP_WIDTH}x${MAP_HEIGHT}`;
+                  }
+                  else if (type=="pc"){//player count changed
+                    playerCount = info[1];
+                  }
+                  else if (type=="gpc"){//global player count changed
+                    globalPlayerCount = info[1];
+                  }
+                  else if (type=="lb"){//leaderboard changed
+                    players = info[1];
+                  }
+                  else if (type=="teams"){
+                    teamColors = [];
+                    teamColors.push(info[1]);
+                    teamColors.push(info[2]);
+                    if(info[3] !== undefined && info[4] !== undefined) {
+                    teamColors.push(info[3]);
+                    teamColors.push(info[4]);
+                    }
+                  }
+                  else if (type == "editedTank"){
+                    //user import scenexe tank code, so server send info for client to update the UI
+                    let player = info[1];
+                    //clear the UI//ADD TANK EDITOR DIVS BEFORE ENABLING THIS PART
+                    /*
+                    $("#assetUI").empty()
+                    $("#bbUI").empty()
+                    $("#barrelUI").empty()
+                    barrelnumberid = 1;
+                    assetnumberid = 1;
+                    gadgetnumberid = 1;
+                    for (const barrelID in player.barrels){
+                      addCustomBarrelDiv(barrelID,player.barrels[barrelID])
+                    }
+                    for (const barrelID in player.bodybarrels){
+                      addCustomGadgetDiv(barrelID,player.bodybarrels[barrelID])
+                    }
+                    for (const barrelID in player.assets){
+                      addCustomAssetDiv(barrelID,player.assets[barrelID])
+                    }
+                    document.getElementById('weapon-fov').value = player.fovMultiplier;
+                    document.getElementById('body-health').value = player.maxhealth;
+                    document.getElementById('weapon-name').value = player.tankType;
+                    document.getElementById('body-name').value = player.bodyType;
+                    document.getElementById('tank-size').value = player.width;
+                    document.getElementById('body-speed').value = player.speed;
+                    document.getElementById('body-damage').value = player.damage;
+                    document.getElementById('body-regen').value = player.healthRegenSpeed;
+                    document.getElementById('body-regen-time').value = player.healthRegenTime;
+                    if (player.turretBaseSize){
+                      document.getElementById('turret-base').value = player.turretBaseSize;
+                    }
+                      */
+                  }
+                else if (type == "exportCode"){//user export tank as scenexe tank code
+                  let code = info[1];
+                  //document.getElementById('import-code').value = code;//SAME THING HERE
                 }
-                //delete actual object
-                delete objects[type][property];
+                  else if (type=="youDied"){
+                    let killer = info[1];
+                    let player = info[2];
+                    let respawnDivide = info[3];
+                    let respawnLimit = info[4];
+                    //when player died, show death screen
+                    sentStuffBefore = "no";
+                    let endscore = abbreviateScore(player.score);
+                    if (typeof killer == "number") {
+                      //killer is a number, which is numer of sides of a shape
+                      let shapetype = killer - 3;
+                      if (killer == 4){
+                        shapetype = 0;
+                      }
+                      else if (killer == 3){
+                        shapetype = 1;
+                      }
+                      killer = shapeNames[shapetype];
+                    }
+                    showDeathScreen(endscore,killer,player.level,player.tankType,player.bodyType);
+                    state = "deathscreen";//ensure that hctx canvas doesnt clear//remove?
+                    
+                    //calculating respawn score, change this if server caculation changes
+                    let respawnlvl = 0;
+                    if (player.score > 0) {
+                      //if player didnt die at 0 score
+                      let respawningScore = Math.round(player.score / respawnDivide);
+                      if (respawningScore > respawnLimit) {
+                        respawningScore = respawnLimit;
+                      }
+                      respawnlvl = convertXPtoLevel(respawningScore);
+                    }
+                    document.getElementById("respawnLvl").innerHTML = respawnlvl;
+                    //hide all the editor UI
+                    /*
+                    tankEditor1.style.display = "none";
+                    tankEditor2.style.display = "none";
+                    barrelEditor.style.display = "none";
+                    assetEditor.style.display = "none";
+                    bbEditor.style.display = "none";*/
+                    //reset player state values
+                    autorotate = "no";
+                    autofire = "no";
+                    fastautorotate = "no";
+                    passivemode = "no";
+                    //reset upgrade ignore
+                    ignorebuttonw.ignore = "no";
+                    ignorebuttonb.ignore = "no";
+                  }
+                  else if (type=="teleport"){//server tells player that it successfully teleported, so need to connect to the server for the new dimension
+                    let dimension = info[1];
+                    prevplayerstring = playerstring;
+                    //reset object list when teleport
+                    portals = {};
+                    oldportals = {};
+                    objects = {
+                      wall: {},//walls drawn below everything
+                      gate: {},
+                      Fixedportal: {},
+                      shape: {},
+                      bot: {},
+                    };//specifically shapes and bots so they would be below players, fixed portals always under everything
+                    teleportingTransition = "yes";
+                    oldteleportingLocation = gamemode;//change all of this
+                    teleportingcount = 0;
+                    if (dimension=="dune"||dimension=="sanc"||dimension=="cavern"||dimension=="cr"||dimension=="arena"||dimension=="2tdm"||dimension=="4tdm"){
+                      socket.close();//disconnect from current server
+                      if (dimension=="arena"){
+                        dimension = "Free For All";
+                      }
+                      else if (dimension=="2tdm"){
+                        dimension = "2 Teams";
+                      }
+                      else if (dimension=="4tdm"){
+                        dimension = "4 Teams";
+                      }
+                      connectServer(serverlist[dimension],"yes")
+                      if (dimension=="sanc"){
+                        gamemode = "sanctuary";
+                      }
+                      else if (dimension=="cr"){
+                        gamemode = "crossroads";
+                      }
+                      else{
+                        gamemode = dimension;//gamemode used to be arena, 2tdm, and 4tdm
+                      }
+                      teleportingLocation = gamemode;
+                    }
+                  }
+                };
+
+                // Listen for socket closes
+                socket.onclose = function(event) {
+                  console.log('Disconnected: ',event);
+                  if (reconnectToDefault != "yes"){//if not purposely disconnecting to respawn in ffa
+                    if (teleportingTransition != "yes"){
+                      //disconnect notification
+                      //when socket disconnect, this is automatically triggered
+                      //createNotif("Disconnected. Reload the page.","rgb(150,0,0)",10000)
+                      document.getElementById('modal3').style.display = "block";
+                      darken.style.display = "block";
+                      returnToHomeScreen("disconnect");
+                      connected = "no";
+                      playButton.style.display = "none";
+                      nameInput.style.display = "none";
+                    }
+                  }
+                  else{
+                    reconnectToDefault = "no";
+                  }
+                };
+                socket.onerror = function(err) {//connection error
+                  console.error('Socket error: ', err.message);
+                  //createNotif("Connection error: "+err.message,"rgb(150,0,0)",10000)
+                  document.getElementById('modal3a').style.display = "block";
+                  document.getElementById('modal3aErr').textContent = "An unexpected error occurred: "+err.message;
+                  darken.style.display = "block";
+                  returnToHomeScreen("disconnect");
+                  connected = "no";
+                  playButton.style.display = "none";
+                  nameInput.style.display = "none";
+                };
+                // To close the socket: socket.close()
+              }
+            }
+            if (gamemode != "PvE arena"){
+              connectServer(serverlist[gamemode],"no");//connect to the server when open the website
+            }
+
+            var joinedWhichGM = "Free For All";//needed for respawning, cuz some gamemodes like crossroads cannot respawn there, so need to respawn to previous gamemode
+
+            //button 1 to 7 are weapon upgrades, 8 to 14 are body upgrades
+            var upgradeButtons = {};
+            function addUpgradeButton(i,x,y,endx,color,darkcolor){
+              upgradeButtons[i] = {};
+              let thisButton = upgradeButtons[i];
+              if (i < 8){//right side upgrade buttons
+                thisButton.x = canvas.width + x; //poition changes when animating
+                thisButton.startx = canvas.width + x; //start position for animating button movement (start position)
+                thisButton.endx = canvas.width - endx; //end position
+              }
+              else{//left side upgrade buttons
+                thisButton.x = 0-x;
+                thisButton.startx = 0-x;
+                thisButton.endx = endx;
+              }
+              thisButton.y = canvas.height - y;
+              thisButton.width = 100;
+              thisButton.hover = "no";
+              thisButton.brightness = 0;
+              thisButton.defaultwidth = 100;
+              thisButton.animatedwidth = 120;
+              thisButton.tankRotate = 0;
+              thisButton.color = color;
+              thisButton.darkcolor = darkcolor;
+            }
+            addUpgradeButton(1,315,205,75,"255,228,107","225,198,77");
+            addUpgradeButton(2,195,205,195,"252,118,118","222,88,88");
+            addUpgradeButton(3,75,205,315,"118,140,252","88,110,222");
+            addUpgradeButton(4,315,325,75,"252,166,68","222,136,38");
+            addUpgradeButton(5,195,325,195,"56,183,100","26,153,70");
+            addUpgradeButton(6,75,325,315,"74,102,189","44,72,159");
+            addUpgradeButton(7,315,445,75,"93,39,93","63,9,63");
+            addUpgradeButton(8,315,205,75,"255,228,107","225,198,77");
+            addUpgradeButton(9,195,205,195,"252,118,118","222,88,88");
+            addUpgradeButton(10,75,205,315,"118,140,252","88,110,222");
+            addUpgradeButton(11,315,325,75,"252,166,68","222,136,38");
+            addUpgradeButton(12,195,325,195,"56,183,100","26,153,70");
+            addUpgradeButton(13,75,325,315,"74,102,189","44,72,159");
+            addUpgradeButton(14,315,445,75,"93,39,93","63,9,63");
+            var ignorebuttonw = {
+                x: -1000,
+                y: -1000,
+                width: 100,
+                height: 40,
+                hover: "no",
+                brightness: 0,
+                defaultwidth: 100,
+                animatedwidth: 120,
+                color: "255,228,107",
+                darkcolor: "225,198,77",
+                ignore: "no",
+              };
+            var ignorebuttonb = {
+                x: -1000,
+                y: -1000,
+                width: 100,
+                height: 40,
+                hover: "no",
+                brightness: 0,
+                defaultwidth: 100,
+                animatedwidth: 120,
+                color: "255,228,107",
+                darkcolor: "225,198,77",
+                ignore: "no",
+              };
+            //store tank info from server
+            var buttonTank = {1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{},11:{},12:{},13:{},14:{},};
+            var prevPlayerLvl = -2; //weapon upgrade tier
+            var prevPlayerLvlb = -2; //body upgrade tier
+            var howManyButtonSentToClient = 0;
+            var howManyButtonSentToClientb = 0;
+            var howManyButtonSentToServer = 0; //weapon upgrade
+            var howManyButtonSentToServerb = 0; //body upgrade
+            var didAnyButtonDraw = "no";
+            var barScore = 0; //for score progress bar
+            var auraWidth = 0;
+            var auraRotate = 0; //for radiant shape aura size increase
+            var extraSpikeRotate = 0;
+            var extraSpikeRotate1 = 0;
+            var extraSpikeRotate2 = 360;
+            var clientFovMultiplier = 1;
+            var listofdeadobjects = []; //animate dead objects
+            //stuff needed for drawing canvas
+            var playerstring = "error";
+            var prevplayerstring = "error";
+            var playerCount = "error";
+            var globalPlayerCount = "error";
+            var portals = {};
+            var oldportals = {};
+            var shakeYN = "error";//portal screen shake
+            var shakeIntensity = 1;
+            var slightshake = "no";//spawn/upgrade screen shake
+            var slightshakeIntensity = 1;
+            //var players = "error";
+            var player = "error";
+            var objects = {};
+            var oldobjects = {};//for client interpolation
+            var interpolatedobjects = {};
+            var latestServerUpdateTime = 0;
+            var oldservertime = 0;
+            var serverCodeTime = "error";
+            var sentStuffBefore = "no";
+            var latency = "Checking latency...";
+            var start;
+            var showHitBox = "no";
+            var shownBandwidth = 0; //bandwidth that is shown, updates every second
+            var bandwidth = 0; //size of packet sent from server
+            var prevBandwidthUpdate = 0; //previous time that bandwidth was updated
+            //particles are completely clientside to reduce server lag (cuz cavern would have 300+ particles)
+            var radparticles = {}; //particle effect for radiants
+            var portalparticles = {}; //prticle effect for portals
+            var particleID = 0;
+            //for mobile
+            var joystick1 = {
+              //movement joystick on the left
+              size: 100,
+              xFromCenter: -500,
+              yFromCenter: 150,
+            };
+            var joystick2 = {
+              //shooting joystick on the right
+              size: 100,
+              xFromCenter: 500,
+              yFromCenter: 150,
+            };
+            var touches = {
+              0: {
+                state: "no",
+                x: "no",
+                y: "no",
+                angle: "no",
+                dir: 0,
+                oldangle: "no",
+              },
+              1: {
+                state: "no",
+                x: "no",
+                y: "no",
+                angle: "no",
+                dir: 0,
+                oldangle: "no",
+              },
+            };
+            //weapon upgrade tree
+            var showUpgradeTree = "no";
+            var upgradetreepos = -750; //current position of upgrade tree
+            var upgradetreestart = -750; //start position
+            var upgradetreeend = 165; //end position
+            //body upgrade tree
+            var showBodyUpgradeTree = "no";
+            var bupgradetreepos = -750; //current position of upgrade tree
+            var bupgradetreestart = -750; //start position
+            var bupgradetreeend = 165; //end position
+            //skillpoints
+            var skillpointspos = -370; //current position of skill points bar
+            var skillpointsstart = -370; //start position
+            var skillpointsend = 155; //end position
+
+            const shootBarrelMax = 100;//reduce this value for a larger shooting height change
+
+            function drawBulletBarrel(canvas, x,width,height,shootChange, fov){//shootchange is change in barrel height when shooting
+              let h = (height - shootChange/shootBarrelMax*height) / fov;
+              canvas.fillRect((x - width / 2) / fov,-h,width / fov,h);
+              canvas.strokeRect((x - width / 2) / fov,-h,width / fov,h);
+            }
+
+            function drawDroneTurret(canvas, x,width,shootChange, fov){//shootchange is change in barrel height when shooting
+              let w = width - shootChange/shootBarrelMax*width;
+              canvas.fillRect((x - w / 2) / fov,-w/2 / fov,w / fov,w / fov);
+              canvas.strokeRect((x - w / 2) / fov,-w/2 / fov,w / fov,w / fov);
+            }
+
+            function drawDroneBarrel(canvas, x,width,height,shootChange, fov){
+              let h = -(height - shootChange/shootBarrelMax*height) / fov;
+              canvas.beginPath();
+              canvas.moveTo((x - width / 2) / fov,0);
+              canvas.lineTo((x-width) / fov,h);
+              canvas.lineTo((x * 2 + width) / fov,h);
+              canvas.lineTo((x * 2 + width) / fov,0);
+              canvas.fill();
+              canvas.stroke();
+            }
+
+            function drawTrapBarrel(canvas, x,width,height,shootChange, fov){
+              let h = -(height - shootChange/shootBarrelMax*height) / fov;
+              canvas.fillRect((x - width / 2) / fov,h * 0.67,width / fov,-h * 0.67);
+              canvas.strokeRect((x - width / 2) / fov,h * 0.67,width / fov,-h * 0.67);
+              canvas.beginPath();
+              canvas.moveTo((x - width / 2) / fov,h * 0.67);
+              canvas.lineTo((x - width) / fov,h);
+              canvas.lineTo((x + width) / fov,h);
+              canvas.lineTo((x + width / 2) / fov,h * 0.67);
+              canvas.fill();
+              canvas.stroke();
+            }
+
+            function drawMineBarrel(canvas, x,width,height,shootChange, fov){
+              let h = -(height - shootChange/shootBarrelMax*height) / fov;
+              canvas.fillRect((x - width / 2) / fov,h,width / fov,-h);
+              canvas.strokeRect((x - width / 2) / fov,h,width / fov,-h);
+              canvas.fillRect((-width * 1.5) / 2 / fov + x / fov,h * 0.67,(width / fov) * 1.5,-h * 0.67);
+              canvas.strokeRect((-width * 1.5) / 2 / fov + x / fov,h * 0.67,(width / fov) * 1.5,-h * 0.67);
+            }
+
+            function drawMinionBarrel(canvas, x,width,height,shootChange, fov){
+              let h = -(height - shootChange/shootBarrelMax*height) / fov;
+              canvas.fillRect((x - width / 2) / fov,h,width / fov,-h);
+              canvas.strokeRect((x - width / 2) / fov,h,width / fov,-h);
+              canvas.fillRect((x - width * 0.75) / fov,h / 1.5,(width / fov) * 1.5,-h / 1.5);
+              canvas.strokeRect((x - width * 0.75) / fov,h / 1.5,(width / fov) * 1.5,-h / 1.5);
+              canvas.fillRect((x - width * 0.75) / fov,h,(width / fov) * 1.5,-h / 5);
+              canvas.strokeRect((x - width * 0.75) / fov,h,(width / fov) * 1.5,-h / 5);
+            }
+            
+            function drawAsset(asset,bodysize,color,outline,canvas){
+              if (asset.hasOwnProperty("angle")) {
+                if (asset.angle != 0) {
+                  canvas.rotate((asset.angle * Math.PI) / 180);
+                }
+              }
+              canvas.translate(bodysize * asset.x, bodysize * asset.y);
+              canvas.fillStyle = color;
+              canvas.strokeStyle = outline;
+              if (asset.sides == 0) {
+                canvas.beginPath();
+                canvas.arc(0, 0, bodysize * asset.size, 0, 2 * Math.PI);
+                canvas.fill();
+                canvas.stroke();
+              } else if (asset.sides < 0) {//draw a star
+                let numberOfSpikes = -asset.sides;
+                let outerRadius = bodysize * asset.size;
+                let innerRadius = (bodysize * asset.size / 2);
+                let rot = (Math.PI / 2) * 3;
+                let x = 0;
+                let y = 0;
+                canvas.beginPath();
+                canvas.moveTo(0, -outerRadius);
+                for (i = 0; i < numberOfSpikes; i++) {
+                  x = Math.cos(rot) * outerRadius;
+                  y = Math.sin(rot) * outerRadius;
+                  canvas.lineTo(x, y);
+                  rot += Math.PI / numberOfSpikes;
+                  x = Math.cos(rot) * innerRadius;
+                  y = Math.sin(rot) * innerRadius;
+                  canvas.lineTo(x, y);
+                  rot += Math.PI / numberOfSpikes;
+                }
+                canvas.lineTo(0, -outerRadius);
+                canvas.closePath();
+                canvas.fill();
+                canvas.stroke();
               } else {
-                if (!(type in objects)) {
-                  //new object
-                  objects[type] = {};
-                  objects[type][property] = {
-                    ...gameobjects[type][property],
-                  };
-                } else if (!(property in objects[type])) {
-                  //new object
-                  objects[type][property] = {
-                    ...gameobjects[type][property],
-                  };
-                } else {
-                  //changed object
-                  loopobj(gameobjects[type][property], objects[type][property])
+                canvas.beginPath();
+                var baseSides = asset.sides;
+                canvas.moveTo(bodysize * asset.size * Math.cos(0), bodysize * asset.size * Math.sin(0));
+                for (var i = 1; i <= baseSides; i++) {
+                  canvas.lineTo(
+                    bodysize * asset.size * Math.cos((i * 2 * Math.PI) / baseSides),
+                    bodysize * asset.size * Math.sin((i * 2 * Math.PI) / baseSides)
+                  );
+                }
+                canvas.closePath();
+                canvas.fill();
+                canvas.stroke();
+              }
+              canvas.translate(-bodysize * asset.x, -bodysize * asset.y);
+              if (asset.hasOwnProperty("angle")) {
+                if (asset.angle != 0) {
+                  canvas.rotate((-asset.angle * Math.PI) / 180);
                 }
               }
             }
-          }
-          else{
-            objects[type]  = {};
-          }
-        }
-        if (objects.player){
-          if (playerstring in objects.player) {
-            if (oldtank!=player.tankType || oldbody!=player.bodyType){//tank changed
-              if ((oldtank!=""&&oldbody!="")||gamelocation=="arena"||gamelocation=="tank-editor"||gamelocation=="cavern"){//particle when spawn only in these gamemodes
-                //spawn particles when upgrade tank
-                oldtank = player.tankType;
-                oldbody = player.bodyType;
-                slightshake = "yes";
-                slightshakeIntensity = 1;
-                let object = player;
-                let playercolor = "";
-                let playeroutline = "";
+            function hctxroundRectangle(x,y,r,w,h){
+              /*
+              hctx.beginPath();
+              hctx.moveTo(x + r, y);
+              hctx.arcTo(x + w, y, x + w, y + h, r);
+              hctx.arcTo(x + w, y + h, x, y + h, r);
+              hctx.arcTo(x, y + h, x, y, r);
+              hctx.arcTo(x, y, x + w, y, r);
+              hctx.closePath();
+              hctx.stroke(); //MUST stroke first, or else the rectangle drawn in code below wil cover part of the stroke
+              hctx.fill();
+          */
+              hctx.beginPath();
+              hctx.roundRect(x,y,w,h,r);//the roundrect function was newly added in 2023, but most browsers should have it now
+              hctx.stroke();
+              hctx.fill();
+            }
+            function ctxroundRectangle(x,y,r,w,h){
+              ctx.beginPath();
+              ctx.roundRect(x,y,w,h,r);//the roundrect function was newly added in 2023, but most browsers should have it now
+              ctx.stroke();
+              ctx.fill();
+            }
+            function hctxroundRectangleFill(x,y,r,w,h){//only fill
+              hctx.beginPath();
+              hctx.roundRect(x,y,w,h,r);
+              hctx.fill();
+            }
+            function ctxroundRectangleFill(x,y,r,w,h){//only fill
+              ctx.beginPath();
+              ctx.roundRect(x,y,w,h,r);
+              ctx.fill();
+            }
+
+            function drawPlayer(canvas, object, fov, spawnProtect, playercolor, playeroutline, eternal, objectangle, id){//only barrels and body (no heath bars, names, and chats)
+              //objectangle refers to angle rotated before triggering this function
+              //fov is clientFovMultiplier for ctx, hctx is 1
+                canvas.lineJoin = "round"; //make nice round corners
+                //draw assets below body, e.g. rammer body base
+                for (assetID in object.assets){
+                  var asset = object.assets[assetID];
+                  if (asset.type == "under") {
+                    let assetcolor = asset.color;
+                    let assetoutline = asset.outline;
+                    canvas.lineWidth = asset.outlineThickness / fov;
+                    if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
+                      assetcolor = playercolor;
+                    }
+                    if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
+                      assetoutline = playeroutline;
+                    }
+                    drawAsset(asset,object.width/fov,assetcolor,assetoutline,canvas)
+                  }
+                }
+
+                //draw barrel
+                canvas.lineWidth = 4 / fov;
+                //weapon barrels
+                for (barrel in object.barrels){
+                  let thisBarrel = object.barrels[barrel];
+                  canvas.rotate((thisBarrel.additionalAngle * Math.PI) / 180); //rotate to barrel angle
+                  canvas.fillStyle = bodyColors.barrel.col;
+                  canvas.strokeStyle = bodyColors.barrel.outline;
+                  if (spawnProtect == "yes") {
+                    //if have spawn protection
+                    canvas.fillStyle = bodyColors.barrel.hitCol;
+                    canvas.strokeStyle = bodyColors.barrel.hitOutline;
+                  }
+                  //lerp barrel animation
+                  let oldbarrelheight;
+                  try{
+                    oldbarrelheight = oldobjects.player[id].barrels[barrel].barrelHeightChange;
+                  }
+                  catch(err){}
+                  let lerpedheight = thisBarrel.barrelHeightChange;
+                  if (oldbarrelheight){
+                    lerpedheight = oldbarrelheight + (thisBarrel.barrelHeightChange - oldbarrelheight)/updateInterval*(Date.now() - latestServerUpdateTime);
+                  }
+                  //bullet barrel
+                  //note: barrelHeightChange refers to reduction in barrel height for barrel animation when shooting
+                  if (thisBarrel.barrelType == "bullet") {
+                    drawBulletBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                  }
+                  //drone barrel
+                  else if (thisBarrel.barrelType == "drone") {
+                    drawDroneBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                  }
+                  //trap barrel
+                  else if (thisBarrel.barrelType == "trap") {
+                    drawTrapBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                  }
+                  //mine barrel
+                  else if (thisBarrel.barrelType == "mine") {
+                    drawMineBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                  }
+                  //minion barrel
+                  else if (thisBarrel.barrelType == "minion") {
+                    drawMinionBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                  }
+                  canvas.rotate((-thisBarrel.additionalAngle * Math.PI) / 180); //rotate back
+                }
+
+                //draw player body
+                canvas.fillStyle = playercolor;
+                canvas.strokeStyle = playeroutline;
+                if (object.rad > 0){//rad player
+                  if (!radiantShapes.hasOwnProperty(id)) {
+                    var randomstate = Math.floor(Math.random() * 3); //randomly choose a color state for the radiant shape to start (if not when you spawn in cavern, all shapes same color)
+                    var randomtype = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
+                    if (randomtype == 1) {
+                      if (randomstate == 0) {
+                        radiantShapes[id] = {
+                          red: 255,
+                          blue: 0,
+                          green: 0,
+                          rgbstate: 1,
+                          radtype: randomtype,
+                        }; //keep track of radiant shape colors (done in client code)
+                      } else if (randomstate == 1) {
+                        radiantShapes[id] = {
+                          red: 199,
+                          blue: 0,
+                          green: 150,
+                          rgbstate: 2,
+                          radtype: randomtype,
+                        };
+                      } else if (randomstate == 2) {
+                        radiantShapes[id] = {
+                          red: -1,
+                          blue: 200,
+                          green: 0,
+                          rgbstate: 3,
+                          radtype: randomtype,
+                        };
+                      }
+                    } else {
+                      if (randomstate == 0) {
+                        radiantShapes[id] = {
+                          red: 118,
+                          blue: 168,
+                          green: 151,
+                          rgbstate: 1,
+                          radtype: randomtype,
+                        };
+                      } else if (randomstate == 1) {
+                        radiantShapes[id] = {
+                          red: 209,
+                          blue: 230,
+                          green: 222,
+                          rgbstate: 2,
+                          radtype: randomtype,
+                        };
+                      } else if (randomstate == 2) {
+                        radiantShapes[id] = {
+                          red: 234,
+                          blue: 240,
+                          green: 180,
+                          rgbstate: 3,
+                          radtype: randomtype,
+                        };
+                      }
+                    }
+                  }
+                  object.red = radiantShapes[id].red;
+                  object.blue = radiantShapes[id].blue;
+                  object.green = radiantShapes[id].green;
+                  let radiantAuraSize = document.getElementById("sizevalue").innerHTML * auraWidth;
+                  //calculate color of spikes, which would be 20 higher than actual rgb value
+                  if (object.red + 150 <= 255) {
+                    var spikeRed = object.red + 150;
+                  } else {
+                    var spikeRed = 255;
+                  }
+                  if (object.blue + 150 <= 255) {
+                    var spikeBlue = object.blue + 150;
+                  } else {
+                    var spikeBlue = 255;
+                  }
+                  if (object.green + 150 <= 255) {
+                    var spikeGreen = object.green + 150;
+                  } else {
+                    var spikeGreen = 255;
+                  }
+                  if (object.rad == 3) {
+                    //for high rarity radiant shapes, draw spikes
+                    canvas.rotate((extraSpikeRotate * Math.PI) / 180);
+                    canvas.fillStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.7)";
+                    canvas.strokeStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.3)";
+                    var numberOfSpikes = 6;
+                    var outerRadius = ((object.width * radiantAuraSize * 3) / fov) * 0.75;
+                    var innerRadius = (object.width / fov) * 0.75;
+                    var rot = (Math.PI / 2) * 3;
+                    var x = 0;
+                    var y = 0;
+
+                    canvas.beginPath();
+                    canvas.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      canvas.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      canvas.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    canvas.lineTo(0, 0 - outerRadius);
+                    canvas.closePath();
+                    canvas.lineWidth = 3 / fov;
+                    canvas.fill();
+                    canvas.stroke();
+                    canvas.rotate((-extraSpikeRotate * Math.PI) / 180);
+                  } else if (object.rad == 4) {
+                    //for high rarity radiant shapes, draw spikes
+                    canvas.rotate((extraSpikeRotate1 * Math.PI) / 180);
+                    canvas.fillStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.7)";
+                    canvas.strokeStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.3)";
+                    var numberOfSpikes = 3;
+                    var outerRadius = (object.width * radiantAuraSize * 3) / fov;
+                    var innerRadius = (object.width / fov) * 0.5;
+                    var rot = (Math.PI / 2) * 3;
+                    var x = 0;
+                    var y = 0;
+                    canvas.beginPath();
+                    canvas.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      canvas.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      canvas.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    canvas.lineTo(0, 0 - outerRadius);
+                    canvas.closePath();
+                    canvas.lineWidth = 3 / fov;
+                    canvas.fill();
+                    canvas.stroke();
+                    canvas.rotate((-extraSpikeRotate1 * Math.PI) / 180);
+                    canvas.rotate((extraSpikeRotate2 * Math.PI) / 180);
+                    var numberOfSpikes = 6;
+                    var outerRadius =
+                      ((object.width * radiantAuraSize * 3) / fov) *
+                      0.5;
+                    var innerRadius = (object.width / fov) * 0.5;
+                    var rot = (Math.PI / 2) * 3;
+                    var x = 0;
+                    var y = 0;
+                    canvas.beginPath();
+                    canvas.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      canvas.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      canvas.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    canvas.lineTo(0, 0 - outerRadius);
+                    canvas.closePath();
+                    canvas.lineWidth = 3 / fov;
+                    canvas.fill();
+                    canvas.stroke();
+                    canvas.rotate((-extraSpikeRotate2 * Math.PI) / 180);
+                  } else if (object.rad == 5) {
+                    //for high rarity radiant shapes, draw spikes
+                    canvas.rotate((extraSpikeRotate1 * Math.PI) / 180);
+                    canvas.fillStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.7)";
+                    canvas.strokeStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.3)";
+                    var numberOfSpikes = 3;
+                    var outerRadius = ((object.width * radiantAuraSize * 3) / fov) * 1.5;
+                    var innerRadius = (object.width / fov) * 0.5;
+                    var rot = (Math.PI / 2) * 3;
+                    var x = 0;
+                    var y = 0;
+                    canvas.beginPath();
+                    canvas.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      canvas.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      canvas.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    canvas.lineTo(0, 0 - outerRadius);
+                    canvas.closePath();
+                    canvas.lineWidth = 3 / fov;
+                    canvas.fill();
+                    canvas.stroke();
+                    canvas.rotate((-extraSpikeRotate1 * Math.PI) / 180);
+                    canvas.rotate((extraSpikeRotate2 * Math.PI) / 180);
+                    var numberOfSpikes = 3;
+                    var outerRadius =
+                      ((object.width * radiantAuraSize * 3) / fov) *
+                      0.5;
+                    var innerRadius = (object.width / fov) * 0.5;
+                    var rot = (Math.PI / 2) * 3;
+                    var x = 0;
+                    var y = 0;
+                    canvas.beginPath();
+                    canvas.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      canvas.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      canvas.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    canvas.lineTo(0, 0 - outerRadius);
+                    canvas.closePath();
+                    canvas.lineWidth = 3 / fov;
+                    canvas.fill();
+                    canvas.stroke();
+                    canvas.rotate((-extraSpikeRotate2 * Math.PI) / 180);
+                  }
+
+                  //old code where aura have shape
+                  canvas.fillStyle =
+                    "rgba(" +
+                    object.red +
+                    ", " +
+                    object.green +
+                    ", " +
+                    object.blue +
+                    ", 0.3)";
+                  canvas.strokeStyle =
+                    "rgba(" +
+                    object.red +
+                    ", " +
+                    object.green +
+                    ", " +
+                    object.blue +
+                    ", 0.3)";
+                  canvas.lineWidth = 3 / fov;
+                  canvas.beginPath();
+
+                  let shapeaurasize = object.rad;
+                  if (shapeaurasize > 3) {
+                    shapeaurasize = 3; //prevent huge auras
+                  }
+                  canvas.beginPath();
+                  canvas.arc(0, 0, object.width * radiantAuraSize * shapeaurasize / fov, 0, 2 * Math.PI);
+                  canvas.fill();
+                  canvas.stroke();
+                  var shadeFactor = 3 / 4; //smaller the value, darker the shade
+                  canvas.strokeStyle =
+                    "rgb(" +
+                    object.red * shadeFactor +
+                    ", " +
+                    object.green * shadeFactor +
+                    ", " +
+                    object.blue * shadeFactor +
+                    ")";
+                  canvas.fillStyle =
+                    "rgb(" +
+                    object.red +
+                    ", " +
+                    object.green +
+                    ", " +
+                    object.blue +
+                    ")";
+                  if (object.hit > 0) {
+                    //if shape is hit
+                    canvas.strokeStyle =
+                      "rgb(" +
+                      (object.red * shadeFactor + 20) +
+                      ", " +
+                      (object.green * shadeFactor + 20) +
+                      ", " +
+                      (object.blue * shadeFactor + 20) +
+                      ")";
+                    canvas.fillStyle =
+                      "rgb(" +
+                      (object.red + 20) +
+                      ", " +
+                      (object.green + 20) +
+                      ", " +
+                      (object.blue + 20) +
+                      ")";
+                  }
+
+                  //choose whether a particle would spawn
+                  //particle spawn chance based on number of sides the shape has, so square has less particles
+                  if (spawnradparticle == "yes"){
+                    var chooseValue = 20 - object.sides * 2; //lower the number means more particles spawned
+                    if (chooseValue < 5) {
+                      //5 refers to mimimum particle spawn chance
+                      chooseValue = 5;
+                    }
+                    if (object.radtier == 4){
+                      chooseValue -= 2;
+                    }
+                    else if (object.radtier == 5){
+                      chooseValue -= 3;
+                    }
+                    var choosing = Math.floor(Math.random() * chooseValue); //choose if particle spawn
+                    if (choosing == 1) {
+                      //spawn a particle
+                      var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
+                      var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
+                      var randomDistFromCenter =
+                        Math.floor(Math.random() * object.width * 2) - object.width;
+                      radparticles[particleID] = {
+                        angle: angleRadians,
+                        x: object.x + randomDistFromCenter * Math.cos(angleRadians),
+                        y: object.y + randomDistFromCenter * Math.sin(angleRadians),
+                        width: 5,
+                        height: 5,
+                        speed: 1,
+                        timer: 25,
+                        maxtimer: 25,
+                        color:
+                          "rgba(" +
+                          object.red +
+                          "," +
+                          object.green +
+                          "," +
+                          object.blue +
+                          ",.5)",
+                        outline:
+                          "rgba(" +
+                          (object.red* shadeFactor + 20) +
+                          "," +
+                          (object.green* shadeFactor + 20) +
+                          "," +
+                          (object.blue* shadeFactor + 20) +
+                          ",.5)",
+                        type: "particle",
+                      };
+                      if (object.radtier == 4){
+                        radparticles[particleID].width = Math.floor(Math.random() * 10) + 5;
+                      }
+                      else if (object.radtier == 5){
+                        radparticles[particleID].width = Math.floor(Math.random() * 20) + 5;
+                        radparticles[particleID].speed = 3;
+                        radparticles[particleID].timer = 50;
+                        radparticles[particleID].maxtimer = 50;
+                      }
+                      particleID++;
+                    }
+                  }
+                } // end of rad player code
+                if (eternal == "no") {
+                  //not a tier 6 tank
+                  if(object.width >= 0) {
+                    if (!object.sides){
+                      canvas.beginPath();
+                      canvas.arc(0, 0, object.width / fov, 0, 2 * Math.PI);
+                      canvas.fill();
+                      canvas.stroke();
+                    }
+                    else{
+                      if (object.sides >= 0){
+                        let baseSides = object.sides;
+                        //rotate to fix weird angle
+                        if (baseSides == 3){
+                          canvas.rotate(30 * Math.PI / 180);
+                        }
+                        else if (baseSides == 4){
+                          canvas.rotate(45 * Math.PI / 180);
+                        }
+                        else if (baseSides == 5){
+                          canvas.rotate(17.5 * Math.PI / 180);
+                        }
+                        else if (baseSides == 7){
+                          canvas.rotate(40 * Math.PI / 180);
+                        }
+                        else if (baseSides == 9){
+                          canvas.rotate(12 * Math.PI / 180);
+                        }
+                        canvas.beginPath();
+                        canvas.moveTo((object.width / fov), 0);
+                        for (var i = 1; i <= baseSides; i++) {
+                          canvas.lineTo((object.width / fov) * Math.cos((i * 2 * Math.PI) / baseSides), (object.width / fov) * Math.sin((i * 2 * Math.PI) / baseSides));
+                        }
+                        canvas.fill();
+                        canvas.stroke();
+                        if (baseSides == 3){
+                          canvas.rotate(-30 * Math.PI / 180);
+                        }
+                        else if (baseSides == 4){
+                          canvas.rotate(-45 * Math.PI / 180);
+                        }
+                        else if (baseSides == 5){
+                          canvas.rotate(-17.5 * Math.PI / 180);
+                        }
+                        else if (baseSides == 7){
+                          canvas.rotate(-40 * Math.PI / 180);
+                        }
+                        else if (baseSides == 9){
+                          canvas.rotate(-12 * Math.PI / 180);
+                        }
+                      }
+                      else{
+                        let numberOfSpikes = -object.sides;
+                        let outerRadius = object.width / fov;
+                        let innerRadius = (object.width / fov / 2);
+                        let rot = (Math.PI / 2) * 3;
+                        let x = 0;
+                        let y = 0;
+                        canvas.beginPath();
+                        canvas.moveTo(0, -outerRadius);
+                        for (i = 0; i < numberOfSpikes; i++) {
+                          x = Math.cos(rot) * outerRadius;
+                          y = Math.sin(rot) * outerRadius;
+                          canvas.lineTo(x, y);
+                          rot += Math.PI / numberOfSpikes;
+                          x = Math.cos(rot) * innerRadius;
+                          y = Math.sin(rot) * innerRadius;
+                          canvas.lineTo(x, y);
+                          rot += Math.PI / numberOfSpikes;
+                        }
+                        canvas.lineTo(0, -outerRadius);
+                        canvas.closePath();
+                        canvas.fill();
+                        canvas.stroke();
+                      }
+                    }
+                  }
+                } else {
+                  //if a tier 6 tank
+                  canvas.beginPath();
+                  let baseSides = 6;
+                  canvas.moveTo((object.width / fov), 0);
+                  for (var i = 1; i <= baseSides; i++) {
+                    canvas.lineTo((object.width / fov) * Math.cos((i * 2 * Math.PI) / baseSides), (object.width / fov) * Math.sin((i * 2 * Math.PI) / baseSides));
+                  }
+                  canvas.fill();
+                  canvas.stroke();
+                }
+
+                //barrels in body upgrade
+                for (barrel in object.bodybarrels){
+                  let thisBarrel = object.bodybarrels[barrel];
+          //lerp barrel angle
+                  let oldangle;
+                  try{
+                    oldangle = oldobjects.player[id].bodybarrels[barrel].additionalAngle;
+                  }
+                  catch(err){}
+                  let newangle = thisBarrel.additionalAngle;
+                  let lerpedAngle = newangle;
+                  if (oldangle){
+                    if ((oldangle - newangle)>5.25){//angle went from 360 to 0
+                      oldangle-=2*Math.PI;
+                    }
+                    else if ((newangle - oldangle)>5.25){//angle went from 0 to 360
+                      oldangle+=2*Math.PI;
+                    }
+                    lerpedAngle = oldangle + (newangle - oldangle)/updateInterval*(Date.now() - latestServerUpdateTime);
+                  }
+                  canvas.rotate(lerpedAngle - objectangle); //rotate to barrel angle
+                  canvas.fillStyle = bodyColors.barrel.col;
+                  canvas.strokeStyle = bodyColors.barrel.outline;
+                  if (spawnProtect == "yes") {
+                    //if have spawn protection
+                    canvas.fillStyle = bodyColors.barrel.hitCol;
+                    canvas.strokeStyle = bodyColors.barrel.hitOutline;
+                  }
+                  //lerp barrel animation
+                  let oldbarrelheight;
+                  try{
+                    oldbarrelheight = oldobjects.player[id].bodybarrels[barrel].barrelHeightChange;
+                  }
+                  catch(err){}
+                  let lerpedheight = thisBarrel.barrelHeightChange;
+                  if (oldbarrelheight){
+                    lerpedheight = oldbarrelheight + (thisBarrel.barrelHeightChange - oldbarrelheight)/updateInterval*(Date.now() - latestServerUpdateTime);
+                  }
+                  //bullet barrel
+                  if (thisBarrel.barrelType == "bullet") {
+                    drawBulletBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                  }
+                  //drone barrel
+                  else if (thisBarrel.barrelType == "drone") {
+                    if (Math.abs(thisBarrel.barrelWidth - thisBarrel.barrelHeight) > 3){//not a square, dont use equal cuz there might be rounding errors
+                      drawDroneBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                    }
+                    else{
+                      drawDroneTurret(canvas,thisBarrel.x,thisBarrel.barrelWidth,lerpedheight,fov)
+                    }
+                  }
+                  //trap barrel (doesnt exist atm)
+                  else if (thisBarrel.barrelType == "trap") {
+                    drawTrapBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                  }
+                  //mine barrel (doesnt exist atm)
+                  else if (thisBarrel.barrelType == "mine") {
+                    drawMineBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                  }
+                  //minion barrel (doesnt exist atm)
+                  else if (thisBarrel.barrelType == "minion") {
+                    drawMinionBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                  }
+                  canvas.rotate(-lerpedAngle + objectangle); //rotate back
+                }
+                //draw turret base
+                if ('turretBaseSize' in object){
+                  canvas.fillStyle = bodyColors.barrel.col;
+                  canvas.strokeStyle = bodyColors.barrel.outline;
+                  canvas.beginPath();
+                  canvas.arc(0, 0, (object.width / clientFovMultiplier) * object.turretBaseSize, 0, 2 * Math.PI);
+                  canvas.fill();
+                  canvas.stroke();
+                }
+
+                //draw assets above body, e.g. aura assets
+                for (assetID in object.assets){
+                  var asset = object.assets[assetID];
+                  if (asset.type == "above") {
+                    let assetcolor = asset.color;
+                    let assetoutline = asset.outline;
+                    canvas.lineWidth = asset.outlineThickness / fov;
+                    if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
+                      assetcolor = playercolor;
+                    }
+                    if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
+                      assetoutline = playeroutline;
+                    }
+                    drawAsset(asset,object.width/fov,assetcolor,assetoutline,canvas)
+                  }
+                }
+
+                canvas.lineJoin = "miter"; //change back
+            }
+
+            function drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which) {//draw player that doesnt exist, e.g. leaderboard, homepage etc
+                  hctx.save();
+                  hctx.translate(x, y);
+                  hctx.rotate(bodyangle);
+                  if (which == "body" && (name in bodyupgrades)) {
+                    if (bodyupgrades[name].hasOwnProperty("assets")) {
+                      //draw under assets
+                      for (const assetID in bodyupgrades[name].assets) {
+                        var asset = bodyupgrades[name].assets[assetID];
+                        if (asset.type == "under") {
+                          let assetcolor = asset.color;
+                          let assetoutline = asset.outline;
+                          if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
+                            assetcolor = bodycolor;
+                          }
+                          if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
+                            assetoutline = bodyoutline;
+                          }
+                          drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
+                        }
+                      }
+                    }
+                    hctx.fillStyle = bodycolor;
+                    hctx.strokeStyle = bodyoutline;
+                    if (!bodyupgrades[name].eternal){
+                      hctx.beginPath();
+                      hctx.arc(0, 0, bodysize, 0, 2 * Math.PI);
+                      hctx.fill();
+                      hctx.stroke();
+                    }
+                    else{
+                      hctx.beginPath();
+                      let baseSides = 6;
+                      hctx.moveTo(bodysize, 0);
+                      for (var i = 1; i <= baseSides; i++) {
+                        hctx.lineTo(bodysize * Math.cos((i * 2 * Math.PI) / baseSides), bodysize * Math.sin((i * 2 * Math.PI) / baseSides));
+                      }
+                      hctx.fill();
+                      hctx.stroke();
+                    }
+                    if (bodyupgrades[name].hasOwnProperty("bodybarrels")) {
+                      //draw barrels
+                      hctx.fillStyle = bodyColors.barrel.col;
+                      hctx.strokeStyle = bodyColors.barrel.outline;
+                      for (const barrel in bodyupgrades[name].bodybarrels) {
+                          let thisBarrel = bodyupgrades[name].bodybarrels[barrel];
+                          hctx.rotate(thisBarrel.additionalAngle);
+                        //bullet barrel
+                          if (thisBarrel.barrelType == "bullet") {
+                            drawBulletBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                          }
+                          //drone barrel
+                          else if (thisBarrel.barrelType == "drone") {
+                            if (Math.round(thisBarrel.barrelWidth) != Math.round(thisBarrel.barrelHeight)){
+                              drawDroneBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                            }
+                            else{
+                              drawDroneTurret(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,0,1)
+                            }
+                          }
+                          //trap barrel (doesnt exist atm)
+                          else if (thisBarrel.barrelType == "trap") {
+                            drawTrapBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                          }
+                          //mine barrel (doesnt exist atm)
+                          else if (thisBarrel.barrelType == "mine") {
+                            drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                          }
+                          //minion barrel (doesnt exist atm)
+                          else if (thisBarrel.barrelType == "minion") {
+                            drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                          }
+                          hctx.rotate(-thisBarrel.additionalAngle); //rotate back
+                        }
+                      //draw turret base
+                      hctx.beginPath();
+                      hctx.arc(0,0,bodysize * bodyupgrades[name].turretBaseSize,0,2 * Math.PI);
+                      hctx.fill();
+                      hctx.stroke();
+                    }
+                    if (bodyupgrades[name].hasOwnProperty("assets")) {
+                      //draw above assets
+                      Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
+                        var asset = bodyupgrades[name].assets[assetID];
+                        if (asset.type == "above") {
+                          let assetcolor = asset.color;
+                          let assetoutline = asset.outline;
+                          if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
+                            assetcolor = bodycolor;
+                          }
+                          if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
+                            assetoutline = bodyoutline;
+                          }
+                          drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
+                        }
+                      });
+                    }
+                  } else if (which == "weapon" && (name in weaponupgrades)) {
+                    if (weaponupgrades[name].hasOwnProperty("barrels")) {
+                          hctx.fillStyle = bodyColors.barrel.col;
+                          hctx.strokeStyle = bodyColors.barrel.outline;
+                      Object.keys(weaponupgrades[name].barrels).forEach(
+                        (assetID) => {
+                          var thisBarrel = weaponupgrades[name].barrels[assetID];
+                          hctx.rotate((thisBarrel.additionalAngle * Math.PI) / 180); //rotate to barrel angle
+                          //bullet barrel
+                          if (thisBarrel.barrelType == "bullet") {
+                            drawBulletBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                          }
+                          //drone barrel
+                          else if (thisBarrel.barrelType == "drone") {
+                            drawDroneBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                          }
+                          //trap barrel (doesnt exist atm)
+                          else if (thisBarrel.barrelType == "trap") {
+                            drawTrapBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                          }
+                          //mine barrel (doesnt exist atm)
+                          else if (thisBarrel.barrelType == "mine") {
+                            drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                          }
+                          //minion barrel (doesnt exist atm)
+                          else if (thisBarrel.barrelType == "minion") {
+                            drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                          }
+                          hctx.rotate(
+                            (-thisBarrel.additionalAngle * Math.PI) / 180
+                          ); //rotate back
+                        }
+                      );
+                    }
+                    hctx.fillStyle = bodycolor;
+                    hctx.strokeStyle = bodyoutline;
+                    if (!weaponupgrades[name].eternal){
+                      hctx.beginPath();
+                      hctx.arc(0, 0, bodysize, 0, 2 * Math.PI);
+                      hctx.fill();
+                      hctx.stroke();
+                    }
+                    else{
+                      hctx.beginPath();
+                      let baseSides = 6;
+                      hctx.moveTo(bodysize, 0);
+                      for (var i = 1; i <= baseSides; i++) {
+                        hctx.lineTo(bodysize * Math.cos((i * 2 * Math.PI) / baseSides), bodysize * Math.sin((i * 2 * Math.PI) / baseSides));
+                      }
+                      hctx.fill();
+                      hctx.stroke();
+                    }
+                  }
+                  hctx.restore();
+                }
+
+            function drawobjects(object, id, playerstring, auraWidth) {
+              //function for drawing objects on the canvas. need to provide aura width because this fuction cannot access variables outside
+              var drawingX = (object.x - px) / clientFovMultiplier + canvas.width / 2; //calculate the location on canvas to draw object
+              var drawingY = (object.y - py) / clientFovMultiplier + canvas.height / 2;
+              
+              if (object.type == "bullet") {
+                //draw bullet
+                if (object.hasOwnProperty("deadOpacity")) {
+                  //if this is an animation of a dead object
+                  ctx.globalAlpha = object.deadOpacity;
+                }
+                var chooseflash = 3;
+                if (object.hit > 0 && object.bulletType != "aura") {
+                  //if shape is hit AND bullet is not aura, choose whether it's color is white or original color to create flashing effect
+                  chooseflash = Math.floor(Math.random() * 3); //random number 0, 1 or 2
+                }
+                if (chooseflash == 0) {
+                  ctx.fillStyle = "white";
+                } else if (chooseflash == 1) {
+                  ctx.fillStyle = "pink";
+                } else {
+                  if (object.ownsIt == "yes" || object.bulletType == "aura") {
+                    //if it's an aura or client's tank owns the bullet
+                    ctx.fillStyle = object.color;
+                  } else {
+                    ctx.fillStyle = "#f04f54"; //bullet color is red
+                  }
+                }
+                if (object.bulletType == "aura") {
+                  var choosing = Math.floor(Math.random() * 3); //choose if particle spawn
+                  if (choosing == 1) {
+                    //spawn a particle
+                    var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
+                    var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
+                    var randomDistFromCenter =
+                      Math.floor(Math.random() * object.width * 2) - object.width;
+                    let auraoutline = object.outline;
+                    if (auraoutline == "rgba(255,0,0,.15)"){//damaging aura will have particles that look too dark
+                      auraoutline = auraoutline.substring(0, auraoutline.length - 3)+ '05)';//change opacity to 0.05
+                    }
+                    radparticles[particleID] = {
+                      angle: angleRadians,
+                      x: object.x + randomDistFromCenter * Math.cos(angleRadians),
+                      y: object.y + randomDistFromCenter * Math.sin(angleRadians),
+                      width: 5,
+                      height: 5,
+                      speed: 1,
+                      timer: 15,
+                      maxtimer: 50,
+                      color: object.color,
+                      outline: auraoutline,
+                      type: "particle",
+                    };
+                    particleID++;
+                  }
+                }
+
+                if (object.ownsIt == "yes" || object.bulletType == "aura") {
+                  //if it's an aura or client's tank owns the bullet
+                  ctx.strokeStyle = object.outline;
+                } else {
+                  ctx.strokeStyle = "#b33b3f"; //bullet is red
+                }
+
+
+                //bullet is purple even if bullet belongs to enemy
+                if (object.color == "#934c93") {
+                  ctx.fillStyle = object.color;
+                }
+                if (object.outline == "#660066") {
+                  ctx.strokeStyle = object.outline;
+                }
+
+                //team colors
+                if (bodyColors.hasOwnProperty(object.team)) {
+                  ctx.fillStyle = bodyColors[object.team].col;
+                  ctx.strokeStyle = bodyColors[object.team].outline;
+                }
+
+                if (object.bulletType == "aura"){
+                  //color is aura color, regardless of team
+                  ctx.fillStyle = object.color;
+                  ctx.strokeStyle = object.outline;
+                }
+
+                if (object.passive == "yes") {
+                  if (object.bulletType == "aura") {
+                    ctx.strokeStyle = "rgba(128,128,128,.2)";
+                    ctx.fillStyle = "rgba(128,128,128,.2)";
+                  } else {
+                    ctx.strokeStyle = "dimgrey";
+                    ctx.fillStyle = "grey";
+                  }
+                }
+
+                if (object.team=="mob"){
+                  //dune mob's bullets is the colo of mob
+                  ctx.fillStyle = botcolors[object.ownerName].color;
+                  ctx.strokeStyle = botcolors[object.ownerName].outline;
+                }
+
+                ctx.lineWidth = 4 / clientFovMultiplier;
+                if (object.bulletType == "bullet" || object.bulletType == "aura") {
+                  if (!object.color.includes('rgba(56,183,100')){//not a heal aura
+                    ctx.beginPath();
+                    ctx.arc(
+                      drawingX,
+                      drawingY,
+                      object.width / clientFovMultiplier,
+                      0,
+                      2 * Math.PI
+                    );
+                    ctx.fill();
+                    ctx.stroke();
+                  }
+                  else{//8 sides for healing aura
+                    ctx.beginPath();
+                    ctx.moveTo((object.width / clientFovMultiplier) + drawingX, drawingY);
+                    for (var i = 1; i <= 8 + 1; i += 1) {
+                      ctx.lineTo(
+                        (object.width / clientFovMultiplier) *
+                            Math.cos((i * 2 * Math.PI) / 8) + drawingX,
+                        (object.width / clientFovMultiplier) *
+                            Math.sin((i * 2 * Math.PI) / 8) + drawingY
+                      );
+                    }
+                    ctx.fill();
+                    ctx.stroke();
+                  }
+                } else if (object.bulletType == "trap") {
+                  //width is the radius, so need to times two to get total width
+                  //note: x and y of object are the center of object, but when drawing rectangles, the x and y coordinates given need to be the top left corner of the rectangle, so need to minus the width and height
+                  ctx.fillRect(
+                    drawingX - object.width / clientFovMultiplier,
+                    drawingY - object.width / clientFovMultiplier,
+                    (object.width * 2) / clientFovMultiplier,
+                    (object.width * 2) / clientFovMultiplier
+                  );
+                  ctx.strokeRect(
+                    drawingX - object.width / clientFovMultiplier,
+                    drawingY - object.width / clientFovMultiplier,
+                    (object.width * 2) / clientFovMultiplier,
+                    (object.width * 2) / clientFovMultiplier
+                  );
+                } else if (object.bulletType == "drone") {
+                  ctx.save();
+                  ctx.translate(drawingX, drawingY);
+                  ctx.rotate(object.moveAngle);
+                  //ctx.rotate((object.moveAngle*180/Math.PI - 90) *Math.PI/180);//cannot straightaway use the angle, must add 90 degrees to it, because 0 degrees is pointing right, but we are drawing the triangle upwards
+                  ctx.beginPath();
+                  ctx.moveTo(
+                    (object.width / clientFovMultiplier) * Math.cos(0),
+                    (object.width / clientFovMultiplier) * Math.sin(0)
+                  );
+                  for (var i = 1; i <= 3; i += 1) {
+                    ctx.lineTo(
+                      (object.width / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / 3),
+                      (object.width / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / 3)
+                    );
+                  }
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.restore();
+                } else if (object.bulletType == "mine" || object.bulletType == "minion") {
+                  //console.log(object.moveAngle/Math.PI*180)
+                  //mine is trap with barrel, minion is bullet with barrel
+                  ctx.save();
+                  ctx.translate(drawingX, drawingY);
+                  ctx.rotate(object.moveAngle);
+                  //ctx.rotate((object.moveAngle*180/Math.PI - 90) *Math.PI/180);//cannot straightaway use the angle, must add 90 degrees to it, because 0 degrees is pointing right, but we are drawing the triangle upwards
+
+                  if (object.bulletType == "minion"){
+                    //draw barrels underneath
+                    var prevfill = ctx.fillStyle;
+                    var prevstroke = ctx.strokeStyle;//store previous bullet color so can change back later
+                    ctx.fillStyle = bodyColors.barrel.col;
+                    ctx.strokeStyle = bodyColors.barrel.outline;
+                    Object.keys(object.barrels).forEach((barrel) => {
+                      let thisBarrel = object.barrels[barrel];
+                      ctx.rotate(thisBarrel.additionalAngle); //rotate to barrel angle
+                      if (thisBarrel.barrelType == "bullet") {
+                        drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "drone") {
+                        drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "trap") {
+                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "mine") {
+                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "minion") {
+                        drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                    })
+                    ctx.fillStyle = prevfill;
+                    ctx.strokeStyle = prevstroke;
+                  }
+                  ctx.beginPath();
+                  if (object.bulletType == "mine"){//mine
+                    ctx.moveTo(
+                      (object.width / clientFovMultiplier) * Math.cos(0),
+                      (object.width / clientFovMultiplier) * Math.sin(0)
+                    );
+                    for (var i = 1; i <= 3; i += 1) {
+                      ctx.lineTo(
+                        (object.width / clientFovMultiplier) *
+                          Math.cos((i * 2 * Math.PI) / 3),
+                        (object.width / clientFovMultiplier) *
+                          Math.sin((i * 2 * Math.PI) / 3)
+                      );
+                    }
+                  }
+                  else{//minion
+                    ctx.arc(0, 0, object.width / clientFovMultiplier, 0, 2 * Math.PI);
+                  }
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.rotate(-object.moveAngle); //rotate back
+                  //BARREL FOR THE MINE TRAP
+                  if (object.bulletType == "mine"){
+                  Object.keys(object.barrels).forEach((barrel) => {
+                    let thisBarrel = object.barrels[barrel];
+                    ctx.rotate(thisBarrel.additionalAngle); //rotate to barrel angle
+                    ctx.fillStyle = "grey";
+                    ctx.strokeStyle = "#5e5e5e";
+                    if (thisBarrel.barrelType == "bullet") {
+                        drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "drone") {
+                        drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "trap") {
+                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "mine") {
+                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "minion") {
+                        drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                    ctx.beginPath();
+                    ctx.arc(
+                      0,
+                      0,
+                      thisBarrel.barrelWidth / clientFovMultiplier,
+                      0,
+                      2 * Math.PI
+                    );
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.rotate(-thisBarrel.additionalAngle); //rotate back
+                  });
+                }
+
+                  ctx.restore();
+                }
+                if (object.hasOwnProperty("deadOpacity")) {
+                  //if this is an animation of a dead object
+                  ctx.globalAlpha = 1.0; //reset opacity
+                }
+                if (showHitBox == "yes") {
+                  //draw hitbox
+                  ctx.strokeStyle = "blue";
+                  ctx.lineWidth = 3;
+                  ctx.beginPath();
+                  ctx.arc(
+                    drawingX,
+                    drawingY,
+                    object.width / clientFovMultiplier,
+                    0,
+                    2 * Math.PI
+                  );
+                  ctx.stroke();
+                }
+              } else if (object.type == "bot") {
+                //draw bot
+                if (object.hasOwnProperty("deadOpacity")) {
+                  //if this is an animation of a dead object
+                  ctx.globalAlpha = object.deadOpacity;
+                }
+                ctx.lineWidth = 4 / clientFovMultiplier;
+                ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
+                ctx.save();
+                ctx.translate(drawingX, drawingY);
+                ctx.rotate(object.angle);
+                //draw barrels
+                if (object.name!="Pillbox"){//pillbox's barrel is visually a turret
+                  Object.keys(object.barrels).forEach((barrel) => {
+                    let thisBarrel = object.barrels[barrel];
+                    ctx.rotate(((thisBarrel.additionalAngle + 90) * Math.PI) / 180); //rotate to barrel angle
+                    ctx.fillStyle = bodyColors.barrel.col;
+                    ctx.strokeStyle = bodyColors.barrel.outline;
+                    if (thisBarrel.barrelType == "bullet") {
+                        drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "drone") {
+                        drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "trap") {
+                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "mine") {
+                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                      else if (thisBarrel.barrelType == "minion") {
+                        drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                      }
+                    ctx.rotate((-(thisBarrel.additionalAngle + 90) * Math.PI) / 180); //rotate back
+                  });
+                }
+                if (object.name=="Cluster"){
+                  //draw the spawning barrels
+                  let barrelwidth = object.width*0.7;
+                  let barrelheight = object.width*1.2;
+                  ctx.fillStyle = bodyColors.barrel.col;
+                  ctx.strokeStyle = bodyColors.barrel.outline;
+                  ctx.save();
+                  ctx.rotate(90 * Math.PI / 180);
+                  for (let i = 0; i < 5; i++){
+                    if (i!=0){
+                      ctx.rotate(72 * Math.PI / 180); //rotate 72 for each barrel
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(
+                      -barrelwidth / 5 / clientFovMultiplier,
+                      0
+                    );
+                    ctx.lineTo(
+                      -barrelwidth / clientFovMultiplier,
+                      -barrelheight / clientFovMultiplier
+                    );
+                    ctx.lineTo(
+                      barrelwidth / clientFovMultiplier,
+                      -barrelheight / clientFovMultiplier
+                    );
+                    ctx.lineTo(
+                      barrelwidth / 5 / clientFovMultiplier,
+                      0
+                    );
+                    ctx.fill();
+                    ctx.stroke();
+                  }
+                  ctx.restore();
+                }
+                else if (object.name=="Infestor"){
+                  //draw the spawning barrels
+                  let barrelwidth = object.width*0.7;
+                  let barrelheight = object.width*1.2;
+                  ctx.fillStyle = bodyColors.barrel.col;
+                  ctx.strokeStyle = bodyColors.barrel.outline;
+                  ctx.save();
+                  for (let i = 0; i < 4; i++){//normal barrels
+                    if (i!=0){
+                      ctx.rotate(90 * Math.PI / 180);
+                    }
+                    ctx.fillRect(
+                      -barrelwidth / 2 / clientFovMultiplier,
+                      -barrelheight / clientFovMultiplier,
+                      barrelwidth / clientFovMultiplier,
+                      barrelheight / clientFovMultiplier
+                    );
+                    ctx.strokeRect(
+                      -barrelwidth / 2 / clientFovMultiplier,
+                      -barrelheight / clientFovMultiplier,
+                      barrelwidth / clientFovMultiplier,
+                      barrelheight / clientFovMultiplier
+                    );
+                  }
+                  ctx.restore();
+                  ctx.save();
+                  ctx.rotate(45 * Math.PI / 180);
+                  barrelwidth = object.width*0.6;
+                  barrelheight = object.width*2;
+                  for (let i = 0; i < 4; i++){//traplike barrels
+                    if (i!=0){
+                      ctx.rotate(90 * Math.PI / 180);
+                    }
+                    ctx.fillRect(
+                      -barrelwidth / 2 / clientFovMultiplier,
+                      -barrelheight * 0.55 / clientFovMultiplier,
+                      barrelwidth / clientFovMultiplier,
+                      barrelheight * 0.5 / clientFovMultiplier
+                    );
+                    ctx.strokeRect(
+                      -barrelwidth / 2 / clientFovMultiplier,
+                      -barrelheight * 0.55 / clientFovMultiplier,
+                      barrelwidth / clientFovMultiplier,
+                      barrelheight * 0.5 / clientFovMultiplier
+                    );
+                    ctx.beginPath();
+                    ctx.moveTo(
+                      -barrelwidth / 2 / clientFovMultiplier,
+                      -barrelheight * 0.55 / clientFovMultiplier
+                    );
+                    ctx.lineTo(
+                      -barrelwidth/1.7 / clientFovMultiplier,
+                      -barrelheight * 0.65 / clientFovMultiplier
+                    );
+                    ctx.lineTo(
+                      barrelwidth/1.7 / clientFovMultiplier,
+                      -barrelheight * 0.65 / clientFovMultiplier
+                    );
+                    ctx.lineTo(
+                      barrelwidth / 2 / clientFovMultiplier,
+                      -barrelheight * 0.55 / clientFovMultiplier
+                    );
+                    ctx.fill();
+                    ctx.stroke();
+                  }
+                  ctx.restore();
+                }
+                else if (object.name=="Champion"){
+                  //draw spikes
+                  var numberOfSpikes = 5;
+                  var outerRadius = object.width / clientFovMultiplier * 1.3;
+                  var innerRadius = object.width / clientFovMultiplier /1.3;
+                  var rot = (Math.PI / 2) * 3;//dont change this, or else will have strange extra lines
+                  var x = 0;
+                  var y = 0;
+                  ctx.fillStyle = bodyColors.barrel.col;
+                  ctx.strokeStyle = bodyColors.barrel.outline;
+                  ctx.save();
+                  ctx.rotate(90 * Math.PI / 180);
+                  ctx.beginPath();
+                  ctx.moveTo(0, 0 - outerRadius);
+                  for (i = 0; i < numberOfSpikes; i++) {
+                    x = 0 + Math.cos(rot) * outerRadius;
+                    y = 0 + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                    x = 0 + Math.cos(rot) * innerRadius;
+                    y = 0 + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                  }
+                  ctx.lineTo(0, 0 - outerRadius);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.restore();
+                }
+                var chooseflash = 3;
+                if (object.hit > 0) {
+                  //if shape is hit, choose whether it's color is white or original color to create flashing effect
+                  chooseflash = Math.floor(Math.random() * 3); //random number 0, 1 or 2
+                }
+                if (chooseflash == 0) {
+                  ctx.fillStyle = "white";
+                } else if (chooseflash == 1) {
+                  ctx.fillStyle = "pink";
+                } else {
+                  ctx.fillStyle = botcolors[object.name].color;
+                }
+                ctx.strokeStyle = botcolors[object.name].outline;
+                //draw body
+                if (object.side==0) {
+                  //draw circle
+                  ctx.beginPath();
+                  ctx.arc(0, 0, object.width / clientFovMultiplier, 0, 2 * Math.PI);
+                  ctx.fill();
+                  ctx.stroke();
+                } else if (object.side>=0) {
+                  if (object.hasOwnProperty('randomPointsArrayX')){
+                    //draw for rock and boulder
+                    //POLYGON WITH IRREGULAR SIDES
+                    ctx.rotate(-object.angle); //rotate back so that rock wont rotate to face you
+                    var rockSides = object.side;
+                    ctx.beginPath();
+                    ctx.moveTo((object.width / clientFovMultiplier) * Math.cos(0), (object.width / clientFovMultiplier) * Math.sin(0));
+                    for (var i = 1; i <= rockSides; i++) {
+                      var XRandom = object.randomPointsArrayX[i - 1] / clientFovMultiplier;
+                      var YRandom = object.randomPointsArrayY[i - 1] / clientFovMultiplier;
+                      ctx.lineTo(XRandom + (object.width / clientFovMultiplier) * Math.cos((i * 2 * Math.PI) / rockSides),
+                        YRandom + (object.width / clientFovMultiplier) * Math.sin((i * 2 * Math.PI) / rockSides)
+                      );
+                    }
+                    ctx.fill();
+                    ctx.stroke();
+                  }
+                  else{//normal spawner
+                    if (object.name=="Cluster"||object.name=="Pursuer"||object.name=="Champion"||object.name=="Infestor"||object.name=="Abyssling"){
+                      //need to rotate 72/2 degrees so that pentagon not facing vertex towards player
+                      ctx.rotate(Math.PI/object.side);//2 PI / sides / 2
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo((object.width / clientFovMultiplier), 0);
+                    for (var i = 1; i <= object.side + 1; i += 1) {
+                      ctx.lineTo(
+                        (object.width / clientFovMultiplier) *
+                            Math.cos((i * 2 * Math.PI) / object.side),
+                        (object.width / clientFovMultiplier) *
+                            Math.sin((i * 2 * Math.PI) / object.side)
+                      );
+                    }
+                    ctx.fill();
+                    ctx.stroke();
+                    if (object.name=="Cluster"||object.name=="Pursuer"){
+                      ctx.rotate(-Math.PI/object.side);//rotate back
+                      //draw circle on top
+                      ctx.fillStyle = bodyColors.barrel.col;//light grey
+                      ctx.strokeStyle = bodyColors.barrel.outline;
+                      ctx.beginPath();
+                      ctx.arc(0, 0, object.width/2 / clientFovMultiplier, 0, 2 * Math.PI);
+                      ctx.fill();
+                      ctx.stroke();
+                    }
+                    else if (object.name=="Champion"){
+                      ctx.rotate(-Math.PI/object.side);//rotate back
+                      //draw circle on top
+                      ctx.fillStyle = "grey";//darker grey
+                      ctx.strokeStyle = "#5e5e5e";
+                      ctx.beginPath();
+                      ctx.arc(0, 0, object.width/2.5 / clientFovMultiplier, 0, 2 * Math.PI);
+                      ctx.fill();
+                      ctx.stroke();
+                    }
+                    else if (object.name=="Infestor"){
+                      ctx.rotate(-Math.PI/object.side);//rotate back
+                      //draw circle on top
+                      ctx.fillStyle = bodyColors.barrel.col;//light grey
+                      ctx.strokeStyle = bodyColors.barrel.outline;
+                      ctx.beginPath();
+                      ctx.arc(0, 0, object.width/5 / clientFovMultiplier, 0, 2 * Math.PI);
+                      ctx.fill();
+                      ctx.stroke();
+                    }
+                    else if (object.name=="Leech"){
+                      //draw circle on top
+                      ctx.fillStyle = bodyColors.barrel.col;//light grey
+                      ctx.strokeStyle = bodyColors.barrel.outline;
+                      ctx.beginPath();
+                      ctx.arc(0, 0, object.width/2 / clientFovMultiplier, 0, 2 * Math.PI);
+                      ctx.fill();
+                      ctx.stroke();
+                    }
+                    else if (object.name=="Pillbox"){//pillbox's barrel is visually a turret
+                      ctx.lineJoin = "round"; //make nice round corners
+                      ctx.rotate(90 * Math.PI / 180);
+                      Object.keys(object.barrels).forEach((barrel) => {
+                        //note that you must use [barrel] instead of .barrel, if not there will be an error
+                        let thisBarrel = object.barrels[barrel];
+                        ctx.fillStyle = bodyColors.barrel.col;
+                        ctx.strokeStyle = bodyColors.barrel.outline;
+                        ctx.fillRect(
+                          -thisBarrel.barrelWidth / 2 / clientFovMultiplier +
+                            thisBarrel.x,
+                          -(thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
+                            clientFovMultiplier,
+                          thisBarrel.barrelWidth / clientFovMultiplier,
+                          (thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
+                            clientFovMultiplier
+                        );
+                        ctx.strokeRect(
+                          -thisBarrel.barrelWidth / 2 / clientFovMultiplier +
+                            thisBarrel.x,
+                          -(thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
+                            clientFovMultiplier,
+                          thisBarrel.barrelWidth / clientFovMultiplier,
+                          (thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
+                            clientFovMultiplier
+                        );
+                      });
+                      ctx.rotate(-90 * Math.PI / 180);
+                      //draw turret base
+                      ctx.beginPath();
+                      ctx.arc(
+                        0,
+                        0,
+                        (object.width / clientFovMultiplier) * 0.6,
+                        0,
+                        2 * Math.PI
+                      );
+                      ctx.fill();
+                      ctx.stroke();
+                      ctx.lineJoin = "miter"; //change back
+                    } else if (object.name=="Abyssling"){
+                      //draw upper layer
+                      let oldfill = ctx.fillStyle;
+                      let oldstroke = ctx.strokeStyle;
+                      ctx.fillStyle = "#5f676c";
+                      ctx.strokeStyle = "#41494e";
+                      ctx.beginPath();
+                      ctx.moveTo((object.width*0.75 / clientFovMultiplier), 0);
+                      for (var i = 1; i <= object.side + 1; i += 1) {
+                        ctx.lineTo(
+                          (object.width*0.75 / clientFovMultiplier) *
+                              Math.cos((i * 2 * Math.PI) / object.side),
+                          (object.width*0.75 / clientFovMultiplier) *
+                              Math.sin((i * 2 * Math.PI) / object.side)
+                        );
+                      }
+                      ctx.fill();
+                      ctx.stroke();
+                      ctx.fillStyle = oldfill;
+                      ctx.strokeStyle = oldstroke;
+                      ctx.beginPath();
+                      ctx.moveTo((object.width*0.7 / clientFovMultiplier), 0);
+                      for (var i = 1; i <= object.side + 1; i += 1) {
+                        ctx.lineTo(
+                          (object.width*0.7 / clientFovMultiplier) *
+                              Math.cos((i * 2 * Math.PI) / object.side),
+                          (object.width*0.7 / clientFovMultiplier) *
+                              Math.sin((i * 2 * Math.PI) / object.side)
+                        );
+                      }
+                      ctx.fill();
+                      ctx.stroke();
+                      ctx.rotate(-Math.PI/object.side);//rotate back
+                      //draw turret on top (only visual)
+                      ctx.fillStyle = bodyColors.barrel.col;//light grey
+                      ctx.strokeStyle = bodyColors.barrel.outline;
+                      let barrelwidth = 35;
+                      let barrelheight = 100;
+                      ctx.fillRect(
+                        -barrelwidth / 2 / clientFovMultiplier,
+                        -barrelheight / clientFovMultiplier,
+                        barrelwidth / clientFovMultiplier,
+                        barrelheight / clientFovMultiplier
+                      );
+                      ctx.strokeRect(
+                        -barrelwidth / 2 / clientFovMultiplier,
+                        -barrelheight / clientFovMultiplier,
+                        barrelwidth / clientFovMultiplier,
+                        barrelheight / clientFovMultiplier
+                      );
+                      ctx.beginPath();
+                      ctx.arc(0, 0, object.width*0.45 / clientFovMultiplier, 0, 2 * Math.PI);
+                      ctx.fill();
+                      ctx.stroke();
+                    }
+                  }
+                } else{//negative sides, draw a star! (cactus)
+                  var numberOfSpikes = -object.side;
+                  var outerRadius = object.width / clientFovMultiplier * 1.5;
+                  var innerRadius = object.width / clientFovMultiplier;
+
+                  var rot = (Math.PI / 2) * 3;//dont change this, or else will have strange extra lines
+                  var x = 0;
+                  var y = 0;
+                  ctx.rotate(-object.angle); //rotate back so that rock wont rotate to face you
+                  ctx.beginPath();
+                  ctx.moveTo(0, 0 - outerRadius);
+                  for (i = 0; i < numberOfSpikes; i++) {
+                    x = 0 + Math.cos(rot) * outerRadius;
+                    y = 0 + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                    x = 0 + Math.cos(rot) * innerRadius;
+                    y = 0 + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                  }
+                  ctx.lineTo(0, 0 - outerRadius);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                }
+                ctx.restore();
+                if (object.health < object.maxhealth) {
+                  //draw health bar background
+                  var w = (object.width * 2) / clientFovMultiplier;
+                  var h = 7 / clientFovMultiplier;
+                  var r = h / 2;
+                  var x = drawingX - object.width / clientFovMultiplier;
+                  var y = drawingY + object.width / clientFovMultiplier + 10;
+                  ctx.fillStyle = "black";
+                  ctx.strokeStyle = "black";
+                  ctx.lineWidth = 2.5 / clientFovMultiplier;
+                  ctx.beginPath();
+                  ctx.moveTo(x + r, y);
+                  ctx.arcTo(x + w, y, x + w, y + h, r);
+                  ctx.arcTo(x + w, y + h, x, y + h, r);
+                  ctx.arcTo(x, y + h, x, y, r);
+                  ctx.arcTo(x, y, x + w, y, r);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  //draw health bar
+                  if (object.health > 0) {
+                    w = (w / object.maxhealth) * object.health;
+                    if (r * 2 > w) {
+                      //prevent weird shape when radius more than width
+                      r = w / 2;
+                      y += (h - w) / 2; //move health bar so that it is centered vertically in black bar
+                      h = w;
+                    }
+                    ctx.fillStyle = botcolors[object.name].color;
+                    ctx.beginPath();
+                    ctx.moveTo(x + r, y);
+                    ctx.arcTo(x + w, y, x + w, y + h, r);
+                    ctx.arcTo(x + w, y + h, x, y + h, r);
+                    ctx.arcTo(x, y + h, x, y, r);
+                    ctx.arcTo(x, y, x + w, y, r);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                  }
+                }
+                ctx.fillStyle = "white";
+                ctx.strokeStyle = "black";
+                ctx.lineWidth = 5 / clientFovMultiplier;
+                ctx.font = "700 " + 20 / clientFovMultiplier + "px Roboto";
+                ctx.textAlign = "center";
+                ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
+                //note: if you stroke then fill, the words will be thicker and nicer. If you fill then stroke, the words are thinner.
+                if ((showStaticMobName == "yes"||botcolors[object.name].static=="no") && (showMinionMobName == "yes"||botcolors[object.name].minion=="no")){//settings for showing static and minion names
+                  if (botcolors[object.name].specialty != "") {
+                    var specialtyText = " (" + botcolors[object.name].specialty + ")";
+                  } else {
+                    var specialtyText = "";
+                  }
+                  ctx.strokeText(
+                    object.name + specialtyText,
+                    drawingX,
+                    drawingY - object.width / clientFovMultiplier - 10
+                  );
+                  ctx.fillText(
+                    object.name + specialtyText,
+                    drawingX,
+                    drawingY - object.width / clientFovMultiplier - 10
+                  );
+                }
+                ctx.lineJoin = "miter"; //prevent spikes above the capital letter "M"
+                if (object.hasOwnProperty("deadOpacity")) {
+                  //if this is an animation of a dead object
+                  ctx.globalAlpha = 1.0; //reset opacity
+                }
+                if (showHitBox == "yes") {
+                  //draw hitbox
+                  ctx.strokeStyle = "blue";
+                  ctx.lineWidth = 3;
+                  ctx.beginPath();
+                  ctx.arc(
+                    drawingX,
+                    drawingY,
+                    object.width / clientFovMultiplier,
+                    0,
+                    2 * Math.PI
+                  );
+                  ctx.stroke();
+                }
+              } else if (object.type == "shape") {
+                if (object.hasOwnProperty("deadOpacity")) {
+                  //if this is an animation of a dead object
+                  ctx.globalAlpha = object.deadOpacity;
+                }
+                var radiantAuraSize =
+                  document.getElementById("sizevalue").innerHTML * auraWidth; //aura size determined by settings, but default is 5
+                //draw shape
+                ctx.save();
+                ctx.translate(drawingX, drawingY);
+                ctx.rotate((object.angle * Math.PI) / 180);
+                if (object.hasOwnProperty("radtier")) {
+                  //radiant shape
+                  if (!radiantShapes.hasOwnProperty(id)) {
+                    var randomstate = Math.floor(Math.random() * 3); //randomly choose a color state for the radiant shape to start (if not when you spawn in cavern, all shapes same color)
+                    var randomtype = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
+                    if (randomtype == 1) {
+                      if (randomstate == 0) {
+                        radiantShapes[id] = {
+                          red: 255,
+                          blue: 0,
+                          green: 0,
+                          rgbstate: 1,
+                          radtype: randomtype,
+                        }; //keep track of radiant shape colors (done in client code)
+                      } else if (randomstate == 1) {
+                        radiantShapes[id] = {
+                          red: 199,
+                          blue: 0,
+                          green: 150,
+                          rgbstate: 2,
+                          radtype: randomtype,
+                        };
+                      } else if (randomstate == 2) {
+                        radiantShapes[id] = {
+                          red: -1,
+                          blue: 200,
+                          green: 0,
+                          rgbstate: 3,
+                          radtype: randomtype,
+                        };
+                      }
+                    } else {
+                      if (randomstate == 0) {
+                        radiantShapes[id] = {
+                          red: 118,
+                          blue: 168,
+                          green: 151,
+                          rgbstate: 1,
+                          radtype: randomtype,
+                        };
+                      } else if (randomstate == 1) {
+                        radiantShapes[id] = {
+                          red: 209,
+                          blue: 230,
+                          green: 222,
+                          rgbstate: 2,
+                          radtype: randomtype,
+                        };
+                      } else if (randomstate == 2) {
+                        radiantShapes[id] = {
+                          red: 234,
+                          blue: 240,
+                          green: 180,
+                          rgbstate: 3,
+                          radtype: randomtype,
+                        };
+                      }
+                    }
+                  }
+                  object.red = radiantShapes[id].red;
+                  object.blue = radiantShapes[id].blue;
+                  object.green = radiantShapes[id].green;
+                }
+                if (object.hasOwnProperty("red")) {
+                  //calculate color of spikes, which would be 20 higher than actual rgb value
+                  if (object.red + 150 <= 255) {
+                    var spikeRed = object.red + 150;
+                  } else {
+                    var spikeRed = 255;
+                  }
+                  if (object.blue + 150 <= 255) {
+                    var spikeBlue = object.blue + 150;
+                  } else {
+                    var spikeBlue = 255;
+                  }
+                  if (object.green + 150 <= 255) {
+                    var spikeGreen = object.green + 150;
+                  } else {
+                    var spikeGreen = 255;
+                  }
+                  if (object.radtier == 3) {
+                    //for high rarity radiant shapes, draw spikes
+                    ctx.rotate((extraSpikeRotate * Math.PI) / 180);
+                    ctx.fillStyle =
+                      "rgba(" +
+                      spikeRed +
+                      ", " +
+                      spikeGreen +
+                      ", " +
+                      spikeBlue +
+                      ", 0.7)";
+                    ctx.strokeStyle =
+                      "rgba(" +
+                      spikeRed +
+                      ", " +
+                      spikeGreen +
+                      ", " +
+                      spikeBlue +
+                      ", 0.3)";
+                    var numberOfSpikes = 6;
+                    var outerRadius =
+                      ((object.width * radiantAuraSize * 3) / clientFovMultiplier) *
+                      0.75;
+                    var innerRadius = (object.width / clientFovMultiplier) * 0.75;
+
+                    var rot = (Math.PI / 2) * 3;
+                    var x = 0;
+                    var y = 0;
+
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    ctx.lineTo(0, 0 - outerRadius);
+                    ctx.closePath();
+                    ctx.lineWidth = 3 / clientFovMultiplier;
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.rotate((-extraSpikeRotate * Math.PI) / 180);
+                  } else if (object.radtier == 4) {
+                    //for high rarity radiant shapes, draw spikes
+                    ctx.rotate((extraSpikeRotate1 * Math.PI) / 180);
+                    ctx.fillStyle =
+                      "rgba(" +
+                      spikeRed +
+                      ", " +
+                      spikeGreen +
+                      ", " +
+                      spikeBlue +
+                      ", 0.7)";
+                    ctx.strokeStyle =
+                      "rgba(" +
+                      spikeRed +
+                      ", " +
+                      spikeGreen +
+                      ", " +
+                      spikeBlue +
+                      ", 0.3)";
+                    var numberOfSpikes = 3;
+                    var outerRadius =
+                      (object.width * radiantAuraSize * 3) / clientFovMultiplier;
+                    var innerRadius = (object.width / clientFovMultiplier) * 0.5;
+                    var rot = (Math.PI / 2) * 3;
+                    var x = 0;
+                    var y = 0;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    ctx.lineTo(0, 0 - outerRadius);
+                    ctx.closePath();
+                    ctx.lineWidth = 3 / clientFovMultiplier;
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.rotate((-extraSpikeRotate1 * Math.PI) / 180);
+                    ctx.rotate((extraSpikeRotate2 * Math.PI) / 180);
+                    var numberOfSpikes = 6;
+                    var outerRadius =
+                      ((object.width * radiantAuraSize * 3) / clientFovMultiplier) *
+                      0.5;
+                    var innerRadius = (object.width / clientFovMultiplier) * 0.5;
+                    var rot = (Math.PI / 2) * 3;
+                    var x = 0;
+                    var y = 0;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    ctx.lineTo(0, 0 - outerRadius);
+                    ctx.closePath();
+                    ctx.lineWidth = 3 / clientFovMultiplier;
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.rotate((-extraSpikeRotate2 * Math.PI) / 180);
+                  } else if (object.radtier == 5) {
+                    //for high rarity radiant shapes, draw spikes
+                    ctx.rotate((extraSpikeRotate1 * Math.PI) / 180);
+                    ctx.fillStyle =
+                      "rgba(" +
+                      spikeRed +
+                      ", " +
+                      spikeGreen +
+                      ", " +
+                      spikeBlue +
+                      ", 0.7)";
+                    ctx.strokeStyle =
+                      "rgba(" +
+                      spikeRed +
+                      ", " +
+                      spikeGreen +
+                      ", " +
+                      spikeBlue +
+                      ", 0.3)";
+                    var numberOfSpikes = 3;
+                    var outerRadius =
+                      ((object.width * radiantAuraSize * 3) / clientFovMultiplier) *
+                      1.5;
+                    var innerRadius = (object.width / clientFovMultiplier) * 0.5;
+                    var rot = (Math.PI / 2) * 3;
+                    var x = 0;
+                    var y = 0;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    ctx.lineTo(0, 0 - outerRadius);
+                    ctx.closePath();
+                    ctx.lineWidth = 3 / clientFovMultiplier;
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.rotate((-extraSpikeRotate1 * Math.PI) / 180);
+                    ctx.rotate((extraSpikeRotate2 * Math.PI) / 180);
+                    var numberOfSpikes = 3;
+                    var outerRadius =
+                      ((object.width * radiantAuraSize * 3) / clientFovMultiplier) *
+                      0.5;
+                    var innerRadius = (object.width / clientFovMultiplier) * 0.5;
+                    var rot = (Math.PI / 2) * 3;
+                    var x = 0;
+                    var y = 0;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    ctx.lineTo(0, 0 - outerRadius);
+                    ctx.closePath();
+                    ctx.lineWidth = 3 / clientFovMultiplier;
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.rotate((-extraSpikeRotate2 * Math.PI) / 180);
+                  }
+                  //if shape is radiant
+                  //draw aura
+
+                  //old code where aura was a gradient
+                  /*
+                      const gradient = ctx.createRadialGradient(0, 0, object.width/clientFovMultiplier, 0, 0, object.width/clientFovMultiplier*radiantAuraSize);
+                      gradient.addColorStop(0, 'rgba(' + object.red + ', ' + object.green + ', ' + object.blue + ', 0.3)');
+                      gradient.addColorStop(0.5, 'rgba(' + object.red + ', ' + object.green + ', ' + object.blue + ', 0.1)');
+                      gradient.addColorStop(1, 'rgba(' + object.red + ', ' + object.green + ', ' + object.blue + ', 0.0)');
+                      ctx.fillStyle = gradient;
+                      ctx.beginPath();
+                      */
+
+                  //old code where aura have shape
+                  ctx.fillStyle =
+                    "rgba(" +
+                    object.red +
+                    ", " +
+                    object.green +
+                    ", " +
+                    object.blue +
+                    ", 0.3)";
+                  ctx.strokeStyle =
+                    "rgba(" +
+                    object.red +
+                    ", " +
+                    object.green +
+                    ", " +
+                    object.blue +
+                    ", 0.3)";
+                  ctx.lineWidth = 3 / clientFovMultiplier;
+                  ctx.beginPath();
+
+                  var shapeaurasize = object.radtier;
+                  if (shapeaurasize > 3) {
+                    shapeaurasize = 3; //prevent huge auras
+                  }
+                  ctx.moveTo(
+                    0 +
+                      ((object.width * radiantAuraSize * shapeaurasize) /
+                        clientFovMultiplier) *
+                        Math.cos(0),
+                    0 +
+                      ((object.width * radiantAuraSize * shapeaurasize) /
+                        clientFovMultiplier) *
+                        Math.sin(0)
+                  );
+                  for (var i = 1; i <= object.sides + 1; i += 1) {
+                    ctx.lineTo(
+                      0 +
+                        ((object.width * radiantAuraSize * shapeaurasize) /
+                          clientFovMultiplier) *
+                          Math.cos((i * 2 * Math.PI) / object.sides),
+                      0 +
+                        ((object.width * radiantAuraSize * shapeaurasize) /
+                          clientFovMultiplier) *
+                          Math.sin((i * 2 * Math.PI) / object.sides)
+                    );
+                  }
+
+                  //ctx.arc(0, 0, object.width/clientFovMultiplier*radiantAuraSize, 0, 2 * Math.PI);
+                  ctx.fill();
+                  ctx.stroke();
+                  var shadeFactor = 3 / 4; //smaller the value, darker the shade
+                  ctx.strokeStyle =
+                    "rgb(" +
+                    object.red * shadeFactor +
+                    ", " +
+                    object.green * shadeFactor +
+                    ", " +
+                    object.blue * shadeFactor +
+                    ")";
+                  ctx.fillStyle =
+                    "rgb(" +
+                    object.red +
+                    ", " +
+                    object.green +
+                    ", " +
+                    object.blue +
+                    ")";
+                  if (object.hit > 0) {
+                    //if shape is hit
+                    ctx.strokeStyle =
+                      "rgb(" +
+                      (object.red * shadeFactor + 20) +
+                      ", " +
+                      (object.green * shadeFactor + 20) +
+                      ", " +
+                      (object.blue * shadeFactor + 20) +
+                      ")";
+                    ctx.fillStyle =
+                      "rgb(" +
+                      (object.red + 20) +
+                      ", " +
+                      (object.green + 20) +
+                      ", " +
+                      (object.blue + 20) +
+                      ")";
+                  }
+
+                  //choose whether a particle would spawn
+                  //particle spawn chance based on number of sides the shape has, so square has less particles
+                  if (spawnradparticle == "yes"){
+                    var chooseValue = 20 - object.sides * 2; //lower the number means more particles spawned
+                    if (chooseValue < 5) {
+                      //5 refers to mimimum particle spawn chance
+                      chooseValue = 5;
+                    }
+                    if (object.radtier == 4){
+                      chooseValue -= 2;
+                    }
+                    else if (object.radtier == 5){
+                      chooseValue -= 3;
+                    }
+                    var choosing = Math.floor(Math.random() * chooseValue); //choose if particle spawn
+                    if (choosing == 1) {
+                      //spawn a particle
+                      var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
+                      var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
+                      var randomDistFromCenter =
+                        Math.floor(Math.random() * object.width * 2) - object.width;
+                      radparticles[particleID] = {
+                        angle: angleRadians,
+                        x: object.x + randomDistFromCenter * Math.cos(angleRadians),
+                        y: object.y + randomDistFromCenter * Math.sin(angleRadians),
+                        width: 5,
+                        height: 5,
+                        speed: 1,
+                        timer: 25,
+                        maxtimer: 25,
+                        color:
+                          "rgba(" +
+                          object.red +
+                          "," +
+                          object.green +
+                          "," +
+                          object.blue +
+                          ",.5)",
+                        outline:
+                          "rgba(" +
+                          (object.red* shadeFactor + 20) +
+                          "," +
+                          (object.green* shadeFactor + 20) +
+                          "," +
+                          (object.blue* shadeFactor + 20) +
+                          ",.5)",
+                        type: "particle",
+                      };
+                      if (object.radtier == 4){
+                        radparticles[particleID].width = Math.floor(Math.random() * 10) + 5;
+                      }
+                      else if (object.radtier == 5){
+                        radparticles[particleID].width = Math.floor(Math.random() * 20) + 5;
+                        radparticles[particleID].speed = 3;
+                        radparticles[particleID].timer = 50;
+                        radparticles[particleID].maxtimer = 50;
+                      }
+                      particleID++;
+                    }
+                  }
+                } else {
+                  //if not radiant
+                  //get shape colors in client code based on theme
+                  let shapetype = object.sides - 3;
+                  if (object.sides == 4){
+                    shapetype = 0;
+                  }
+                  else if (object.sides == 3){
+                    shapetype = 1;
+                  }
+                  ctx.fillStyle = shapecolors[shapetype];
+                  ctx.strokeStyle = shapeoutlines[shapetype];
+                  
+                  if (object.hit > 0){//if shape is hit
+                    if (!shapeHit.hasOwnProperty(id)){
+                      shapeHit[id] = 0;
+                    }
+                    let maxshade = 0.3;//shapes turn 30% whiter when hit  (log, not linear)
+                    if (object.sides > 8){//nonagon, decagon, hendecagon etc. dont turn very white upon collision with bullets or players
+                      maxshade = 0.03;
+                    }
+                    shapeHit[id] += (maxshade/25);//make shape whiter
+                    if (shapeHit[id] > maxshade){
+                      shapeHit[id] = maxshade;
+                    }
+                  }
+                  else if (shapeHit[id] > 0){
+                    shapeHit[id] -= (maxshade/25);//make shape whiter
+                    if (shapeHit[id] < 0.00001){
+                      shapeHit[id] = 0;
+                    }
+                  }
+                  if (shapeHit[id]>0){//even if not hit, still need to animate from whitish color to normal shape color
+                    ctx.fillStyle = pSBC ( shapeHit[id], shapecolors[shapetype] );
+                    ctx.strokeStyle = pSBC ( shapeHit[id], shapeoutlines[shapetype] );
+                  }
+                }
+                ctx.lineJoin = "round"; //make corners of shape round
+                if (object.sides < 0) {
+                  //draw a star shape
+
+                  var numberOfSpikes = 5;
+                  var outerRadius = object.width / clientFovMultiplier;
+                  var innerRadius = (object.width / clientFovMultiplier / 2);
+
+                  var rot = (Math.PI / 2) * 3;
+                  var x = 0;
+                  var y = 0;
+
+                  ctx.beginPath();
+                  ctx.moveTo(0, 0 - outerRadius);
+                  for (i = 0; i < numberOfSpikes; i++) {
+                    x = 0 + Math.cos(rot) * outerRadius;
+                    y = 0 + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                    x = 0 + Math.cos(rot) * innerRadius;
+                    y = 0 + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                  }
+                  ctx.lineTo(0, 0 - outerRadius);
+                  ctx.closePath();
+                  ctx.lineWidth = 4 / clientFovMultiplier;
+                  ctx.fill();
+                  ctx.stroke();
+                } else {
+                  ctx.lineWidth = 4 / clientFovMultiplier;
+                  ctx.beginPath();
+                  ctx.moveTo(
+                    0 + (object.width / clientFovMultiplier) * Math.cos(0),
+                    0 + (object.width / clientFovMultiplier) * Math.sin(0)
+                  );
+                  for (var i = 1; i <= object.sides + 1; i += 1) {
+                    ctx.lineTo(
+                      0 +
+                        (object.width / clientFovMultiplier) *
+                          Math.cos((i * 2 * Math.PI) / object.sides),
+                      0 +
+                        (object.width / clientFovMultiplier) *
+                          Math.sin((i * 2 * Math.PI) / object.sides)
+                    );
+                  }
+                  ctx.fill();
+                  ctx.stroke();
+                }
+                ctx.lineJoin = "miter"; //change back to default
+                ctx.restore(); //must restore to reset angle rotation so health bar wont be rotated sideways
+                //draw shape's health bar
+                if (object.health < object.maxhealth) {
+                  //draw health bar background
+                  if (!shapeHealthBar.hasOwnProperty(id)){//for health bar width animation when first get damage
+                    shapeHealthBar[id] = 0;
+                  }
+                  else if (shapeHealthBar[id] < 10){
+                    shapeHealthBar[id]+=2*deltaTime;
+                  }
+                  if (shapeHealthBar[id] > 10){
+                    shapeHealthBar[id] = 10;
+                  }
+                  var w = (object.width / clientFovMultiplier) * 2 * (shapeHealthBar[id]/10);
+                  var h = 7 / clientFovMultiplier;
+                  var r = h / 2;
+                  var x = drawingX - object.width / clientFovMultiplier * (shapeHealthBar[id]/10);
+                  var y = drawingY + object.width / clientFovMultiplier + 10;
+                  ctx.fillStyle = "black";
+                  ctx.strokeStyle = "black";
+                  ctx.lineWidth = 2.5 / clientFovMultiplier;//determines with of black area
+                  ctx.beginPath();
+                  ctx.moveTo(x + r, y);
+                  ctx.arcTo(x + w, y, x + w, y + h, r);
+                  ctx.arcTo(x + w, y + h, x, y + h, r);
+                  ctx.arcTo(x, y + h, x, y, r);
+                  ctx.arcTo(x, y, x + w, y, r);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  //draw health bar
+                  if (object.health > 0) {
+                    //dont draw health bar if negative health
+                    w = (w / object.maxhealth) * object.health;
+                    if (r * 2 > w) {
+                      //prevent weird shape when radius more than width
+                      r = w / 2;
+                      y += (h - w) / 2; //move health bar so that it is centered vertically in black bar
+                      h = w;
+                    }
+                    if (object.hasOwnProperty("red")) {
+                      //if shape is radiant
+                      ctx.fillStyle =
+                        "rgb(" +
+                        object.red +
+                        ", " +
+                        object.green +
+                        ", " +
+                        object.blue +
+                        ")";
+                    } else {
+                      let shapetype = object.sides - 3;
+                      if (object.sides == 4){
+                        shapetype = 0;
+                      }
+                      else if (object.sides == 3){
+                        shapetype = 1;
+                      }
+                      ctx.fillStyle = shapecolors[shapetype];
+                      if (object.sides==10||object.sides==11||object.sides==14){//these shapes are very dark, cannot see health bar
+                        ctx.fillStyle = shapecolors[9];//use dodecagon's grey color for health bar
+                      }
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(x + r, y);
+                    ctx.arcTo(x + w, y, x + w, y + h, r);
+                    ctx.arcTo(x + w, y + h, x, y + h, r);
+                    ctx.arcTo(x, y + h, x, y, r);
+                    ctx.arcTo(x, y, x + w, y, r);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                  }
+                }
+                if (object.hasOwnProperty("deadOpacity")) {
+                  //if this is an animation of a dead object
+                  ctx.globalAlpha = 1.0; //reset opacity
+                }
+                if (showHitBox == "yes") {
+                  //draw hitbox
+                  ctx.strokeStyle = "blue";
+                  ctx.lineWidth = 3;
+                  ctx.beginPath();
+                  ctx.arc(
+                    drawingX,
+                    drawingY,
+                    object.width / clientFovMultiplier,
+                    0,
+                    2 * Math.PI
+                  );
+                  ctx.stroke();
+                }
+                if (showshapeinfo == "yes"){
+                  ctx.fillStyle = "white";
+                  ctx.strokeStyle = "black";
+                  ctx.lineWidth = 5 / clientFovMultiplier;
+                  ctx.font = "700 " + 20 / clientFovMultiplier + "px Roboto";
+                  ctx.textAlign = "center";
+                  ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
+                  let name = "";
+                  if (object.radtier == 1){
+                    name = "Radiant "
+                  }
+                  else if (object.radtier == 2){
+                    name = "Gleaming "
+                  }
+                  else if (object.radtier == 3){
+                    name = "Luminous "
+                  }
+                  else if (object.radtier == 4){
+                    name = "Lustrous "
+                  }
+                  else if (object.radtier == 5){
+                    name = "Highly Radiant "
+                  }
+                  let shapetype = object.sides - 3;
+                  if (object.sides == 4){
+                    shapetype = 0;
+                  }
+                  else if (object.sides == 3){
+                    shapetype = 1;
+                  }
+                  name += shapeNames[shapetype];
+                  ctx.strokeText(
+                  name,
+                    drawingX,
+                    drawingY - object.width / clientFovMultiplier - 10
+                  );
+                  ctx.fillText(
+                    name,
+                    drawingX,
+                    drawingY - object.width / clientFovMultiplier - 10
+                  );
+                  ctx.lineJoin = "miter"; //prevent spikes above the capital letter "M"
+                }
+              } else if (object.type == "spawner") {
+                //spawner in sanctuary
+                ctx.save();
+                ctx.translate(drawingX, drawingY);
+                ctx.rotate(object.angle);
+                ctx.lineJoin = "round"; //make corners of shape round
+
+                //actual body
+                ctx.fillStyle = object.baseColor;
+                ctx.strokeStyle = object.baseOutline;
+                ctx.beginPath();
+                ctx.moveTo(
+                  0 + (object.basewidth6 / clientFovMultiplier) * Math.cos(0),
+                  0 + (object.basewidth6 / clientFovMultiplier) * Math.sin(0)
+                );
+                for (var i = 1; i <= object.sides + 1; i += 1) {
+                  ctx.lineTo(
+                    0 +
+                      (object.basewidth6 / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / object.sides),
+                    0 +
+                      (object.basewidth6 / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / object.sides)
+                  );
+                }
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = object.color;
+                ctx.strokeStyle = object.outline;
+                ctx.beginPath();
+                ctx.moveTo(
+                  0 + (object.width / clientFovMultiplier) * Math.cos(0),
+                  0 + (object.width / clientFovMultiplier) * Math.sin(0)
+                );
+                for (var i = 1; i <= object.sides + 1; i += 1) {
+                  ctx.lineTo(
+                    0 +
+                      (object.width / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / object.sides),
+                    0 +
+                      (object.width / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / object.sides)
+                  );
+                }
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = object.baseColor;
+                ctx.strokeStyle = object.baseOutline;
+                ctx.beginPath();
+                ctx.moveTo(
+                  0 + (object.basewidth4 / clientFovMultiplier) * Math.cos(0),
+                  0 + (object.basewidth4 / clientFovMultiplier) * Math.sin(0)
+                );
+                for (var i = 1; i <= object.sides + 1; i += 1) {
+                  ctx.lineTo(
+                    0 +
+                      (object.basewidth4 / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / object.sides),
+                    0 +
+                      (object.basewidth4 / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / object.sides)
+                  );
+                }
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = object.color;
+                ctx.strokeStyle = object.outline;
+                ctx.lineWidth = 4 / clientFovMultiplier;
+                ctx.beginPath();
+                ctx.moveTo(
+                  0 + (object.basewidth5 / clientFovMultiplier) * Math.cos(0),
+                  0 + (object.basewidth5 / clientFovMultiplier) * Math.sin(0)
+                );
+                for (var i = 1; i <= object.sides + 1; i += 1) {
+                  ctx.lineTo(
+                    0 +
+                      (object.basewidth5 / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / object.sides),
+                    0 +
+                      (object.basewidth5 / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / object.sides)
+                  );
+                }
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = object.baseColor;
+                ctx.strokeStyle = object.baseOutline;
+                ctx.beginPath();
+                ctx.moveTo(
+                  0 + (object.basewidth1 / clientFovMultiplier) * Math.cos(0),
+                  0 + (object.basewidth1 / clientFovMultiplier) * Math.sin(0)
+                );
+                for (var i = 1; i <= object.sides + 1; i += 1) {
+                  ctx.lineTo(
+                    0 +
+                      (object.basewidth1 / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / object.sides),
+                    0 +
+                      (object.basewidth1 / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / object.sides)
+                  );
+                }
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = object.barrelColor;
+                ctx.strokeStyle = object.barrelOutline;
+                ctx.beginPath();
+                ctx.moveTo(
+                  0 + (object.basewidth2 / clientFovMultiplier) * Math.cos(0),
+                  0 + (object.basewidth2 / clientFovMultiplier) * Math.sin(0)
+                );
+                for (var i = 1; i <= object.sides + 1; i += 1) {
+                  ctx.lineTo(
+                    0 +
+                      (object.basewidth2 / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / object.sides),
+                    0 +
+                      (object.basewidth2 / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / object.sides)
+                  );
+                }
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = object.color;
+                ctx.strokeStyle = object.outline;
+                ctx.lineWidth = 4 / clientFovMultiplier;
+                ctx.beginPath();
+                ctx.moveTo(
+                  0 + (object.basewidth3 / clientFovMultiplier) * Math.cos(0),
+                  0 + (object.basewidth3 / clientFovMultiplier) * Math.sin(0)
+                );
+                for (var i = 1; i <= object.sides + 1; i += 1) {
+                  ctx.lineTo(
+                    0 +
+                      (object.basewidth3 / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / object.sides),
+                    0 +
+                      (object.basewidth3 / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / object.sides)
+                  );
+                }
+                ctx.fill();
+                ctx.stroke();
+                //draw barrels
+                ctx.fillStyle = object.barrelColor;
+                ctx.strokeStyle = object.barrelOutline;
+                //trapezoid at the tip
+                var barrelwidth = 140;
+                var barrelheight = 28;
+                //rectangle
+                var barrelwidth2 = 180;
+                var barrelheight2 = 28;
+                //base trapezoid
+                var barrelwidth3 = 140;
+                var barrelheight3 = 80;
+                //note that trapezoids and rectangles are drawn differently
+
+                var barrelDistanceFromCenter = (object.width * (Math.cos(Math.PI/object.sides)));//width of middle of polygon (less than width of circle)
+
+                function drawSancBarrel(barNum){
+                  var barAngle = 360/object.sides*(barNum+0.5);//half of a side, cuz barrel is in between sides
+                  var barrelX = Math.cos((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter+ barrelheight+ barrelheight2+ barrelheight3);//object.width * 0.9
+                  var barrelY = Math.sin((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter+ barrelheight+ barrelheight2+ barrelheight3);
+                  var barrelX2 = Math.cos((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight2 + barrelheight3); //move rectangle barrel downwards
+                  var barrelY2 = Math.sin((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight2 + barrelheight3);
+                  var barrelX3 = Math.cos((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight3); //move base trapezoid barrel downwards
+                  var barrelY3 = Math.sin((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight3);
+                  //base trapezoid
+                  ctx.save();
+                  ctx.translate(
+                    barrelX3 / clientFovMultiplier,
+                    barrelY3 / clientFovMultiplier
+                  );
+                  ctx.rotate(((barAngle - 90) * Math.PI) / 180);
+                  ctx.beginPath();
+                  ctx.moveTo(
+                    ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
+                    -barrelheight3 / clientFovMultiplier
+                  );
+                  ctx.lineTo(-barrelwidth3 / clientFovMultiplier, 0);
+                  ctx.lineTo(barrelwidth3 / clientFovMultiplier, 0);
+                  ctx.lineTo(
+                    ((barrelwidth3 / 3) * 2) / clientFovMultiplier,
+                    -barrelheight3 / clientFovMultiplier
+                  );
+                  ctx.lineTo(
+                    ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
+                    -barrelheight3 / clientFovMultiplier
+                  );
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.restore();
+                  //rectangle
+                  ctx.save();
+                  ctx.translate(
+                    barrelX2 / clientFovMultiplier,
+                    barrelY2 / clientFovMultiplier
+                  );
+                  ctx.rotate(((barAngle - 90) * Math.PI) / 180);
+                  ctx.fillRect(
+                    -barrelwidth2 / 2 / clientFovMultiplier,
+                    -barrelheight2 / clientFovMultiplier,
+                    barrelwidth2 / clientFovMultiplier,
+                    barrelheight2 / clientFovMultiplier
+                  );
+                  ctx.strokeRect(
+                    -barrelwidth2 / 2 / clientFovMultiplier,
+                    -barrelheight2 / clientFovMultiplier,
+                    barrelwidth2 / clientFovMultiplier,
+                    barrelheight2 / clientFovMultiplier
+                  );
+                  ctx.restore();
+                  //trapezium at the tip
+                  ctx.save();
+                  ctx.translate(
+                    barrelX / clientFovMultiplier,
+                    barrelY / clientFovMultiplier
+                  );
+                  ctx.rotate(((barAngle - 90) * Math.PI) / 180);
+                  ctx.beginPath();
+                  ctx.moveTo(-barrelwidth / 2 / clientFovMultiplier, 0);
+                  ctx.lineTo(
+                    -barrelwidth / clientFovMultiplier,
+                    -barrelheight / clientFovMultiplier
+                  );
+                  ctx.lineTo(
+                    barrelwidth / clientFovMultiplier,
+                    -barrelheight / clientFovMultiplier
+                  );
+                  ctx.lineTo(barrelwidth / 2 / clientFovMultiplier, 0);
+                  ctx.lineTo(-barrelwidth / 2 / clientFovMultiplier, 0);
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.restore();
+                }
+
+                for (let i = 0; i < object.sides; i++) {
+                  drawSancBarrel(i);
+                }
+                //draw aura
+                ctx.fillStyle = object.auraColor;
+                ctx.lineWidth = 4 / clientFovMultiplier;
+                ctx.beginPath();
+                ctx.moveTo(
+                  0 + (object.auraWidth / clientFovMultiplier) * Math.cos(0),
+                  0 + (object.auraWidth / clientFovMultiplier) * Math.sin(0)
+                );
+                for (var i = 1; i <= object.sides + 1; i += 1) {
+                  ctx.lineTo(
+                    0 +
+                      (object.auraWidth / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / object.sides),
+                    0 +
+                      (object.auraWidth / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / object.sides)
+                  );
+                }
+                ctx.fill();
+                ctx.lineJoin = "miter"; //change back
+                ctx.restore();
+                if (showHitBox == "yes") {
+                  //draw hitbox
+                  ctx.strokeStyle = "blue";
+                  ctx.lineWidth = 3;
+                  ctx.beginPath();
+                  ctx.arc(
+                    drawingX,
+                    drawingY,
+                    object.width / clientFovMultiplier,
+                    0,
+                    2 * Math.PI
+                  );
+                  ctx.stroke();
+                }
+              } else if (object.type == "player") {
+                var spawnProtectionFlashDuration = 3; //higher number indicates longer duration between flashes.
+                if (object.hasOwnProperty("deadOpacity")) {
+                  //if this is an animation of a dead object
+                  ctx.globalAlpha = object.deadOpacity;
+                }
+                //draw players
+                ctx.save(); //save so later can restore
+                //translate canvas to location of player so that the player is at 0,0 coordinates, allowing rotation around the center of player's body
+                ctx.translate(drawingX, drawingY);
+
+                let objectangle = object.angle;
+                if (
+                  id == playerstring &&
+                  object.autorotate != "yes" &&
+                  object.fastautorotate != "yes"
+                ) {
+                  //if this player is the tank that the client is controlling
+                  objectangle = clientAngle;
+                  ctx.rotate(clientAngle); //instead of using client's actual tank angle, use the angle to the mouse. this reduces lag effect
+                } else {
+                  ctx.rotate(object.angle);
+                }
+
+                let spawnProtect = "no";
+                if (object.spawnProtection < object.spawnProtectionDuration && object.spawnProtection % spawnProtectionFlashDuration == 0) {
+                  spawnProtect = "yes";
+                }
+
+                let playercolor = "undefined";
+                let playeroutline = "undefined";
+                let eternal = "no";
                 if (object.team == "none") {
-                  playercolor = bodyColors.blue.col;
-                  playeroutline = bodyColors.blue.outline;
+                  if (id == playerstring) {
+                    playercolor = bodyColors.blue.col;
+                    playeroutline = bodyColors.blue.outline;
+                    if (object.hit > 0 || spawnProtect == "yes") {
+                      playercolor = bodyColors.blue.hitCol
+                      playeroutline = bodyColors.blue.hitOutline
+                    }
+                  }
+                  else{
+                    playercolor = bodyColors.red.col;
+                    playeroutline = bodyColors.red.outline;
+                    if (object.hit > 0 || spawnProtect == "yes") {
+                      playercolor = bodyColors.red.hitCol
+                      playeroutline = bodyColors.red.hitOutline
+                    }
+                  }
                 } else if (bodyColors.hasOwnProperty(object.team)) {
                     playercolor = bodyColors[object.team].col;
                     playeroutline = bodyColors[object.team].outline;
+                    if (object.hit > 0 || spawnProtect == "yes") {
+                      playercolor = bodyColors[object.team].hitCol;
+                      playeroutline = bodyColors[object.team].hitOutline;
+                    }
+                    if (object.team == "eternal"){
+                      eternal = "yes";
+                    }
                 }
-                if (object.developer == "yes") {//if a developer
+                if (object.developer == "yes") {
+                  //if a developer
                   playercolor = object.color;
                   playeroutline = object.outline;
                 }
-                for (let i = 0; i < 30; i++) {
-                  let angleRadians = (Math.floor(Math.random() * 360) * Math.PI) / 180; //convert to radians
-                  var randomDistFromCenter = Math.floor(Math.random() * player.width) - player.width/2;
-                  radparticles[particleID] = {
+                
+                //store player color for upgrade buttons
+                if (id == playerstring){
+                  playerBodyCol = playercolor;
+                  playerBodyOutline = playeroutline;
+                }
+
+                drawPlayer(ctx, object, clientFovMultiplier, spawnProtect, playercolor, playeroutline, eternal, objectangle, id)//draw barrel and body
+                ctx.restore(); //restore coordinates to saved
+
+                //write player name if not the client's tank
+
+                //draw player health
+                if (object.health < object.maxhealth) {
+                  //draw health bar background
+                  var w = (object.width / clientFovMultiplier) * 2;
+                  var h = 7 / clientFovMultiplier;
+                  var r = h / 2;
+                  var x = drawingX - object.width / clientFovMultiplier;
+                  var y = drawingY + object.width / clientFovMultiplier + 10;
+                  ctx.fillStyle = "black";
+                  ctx.strokeStyle = "black";
+                  ctx.lineWidth = 2.5 / clientFovMultiplier;
+                  ctx.beginPath();
+                  ctx.moveTo(x + r, y);
+                  ctx.arcTo(x + w, y, x + w, y + h, r);
+                  ctx.arcTo(x + w, y + h, x, y + h, r);
+                  ctx.arcTo(x, y + h, x, y, r);
+                  ctx.arcTo(x, y, x + w, y, r);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  //draw health bar
+                  if (object.health > 0) {
+                    w = (w / object.maxhealth) * object.health;
+                    //if (id == playerstring) {
+                      //if this player is the tank that the client is controlling
+                      if (object.team == "none") {
+                        if (id == playerstring) {
+                          ctx.fillStyle = bodyColors.blue.col;
+                        }
+                        else{
+                          ctx.fillStyle = bodyColors.red.col;
+                        }
+                      } else if (bodyColors.hasOwnProperty(object.team)) {
+                        ctx.fillStyle = bodyColors[object.team].col;
+                      }
+                    if (r * 2 > w) {
+                      //prevent weird shape when radius more than width
+                      r = w / 2;
+                      y += (h - w) / 2; //move health bar so that it is centered vertically in black bar
+                      h = w;
+                    }
+                    ctx.beginPath();
+                    ctx.moveTo(x + r, y);
+                    ctx.arcTo(x + w, y, x + w, y + h, r);
+                    ctx.arcTo(x + w, y + h, x, y + h, r);
+                    ctx.arcTo(x, y + h, x, y, r);
+                    ctx.arcTo(x, y, x + w, y, r);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                  }
+                }
+
+                if (object.hasOwnProperty("deadOpacity")) {
+                  //if this is an animation of a dead object
+                  ctx.globalAlpha = 1.0; //reset opacity
+                }
+                if (showHitBox == "yes") {
+                  //draw hitbox
+                  ctx.strokeStyle = "blue";
+                  ctx.lineWidth = 3;
+                  ctx.beginPath();
+                  ctx.arc(
+                    drawingX,
+                    drawingY,
+                    object.width / clientFovMultiplier,
+                    0,
+                    2 * Math.PI
+                  );
+                  ctx.stroke();
+                }
+              } else if (object.type == "portal") {
+                //draw the aura below the portal
+                var auraSpeed = 75; //higher number means slower speed
+                var auraWidth = 4; //reative to portal size
+                var portalAuraSize = object.timer % auraSpeed;
+                var portalwidth = portalwidths[id]; //use this for portal width. it keeps track size changes when players touch portal
+                var portalsizeincrease = portalwidths[id] / object.width; //increase in width when someone touch it (needed for the spikes)
+                //first aura
+                var opacityCalculation =
+                  1 - ((auraWidth / auraSpeed) * portalAuraSize) / auraWidth; //goes from 0 to 0.3
+                if (opacityCalculation > 0.3) {
+                  //max opacity for portal aura
+                  opacityCalculation = 0.3;
+                }
+                if (object.hasOwnProperty("red")) {
+                  //if portal is radiant
+                  ctx.fillStyle =
+                    "rgba(" +
+                    object.red +
+                    ", " +
+                    object.green +
+                    ", " +
+                    object.blue +
+                    "," +
+                    opacityCalculation +
+                    ")";
+                } else {
+                  ctx.fillStyle =
+                    "rgba(" + object.color + "," + opacityCalculation + ")";
+                }
+                if ((portalwidth * ((auraWidth / auraSpeed) * portalAuraSize)) /
+                    clientFovMultiplier > 0){
+                  ctx.beginPath();
+                  ctx.arc(
+                    drawingX,
+                    drawingY,
+                    (portalwidth * ((auraWidth / auraSpeed) * portalAuraSize)) /
+                      clientFovMultiplier,
+                    0,
+                    2 * Math.PI
+                  );
+                  ctx.fill();
+                }
+                //second smaller aura
+                portalAuraSize = (object.timer - auraSpeed / 2) % auraSpeed;
+                if (portalAuraSize > 0) {
+                  var opacityCalculation =
+                    1 - ((auraWidth / auraSpeed) * portalAuraSize) / auraWidth;
+                  if (opacityCalculation > 0.3) {
+                    //max opacity for portal aura
+                    opacityCalculation = 0.3;
+                  }
+                  if (object.hasOwnProperty("red")) {
+                    //if portal is radiant
+                    ctx.fillStyle =
+                      "rgba(" +
+                      object.red +
+                      ", " +
+                      object.green +
+                      ", " +
+                      object.blue +
+                      "," +
+                      opacityCalculation +
+                      ")";
+                  } else {
+                    ctx.fillStyle =
+                      "rgba(" + object.color + "," + opacityCalculation + ")";
+                  }
+                  ctx.beginPath();
+                  ctx.arc(
+                    drawingX,
+                    drawingY,
+                    (portalwidth * ((auraWidth / auraSpeed) * portalAuraSize)) /
+                      clientFovMultiplier,
+                    0,
+                    2 * Math.PI
+                  );
+                  ctx.fill();
+                }
+
+                if (object.hasOwnProperty("deadOpacity")) {
+                  //if this is an animation of a dead object
+                  ctx.globalAlpha = object.deadOpacity;
+                }
+                //drawing portals
+                //create gradient
+                //const gradient = ctx.createRadialGradient(drawingX, drawingY, object.width/3/clientFovMultiplier, drawingX, drawingY, object.width/clientFovMultiplier);
+
+                // Add two color stops
+                //caluclate color of outline of portal based on time until it die
+                var portalColorCalc = object.timer / object.maxtimer;
+                var portalColor = 255 - portalColorCalc * 255;
+                var portalRGB =
+                  "rgb(" +
+                  portalColor +
+                  "," +
+                  portalColor +
+                  "," +
+                  portalColor +
+                  ")";
+                var portalRGBoutline =
+                  "rgb(" +
+                  (portalColor - 20) +
+                  "," +
+                  (portalColor - 20) +
+                  "," +
+                  (portalColor - 20) +
+                  ")";
+                if (object.ruptured == 1) {
+                  //portal is ruptured!
+                  //draw the stars
+                  ctx.save(); //save so later can restore
+                  ctx.translate(drawingX, drawingY);
+                  ctx.fillStyle = "white";
+                  ctx.strokeStyle = "lightgrey";
+                  ctx.lineWidth = 3 / clientFovMultiplier;
+                  ctx.lineJoin = "round";
+                  //first star: 3 spikes
+                  ctx.rotate((extraSpikeRotate * Math.PI) / 180);
+                  var numberOfSpikes = 3;
+                  var outerRadius =
+                    ((object.width * 3) / clientFovMultiplier) * portalsizeincrease;
+                  var innerRadius =
+                    (object.width / 3 / clientFovMultiplier) * portalsizeincrease;
+                  var rot = (Math.PI / 2) * 3;
+                  var x = 0;
+                  var y = 0;
+                  ctx.beginPath();
+                  ctx.moveTo(0, 0 - outerRadius);
+                  for (i = 0; i < numberOfSpikes; i++) {
+                    x = 0 + Math.cos(rot) * outerRadius;
+                    y = 0 + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                    x = 0 + Math.cos(rot) * innerRadius;
+                    y = 0 + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                  }
+                  ctx.lineTo(0, 0 - outerRadius);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.rotate((-extraSpikeRotate * Math.PI) / 180);
+                  //second star: 6 spikes in opposite direction
+                  ctx.rotate(((360 - extraSpikeRotate) * 2 * Math.PI) / 180);
+                  var numberOfSpikes = 6;
+                  var outerRadius =
+                    ((object.width * 1.5) / clientFovMultiplier) *
+                    portalsizeincrease;
+                  var innerRadius =
+                    (object.width / 1.2 / clientFovMultiplier) * portalsizeincrease;
+                  var rot = (Math.PI / 2) * 3;
+                  var x = 0;
+                  var y = 0;
+                  ctx.beginPath();
+                  ctx.moveTo(0, 0 - outerRadius);
+                  for (i = 0; i < numberOfSpikes; i++) {
+                    x = 0 + Math.cos(rot) * outerRadius;
+                    y = 0 + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                    x = 0 + Math.cos(rot) * innerRadius;
+                    y = 0 + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                  }
+                  ctx.lineTo(0, 0 - outerRadius);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.rotate((-(360 - extraSpikeRotate) * 2 * Math.PI) / 180);
+                  //third star: 6 spikes
+                  ctx.rotate((extraSpikeRotate * 2 * Math.PI) / 180);
+                  var numberOfSpikes = 6;
+                  var outerRadius =
+                    ((object.width * 1.5) / clientFovMultiplier) *
+                    portalsizeincrease;
+                  var innerRadius =
+                    (object.width / 1.2 / clientFovMultiplier) * portalsizeincrease;
+                  var rot = (Math.PI / 2) * 3;
+                  var x = 0;
+                  var y = 0;
+                  ctx.beginPath();
+                  ctx.moveTo(0, 0 - outerRadius);
+                  for (i = 0; i < numberOfSpikes; i++) {
+                    x = 0 + Math.cos(rot) * outerRadius;
+                    y = 0 + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                    x = 0 + Math.cos(rot) * innerRadius;
+                    y = 0 + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                  }
+                  ctx.lineTo(0, 0 - outerRadius);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.rotate((-extraSpikeRotate * 2 * Math.PI) / 180);
+                  //fourth star: 6 dark spikes in opposite direction
+                  ctx.fillStyle = portalRGB;
+                  ctx.strokeStyle = portalRGBoutline;
+                  ctx.rotate(((360 - extraSpikeRotate) * 3 * Math.PI) / 180); //times 2 to make it faster
+                  var numberOfSpikes = 6;
+                  var outerRadius =
+                    ((object.width * 1.5) / clientFovMultiplier) *
+                    portalsizeincrease;
+                  var innerRadius =
+                    (object.width / 2 / clientFovMultiplier) * portalsizeincrease;
+                  var rot = (Math.PI / 2) * 3;
+                  var x = 0;
+                  var y = 0;
+                  ctx.beginPath();
+                  ctx.moveTo(0, 0 - outerRadius);
+                  for (i = 0; i < numberOfSpikes; i++) {
+                    x = 0 + Math.cos(rot) * outerRadius;
+                    y = 0 + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                    x = 0 + Math.cos(rot) * innerRadius;
+                    y = 0 + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                  }
+                  ctx.lineTo(0, 0 - outerRadius);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.rotate((-(360 - extraSpikeRotate) * 3 * Math.PI) / 180);
+                  //fifth star: tiny black spikes
+                  ctx.rotate((extraSpikeRotate * 3 * Math.PI) / 180); //times 2 to make it faster
+                  var numberOfSpikes = 6;
+                  var outerRadius =
+                    ((object.width * 1.25) / clientFovMultiplier) *
+                    portalsizeincrease;
+                  var innerRadius =
+                    (object.width / 4 / clientFovMultiplier) * portalsizeincrease;
+                  var rot = (Math.PI / 2) * 3;
+                  var x = 0;
+                  var y = 0;
+                  ctx.beginPath();
+                  ctx.moveTo(0, 0 - outerRadius);
+                  for (i = 0; i < numberOfSpikes; i++) {
+                    x = 0 + Math.cos(rot) * outerRadius;
+                    y = 0 + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                    x = 0 + Math.cos(rot) * innerRadius;
+                    y = 0 + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += Math.PI / numberOfSpikes;
+                  }
+                  ctx.lineTo(0, 0 - outerRadius);
+                  ctx.closePath();
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.rotate((-extraSpikeRotate * 3 * Math.PI) / 180);
+                  ctx.restore();
+                  ctx.lineJoin = "miter";
+                }
+                ctx.fillStyle = portalRGB;
+                ctx.strokeStyle = portalRGBoutline;
+                ctx.lineWidth = 3 / clientFovMultiplier;
+                ctx.beginPath();
+                ctx.arc(
+                  drawingX,
+                  drawingY,
+                  portalwidth / clientFovMultiplier,
+                  0,
+                  2 * Math.PI
+                );
+                ctx.fill();
+                ctx.stroke();
+                if (object.hasOwnProperty("deadOpacity")) {
+                  //if this is an animation of a dead object
+                  ctx.globalAlpha = 1.0; //reset opacity
+                }
+
+                //spawn particles
+                var choosing = Math.floor(Math.random() * 3); //choose if particle spawn. Lower number means more particles
+                if (choosing == 1) {
+                  var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
+                  var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
+                  portalparticles[particleID] = {
                     angle: angleRadians,
-                    x: player.x + randomDistFromCenter * Math.cos(angleRadians),
-                    y: player.y - randomDistFromCenter * Math.sin(angleRadians),
-                    width: player.width/6 + Math.floor(Math.random() * player.width/4),
-                    height: player.width/6 + Math.floor(Math.random() * player.width/4),
-                    speed: 3 + Math.floor(Math.random() * 3),
-                    timer: 20 + Math.floor(Math.random() * 10),
-                    maxtimer: 200,
-                    color: playercolor,
-                    outline: playeroutline,
+                    x: object.x,
+                    y: object.y,
+                    width: 50,
+                    height: 50,
+                    speed: 10,
+                    timer: 30,
+                    maxtimer: 15, //difference between timer and maxtimer is the opacity change of the particle. Larger difference means more or less transparent
+                    color: "white",
+                    outline: "lightgrey",
                     type: "particle",
                   };
                   particleID++;
                 }
-              }
-              else if (player.tankType && player.bodyType){
-                oldtank = player.tankType;
-                oldbody = player.bodyType;
-              }
-            }
-            player = objects.player[playerstring]; //refers to the client's tank
-          }
-        }
-        
-          //console.log(objects)
-        serverCodeTime = serverruntime;
-        sentStuffBefore = "yes";
-      }
-      else if (type=="map"){//map size changed
-        gameAreaSize = info[1];
-      }
-      else if (type=="pc"){//player count changed
-        playerCount = info[1];
-      }
-      else if (type=="gpc"){//global player count changed
-        globalPlayerCount = info[1];
-      }
-      else if (type=="lb"){//leaderboard changed
-        players = info[1];
-      }
-      else if (type=="teams"){
-        teamColors = [];
-        teamColors.push(info[1]);
-        teamColors.push(info[2]);
-        if(info[3] !== undefined && info[4] !== undefined) {
-        teamColors.push(info[3]);
-        teamColors.push(info[4]);
-        }
-      }
-      else if (type == "editedTank"){
-        //user import scenexe tank code, so server send info for client to update the UI
-        let player = info[1];
-        //clear the UI
-        $("#assetUI").empty()
-        $("#bbUI").empty()
-        $("#barrelUI").empty()
-        barrelnumberid = 1;
-        assetnumberid = 1;
-        gadgetnumberid = 1;
-        for (const barrelID in player.barrels){
-          addCustomBarrelDiv(barrelID,player.barrels[barrelID])
-        }
-        for (const barrelID in player.bodybarrels){
-          addCustomGadgetDiv(barrelID,player.bodybarrels[barrelID])
-        }
-        for (const barrelID in player.assets){
-          addCustomAssetDiv(barrelID,player.assets[barrelID])
-        }
-        document.getElementById('weapon-fov').value = player.fovMultiplier;
-        document.getElementById('body-health').value = player.maxhealth;
-        document.getElementById('weapon-name').value = player.tankType;
-        document.getElementById('body-name').value = player.bodyType;
-        document.getElementById('tank-size').value = player.width;
-        document.getElementById('body-speed').value = player.speed;
-        document.getElementById('body-damage').value = player.damage;
-        document.getElementById('body-regen').value = player.healthRegenSpeed;
-        document.getElementById('body-regen-time').value = player.healthRegenTime;
-        if (player.turretBaseSize){
-          document.getElementById('turret-base').value = player.turretBaseSize;
-        }
-      }
-      else if (type == "exportCode"){//user export tank as scenexe tank code
-        let code = info[1];
-        document.getElementById('import-code').value = code;
-      }
-      else if (type=="youDied"){
-        let killer = info[1];
-        let player = info[2];
-        let respawnDivide = info[3];
-        let respawnLimit = info[4];
-        //when player died
-        let skillissue = [
-          "Skill issue",
-          "Keyboard slamming time",
-          "Gonna suggest a nerf?",
-          "Maybe its just you",
-          "Lag? Na",
-          "You died!",
-          "All things must come to an end eventually.",
-          "That's unfortunate...",
-          "Your score was not in vain",
-          "Tanks for playing!",
-          "Welcome to the death screen",
-          "Here lies your grave.",
-          "Game over.",
-          "Try, try again!",
-          "OOF",
-          "How much wood would a woodchuck chuck?",
-          "Did you really think that through?",
-        ];
-        let rando =
-          skillissue[Math.floor(Math.random() * skillissue.length)]; //random death screen text
-        sentStuffBefore = "no";
-        //DEATH SCREEN
-        gameStart = -1;//ensure that hctx canvas doesnt clear
-        hctx.clearRect(0, 0, hcanvas.width, hcanvas.height);
-        hctx.fillStyle = "rgba(0,0,0,.5)";
-        hctx.fillRect(0, 0, hcanvas.width, hcanvas.height); //drawing background
-        hctx.fillStyle = "white";
-        hctx.strokeStyle = "black";
-        hctx.lineWidth = 5;
-        hctx.font = "900 60px Roboto";
-        hctx.textAlign = "center";
-        hctx.save();
-        hctx.translate(hcanvas.width / 2, hcanvas.height / 4)
-        let resizeDiffX = 1/window.innerWidth*hcanvas.width;
-        let resizeDiffY = 1/window.innerHeight*hcanvas.height;
-        hctx.scale(1,resizeDiffY/resizeDiffX)
-        hctx.strokeText(rando, 0, 0);
-        hctx.fillText(rando, 0, 0);
-        hctx.font = "700 30px Roboto";
-        if (typeof killer == "number") {
-          //killer is a number, which is numer of sides of a shape
-          let shapetype = killer - 3;
-          if (killer == 4){
-            shapetype = 0;
-          }
-          else if (killer == 3){
-            shapetype = 1;
-          }
-          killer = shapeNames[shapetype];
-        }
-        hctx.strokeText(
-          "You were killed by " + killer,
-          0,
-          80
-        );
-        hctx.fillText(
-          "You were killed by " + killer,
-          0,
-          80
-        );
-        hctx.restore();
-        //ABBREVIATE SCORE, e.g. 6000 -> 6k
-        //player's score is not abbreviated because need to do calculations using the number, and server might get laggy if it need to abbreviate everyone's score, so abbreviating score is done in client side code
-        var newValue = player.score;
-        if (player.score >= 1000) {
-          var suffixes = ["", "k", "m", "b", "t"];
-          var suffixNum = Math.floor(("" + player.score).length / 3);
-          var shortValue = "";
-          for (var precision = 2; precision >= 1; precision--) {
-            shortValue = parseFloat(
-              (suffixNum != 0
-                ? player.score / Math.pow(1000, suffixNum)
-                : player.score
-              ).toPrecision(precision)
-            );
-            var dotLessShortValue = (shortValue + "").replace(
-              /[^a-zA-Z 0-9]+/g,
-              ""
-            );
-            if (dotLessShortValue.length <= 2) {
-              break;
-            }
-          }
-          if (shortValue % 1 != 0) shortValue = shortValue.toFixed(1);
-          newValue = shortValue + suffixes[suffixNum];
-        }
-        let timeplayed = Date.now() - startPlayTime;
-        let datee = new Date(0);
-        datee.setSeconds(timeplayed / 1000); // specify value for SECONDS here
-        timeplayed = datee.toISOString().substring(11, 19);
-        
-        hctx.font = "700 25px Roboto";
-        hctx.save();
-        hctx.translate(hcanvas.width / 2, hcanvas.height / 1.6)
-        hctx.scale(1,resizeDiffY/resizeDiffX)
-        hctx.strokeText(
-          "Level " +
-            player.level +
-            " " +
-            player.tankType +
-            "-" +
-            player.bodyType,
-          0,
-          30
-        );
-        hctx.fillText(
-          "Level " +
-            player.level +
-            " " +
-            player.tankType +
-            "-" +
-            player.bodyType,
-          0,
-          30
-        );
-        hctx.strokeText(
-          "Time Played: " + timeplayed,
-          0,
-          90
-        );
-        hctx.fillText(
-          "Time Played: " + timeplayed,
-          0,
-          90
-        );
-        hctx.strokeText(
-          "Score: " + newValue + " (" + player.score + ")",
-          0,
-          130
-        );
-        hctx.fillText(
-          "Score: " + newValue + " (" + player.score + ")",
-          0,
-          130
-        );
-        hctx.restore();
-        continueButton.style.display = "block";
-        //calculating respawn score, change this if server caculation changes
-        var respawningScore = 0;
-        if (player.score > 0) {
-          //if player didnt die at 0 score
-          respawningScore = Math.round(player.score / respawnDivide);
-          if (respawningScore > respawnLimit) {
-            respawningScore = respawnLimit;
-          }
-        }
-        document.getElementById("respawnScoreDiv").innerHTML =
-          "Respawning at " + respawningScore + " score";
-        document.getElementById("chat").style.display = "none";
-        //hide all the editor UI
-        tankEditor1.style.display = "none";
-        tankEditor2.style.display = "none";
-        barrelEditor.style.display = "none";
-        assetEditor.style.display = "none";
-        bbEditor.style.display = "none";
-        //reset player state values
-        autorotate = "no";
-        autofire = "no";
-        fastautorotate = "no";
-        passivemode = "no";
-        //reset upgrade ignore
-        ignorebuttonw.ignore = "no";
-        ignorebuttonb.ignore = "no";
-      }
-      else if (type=="teleport"){//server tells player that it successfully teleported, so need to connect to the server for the new dimension
-        let dimension = info[1];
-        prevplayerstring = playerstring;
-        //reset object list when teleport
-        portals = {};
-        oldportals = {};
-        objects = {
-          wall: {},//walls drawn below everything
-          gate: {},
-          Fixedportal: {},
-          shape: {},
-          bot: {},
-        };//specifically shapes and bots so they would be below players, fixed portals always under everything
-        teleportingTransition = "yes";
-        oldteleportingLocation = gamelocation;
-        teleportingLocation = dimension;
-        teleportingcount = 0;
-        if (dimension=="dune"){
-          socket.close();//disconnect from current server
-          connectServer(serverlist.dune,"yes")
-          gamelocation = "dune";
-        }
-        else if (dimension=="sanc"){
-          socket.close();//disconnect from current server
-          connectServer(serverlist.sanc,"yes")
-          gamelocation = "sanctuary";
-        }
-        else if (dimension=="cavern"){
-          socket.close();//disconnect from current server
-          connectServer(serverlist.cavern,"yes")
-          gamelocation = "cavern";
-        }
-        else if (dimension=="cr"){
-          socket.close();//disconnect from current server
-          connectServer(serverlist.cr,"yes")
-          gamelocation = "crossroads"
-        }
-        else if (dimension=="arena"){
-          socket.close();//disconnect from current server
-          connectServer(serverlist["Free For All"],"yes")
-          gamelocation = "arena";
-        }
-        else if (dimension=="2tdm"){
-          socket.close();//disconnect from current server
-          connectServer(serverlist["2 Teams"],"yes")
-          gamelocation = "2tdm";
-        }
-        else if (dimension=="4tdm"){
-          socket.close();//disconnect from current server
-          connectServer(serverlist["4 Teams"],"yes")
-          gamelocation = "4tdm";
-        }
-      }
-    };
 
-    // Listen for socket closes
-    socket.onclose = function(event) {
-      console.log('Disconnected: ',event);
-      if (reconnectToDefault != "yes"){//if not purposely disconnecting to respawn in ffa
-        if (teleportingTransition != "yes"){
-          //disconnect notification
-          //when socket disconnect, this is automatically triggered
-          createNotif("Disconnected. Reload the page.","rgb(150,0,0)",10000)
-          exitDeathScreen();
-          connected = "no";
-          playButton.style.display = "none";
-          nameInput.style.display = "none";
-        }
-      }
-      else{
-        reconnectToDefault = "no";
-      }
-    };
-    socket.onerror = function(err) {
-      console.error('Socket error: ', err.message);
-      //connection error
-      createNotif("Connection error: "+err.message,"rgb(150,0,0)",10000)
-      //socket.close();
-      exitDeathScreen();
-      connected = "no";
-      playButton.style.display = "none";
-      nameInput.style.display = "none";
-      //socket = new WebSocket(whichserver);//try to reconnect
-    };
-    // To close the socket: socket.close()
-  }
-  }
-  connectServer(serverlist["Free For All"],"no")
-  //gamemodeBgFoV[currentGmSelector.gamemode] = 0.1;
-
-
-  //GAME CANVAS
-  var canvas = document.getElementById("game");
-  canvas.width = 1920;
-  canvas.height = 1080; //fixed width and height so that all users regardless of screen size will see the same thing, a bigger fixed size will result in greater field of vision for users but also clearer image on a large screen when html stretches the canvas to fit the screen (because in the css code above we made the canvas width and height as 100%)
-  //NOTE: if you change the canvas width and height, also must change in server code at the part at the end of the game loop
-
-  //calculating canvas resizing for different screen sizes
-  //remember to fix buttons afterwards
-  //window.innerWidth
-  //canvasResizing();//removed
-  canvas.width = 1920;
-  canvas.height = 1080;
-
-  var ctx = canvas.getContext("2d");
-  //HOME PAGE CANVAS
-  //there are two canvas: one is this canvas, and the other is the game canvas
-  //the game canvas draws the game, and might not be able to see the entire thing as it resizes to make sure it's porportional
-  //this canvas draws the home page, death screen, and other things, which requires the entire canvas to be seen
-  var hcanvas = document.getElementById("homePage");
-  hcanvas.width = 1920;
-  hcanvas.height = 1080;
-  var hctx = hcanvas.getContext("2d");
-
-  var continueButton = document.getElementById("continue");
-  var playButton = document.getElementById("play");
-  var nameInput = document.getElementById("gamename");
-  //when continue button clicked after player died, or press enter on death screen
-  var joinedWhichGM = "Free For All";
-  function exitDeathScreen(){
-    gameStart = 0; //reset canvas
-    playButton.style.display = "block";
-    nameInput.style.display = "block";
-    document.body.appendChild(changelogbutton);
-    document.body.appendChild(settingsbutton);
-    document.body.appendChild(wrlbbutton);
-    document.body.appendChild(howToPlaybutton);
-    accountsbutton.style.display = "block";
-    document.body.appendChild(discordbutton);
-    document.body.appendChild(tokeninput);
-    document.body.appendChild(redditbutton);
-    document.getElementById("advert").style.display = "block";
-    document.getElementById("featuredyoutuber").style.display = "block";
-    document.getElementById("changelogDisplay").style.display = "block";
-    document.getElementById("subtitle").style.display = "block";
-    document.getElementById("menuTitle").style.display = "block";
-    continueButton.style.display = "none";
-    document.getElementById("respawnScoreDiv").style.display = "block";
-    if (shownEditButton=="yes"){
-      document.getElementById("openEditor").style.display = "none";
-      shownEditButton = "no";
-    }
-    //connect to arena
-    reconnectToDefault = "yes";//prevent disconnect notification
-    socket.close();//disconnect from current server
-    connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in. If you spawned in FFA and died in 2tdm, you can only respawn in FFA
-    if (joinedWhichGM == "Free For All"){
-          gamelocation = "arena"
-        }
-        else if (joinedWhichGM == "2 Teams"){
-          gamelocation = "2tdm"
-        }
-        else if (joinedWhichGM == "4 Teams"){
-          gamelocation = "4tdm"
-        }
-        else if (joinedWhichGM == "Tank Editor"){
-          gamelocation = "tank-editor"
-        }
-  };
-
-  //list of buttons outside function so that can access in mouse event listeners below function
-  //button 1 to 7 are weapon upgrades, 8 to 14 are body upgrades
-  var upgradeButtons = {
-    1: {
-      x: canvas.width + 315, //poition changes when animating
-      y: canvas.height - 205,
-      width: 100,
-      hover: "no",
-      startx: canvas.width + 315, //start position for animating button movement (start position)
-      endx: canvas.width - 75, //end position
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "255,228,107",
-      darkcolor: "225,198,77",
-    },
-    2: {
-      x: canvas.width + 195,
-      y: canvas.height - 205,
-      width: 100,
-      hover: "no",
-      startx: canvas.width + 195,
-      endx: canvas.width - 195,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "252,118,118",
-      darkcolor: "222,88,88",
-    },
-    3: {
-      x: canvas.width + 75,
-      y: canvas.height - 205,
-      width: 100,
-      hover: "no",
-      startx: canvas.width + 75,
-      endx: canvas.width - 315,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "118,140,252",
-      darkcolor: "88,110,222",
-    },
-    4: {
-      x: canvas.width + 315,
-      y: canvas.height - 325,
-      width: 100,
-      hover: "no",
-      startx: canvas.width + 315,
-      endx: canvas.width - 75,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "252,166,68",
-      darkcolor: "222,136,38",
-    },
-    5: {
-      x: canvas.width + 195,
-      y: canvas.height - 325,
-      width: 100,
-      hover: "no",
-      startx: canvas.width + 195,
-      endx: canvas.width - 195,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "56,183,100",
-      darkcolor: "26,153,70",
-    },
-    6: {
-      x: canvas.width + 75,
-      y: canvas.height - 325,
-      width: 100,
-      hover: "no",
-      startx: canvas.width + 75,
-      endx: canvas.width - 315,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "74,102,189",
-      darkcolor: "44,72,159",
-    },
-    7: {
-      x: canvas.width + 315,
-      y: canvas.height - 445,
-      width: 100,
-      hover: "no",
-      startx: canvas.width + 315,
-      endx: canvas.width - 75,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "93,39,93",
-      darkcolor: "63,9,63",
-    },
-    8: {
-      x: -315, //poition changes when animating
-      y: canvas.height - 205,
-      width: 100,
-      hover: "no",
-      startx: -315, //start position for animating button movement (start position)
-      endx: 75, //end position
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "255,228,107",
-      darkcolor: "225,198,77",
-    },
-    9: {
-      x: -195,
-      y: canvas.height - 205,
-      width: 100,
-      hover: "no",
-      startx: -195,
-      endx: 195,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "252,118,118",
-      darkcolor: "222,88,88",
-    },
-    10: {
-      x: -75,
-      y: canvas.height - 205,
-      width: 100,
-      hover: "no",
-      startx: -75,
-      endx: 315,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "118,140,252",
-      darkcolor: "88,110,222",
-    },
-    11: {
-      x: -315,
-      y: canvas.height - 325,
-      width: 100,
-      hover: "no",
-      startx: -315,
-      endx: 75,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "252,166,68",
-      darkcolor: "222,136,38",
-    },
-    12: {
-      x: -195,
-      y: canvas.height - 325,
-      width: 100,
-      hover: "no",
-      startx: -195,
-      endx: 195,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "56,183,100",
-      darkcolor: "26,153,70",
-    },
-    13: {
-      x: -75,
-      y: canvas.height - 325,
-      width: 100,
-      hover: "no",
-      startx: -75,
-      endx: 315,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "74,102,189",
-      darkcolor: "44,72,159",
-    },
-    14: {
-      x: -315,
-      y: canvas.height - 445,
-      width: 100,
-      hover: "no",
-      startx: -315,
-      endx: 75,
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      tankRotate: 0,
-      color: "93,39,93",
-      darkcolor: "63,9,63",
-    },
-  };
-  var ignorebuttonw = {
-      x: -1000,
-      y: -1000,
-      width: 100,
-      height: 40,
-      hover: "no",
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      color: "255,228,107",
-      darkcolor: "225,198,77",
-      ignore: "no",
-    };
-  var ignorebuttonb = {
-      x: -1000,
-      y: -1000,
-      width: 100,
-      height: 40,
-      hover: "no",
-      brightness: 0,
-      defaultwidth: 100,
-      animatedwidth: 120,
-      color: "255,228,107",
-      darkcolor: "225,198,77",
-      ignore: "no",
-    };
-  //store tank info from server
-  var buttonTank = {1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{},11:{},12:{},13:{},14:{},};
-  var prevPlayerLvl = -2; //weapon upgrade tier
-  var prevPlayerLvlb = -2; //body upgrade tier
-  var howManyButtonSentToClient = 0;
-  var howManyButtonSentToClientb = 0;
-  var howManyButtonSentToServer = 0; //weapon upgrade
-  var howManyButtonSentToServerb = 0; //body upgrade
-  var didAnyButtonDraw = "no";
-  var barScore = 0; //for score progress bar
-  var auraWidth = 0;
-  var newaurawidth = 0;
-  var auraRotate = 0; //for radiant shape aura size increase
-//  var newauraWidthDirection = "increasing";
-//  var auraWidthDirection = "increasing";
-  var extraSpikeRotate = 0;
-  var extraSpikeRotate1 = 0;
-  var extraSpikeRotate2 = 360;
-  var clientFovMultiplier = 1;
-  var listofdeadobjects = []; //animate dead objects
-  //stuff needed for drawing canvas
-  var playerstring = "error";
-  var prevplayerstring = "error";
-  var playerCount = "error";
-  var globalPlayerCount = "error";
-  var portals = {};
-  var oldportals = {};
-  var gamelocation = "arena";
-  var shakeYN = "error";//portal screen shake
-  var shakeIntensity = 1;
-  var slightshake = "no";//spawn/upgrade screen shake
-  var slightshakeIntensity = 1;
-  var players = "error";
-  var player = "error";
-  var gameAreaSize = "error";
-  var objects = {};
-  var oldobjects = {};//for client interpolation
-  var interpolatedobjects = {};
-  var prevServerUpdateTime = Date.now();
-  var latestServerUpdateTime = 0;
-  var oldservertime = 0;
-  var serverCodeTime = "error";
-  var sentStuffBefore = "no";
-  var latency = "Checking latency...";
-  var start;
-  var showDebug = "yes";
-  var showHitBox = "no";
-  var shownBandwidth = 0; //bandwidth that is shown, updates every second
-  var bandwidth = 0; //size of packet sent from server
-  var prevBandwidthUpdate = 0; //previous time that bandwidth was updated
-  //particles are completely clientside to reduce server lag (cuz cavern would have 300+ particles)
-  var radparticles = {}; //particle effect for radiants
-  var portalparticles = {}; //prticle effect for portals
-  var particleID = 0;
-  //for death screen
-  var startPlayTime = 0;
-  //for mobile
-  var joystick1 = {
-    //movement joystick on the left
-    size: 100,
-    xFromCenter: -500,
-    yFromCenter: 150,
-  };
-  var joystick2 = {
-    //shooting joystick on the right
-    size: 100,
-    xFromCenter: 500,
-    yFromCenter: 150,
-  };
-  var touches = {
-    0: {
-      state: "no",
-      x: "no",
-      y: "no",
-      angle: "no",
-      dir: 0,
-      oldangle: "no",
-    },
-    1: {
-      state: "no",
-      x: "no",
-      y: "no",
-      angle: "no",
-      dir: 0,
-      oldangle: "no",
-    },
-  };
-
-  let shootBarrelMax = 100;//reduce this value for a larger shooting height change
-
-  function drawBulletBarrel(canvas, x,width,height,shootChange, fov){//shootchange is change in barrel height when shooting
-    canvas.fillRect(
-      (x - width / 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov,//divided by 50 times height so that smaller barrels have less height change
-      width / fov,
-      (height - shootChange/shootBarrelMax*height) / fov
-    );
-    canvas.strokeRect(
-      (x - width / 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov,
-      width / fov,
-      (height - shootChange/shootBarrelMax*height) / fov
-    );
-  }
-
-  function drawDroneTurret(canvas, x,width,shootChange, fov){//shootchange is change in barrel height when shooting
-    canvas.fillRect(
-      (x - (width - shootChange/shootBarrelMax*width) / 2) / fov,
-      -(width - shootChange/shootBarrelMax*width)/2 / fov,//divided by 50 times height so that smaller barrels have less height change
-      (width - shootChange/shootBarrelMax*width) / fov,
-      (width - shootChange/shootBarrelMax*width) / fov
-    );
-    canvas.strokeRect(
-      (x - (width - shootChange/shootBarrelMax*width) / 2) / fov,
-      -(width - shootChange/shootBarrelMax*width)/2 / fov,//divided by 50 times height so that smaller barrels have less height change
-      (width - shootChange/shootBarrelMax*width) / fov,
-      (width - shootChange/shootBarrelMax*width) / fov
-    );
-  }
-
-  function drawDroneBarrel(canvas, x,width,height,shootChange, fov){
-    canvas.beginPath();
-    canvas.moveTo(
-      -width / 2 / fov +
-        x / fov,
-      0
-    );
-    canvas.lineTo(
-      -width / fov +
-        x / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov
-    );
-    canvas.lineTo(
-      width / fov +
-        (x * 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov
-    );
-    canvas.lineTo(
-      width / 2 / fov +
-        (x * 2) / fov,
-      0
-    );
-    canvas.fill();
-    canvas.stroke();
-  }
-
-  function drawTrapBarrel(canvas, x,width,height,shootChange, fov){
-    canvas.fillRect(
-      (x - width / 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) * 0.67 / fov,
-      width / fov,
-      (height - shootChange/shootBarrelMax*height) * 0.67 / fov
-    );
-    canvas.strokeRect(
-      (x - width / 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) * 0.67 / fov,
-      width / fov,
-      (height - shootChange/shootBarrelMax*height) * 0.67 / fov
-    );
-    canvas.beginPath();
-    canvas.moveTo(
-      (x - width / 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) * 0.67 / fov
-    );
-    canvas.lineTo(
-      (x - width) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov
-    );
-    canvas.lineTo(
-      (x + width) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov
-    );
-    canvas.lineTo(
-      (x + width / 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) * 0.67 / fov
-    );
-    canvas.fill();
-    canvas.stroke();
-  }
-
-  function drawMineBarrel(canvas, x,width,height,shootChange, fov){
-    canvas.fillRect(
-      (x - width / 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov,
-      width / fov,
-      (height - shootChange/shootBarrelMax*height) / fov
-    );
-    canvas.strokeRect(
-      (x - width / 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov,
-      width / fov,
-      (height - shootChange/shootBarrelMax*height) / fov
-    );
-    canvas.fillRect(
-      (-width * 1.5) / 2 / fov + x / fov,
-      -(height - shootChange/shootBarrelMax*height) * 0.67 / fov,
-      (width / fov) * 1.5,
-      (height - shootChange/shootBarrelMax*height) * 0.67 / fov
-    );
-    canvas.strokeRect(
-      (-width * 1.5) / 2 / fov + x / fov,
-      -(height - shootChange/shootBarrelMax*height) * 0.67 / fov,
-      (width / fov) * 1.5,
-      (height - shootChange/shootBarrelMax*height) * 0.67 / fov
-    );
-  }
-
-  function drawMinionBarrel(canvas, x,width,height,shootChange, fov){
-    canvas.fillRect(
-      (x - width / 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov,
-      width / fov,
-      (height - shootChange/shootBarrelMax*height) / fov
-    );
-    canvas.strokeRect(
-      (x - width / 2) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov,
-      width / fov,
-      (height - shootChange/shootBarrelMax*height) / fov
-    );
-    canvas.fillRect(
-      (x - width * 0.75) / fov,
-      -(height - shootChange/shootBarrelMax*height) / 1.5 / fov,
-      (width / fov) * 1.5,
-      (height - shootChange/shootBarrelMax*height) / 1.5 / fov
-    );
-    canvas.strokeRect(
-      (x - width * 0.75) / fov,
-      -(height - shootChange/shootBarrelMax*height) / 1.5 / fov,
-      (width / fov) * 1.5,
-      (height - shootChange/shootBarrelMax*height) / 1.5 / fov
-    );
-    canvas.fillRect(
-      (x - width * 0.75) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov,
-      (width / fov) * 1.5,
-      (height - shootChange/shootBarrelMax*height) / 5 / fov
-    );
-    canvas.strokeRect(
-      (x - width * 0.75) / fov,
-      -(height - shootChange/shootBarrelMax*height) / fov,
-      (width / fov) * 1.5,
-      (height - shootChange/shootBarrelMax*height) / 5 /fov
-    );
-  }
-  function drawAsset(asset,bodysize,color,outline,canvas){
-    if (asset.hasOwnProperty("angle")) {
-      if (asset.angle != 0) {
-        canvas.rotate((asset.angle * Math.PI) / 180);
-      }
-    }
-    canvas.translate(bodysize * asset.x, bodysize * asset.y);
-    canvas.fillStyle = color;
-    canvas.strokeStyle = outline;
-    if (asset.sides == 0) {
-      canvas.beginPath();
-      canvas.arc(0, 0, bodysize * asset.size, 0, 2 * Math.PI);
-      canvas.fill();
-      canvas.stroke();
-    } else if (asset.sides < 0) {//draw a star
-      let numberOfSpikes = -asset.sides;
-      let outerRadius = bodysize * asset.size;
-      let innerRadius = (bodysize * asset.size / 2);
-      let rot = (Math.PI / 2) * 3;
-      let x = 0;
-      let y = 0;
-      canvas.beginPath();
-      canvas.moveTo(0, -outerRadius);
-      for (i = 0; i < numberOfSpikes; i++) {
-        x = Math.cos(rot) * outerRadius;
-        y = Math.sin(rot) * outerRadius;
-        canvas.lineTo(x, y);
-        rot += Math.PI / numberOfSpikes;
-        x = Math.cos(rot) * innerRadius;
-        y = Math.sin(rot) * innerRadius;
-        canvas.lineTo(x, y);
-        rot += Math.PI / numberOfSpikes;
-      }
-      canvas.lineTo(0, -outerRadius);
-      canvas.closePath();
-      canvas.fill();
-      canvas.stroke();
-    } else {
-      canvas.beginPath();
-      var baseSides = asset.sides;
-      canvas.moveTo(bodysize * asset.size * Math.cos(0), bodysize * asset.size * Math.sin(0));
-      for (var i = 1; i <= baseSides; i++) {
-        canvas.lineTo(
-          bodysize * asset.size * Math.cos((i * 2 * Math.PI) / baseSides),
-          bodysize * asset.size * Math.sin((i * 2 * Math.PI) / baseSides)
-        );
-      }
-      canvas.closePath();
-      canvas.fill();
-      canvas.stroke();
-    }
-    canvas.translate(-bodysize * asset.x, -bodysize * asset.y);
-    if (asset.hasOwnProperty("angle")) {
-      if (asset.angle != 0) {
-        canvas.rotate((-asset.angle * Math.PI) / 180);
-      }
-    }
-  }
-  function hctxroundRectangle(x,y,r,w,h){
-    hctx.beginPath();
-    hctx.moveTo(x + r, y);
-    hctx.arcTo(x + w, y, x + w, y + h, r);
-    hctx.arcTo(x + w, y + h, x, y + h, r);
-    hctx.arcTo(x, y + h, x, y, r);
-    hctx.arcTo(x, y, x + w, y, r);
-    hctx.closePath();
-    hctx.stroke(); //MUST stroke first, or else the rectangle drawn in code below wil cover part of the stroke
-    hctx.fill();
-  }
-  function ctxroundRectangle(x,y,r,w,h){
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-    ctx.stroke(); //MUST stroke first, or else the rectangle drawn in code below wil cover part of the stroke
-    ctx.fill();
-  }
-  function hctxroundRectangleFill(x,y,r,w,h){//only fill
-    hctx.beginPath();
-    hctx.moveTo(x + r, y);
-    hctx.arcTo(x + w, y, x + w, y + h, r);
-    hctx.arcTo(x + w, y + h, x, y + h, r);
-    hctx.arcTo(x, y + h, x, y, r);
-    hctx.arcTo(x, y, x + w, y, r);
-    hctx.closePath();
-    hctx.fill();
-  }
-  function ctxroundRectangleFill(x,y,r,w,h){//only fill
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  function drawPlayer(canvas, object, fov, spawnProtect, playercolor, playeroutline, eternal, objectangle, id){//only barrels and body (no heath bars, names, and chats)
-    //objectangle refers to angle rotated before triggering this function
-    //fov is clientFovMultiplier for ctx, hctx is 1
-      canvas.lineJoin = "round"; //make nice round corners
-      //draw assets below body, e.g. rammer body base
-      for (assetID in object.assets){
-        var asset = object.assets[assetID];
-        if (asset.type == "under") {
-          let assetcolor = asset.color;
-          let assetoutline = asset.outline;
-          canvas.lineWidth = asset.outlineThickness / fov;
-          if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
-            assetcolor = playercolor;
-          }
-          if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
-            assetoutline = playeroutline;
-          }
-          drawAsset(asset,object.width/fov,assetcolor,assetoutline,canvas)
-        }
-      }
-
-      //draw barrel
-      canvas.lineWidth = 4 / fov;
-      //weapon barrels
-      for (barrel in object.barrels){
-        let thisBarrel = object.barrels[barrel];
-        canvas.rotate((thisBarrel.additionalAngle * Math.PI) / 180); //rotate to barrel angle
-        canvas.fillStyle = bodyColors.barrel.col;
-        canvas.strokeStyle = bodyColors.barrel.outline;
-        if (spawnProtect == "yes") {
-          //if have spawn protection
-          canvas.fillStyle = bodyColors.barrel.hitCol;
-          canvas.strokeStyle = bodyColors.barrel.hitOutline;
-        }
-        //lerp barrel animation
-        let oldbarrelheight;
-        try{
-          oldbarrelheight = oldobjects.player[id].barrels[barrel].barrelHeightChange;
-        }
-        catch(err){}
-        let lerpedheight = thisBarrel.barrelHeightChange;
-        if (oldbarrelheight){
-          lerpedheight = oldbarrelheight + (thisBarrel.barrelHeightChange - oldbarrelheight)/updateInterval*(Date.now() - latestServerUpdateTime);
-        }
-        //bullet barrel
-        //note: barrelHeightChange refers to reduction in barrel height for barrel animation when shooting
-        if (thisBarrel.barrelType == "bullet") {
-          drawBulletBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
-        }
-        //drone barrel
-        else if (thisBarrel.barrelType == "drone") {
-          drawDroneBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
-        }
-        //trap barrel
-        else if (thisBarrel.barrelType == "trap") {
-          drawTrapBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
-        }
-        //mine barrel
-        else if (thisBarrel.barrelType == "mine") {
-          drawMineBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
-        }
-        //minion barrel
-        else if (thisBarrel.barrelType == "minion") {
-          drawMinionBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
-        }
-        canvas.rotate((-thisBarrel.additionalAngle * Math.PI) / 180); //rotate back
-      }
-
-      //draw player body
-      canvas.fillStyle = playercolor;
-      canvas.strokeStyle = playeroutline;
-      if (object.rad > 0){//rad player
-        if (!radiantShapes.hasOwnProperty(id)) {
-          var randomstate = Math.floor(Math.random() * 3); //randomly choose a color state for the radiant shape to start (if not when you spawn in cavern, all shapes same color)
-          var randomtype = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
-          if (randomtype == 1) {
-            if (randomstate == 0) {
-              radiantShapes[id] = {
-                red: 255,
-                blue: 0,
-                green: 0,
-                rgbstate: 1,
-                radtype: randomtype,
-              }; //keep track of radiant shape colors (done in client code)
-            } else if (randomstate == 1) {
-              radiantShapes[id] = {
-                red: 199,
-                blue: 0,
-                green: 150,
-                rgbstate: 2,
-                radtype: randomtype,
-              };
-            } else if (randomstate == 2) {
-              radiantShapes[id] = {
-                red: -1,
-                blue: 200,
-                green: 0,
-                rgbstate: 3,
-                radtype: randomtype,
-              };
-            }
-          } else {
-            if (randomstate == 0) {
-              radiantShapes[id] = {
-                red: 118,
-                blue: 168,
-                green: 151,
-                rgbstate: 1,
-                radtype: randomtype,
-              };
-            } else if (randomstate == 1) {
-              radiantShapes[id] = {
-                red: 209,
-                blue: 230,
-                green: 222,
-                rgbstate: 2,
-                radtype: randomtype,
-              };
-            } else if (randomstate == 2) {
-              radiantShapes[id] = {
-                red: 234,
-                blue: 240,
-                green: 180,
-                rgbstate: 3,
-                radtype: randomtype,
-              };
-            }
-          }
-        }
-        object.red = radiantShapes[id].red;
-        object.blue = radiantShapes[id].blue;
-        object.green = radiantShapes[id].green;
-        let radiantAuraSize = document.getElementById("sizevalue").innerHTML * auraWidth;
-        //calculate color of spikes, which would be 20 higher than actual rgb value
-        if (object.red + 150 <= 255) {
-          var spikeRed = object.red + 150;
-        } else {
-          var spikeRed = 255;
-        }
-        if (object.blue + 150 <= 255) {
-          var spikeBlue = object.blue + 150;
-        } else {
-          var spikeBlue = 255;
-        }
-        if (object.green + 150 <= 255) {
-          var spikeGreen = object.green + 150;
-        } else {
-          var spikeGreen = 255;
-        }
-        if (object.rad == 3) {
-          //for high rarity radiant shapes, draw spikes
-          canvas.rotate((extraSpikeRotate * Math.PI) / 180);
-          canvas.fillStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.7)";
-          canvas.strokeStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.3)";
-          var numberOfSpikes = 6;
-          var outerRadius =
-            ((object.width * radiantAuraSize * 3) / fov) *
-            0.75;
-          var innerRadius = (object.width / fov) * 0.75;
-
-          var rot = (Math.PI / 2) * 3;
-          var x = 0;
-          var y = 0;
-
-          canvas.beginPath();
-          canvas.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            canvas.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            canvas.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          canvas.lineTo(0, 0 - outerRadius);
-          canvas.closePath();
-          canvas.lineWidth = 3 / fov;
-          canvas.fill();
-          canvas.stroke();
-          canvas.rotate((-extraSpikeRotate * Math.PI) / 180);
-        } else if (object.rad == 4) {
-          //for high rarity radiant shapes, draw spikes
-          canvas.rotate((extraSpikeRotate1 * Math.PI) / 180);
-          canvas.fillStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.7)";
-          canvas.strokeStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.3)";
-          var numberOfSpikes = 3;
-          var outerRadius =
-            (object.width * radiantAuraSize * 3) / fov;
-          var innerRadius = (object.width / fov) * 0.5;
-          var rot = (Math.PI / 2) * 3;
-          var x = 0;
-          var y = 0;
-          canvas.beginPath();
-          canvas.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            canvas.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            canvas.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          canvas.lineTo(0, 0 - outerRadius);
-          canvas.closePath();
-          canvas.lineWidth = 3 / fov;
-          canvas.fill();
-          canvas.stroke();
-          canvas.rotate((-extraSpikeRotate1 * Math.PI) / 180);
-          canvas.rotate((extraSpikeRotate2 * Math.PI) / 180);
-          var numberOfSpikes = 6;
-          var outerRadius =
-            ((object.width * radiantAuraSize * 3) / fov) *
-            0.5;
-          var innerRadius = (object.width / fov) * 0.5;
-          var rot = (Math.PI / 2) * 3;
-          var x = 0;
-          var y = 0;
-          canvas.beginPath();
-          canvas.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            canvas.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            canvas.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          canvas.lineTo(0, 0 - outerRadius);
-          canvas.closePath();
-          canvas.lineWidth = 3 / fov;
-          canvas.fill();
-          canvas.stroke();
-          canvas.rotate((-extraSpikeRotate2 * Math.PI) / 180);
-        } else if (object.rad == 5) {
-          //for high rarity radiant shapes, draw spikes
-          canvas.rotate((extraSpikeRotate1 * Math.PI) / 180);
-          canvas.fillStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.7)";
-          canvas.strokeStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.3)";
-          var numberOfSpikes = 3;
-          var outerRadius =
-            ((object.width * radiantAuraSize * 3) / fov) *
-            1.5;
-          var innerRadius = (object.width / fov) * 0.5;
-          var rot = (Math.PI / 2) * 3;
-          var x = 0;
-          var y = 0;
-          canvas.beginPath();
-          canvas.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            canvas.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            canvas.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          canvas.lineTo(0, 0 - outerRadius);
-          canvas.closePath();
-          canvas.lineWidth = 3 / fov;
-          canvas.fill();
-          canvas.stroke();
-          canvas.rotate((-extraSpikeRotate1 * Math.PI) / 180);
-          canvas.rotate((extraSpikeRotate2 * Math.PI) / 180);
-          var numberOfSpikes = 3;
-          var outerRadius =
-            ((object.width * radiantAuraSize * 3) / fov) *
-            0.5;
-          var innerRadius = (object.width / fov) * 0.5;
-          var rot = (Math.PI / 2) * 3;
-          var x = 0;
-          var y = 0;
-          canvas.beginPath();
-          canvas.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            canvas.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            canvas.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          canvas.lineTo(0, 0 - outerRadius);
-          canvas.closePath();
-          canvas.lineWidth = 3 / fov;
-          canvas.fill();
-          canvas.stroke();
-          canvas.rotate((-extraSpikeRotate2 * Math.PI) / 180);
-        }
-
-        //old code where aura have shape
-        canvas.fillStyle =
-          "rgba(" +
-          object.red +
-          ", " +
-          object.green +
-          ", " +
-          object.blue +
-          ", 0.3)";
-        canvas.strokeStyle =
-          "rgba(" +
-          object.red +
-          ", " +
-          object.green +
-          ", " +
-          object.blue +
-          ", 0.3)";
-        canvas.lineWidth = 3 / fov;
-        canvas.beginPath();
-
-        let shapeaurasize = object.rad;
-        if (shapeaurasize > 3) {
-          shapeaurasize = 3; //prevent huge auras
-        }
-        canvas.beginPath();
-        canvas.arc(0, 0, object.width * radiantAuraSize * shapeaurasize / fov, 0, 2 * Math.PI);
-        canvas.fill();
-        canvas.stroke();
-        var shadeFactor = 3 / 4; //smaller the value, darker the shade
-        canvas.strokeStyle =
-          "rgb(" +
-          object.red * shadeFactor +
-          ", " +
-          object.green * shadeFactor +
-          ", " +
-          object.blue * shadeFactor +
-          ")";
-        canvas.fillStyle =
-          "rgb(" +
-          object.red +
-          ", " +
-          object.green +
-          ", " +
-          object.blue +
-          ")";
-        if (object.hit > 0) {
-          //if shape is hit
-          canvas.strokeStyle =
-            "rgb(" +
-            (object.red * shadeFactor + 20) +
-            ", " +
-            (object.green * shadeFactor + 20) +
-            ", " +
-            (object.blue * shadeFactor + 20) +
-            ")";
-          canvas.fillStyle =
-            "rgb(" +
-            (object.red + 20) +
-            ", " +
-            (object.green + 20) +
-            ", " +
-            (object.blue + 20) +
-            ")";
-        }
-
-        //choose whether a particle would spawn
-        //particle spawn chance based on number of sides the shape has, so square has less particles
-        if (spawnradparticle == "yes"){
-          var chooseValue = 20 - object.sides * 2; //lower the number means more particles spawned
-          if (chooseValue < 5) {
-            //5 refers to mimimum particle spawn chance
-            chooseValue = 5;
-          }
-          if (object.radtier == 4){
-            chooseValue -= 2;
-          }
-          else if (object.radtier == 5){
-            chooseValue -= 3;
-          }
-          var choosing = Math.floor(Math.random() * chooseValue); //choose if particle spawn
-          if (choosing == 1) {
-            //spawn a particle
-            var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
-            var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
-            var randomDistFromCenter =
-              Math.floor(Math.random() * object.width * 2) - object.width;
-            radparticles[particleID] = {
-              angle: angleRadians,
-              x: object.x + randomDistFromCenter * Math.cos(angleRadians),
-              y: object.y + randomDistFromCenter * Math.sin(angleRadians),
-              width: 5,
-              height: 5,
-              speed: 1,
-              timer: 25,
-              maxtimer: 25,
-              color:
-                "rgba(" +
-                object.red +
-                "," +
-                object.green +
-                "," +
-                object.blue +
-                ",.5)",
-              outline:
-                "rgba(" +
-                (object.red* shadeFactor + 20) +
-                "," +
-                (object.green* shadeFactor + 20) +
-                "," +
-                (object.blue* shadeFactor + 20) +
-                ",.5)",
-              type: "particle",
-            };
-            if (object.radtier == 4){
-              radparticles[particleID].width = Math.floor(Math.random() * 10) + 5;
-            }
-            else if (object.radtier == 5){
-              radparticles[particleID].width = Math.floor(Math.random() * 20) + 5;
-              radparticles[particleID].speed = 3;
-              radparticles[particleID].timer = 50;
-              radparticles[particleID].maxtimer = 50;
-            }
-            particleID++;
-          }
-        }
-      } // end of rad player code
-      if (eternal == "no") {
-        //not a tier 6 tank
-        if(object.width >= 0) {
-          if (!object.sides){
-            canvas.beginPath();
-            canvas.arc(0, 0, object.width / fov, 0, 2 * Math.PI);
-            canvas.fill();
-            canvas.stroke();
-          }
-          else{
-            if (object.sides >= 0){
-              let baseSides = object.sides;
-              //rotate to fix weird angle
-              if (baseSides == 3){
-                canvas.rotate(30 * Math.PI / 180);
-              }
-              else if (baseSides == 4){
-                canvas.rotate(45 * Math.PI / 180);
-              }
-              else if (baseSides == 5){
-                canvas.rotate(17.5 * Math.PI / 180);
-              }
-              else if (baseSides == 7){
-                canvas.rotate(40 * Math.PI / 180);
-              }
-              else if (baseSides == 9){
-                canvas.rotate(12 * Math.PI / 180);
-              }
-              canvas.beginPath();
-              canvas.moveTo((object.width / fov), 0);
-              for (var i = 1; i <= baseSides; i++) {
-                canvas.lineTo((object.width / fov) * Math.cos((i * 2 * Math.PI) / baseSides), (object.width / fov) * Math.sin((i * 2 * Math.PI) / baseSides));
-              }
-              canvas.fill();
-              canvas.stroke();
-              if (baseSides == 3){
-                canvas.rotate(-30 * Math.PI / 180);
-              }
-              else if (baseSides == 4){
-                canvas.rotate(-45 * Math.PI / 180);
-              }
-              else if (baseSides == 5){
-                canvas.rotate(-17.5 * Math.PI / 180);
-              }
-              else if (baseSides == 7){
-                canvas.rotate(-40 * Math.PI / 180);
-              }
-              else if (baseSides == 9){
-                canvas.rotate(-12 * Math.PI / 180);
-              }
-            }
-            else{
-              let numberOfSpikes = -object.sides;
-              let outerRadius = object.width / fov;
-              let innerRadius = (object.width / fov / 2);
-              let rot = (Math.PI / 2) * 3;
-              let x = 0;
-              let y = 0;
-              canvas.beginPath();
-              canvas.moveTo(0, -outerRadius);
-              for (i = 0; i < numberOfSpikes; i++) {
-                x = Math.cos(rot) * outerRadius;
-                y = Math.sin(rot) * outerRadius;
-                canvas.lineTo(x, y);
-                rot += Math.PI / numberOfSpikes;
-                x = Math.cos(rot) * innerRadius;
-                y = Math.sin(rot) * innerRadius;
-                canvas.lineTo(x, y);
-                rot += Math.PI / numberOfSpikes;
-              }
-              canvas.lineTo(0, -outerRadius);
-              canvas.closePath();
-              canvas.fill();
-              canvas.stroke();
-            }
-          }
-        }
-      } else {
-        //if a tier 6 tank
-        canvas.beginPath();
-        let baseSides = 6;
-        canvas.moveTo((object.width / fov), 0);
-        for (var i = 1; i <= baseSides; i++) {
-          canvas.lineTo((object.width / fov) * Math.cos((i * 2 * Math.PI) / baseSides), (object.width / fov) * Math.sin((i * 2 * Math.PI) / baseSides));
-        }
-        canvas.fill();
-        canvas.stroke();
-      }
-
-      //barrels in body upgrade
-      for (barrel in object.bodybarrels){
-        let thisBarrel = object.bodybarrels[barrel];
-//lerp barrel angle
-        let oldangle;
-        try{
-          oldangle = oldobjects.player[id].bodybarrels[barrel].additionalAngle;
-        }
-        catch(err){}
-        let newangle = thisBarrel.additionalAngle;
-        let lerpedAngle = newangle;
-        if (oldangle){
-          if ((oldangle - newangle)>5.25){//angle went from 360 to 0
-            oldangle-=2*Math.PI;
-          }
-          else if ((newangle - oldangle)>5.25){//angle went from 0 to 360
-            oldangle+=2*Math.PI;
-          }
-          lerpedAngle = oldangle + (newangle - oldangle)/updateInterval*(Date.now() - latestServerUpdateTime);
-        }
-        canvas.rotate(lerpedAngle - objectangle); //rotate to barrel angle
-        canvas.fillStyle = bodyColors.barrel.col;
-        canvas.strokeStyle = bodyColors.barrel.outline;
-        if (spawnProtect == "yes") {
-          //if have spawn protection
-          canvas.fillStyle = bodyColors.barrel.hitCol;
-          canvas.strokeStyle = bodyColors.barrel.hitOutline;
-        }
-        //lerp barrel animation
-        let oldbarrelheight;
-        try{
-          oldbarrelheight = oldobjects.player[id].bodybarrels[barrel].barrelHeightChange;
-        }
-        catch(err){}
-        let lerpedheight = thisBarrel.barrelHeightChange;
-        if (oldbarrelheight){
-          lerpedheight = oldbarrelheight + (thisBarrel.barrelHeightChange - oldbarrelheight)/updateInterval*(Date.now() - latestServerUpdateTime);
-        }
-        //bullet barrel
-        if (thisBarrel.barrelType == "bullet") {
-          drawBulletBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
-        }
-        //drone barrel
-        else if (thisBarrel.barrelType == "drone") {
-          if (Math.abs(thisBarrel.barrelWidth - thisBarrel.barrelHeight) > 3){//not a square, dont use equal cuz there might be rounding errors
-            drawDroneBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
-          }
-          else{
-            drawDroneTurret(canvas,thisBarrel.x,thisBarrel.barrelWidth,lerpedheight,fov)
-          }
-        }
-        //trap barrel (doesnt exist atm)
-        else if (thisBarrel.barrelType == "trap") {
-          drawTrapBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
-        }
-        //mine barrel (doesnt exist atm)
-        else if (thisBarrel.barrelType == "mine") {
-          drawMineBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
-        }
-        //minion barrel (doesnt exist atm)
-        else if (thisBarrel.barrelType == "minion") {
-          drawMinionBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
-        }
-        canvas.rotate(-lerpedAngle + objectangle); //rotate back
-      }
-      //draw turret base
-      if ('turretBaseSize' in object){
-        canvas.fillStyle = bodyColors.barrel.col;
-        canvas.strokeStyle = bodyColors.barrel.outline;
-        canvas.beginPath();
-        canvas.arc(0, 0, (object.width / clientFovMultiplier) * object.turretBaseSize, 0, 2 * Math.PI);
-        canvas.fill();
-        canvas.stroke();
-      }
-
-      //draw assets above body, e.g. aura assets
-      for (assetID in object.assets){
-        var asset = object.assets[assetID];
-        if (asset.type == "above") {
-          let assetcolor = asset.color;
-          let assetoutline = asset.outline;
-          canvas.lineWidth = asset.outlineThickness / fov;
-          if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
-            assetcolor = playercolor;
-          }
-          if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
-            assetoutline = playeroutline;
-          }
-          drawAsset(asset,object.width/fov,assetcolor,assetoutline,canvas)
-        }
-      }
-
-      canvas.lineJoin = "miter"; //change back
-  }
-
-  function drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which) {//draw player that doesnt exist, e.g. leaderboard, homepage etc
-        hctx.save();
-        hctx.translate(x, y);
-        hctx.rotate(bodyangle);
-        if (which == "body" && (name in bodyupgrades)) {
-          if (bodyupgrades[name].hasOwnProperty("assets")) {
-            //draw under assets
-            for (const assetID in bodyupgrades[name].assets) {
-              var asset = bodyupgrades[name].assets[assetID];
-              if (asset.type == "under") {
-                let assetcolor = asset.color;
-                let assetoutline = asset.outline;
-                if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
-                  assetcolor = bodycolor;
+                if (showHitBox == "yes") {
+                  //draw hitbox
+                  ctx.strokeStyle = "blue";
+                  ctx.lineWidth = 3;
+                  ctx.beginPath();
+                  ctx.arc(
+                    drawingX,
+                    drawingY,
+                    object.width / clientFovMultiplier,
+                    0,
+                    2 * Math.PI
+                  );
+                  ctx.stroke();
                 }
-                if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
-                  assetoutline = bodyoutline;
+              } else if (object.type == "Fixedportal") {
+                //drawing rectangular fixed portals, e.g. the portal at top left corner of dune
+                ctx.save(); //save so later can restore
+                ctx.translate(drawingX, drawingY); //translate so white portal is at 0,0 coordinates so can rotate around center of portal
+                ctx.rotate((object.angleDegrees * Math.PI) / 180); //rotate portal
+                ctx.fillStyle = object.color;
+                ctx.strokeStyle = object.outline;
+                ctx.fillRect(
+                  -object.width / 2 / clientFovMultiplier,
+                  -object.height / 2 / clientFovMultiplier,
+                  object.width / clientFovMultiplier,
+                  object.height / clientFovMultiplier
+                );
+                ctx.strokeRect(
+                  -object.width / 2 / clientFovMultiplier,
+                  -object.height / 2 / clientFovMultiplier,
+                  object.width / clientFovMultiplier,
+                  object.height / clientFovMultiplier
+                );
+                ctx.globalAlpha = 0.7; //transparency
+                ctx.fillStyle = object.color2;
+                ctx.fillRect(
+                  -object.width / clientFovMultiplier,
+                  -object.height / clientFovMultiplier,
+                  (object.width * 2) / clientFovMultiplier,
+                  (object.height * 2) / clientFovMultiplier
+                );
+                ctx.strokeRect(
+                  -object.width / clientFovMultiplier,
+                  -object.height / clientFovMultiplier,
+                  (object.width * 2) / clientFovMultiplier,
+                  (object.height * 2) / clientFovMultiplier
+                );
+                ctx.globalAlpha = 1.0; //reset transparency
+                ctx.restore(); //restore after translating
+                if (showHitBox == "yes") {
+                  //draw hitbox
+                  ctx.strokeStyle = "blue";
+                  ctx.lineWidth = 3;
+                  ctx.beginPath();
+                  ctx.arc(
+                    drawingX,
+                    drawingY,
+                    object.width / 2 / clientFovMultiplier,
+                    0,
+                    2 * Math.PI
+                  );
+                  ctx.stroke();
                 }
-                drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
+              } else if (object.type == "particle") {
+                //draw particles
+                if (object.timer <= 10){
+                  ctx.globalAlpha = object.timer / 10;
+                }
+                else if (object.timer >= object.maxtimer-10 && (object.source == "dune" || object.source == "crossroads")) {
+                  ctx.globalAlpha = ((((object.timer - object.maxtimer) + 10) - 10) * -1) / 10;
+                }
+                //ctx.globalAlpha = object.timer / object.maxtimer;
+                ctx.fillStyle = object.color;
+                ctx.strokeStyle = object.outline;
+
+                ctx.lineWidth = 3 / clientFovMultiplier;
+                ctx.beginPath();
+                ctx.arc(
+                  drawingX,
+                  drawingY,
+                  object.width / clientFovMultiplier,
+                  0,
+                  2 * Math.PI
+                );
+                ctx.fill();
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+              } else if (object.type == "wall") {
+                //ctx.fillStyle = "#232323";
+                ctx.fillStyle = "rgba(15, 15, 15, .5)";//crossroads wall color
+                if (gamemode == "sanctuary"){
+                  ctx.fillStyle = "rgba(40,40,40, .5)";//sanctuary wall color
+                }
+                else if (gamemode == "cavern"){
+                  ctx.fillStyle = "black";//cavern wall color
+                }
+                ctx.fillRect(
+                  drawingX,
+                  drawingY,
+                  object.w / clientFovMultiplier,
+                  object.h / clientFovMultiplier
+                );
+                if (showHitBox == "yes") {
+                  //draw hitbox
+                  ctx.strokeStyle = "blue";
+                  ctx.lineWidth = 3;
+                  ctx.strokeRect(
+                    drawingX,
+                    drawingY,
+                    object.w / clientFovMultiplier,
+                    object.h / clientFovMultiplier
+                  );
+                }
+              } else if (object.type == "gate") {
+                if (gamemode == "cavern"){//cavern
+                  ctx.save();
+                  ctx.translate(drawingX, drawingY);
+                  ctx.rotate(object.angle/180*Math.PI);
+                  //draw white rectangle below
+                  ctx.fillStyle = "rgba(255,255,255,.7)";
+                  ctx.strokeStyle = "white";
+                  //FIRST WHITE RECTANGLE
+                  ctx.globalAlpha = 1.0 * (endGate - gateTimer) / (endGate - 1 - startGate);//gateTimer increases from 0.5 to 9, this equation makes the opacity decrease from 1 to 0
+                  ctx.fillRect(
+                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.strokeRect(
+                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.globalAlpha = 1.0;
+                  //SECOND WHITE RECTANGLE
+                  let gateTimer2 = gateTimer - endGate/2;
+                  if (gateTimer2 < startGate){
+                    gateTimer2 = endGate - (startGate - gateTimer2)
+                  }
+                  ctx.globalAlpha = 1.0 * (endGate - gateTimer2) / (endGate - 1 - startGate);//gateTimer increases from 1 to 7, this equation makes the opacity decrease from 1 to 0
+                  ctx.fillRect(
+                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer2,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.strokeRect(
+                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer2,
+                    object.width / clientFovMultiplier
+                  );
+                  //draw arrows
+                  for (var i = 0; i < gatearrow.length; i++) {
+                    let y = ((object.height / clientFovMultiplier * 9)/2 + object.height / clientFovMultiplier/2)/45*(gatearrow[i]-45);
+                    let arrowwidth = 25/clientFovMultiplier;//half of entire width
+                    let arrowheight = 25/clientFovMultiplier;
+                    //draw 3 arrows in a row
+                    if (gatearrow[i] < 20){
+                      ctx.globalAlpha = gatearrow[i]/20;
+                    }
+                    else if (gatearrow[i] > 70){
+                      ctx.globalAlpha = (90-gatearrow[i])/20;
+                    }
+                    else{
+                      ctx.globalAlpha = 1;
+                    }
+                    ctx.lineWidth = 3/clientFovMultiplier;
+                    ctx.fillStyle = "white";
+                    ctx.beginPath();
+                    ctx.moveTo(y-arrowheight, 0-arrowwidth);
+                    ctx.lineTo(y, 0);
+                    ctx.lineTo(y-arrowheight, 0+arrowwidth);
+                    ctx.moveTo(y-arrowheight, object.width/clientFovMultiplier/3-arrowwidth);
+                    ctx.lineTo(y, object.width/clientFovMultiplier/3);
+                    ctx.lineTo(y-arrowheight, object.width/clientFovMultiplier/3+arrowwidth);
+                    ctx.moveTo(y-arrowheight, -object.width/clientFovMultiplier/3-arrowwidth);
+                    ctx.lineTo(y, -object.width/clientFovMultiplier/3);
+                    ctx.lineTo(y-arrowheight, -object.width/clientFovMultiplier/3+arrowwidth);
+                    ctx.stroke();
+                    //move arrow
+                    gatearrow[i]+=0.1;
+                    if (gatearrow[i]>45 && gatearrow[i]<65){//move faster when arrow in the middle
+                      gatearrow[i]+=0.4;
+                    }
+                    else if (gatearrow[i]>90){
+                      gatearrow[i] = 0;
+                    }
+                  }
+                  ctx.globalAlpha = 1.0;
+                  //draw actual black gate
+                  ctx.fillStyle = "black";
+                  ctx.fillRect(0,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier,
+                    object.width / clientFovMultiplier
+                  );
+                }
+                else if (gamemode != "sanctuary"){//cross (default)
+                  ctx.save();
+                  ctx.translate(drawingX, drawingY);
+                  ctx.rotate(object.angle/180*Math.PI);
+                  //draw white rectangle below
+                  ctx.fillStyle = "rgba(255,255,255,.7)";
+                  ctx.strokeStyle = "white";
+                  //FIRST WHITE RECTANGLE
+                  ctx.globalAlpha = 1.0 * (endGate - gateTimer) / (endGate - 1 - startGate);//gateTimer increases from 0.5 to 9, this equation makes the opacity decrease from 1 to 0
+                  ctx.fillRect(
+                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.strokeRect(
+                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.globalAlpha = 1.0;
+                  //SECOND WHITE RECTANGLE
+                  let gateTimer2 = gateTimer - endGate/2;
+                  if (gateTimer2 < startGate){
+                    gateTimer2 = endGate - (startGate - gateTimer2)
+                  }
+                  ctx.globalAlpha = 1.0 * (endGate - gateTimer2) / (endGate - 1 - startGate);//gateTimer increases from 1 to 7, this equation makes the opacity decrease from 1 to 0
+                  ctx.fillRect(
+                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer2,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.strokeRect(
+                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer2,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.globalAlpha = 1.0;
+                  //draw actual black gate
+                  ctx.fillStyle = "black";
+                  ctx.fillRect(0,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier,
+                    object.width / clientFovMultiplier
+                  );
+                }
+                else{//sanc
+                  ctx.save();
+                  ctx.translate(drawingX, drawingY);
+                  ctx.rotate(object.angle/180*Math.PI);
+                  //draw white rectangle below
+                  ctx.fillStyle = "rgba(0,0,0,.2)";
+                  ctx.strokeStyle = "rgba(0,0,0,.5)";
+                  //FIRST WHITE RECTANGLE
+                  ctx.globalAlpha = 1.0 * (endGate - gateTimer) / (endGate - 1 - startGate);//gateTimer increases from 0.5 to 9, this equation makes the opacity decrease from 1 to 0
+                  ctx.fillRect(
+                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.strokeRect(
+                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.globalAlpha = 1.0;
+                  //SECOND WHITE RECTANGLE
+                  let gateTimer2 = gateTimer - endGate/2;
+                  if (gateTimer2 < startGate){
+                    gateTimer2 = endGate - (startGate - gateTimer2)
+                  }
+                  ctx.globalAlpha = 1.0 * (endGate - gateTimer2) / (endGate - 1 - startGate);//gateTimer increases from 1 to 7, this equation makes the opacity decrease from 1 to 0
+                  ctx.fillRect(
+                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer2,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.strokeRect(
+                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier * gateTimer2,
+                    object.width / clientFovMultiplier
+                  );
+                  ctx.globalAlpha = 1.0;
+                  //draw actual black gate
+                  ctx.fillStyle = "black";
+                  ctx.fillRect(0,
+                    -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier,
+                    object.width / clientFovMultiplier
+                  );
+                  let numberOfSpikes = 6;
+                  let outerRadius = object.width / clientFovMultiplier /8;
+                  let innerRadius = object.width / clientFovMultiplier /25;
+                  let rot = (Math.PI / 2) * 3;
+                  let x = 0;
+                  let y = 0;
+                  for (let star = 0; star < 4; star++) {
+                    x = 0;
+                    y = 0;
+
+                    ctx.translate(object.height / clientFovMultiplier, object.width / clientFovMultiplier / 5 * (star-1.5))
+                    ctx.rotate(Math.PI * (endGate - gateTimer) / (endGate - 1 - startGate) /204 *360)
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0 - outerRadius);
+                    for (i = 0; i < numberOfSpikes; i++) {
+                      x = 0 + Math.cos(rot) * outerRadius;
+                      y = 0 + Math.sin(rot) * outerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                      x = 0 + Math.cos(rot) * innerRadius;
+                      y = 0 + Math.sin(rot) * innerRadius;
+                      ctx.lineTo(x, y);
+                      rot += Math.PI / numberOfSpikes;
+                    }
+                    ctx.lineTo(0,0 - outerRadius);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.rotate(-Math.PI * (endGate - gateTimer) / (endGate - 1 - startGate) /204 *360)
+                    ctx.translate(-object.height / clientFovMultiplier, -object.width / clientFovMultiplier / 5 * (star-1.5))
+                  }
+                }
+                if (showHitBox == "yes") {
+                  //draw hitbox
+                  ctx.strokeStyle = "blue";
+                  ctx.lineWidth = 3;
+                  ctx.strokeRect(0,
+                  -object.width/2/clientFovMultiplier,
+                    object.height / clientFovMultiplier,
+                    object.width / clientFovMultiplier
+                  );
+                }
+                ctx.restore();
+                //spawn particles
+                if (gamemode != "sanctuary" && gamemode != "cavern"){
+                  var choosing = Math.floor(Math.random() * 3); //choose if particle spawn. Lower number means more particles
+                  if (choosing == 1) {
+                      var dir = Math.floor(Math.random() * 2); //choose angle in degrees
+                      if (dir == 0){
+                        var angleRadians = (object.angle) * Math.PI / 180; //convert to radians
+                      }
+                      else{
+                        var angleRadians = (object.angle - 180) * Math.PI / 180;
+                      }
+                      let randX = 0;
+                      let randY = 0;
+                      //code currently does not support particles for gates that are tilted
+                      //i dont see a need to add that in the near future
+                      if (object.angle == 0 || object.angle == 180 || object.angle == 360){
+                        randY = Math.floor(Math.random() * object.width) - object.width/2;
+                      }
+                      else if (object.angle == 90 || object.angle == 270){
+                        randX = Math.floor(Math.random() * object.width) - object.width/2;
+                      }
+                      portalparticles[particleID] = {
+                        angle: angleRadians,
+                        x: object.x + randX,
+                        y: object.y + randY,
+                        width: 50,
+                        height: 50,
+                        speed: 10,
+                        timer: 30,
+                        maxtimer: 15, //difference between timer and maxtimer is the opacity change of the particle. Larger difference means more or less transparent
+                        color: "white",
+                        outline: "lightgrey",
+                        type: "particle",
+                      };
+                      particleID++;
+                  }
+                }
+                else if (gamemode != "cavern"){
+                  var choosing = Math.floor(Math.random() * 7); //choose if particle spawn. Lower number means more particles
+                  if (choosing == 1) {
+                    var dir = Math.floor(Math.random() * 2); //choose angle in degrees
+                    if (dir == 0){
+                      var angleRadians = (object.angle) * Math.PI / 180; //convert to radians
+                    }
+                    else{
+                      var angleRadians = (object.angle - 180) * Math.PI / 180;
+                    }
+                    let randX = 0;
+                    let randY = 0;
+                    //code currently does not support particles for gates that are tilted
+                    //i dont see a need to add that in the near future
+                    if (object.angle == 0 || object.angle == 180 || object.angle == 360){
+                      randY = Math.floor(Math.random() * object.width) - object.width/2;
+                    }
+                    else if (object.angle == 90 || object.angle == 270){
+                      randX = Math.floor(Math.random() * object.width) - object.width/2;
+                    }
+                    portalparticles[particleID] = {
+                      angle: angleRadians,
+                      x: object.x + randX,
+                      y: object.y + randY,
+                      width: 15,
+                      height: 15,
+                      speed: 5,
+                      timer: 20,
+                      maxtimer: 20, //difference between timer and maxtimer is the opacity change of the particle. Larger difference means more or less transparent
+                      color: "black",
+                      outline: "black",
+                      type: "particle",
+                    };
+                    particleID++;
+                  }
+                }
+              } else if (object.type == "def") {
+                //base defender in 2tdm
+                ctx.save();
+                ctx.translate(drawingX, drawingY);
+                ctx.rotate(object.angle);
+                ctx.lineJoin = "round"; //make corners of shape round
+                ctx.lineWidth = 4 / clientFovMultiplier;
+
+                //draw octagon base
+                var octagonWidth = object.width/5*6;
+                ctx.fillStyle = bodyColors.asset.col;
+                ctx.strokeStyle = bodyColors.asset.outline;
+                ctx.beginPath();
+                ctx.moveTo(
+                  0 + (octagonWidth / clientFovMultiplier) * Math.cos(0),
+                  0 + (octagonWidth / clientFovMultiplier) * Math.sin(0)
+                );
+                for (var i = 1; i <= 8 + 1; i += 1) {
+                  ctx.lineTo(
+                    0 +
+                      (octagonWidth / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / 8),
+                    0 +
+                      (octagonWidth / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / 8)
+                  );
+                }
+                ctx.fill();
+                ctx.stroke();
+
+
+                //draw barrels
+                ctx.fillStyle = bodyColors.barrel.col;
+                ctx.strokeStyle = bodyColors.barrel.outline;
+                //trapezoid at the tip
+                var barrelwidth = 70;
+                var barrelheight = 20;
+                //rectangle
+                var barrelwidth2 = 90;
+                var barrelheight2 = 20;
+                //base trapezoid
+                var barrelwidth3 = 70;
+                var barrelheight3 = 60;
+                //note that trapezoids and rectangles are drawn differently
+
+                for (let i = 0; i < 4; i++) {//draw 4 barrels
+                  var barrelAngle = 360/4*i;
+                  var barrelX = Math.cos((barrelAngle * Math.PI) / 180) * object.width * 1.4;
+                  var barrelY = Math.sin((barrelAngle * Math.PI) / 180) * object.width * 1.4;
+                  var barrelX2 =
+                    Math.cos((barrelAngle * Math.PI) / 180) *
+                    (object.width * 1.4 - barrelheight); //move rectangle barrel downwards
+                  var barrelY2 =
+                    Math.sin((barrelAngle * Math.PI) / 180) *
+                    (object.width * 1.4 - barrelheight);
+                  var barrelX3 =
+                    Math.cos((barrelAngle * Math.PI) / 180) *
+                    (object.width * 1.4 - barrelheight - barrelheight2); //move base trapezoid barrel downwards
+                  var barrelY3 =
+                    Math.sin((barrelAngle * Math.PI) / 180) *
+                    (object.width * 1.4 - barrelheight - barrelheight2);
+                  //base trapezoid
+                  ctx.save();
+                  ctx.translate(
+                    barrelX3 / clientFovMultiplier,
+                    barrelY3 / clientFovMultiplier
+                  );
+                  ctx.rotate(((barrelAngle - 90) * Math.PI) / 180);
+                  ctx.beginPath();
+                  ctx.moveTo(
+                    ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
+                    -barrelheight3 / clientFovMultiplier
+                  );
+                  ctx.lineTo(-barrelwidth3 / clientFovMultiplier, 0);
+                  ctx.lineTo(barrelwidth3 / clientFovMultiplier, 0);
+                  ctx.lineTo(
+                    ((barrelwidth3 / 3) * 2) / clientFovMultiplier,
+                    -barrelheight3 / clientFovMultiplier
+                  );
+                  ctx.lineTo(
+                    ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
+                    -barrelheight3 / clientFovMultiplier
+                  );
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.restore();
+                  //rectangle
+                  ctx.save();
+                  ctx.translate(
+                    barrelX2 / clientFovMultiplier,
+                    barrelY2 / clientFovMultiplier
+                  );
+                  ctx.rotate(((barrelAngle - 90) * Math.PI) / 180);
+                  ctx.fillRect(
+                    -barrelwidth2 / 2 / clientFovMultiplier,
+                    -barrelheight2 / clientFovMultiplier,
+                    barrelwidth2 / clientFovMultiplier,
+                    barrelheight2 / clientFovMultiplier
+                  );
+                  ctx.strokeRect(
+                    -barrelwidth2 / 2 / clientFovMultiplier,
+                    -barrelheight2 / clientFovMultiplier,
+                    barrelwidth2 / clientFovMultiplier,
+                    barrelheight2 / clientFovMultiplier
+                  );
+                  ctx.restore();
+                  //trapezium at the tip
+                  ctx.save();
+                  ctx.translate(
+                    barrelX / clientFovMultiplier,
+                    barrelY / clientFovMultiplier
+                  );
+                  ctx.rotate(((barrelAngle - 90) * Math.PI) / 180);
+                  ctx.beginPath();
+                  ctx.moveTo(-barrelwidth / 2 / clientFovMultiplier, 0);
+                  ctx.lineTo(
+                    -barrelwidth / clientFovMultiplier,
+                    -barrelheight / clientFovMultiplier
+                  );
+                  ctx.lineTo(
+                    barrelwidth / clientFovMultiplier,
+                    -barrelheight / clientFovMultiplier
+                  );
+                  ctx.lineTo(barrelwidth / 2 / clientFovMultiplier, 0);
+                  ctx.lineTo(-barrelwidth / 2 / clientFovMultiplier, 0);
+                  ctx.fill();
+                  ctx.stroke();
+                  ctx.restore();
+                }
+
+                //draw body
+                ctx.fillStyle = object.color;
+                ctx.strokeStyle = object.outline;
+                ctx.beginPath();
+                ctx.arc(
+                  0,
+                  0,
+                  object.width / clientFovMultiplier,
+                  0,
+                  2 * Math.PI
+                );
+                ctx.fill();
+                ctx.stroke();
+                var octagonWidth = object.width/5*4;
+                ctx.fillStyle = bodyColors.asset.col;
+                ctx.strokeStyle = bodyColors.asset.outline;
+                ctx.beginPath();
+                ctx.moveTo(
+                  0 + (octagonWidth / clientFovMultiplier) * Math.cos(0),
+                  0 + (octagonWidth / clientFovMultiplier) * Math.sin(0)
+                );
+                for (var i = 1; i <= 8 + 1; i += 1) {
+                  ctx.lineTo(
+                    0 +
+                      (octagonWidth / clientFovMultiplier) *
+                        Math.cos((i * 2 * Math.PI) / 8),
+                    0 +
+                      (octagonWidth / clientFovMultiplier) *
+                        Math.sin((i * 2 * Math.PI) / 8)
+                  );
+                }
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = object.color;
+                ctx.strokeStyle = object.outline;
+                ctx.beginPath();
+                ctx.arc(
+                  0,
+                  0,
+                  object.width/2 / clientFovMultiplier,
+                  0,
+                  2 * Math.PI
+                );
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.lineJoin = "miter"; //change back
+                ctx.restore();
+                if (showHitBox == "yes") {
+                  //draw hitbox
+                  ctx.strokeStyle = "blue";
+                  ctx.lineWidth = 3;
+                  ctx.beginPath();
+                  ctx.arc(
+                    drawingX,
+                    drawingY,
+                    object.width / clientFovMultiplier,
+                    0,
+                    2 * Math.PI
+                  );
+                  ctx.stroke();
+                }
               }
             }
-          }
-          hctx.fillStyle = bodycolor;
-          hctx.strokeStyle = bodyoutline;
-          if (!bodyupgrades[name].eternal){
-            hctx.beginPath();
-            hctx.arc(0, 0, bodysize, 0, 2 * Math.PI);
-            hctx.fill();
-            hctx.stroke();
-          }
-          else{
-            hctx.beginPath();
-            let baseSides = 6;
-            hctx.moveTo(bodysize, 0);
-            for (var i = 1; i <= baseSides; i++) {
-              hctx.lineTo(bodysize * Math.cos((i * 2 * Math.PI) / baseSides), bodysize * Math.sin((i * 2 * Math.PI) / baseSides));
-            }
-            hctx.fill();
-            hctx.stroke();
-          }
-          if (bodyupgrades[name].hasOwnProperty("bodybarrels")) {
-            //draw barrels
-            hctx.fillStyle = bodyColors.barrel.col;
-            hctx.strokeStyle = bodyColors.barrel.outline;
-            for (const barrel in bodyupgrades[name].bodybarrels) {
-                let thisBarrel = bodyupgrades[name].bodybarrels[barrel];
-                hctx.rotate(thisBarrel.additionalAngle);
-              //bullet barrel
-                if (thisBarrel.barrelType == "bullet") {
-                  drawBulletBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+            function drawplayerdata(object, id, playerstring, auraWidth) {
+              //function for drawing objects on the canvas. need to provide aura width because this fuction cannot access variables outside
+              var drawingX = (object.x - px) / clientFovMultiplier + canvas.width / 2; //calculate the location on canvas to draw object
+              var drawingY = (object.y - py) / clientFovMultiplier + canvas.height / 2;
+              if(object.type == "player") {
+                //write chats
+                if (id != playerstring) {
+                  var firstChatY = object.width / clientFovMultiplier /5*4 + 55 / clientFovMultiplier;
                 }
-                //drone barrel
-                else if (thisBarrel.barrelType == "drone") {
-                  if (Math.round(thisBarrel.barrelWidth) != Math.round(thisBarrel.barrelHeight)){
-                    drawDroneBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                else{
+                  var firstChatY = object.width / clientFovMultiplier /5*4;//chat nearer to player body if no need to display name
+                }
+                ctx.font = "700 25px Roboto";
+                ctx.textAlign = "center";
+                ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
+                var xpadding = 15;
+                var ypadding = 10;
+                var lineheight = 30;
+                
+                var timeWhenChatRemove = 100;//when change on server code, remember to change here too
+                
+                if (!(chatlist[id])){//used for animating chat positions
+                  chatlist[id] = JSON.parse(JSON.stringify(object.chats));
+                }
+                else{
+                  let tempArray = [];
+                  let messages = {};//prevent bug when multiple chats have same message
+                  object.chats.forEach(function (item, index) {
+                    let occurence = 0;//prevent bug when multiple chats have same message
+                    let foundit = 0;
+                    for (var i = 0; i < chatlist[id].length; i++) {//check if oldchats hae this message, to preserve the position for animation
+                      if (chatlist[id][i].chat == item.chat){
+                        if (messages[item.chat]){//saw a chat with the exact same message before!
+                          if (messages[item.chat] <= occurence){//this is a different chat
+                            let k = JSON.parse(JSON.stringify(chatlist[id][i]));
+                            k.time = item.time;
+                            tempArray.push(k);
+                            messages[chatlist[id][i].chat]++;
+                            foundit = 1;
+                            break
+                          }
+                          else{//this is the same chat that you saw before, continue hunting for the chat
+                            occurence++;
+                          }
+                        }
+                        else{
+                          let k = JSON.parse(JSON.stringify(chatlist[id][i]));
+                          k.time = item.time;
+                          tempArray.push(k);
+                          messages[chatlist[id][i].chat] = 1;
+                          foundit = 1;
+                          break
+                        }
+                      }
+                    }
+                    if (foundit == 0){//new chat message
+                      let k = JSON.parse(JSON.stringify(item));
+                      k.opacity = 0;
+                      tempArray.push(k);
+                    }
+                  });
+                  chatlist[id] = tempArray;
+                }
+
+                object.chats.slice().reverse().forEach((chatObj, index) => {//slice and reverse to loop though array backwards (so older messages are above)
+                  ctx.fillStyle = "rgba(69,69,69,.7)";
+
+                  var longestLine = 0;
+
+                  //multiline chat
+                  const wrapText = function(ctx, text, x, y, maxWidth, lineHeight) {
+                    // First, start by splitting all of our text into words, but splitting it into an array split by spaces
+                    let words = text.split(' ');
+                    let line = ''; // This will store the text of the current line
+                    let testLine = ''; // This will store the text when we add a word, to test if it's too long
+                    let lineArray = []; // This is an array of lines, which the function will return
+
+                    // Lets iterate over each word
+                    for(var n = 0; n < words.length; n++) {
+                        // Create a test line, and measure it..
+                        testLine += `${words[n]} `;
+                        let metrics = ctx.measureText(testLine);
+                        let testWidth = metrics.width;
+                        // If the width of this test line is more than the max width
+                        if (testWidth > maxWidth && n > 0) {
+                            // Then the line is finished, push the current line into "lineArray"
+                            line = line.slice(0, -1);//remove space at the end of the line
+                            lineArray.push([line, x, y]);
+                            let thislinewidth = ctx.measureText(line).width;
+                            if (thislinewidth > longestLine){
+                              longestLine = thislinewidth;
+                            }
+                            // Increase the line height, so a new line is started
+                            y += lineHeight;
+                            // Update line and test line to use this word as the first word on the next line
+                            line = `${words[n]} `;
+                            testLine = `${words[n]} `;
+                        }
+                        else {
+                            // If the test line is still less than the max width, then add the word to the current line
+                            line += `${words[n]} `;
+                        }
+                        // If we never reach the full max width, then there is only one line.. so push it into the lineArray so we return something
+                        if(n === words.length - 1) {
+                            line = line.slice(0, -1);//remove space at the end of the line
+                            lineArray.push([line, x, y]);
+                            let thislinewidth = ctx.measureText(line).width;
+                            if (thislinewidth > longestLine){
+                              longestLine = thislinewidth;
+                            }
+                        }
+                    }
+                    // Return the line array
+                    return lineArray;
+                  }
+
+                  let isTypingAnimation = "no";
+                  if (chatObj.chat == "typingAnim"){
+                    isTypingAnimation = "yes";
+                    chatObj.chat = "anim"
+                  }
+                  let wrappedText = wrapText(ctx, chatObj.chat, drawingX, drawingY - firstChatY, 900, lineheight);//split message into multiline text
+                  //draw rect
+                  var w = longestLine + xpadding * 2;
+                  var h = lineheight * wrappedText.length + ypadding * 2;
+                  if (wrappedText.length == 1){//remove spacing between text for single-line text
+                    h = 25 + ypadding * 2;
+                  }
+                  var r = 15;
+                  var x = drawingX - longestLine / 2 - xpadding;
+                  var y = drawingY - firstChatY - ypadding - h - 20;//the actual y location of this chat message
+                  //aniamte towards this y position
+                  //remember that the loop is reversed, so indexes are reversed here too
+                  let thischat = chatlist[id][chatlist[id].length - 1 - index];
+                  let diffpos = 0;
+                  if (!thischat.y){
+                    thischat.y = y;
                   }
                   else{
-                    drawDroneTurret(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,0,1)
+                    if (y > thischat.y){
+                      thischat.y+=(y - thischat.y)/2*deltaTime;
+                      if (y < thischat.y){
+                        thischat.y = y;
+                      }
+                    }
+                    else if (y < thischat.y){
+                      thischat.y-=(thischat.y - y)/2*deltaTime;
+                      if (y > thischat.y){
+                        thischat.y = y;
+                      }
+                    }
+                    if (Math.abs(y - thischat.y)<0.1){//small difference between current position and actual position
+                      thischat.y = y;
+                    }
+                    diffpos = y - thischat.y;
+                    y = thischat.y;
                   }
+                  if (thischat.opacity < 1){
+                    thischat.opacity+=0.1;
+                  }
+                  ctx.globalAlpha = thischat.opacity;
+                  ctx.beginPath();
+                  ctx.moveTo(x + r, y);
+                  ctx.arcTo(x + w, y, x + w, y + h, r);
+                  ctx.arcTo(x + w, y + h, x, y + h, r);
+                  ctx.arcTo(x, y + h, x, y, r);
+                  ctx.arcTo(x, y, x + w, y, r);
+                  ctx.closePath();
+                  ctx.fill();
+                  if (index == 0){
+                    //if this is first chat message, draw triangle
+                    let trianglewidth = 20;
+                    let triangleheight = 10;
+                    ctx.beginPath();
+                    ctx.moveTo(x + w/2 - trianglewidth/2, y + h);
+                    ctx.lineTo(x + w/2 + trianglewidth/2, y + h);
+                    ctx.lineTo(x + w/2, y + h + triangleheight);
+                    ctx.fill();
+                  }
+                  //write words
+                  ctx.fillStyle = "white";
+                  wrappedText.forEach(function(item) {
+                    if (isTypingAnimation == "no"){
+                      ctx.fillText(item[0], item[1], item[2]-h-diffpos);//write text
+                    }
+                    else{//typing animation
+                      ctx.beginPath();
+                      for (let i = 0; i < 3; i++) {
+                        let radiusIncrease = 0;
+                        if (typingAnimation <= 3*(i+1)+3*i && typingAnimation >= 6*i){
+                          radiusIncrease = (typingAnimation - 6*i);
+                        }
+                        else if (typingAnimation <= 6*(i+1) && typingAnimation >= 6*i){
+                          radiusIncrease = (6*(i+1) - typingAnimation);
+                        }
+                        if (radiusIncrease < 0){
+                          radiusIncrease = 0;
+                        }
+                        ctx.arc(item[1]+(i-1)*18, item[2]-h-diffpos-6, 5+radiusIncrease, 0, 2 * Math.PI);
+                      }
+                      ctx.fill();
+                    }
+                  })
+                  ctx.globalAlpha = 1.0;
+                  firstChatY += (h + 10); //height of chat plus space between chats
+                });
+                ctx.lineJoin = "miter"; //change it back
+                
+                if (id != playerstring) {
+                  ctx.fillStyle = "white";
+                  ctx.strokeStyle = "black";
+                  ctx.lineWidth = 8 / clientFovMultiplier;
+                  ctx.font = "700 " + 35 / clientFovMultiplier + "px Roboto";
+                  ctx.textAlign = "center";
+                  ctx.miterLimit = 2;//prevent text spikes, alternative to linejoin round
+                  //ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
+                  //note: if you stroke then fill, the words will be thicker and nicer. If you fill then stroke, the words are thinner.
+                  if (object.name == "unnamed"){
+                    //this guy is unnamed, add a 3 digit identifier
+                    let thisID = id.substr(id.length - 3);//last 3 digits of ID
+                    object.name += (" #" + thisID);
+                  }
+                  ctx.strokeText(
+                    object.name,
+                    drawingX,
+                    drawingY - (object.width + 40) / clientFovMultiplier
+                  );
+                  ctx.fillText(
+                    object.name,
+                    drawingX,
+                    drawingY - (object.width + 40) / clientFovMultiplier
+                  );
+                  //write player level
+                  ctx.font = "700 " + 18 / clientFovMultiplier + "px Roboto";
+                  ctx.strokeText(
+                    "Lvl " +
+                      object.level +
+                      " " +
+                      object.tankType +
+                      "-" +
+                      object.bodyType,
+                    drawingX,
+                    drawingY - (object.width + 10) / clientFovMultiplier
+                  );
+                  ctx.fillText(
+                    "Lvl " +
+                      object.level +
+                      " " +
+                      object.tankType +
+                      "-" +
+                      object.bodyType,
+                    drawingX,
+                    drawingY - (object.width + 10) / clientFovMultiplier
+                  );
+                  ctx.lineJoin = "miter"; //change it back
                 }
-                //trap barrel (doesnt exist atm)
-                else if (thisBarrel.barrelType == "trap") {
-                  drawTrapBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                }
-                //mine barrel (doesnt exist atm)
-                else if (thisBarrel.barrelType == "mine") {
-                  drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                }
-                //minion barrel (doesnt exist atm)
-                else if (thisBarrel.barrelType == "minion") {
-                  drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                }
-                hctx.rotate(-thisBarrel.additionalAngle); //rotate back
               }
-            //draw turret base
-            hctx.beginPath();
-            hctx.arc(
-              0,
-              0,
-              bodysize * bodyupgrades[name].turretBaseSize,
-              0,
-              2 * Math.PI
-            );
-            hctx.fill();
-            hctx.stroke();
-          }
-          if (bodyupgrades[name].hasOwnProperty("assets")) {
-            //draw above assets
-            Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
-              var asset = bodyupgrades[name].assets[assetID];
-              if (asset.type == "above") {
-                let assetcolor = asset.color;
-                let assetoutline = asset.outline;
-                if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
-                  assetcolor = bodycolor;
+            }
+
+            //skill points variables
+            var currentStatPoints = 0;
+            var extraPoints = 0;
+            //client send stuff to server
+            var autorotate = "no";//keep track of state to create notification
+            var autofire = "no";
+            var fastautorotate = "no";
+            var passivemode = "no";
+            //keep track of whether key is pressed down or not to prevent packet sent multiple times when holding down key
+            var downpressed = "no";
+            var uppressed = "no";
+            var leftpressed = "no";
+            var rightpressed = "no";
+            $("html").keydown(function (e) {
+                if(!$("input,textarea").is(":focus")){//if all input and text area do not have focus
+
+                //prevents triggering commands when typing in input boxes
+                //console.log(e)
+                if (e.key == "ArrowDown" || e.key == "s" || e.key == "S") {
+                  if (downpressed == "no" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["down"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = true;
+                    }
+                    downpressed = "yes";
+                  }
+                } else if (e.key == "ArrowUp" || e.key == "w" || e.key == "W") {
+                  if (uppressed == "no" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["up"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = true;
+                    }
+                    uppressed = "yes";
+                  }
+                } else if (e.key == "ArrowLeft" || e.key == "a" || e.key == "A") {
+                  if (leftpressed == "no" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["left"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = true;
+                    }
+                    leftpressed = "yes";
+                  }
+                    else if (state == "homepage"){
+                      changeGamemode("p")
+                    }
+                } else if (e.key == "ArrowRight" || e.key == "d" || e.key == "D") {
+                  if (rightpressed == "no" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["right"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = true;
+                    }
+                    rightpressed = "yes";
+                  }
+                  else if (state == "homepage"){
+                      changeGamemode("n")
+                    }
+                } else if (e.key == "Shift" && state=="ingame" && gamemode != "PvE arena"){
+                  var packet = JSON.stringify(["mousePressed", 3]);
+                  socket.send(packet)
+                  //e.which refers to whether it's lfet or right click. leftclick is 1, rightclick is 3
+                } else if ((e.key == "e" || e.key == "E") && state=="ingame" && gamemode != "PvE arena") {
+                  var packet = JSON.stringify(["auto-fire"]);
+                  socket.send(packet)
+                  if (autofire == "no"){
+                    createNotif("Auto Fire (E): ON",defaultNotifColor,3000)
+                    autofire = "yes";
+                  }
+                  else{
+                    createNotif("Auto Fire (E): OFF",defaultNotifColor,3000)
+                    autofire = "no";
+                  }
+                } else if ((e.key == "c" || e.key == "C") && state=="ingame" && gamemode != "PvE arena") {
+                  var packet = JSON.stringify(["auto-rotate"]);
+                  socket.send(packet)
+                  if (autorotate == "no"){
+                    createNotif("Auto Rotate (C): ON",defaultNotifColor,3000)
+                    autorotate = "yes";
+                  }
+                  else{
+                    createNotif("Auto Rotate (C): OFF",defaultNotifColor,3000)
+                    autorotate = "no";
+                  }
+                } else if ((e.key == "f" || e.key == "F") && state=="ingame" && gamemode != "PvE arena") {
+                  var packet = JSON.stringify(["fast-auto-rotate"]);
+                  socket.send(packet)
+                  if (fastautorotate == "no"){
+                    createNotif("Fast Auto Rotate (F): ON",defaultNotifColor,3000)
+                    fastautorotate = "yes";
+                  }
+                  else{
+                    createNotif("Fast Auto Rotate (F): OFF",defaultNotifColor,3000)
+                    fastautorotate = "no";
+                  }
+                } else if ((e.key == "x" || e.key == "X") && state=="ingame" && gamemode != "PvE arena") {
+                  if (keylock == "yes"){
+                    keylock = "no";
+                    createNotif("Spin Lock (X): OFF",defaultNotifColor,3000)
+                  }
+                  else{
+                    keylock = "yes";
+                    createNotif("Spin Lock (X): ON",defaultNotifColor,3000)
+                  }
+                } else if ((e.key == "m" || e.key == "M") && state=="ingame") {
+                  //opening and closing debug info box
+                  if (debugState == "open") {
+                    fpsCounter.style.display = "none";
+                    let allOtherDebugDivs = document.querySelectorAll(".debugopen");
+                    for(let i = 0; i < allOtherDebugDivs.length; i++){
+                      document.getElementById(allOtherDebugDivs[i].id).className = "debug";
+                    }
+                    debugState = "close";
+                    createNotif("Debug Mode (M): OFF",defaultNotifColor,3000)
+                  } else {
+                    fpsCounter.style.display = "block";
+                    let allOtherDebugDivs = document.querySelectorAll(".debug");
+                    for(let i = 0; i < allOtherDebugDivs.length; i++){
+                      document.getElementById(allOtherDebugDivs[i].id).className = "debugopen";
+                    }
+                    debugState = "open";
+                    createNotif("Debug Mode (M): ON",defaultNotifColor,3000)
+                  }
+                } else if ((e.key == "h" || e.key == "H") && state=="ingame") {
+                  //toggle hitbox
+                  if (showHitBox == "no") {
+                    showHitBox = "yes";
+                    createNotif("Hitbox (H): ON",defaultNotifColor,3000)
+                  } else if (showHitBox == "yes") {
+                    showHitBox = "no";
+                    createNotif("Hitbox (H): OFF",defaultNotifColor,3000)
+                  }
+                } else if ((e.key == "t" || e.key == "T") && state=="ingame") {
+                  if (quickchat.style.display == "block"){
+                    quickchat.style.display = "none";
+                  }
+                  else{//if display is none or " "
+                    //js will return display as " " because it cant read the css, unless you set it using js before
+                    quickchat.style.display = "block";
+                  }
+                } else if ((e.key == "p" || e.key == "P") && state=="ingame" && gamemode != "PvE arena") {
+                  var packet = JSON.stringify(["passive-mode"]);
+                  socket.send(packet)
+                  if (passivemode == "no"){
+                    createNotif("Passive Mode (P): ON",defaultNotifColor,3000)
+                    passivemode = "yes";
+                  }
+                  else{
+                    createNotif("Passive Mode (P): OFF",defaultNotifColor,3000)
+                    passivemode = "no";
+                  }
+                } else if (e.key == "Enter" && state == "ingame") {
+                  //if press enter, add cursor to chat inputbox
+                  document.getElementById("chat").focus(); //add cursor to input field
+                } else if (e.key == "Enter" && state != "ingame") {
+                  if (state == "deathscreen"){
+                    returnToHomeScreen();
+                  }
+                  else{//if press enter at homepage, enter the game
+                    startGame();
+                  }
+                } else if (e.key == "y" || e.key == "Y") {
+                  if (showUpgradeTree == "no") {
+                    showUpgradeTree = "yes";
+                    showBodyUpgradeTree = "no";
+                  } else {
+                    showUpgradeTree = "no";
+                  }
+                } else if (e.key == "u" || e.key == "U") {
+                  if (showBodyUpgradeTree == "no") {
+                    showBodyUpgradeTree = "yes";
+                    showUpgradeTree = "no";
+                  } else {
+                    showBodyUpgradeTree = "no";
+                  }
+                } else if (e.key == "o" || e.key == "O") {
+                  //open and close settings
+                  if (settings.style.display == "none" || settings.style.display == "") {//if settings popup hidden or havent opened before
+                    settings.style.display = "block";
+                  } else {
+                    settings.style.display = "none";
+                  }
+                } else if (
+                  (e.key == "1" ||
+                    e.key == "2" ||
+                    e.key == "3" ||
+                    e.key == "4" ||
+                    e.key == "5" ||
+                    e.key == "6" ||
+                    e.key == "7" ||
+                    e.key == "8") &&
+                  extraPoints > 0  && state=="ingame" && gamemode != "PvE arena"
+                ) {
+                  //skill points
+                  var packet = JSON.stringify(["upgradeSkillPoints", e.key]);
+                  socket.send(packet)
+                } else if (e.key == " ") {
+                  //space bar
+                  var packet = JSON.stringify(["mousePressed"]);
+                  socket.send(packet)
                 }
-                if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
-                  assetoutline = bodyoutline;
+              } else if (
+                document.activeElement === nameInput
+              ) {
+                //if name input box is selected
+                if (e.key == "Enter") {
+                  //if press enter, do the same thing as when pressing the play button
+                  startGame();
                 }
-                drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
+              } else if (
+                document.activeElement === document.getElementById("chat")
+              ) {
+                //if chat input box is selected
+                if (e.key == "Enter"  && state=="ingame" && gamemode != "PvE arena") {
+                  //if press enter, send chat message
+                  var yourChat = document.getElementById("chat").value; //get message
+                  var packet = JSON.stringify(["chat", yourChat]);
+                  socket.send(packet)
+                  document.getElementById("chat").value = ""; //clear input field
+                  document.getElementById("chat").blur(); //remove cursor
+                }
+              } else if (
+                document.activeElement === document.getElementById("devtoken")
+              ) {
+                //if dev token input box is selected
+                if (e.key == "Enter") {
+                  //if press enter, send chat message
+                  var devToken = document.getElementById("devtoken").value; //get inputted token
+                  var packet = JSON.stringify(["developerTest", devToken]);
+                  socket.send(packet)
+                  document.getElementById("devtoken").value = ""; //clear input field
+                  document.getElementById("devtoken").blur(); //remove cursor
+                }
               }
             });
-          }
-        } else if (which == "weapon" && (name in weaponupgrades)) {
-          if (weaponupgrades[name].hasOwnProperty("barrels")) {
-                hctx.fillStyle = bodyColors.barrel.col;
-                hctx.strokeStyle = bodyColors.barrel.outline;
-            Object.keys(weaponupgrades[name].barrels).forEach(
-              (assetID) => {
-                var thisBarrel = weaponupgrades[name].barrels[assetID];
-                hctx.rotate((thisBarrel.additionalAngle * Math.PI) / 180); //rotate to barrel angle
-                //bullet barrel
-                if (thisBarrel.barrelType == "bullet") {
-                  drawBulletBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+            $("html").keyup(function (e) {
+              if (document.activeElement !== nameInput) {
+                //if the name input box is not selected (prevents triggering commands when typing name)
+                //console.log(e)
+                if (e.key == "ArrowDown" || e.key == "s" || e.key == "S") {
+                  if (downpressed == "yes" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["downRelease"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = false;
+                    }
+                    downpressed = "no";
+                  }
+                } else if (e.key == "ArrowUp" || e.key == "w" || e.key == "W") {
+                  if (uppressed == "yes" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["upRelease"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = false;
+                    }
+                    uppressed = "no";
+                  }
+                } else if (e.key == "ArrowLeft" || e.key == "a" || e.key == "A") {
+                  if (leftpressed == "yes" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["leftRelease"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = false;
+                    }
+                    leftpressed = "no";
+                  }
+                } else if (e.key == "ArrowRight" || e.key == "d" || e.key == "D") {
+                  if (rightpressed == "yes" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["rightRelease"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = false;
+                    }
+                    rightpressed = "no";
+                  }
+                } else if (e.key == " " && state=="ingame" && gamemode != "PvE arena") {
+                  var packet = JSON.stringify(["mouseReleased"]);
+                  socket.send(packet)
+                } else if (e.key == "Shift" && state=="ingame" && gamemode != "PvE arena"){
+                  var packet = JSON.stringify(["mousePressed", 1]);//stop drone repel by left click
+                  socket.send(packet)
+                  var packet = JSON.stringify(["mouseReleased"]);
+                  socket.send(packet)
                 }
-                //drone barrel
-                else if (thisBarrel.barrelType == "drone") {
-                  drawDroneBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                }
-                //trap barrel (doesnt exist atm)
-                else if (thisBarrel.barrelType == "trap") {
-                  drawTrapBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                }
-                //mine barrel (doesnt exist atm)
-                else if (thisBarrel.barrelType == "mine") {
-                  drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                }
-                //minion barrel (doesnt exist atm)
-                else if (thisBarrel.barrelType == "minion") {
-                  drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                }
-                hctx.rotate(
-                  (-thisBarrel.additionalAngle * Math.PI) / 180
-                ); //rotate back
               }
-            );
-          }
-          hctx.fillStyle = bodycolor;
-          hctx.strokeStyle = bodyoutline;
-          if (!weaponupgrades[name].eternal){
-            hctx.beginPath();
-            hctx.arc(0, 0, bodysize, 0, 2 * Math.PI);
-            hctx.fill();
-            hctx.stroke();
-          }
-          else{
-            hctx.beginPath();
-            let baseSides = 6;
-            hctx.moveTo(bodysize, 0);
-            for (var i = 1; i <= baseSides; i++) {
-              hctx.lineTo(bodysize * Math.cos((i * 2 * Math.PI) / baseSides), bodysize * Math.sin((i * 2 * Math.PI) / baseSides));
-            }
-            hctx.fill();
-            hctx.stroke();
-          }
-        }
-        hctx.restore();
-      }
-
-  function drawobjects(object, id, playerstring, auraWidth) {
-    //function for drawing objects on the canvas. need to provide aura width because this fuction cannot access variables outside
-    var drawingX =
-      (object.x - px) / clientFovMultiplier + canvas.width / 2; //calculate the location on canvas to draw object
-    var drawingY =
-      (object.y - py) / clientFovMultiplier + canvas.height / 2;
-    
-    if (object.type == "bullet") {
-      //draw bullet
-      if (object.hasOwnProperty("deadOpacity")) {
-        //if this is an animation of a dead object
-        ctx.globalAlpha = object.deadOpacity;
-      }
-      var chooseflash = 3;
-      if (object.hit > 0 && object.bulletType != "aura") {
-        //if shape is hit AND bullet is not aura, choose whether it's color is white or original color to create flashing effect
-        chooseflash = Math.floor(Math.random() * 3); //random number 0, 1 or 2
-      }
-      if (chooseflash == 0) {
-        ctx.fillStyle = "white";
-      } else if (chooseflash == 1) {
-        ctx.fillStyle = "pink";
-      } else {
-        if (object.ownsIt == "yes" || object.bulletType == "aura") {
-          //if it's an aura or client's tank owns the bullet
-          ctx.fillStyle = object.color;
-        } else {
-          ctx.fillStyle = "#f04f54"; //bullet color is red
-        }
-      }
-      if (object.bulletType == "aura") {
-        var choosing = Math.floor(Math.random() * 3); //choose if particle spawn
-        if (choosing == 1) {
-          //spawn a particle
-          var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
-          var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
-          var randomDistFromCenter =
-            Math.floor(Math.random() * object.width * 2) - object.width;
-          let auraoutline = object.outline;
-          if (auraoutline == "rgba(255,0,0,.15)"){//damaging aura will have particles that look too dark
-            auraoutline = auraoutline.substring(0, auraoutline.length - 3)+ '05)';//change opacity to 0.05
-          }
-          radparticles[particleID] = {
-            angle: angleRadians,
-            x: object.x + randomDistFromCenter * Math.cos(angleRadians),
-            y: object.y + randomDistFromCenter * Math.sin(angleRadians),
-            width: 5,
-            height: 5,
-            speed: 1,
-            timer: 15,
-            maxtimer: 50,
-            color: object.color,
-            outline: auraoutline,
-            type: "particle",
-          };
-          particleID++;
-        }
-      }
-
-      if (object.ownsIt == "yes" || object.bulletType == "aura") {
-        //if it's an aura or client's tank owns the bullet
-        ctx.strokeStyle = object.outline;
-      } else {
-        ctx.strokeStyle = "#b33b3f"; //bullet is red
-      }
-
-
-      //bullet is purple even if bullet belongs to enemy
-      if (object.color == "#934c93") {
-        ctx.fillStyle = object.color;
-      }
-      if (object.outline == "#660066") {
-        ctx.strokeStyle = object.outline;
-      }
-
-      //team colors
-      if (bodyColors.hasOwnProperty(object.team)) {
-        ctx.fillStyle = bodyColors[object.team].col;
-        ctx.strokeStyle = bodyColors[object.team].outline;
-      }
-
-      if (object.bulletType == "aura"){
-        //color is aura color, regardless of team
-        ctx.fillStyle = object.color;
-        ctx.strokeStyle = object.outline;
-      }
-
-      if (object.passive == "yes") {
-        if (object.bulletType == "aura") {
-          ctx.strokeStyle = "rgba(128,128,128,.2)";
-          ctx.fillStyle = "rgba(128,128,128,.2)";
-        } else {
-          ctx.strokeStyle = "dimgrey";
-          ctx.fillStyle = "grey";
-        }
-      }
-
-      if (object.team=="mob"){
-        //dune mob's bullets is the colo of mob
-        ctx.fillStyle = botcolors[object.ownerName].color;
-        ctx.strokeStyle = botcolors[object.ownerName].outline;
-      }
-
-      ctx.lineWidth = 4 / clientFovMultiplier;
-      if (object.bulletType == "bullet" || object.bulletType == "aura") {
-        if (!object.color.includes('rgba(56,183,100')){//not a heal aura
-          ctx.beginPath();
-          ctx.arc(
-            drawingX,
-            drawingY,
-            object.width / clientFovMultiplier,
-            0,
-            2 * Math.PI
-          );
-          ctx.fill();
-          ctx.stroke();
-        }
-        else{//8 sides for healing aura
-          ctx.beginPath();
-          ctx.moveTo((object.width / clientFovMultiplier) + drawingX, drawingY);
-          for (var i = 1; i <= 8 + 1; i += 1) {
-            ctx.lineTo(
-              (object.width / clientFovMultiplier) *
-                  Math.cos((i * 2 * Math.PI) / 8) + drawingX,
-              (object.width / clientFovMultiplier) *
-                  Math.sin((i * 2 * Math.PI) / 8) + drawingY
-            );
-          }
-          ctx.fill();
-          ctx.stroke();
-        }
-      } else if (object.bulletType == "trap") {
-        //width is the radius, so need to times two to get total width
-        //note: x and y of object are the center of object, but when drawing rectangles, the x and y coordinates given need to be the top left corner of the rectangle, so need to minus the width and height
-        ctx.fillRect(
-          drawingX - object.width / clientFovMultiplier,
-          drawingY - object.width / clientFovMultiplier,
-          (object.width * 2) / clientFovMultiplier,
-          (object.width * 2) / clientFovMultiplier
-        );
-        ctx.strokeRect(
-          drawingX - object.width / clientFovMultiplier,
-          drawingY - object.width / clientFovMultiplier,
-          (object.width * 2) / clientFovMultiplier,
-          (object.width * 2) / clientFovMultiplier
-        );
-      } else if (object.bulletType == "drone") {
-        ctx.save();
-        ctx.translate(drawingX, drawingY);
-        ctx.rotate(object.moveAngle);
-        //ctx.rotate((object.moveAngle*180/Math.PI - 90) *Math.PI/180);//cannot straightaway use the angle, must add 90 degrees to it, because 0 degrees is pointing right, but we are drawing the triangle upwards
-        ctx.beginPath();
-        ctx.moveTo(
-          (object.width / clientFovMultiplier) * Math.cos(0),
-          (object.width / clientFovMultiplier) * Math.sin(0)
-        );
-        for (var i = 1; i <= 3; i += 1) {
-          ctx.lineTo(
-            (object.width / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / 3),
-            (object.width / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / 3)
-          );
-        }
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      } else if (object.bulletType == "mine" || object.bulletType == "minion") {
-        //console.log(object.moveAngle/Math.PI*180)
-        //mine is trap with barrel, minion is bullet with barrel
-        ctx.save();
-        ctx.translate(drawingX, drawingY);
-        ctx.rotate(object.moveAngle);
-        //ctx.rotate((object.moveAngle*180/Math.PI - 90) *Math.PI/180);//cannot straightaway use the angle, must add 90 degrees to it, because 0 degrees is pointing right, but we are drawing the triangle upwards
-
-        if (object.bulletType == "minion"){
-          //draw barrels underneath
-          var prevfill = ctx.fillStyle;
-          var prevstroke = ctx.strokeStyle;//store previous bullet color so can change back later
-          ctx.fillStyle = bodyColors.barrel.col;
-          ctx.strokeStyle = bodyColors.barrel.outline;
-          Object.keys(object.barrels).forEach((barrel) => {
-            let thisBarrel = object.barrels[barrel];
-            ctx.rotate(thisBarrel.additionalAngle); //rotate to barrel angle
-            if (thisBarrel.barrelType == "bullet") {
-              drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "drone") {
-              drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "trap") {
-              drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "mine") {
-              drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "minion") {
-              drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-          })
-          ctx.fillStyle = prevfill;
-          ctx.strokeStyle = prevstroke;
-        }
-        ctx.beginPath();
-        if (object.bulletType == "mine"){//mine
-          ctx.moveTo(
-            (object.width / clientFovMultiplier) * Math.cos(0),
-            (object.width / clientFovMultiplier) * Math.sin(0)
-          );
-          for (var i = 1; i <= 3; i += 1) {
-            ctx.lineTo(
-              (object.width / clientFovMultiplier) *
-                Math.cos((i * 2 * Math.PI) / 3),
-              (object.width / clientFovMultiplier) *
-                Math.sin((i * 2 * Math.PI) / 3)
-            );
-          }
-        }
-        else{//minion
-          ctx.arc(0, 0, object.width / clientFovMultiplier, 0, 2 * Math.PI);
-        }
-        ctx.fill();
-        ctx.stroke();
-        ctx.rotate(-object.moveAngle); //rotate back
-        //BARREL FOR THE MINE TRAP
-        if (object.bulletType == "mine"){
-        Object.keys(object.barrels).forEach((barrel) => {
-          let thisBarrel = object.barrels[barrel];
-          ctx.rotate(thisBarrel.additionalAngle); //rotate to barrel angle
-          ctx.fillStyle = "grey";
-          ctx.strokeStyle = "#5e5e5e";
-          if (thisBarrel.barrelType == "bullet") {
-              drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "drone") {
-              drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "trap") {
-              drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "mine") {
-              drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "minion") {
-              drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-          ctx.beginPath();
-          ctx.arc(
-            0,
-            0,
-            thisBarrel.barrelWidth / clientFovMultiplier,
-            0,
-            2 * Math.PI
-          );
-          ctx.fill();
-          ctx.stroke();
-          ctx.rotate(-thisBarrel.additionalAngle); //rotate back
-        });
-      }
-
-        ctx.restore();
-      }
-      if (object.hasOwnProperty("deadOpacity")) {
-        //if this is an animation of a dead object
-        ctx.globalAlpha = 1.0; //reset opacity
-      }
-      if (showHitBox == "yes") {
-        //draw hitbox
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(
-          drawingX,
-          drawingY,
-          object.width / clientFovMultiplier,
-          0,
-          2 * Math.PI
-        );
-        ctx.stroke();
-      }
-    } else if (object.type == "bot") {
-      //draw bot
-      if (object.hasOwnProperty("deadOpacity")) {
-        //if this is an animation of a dead object
-        ctx.globalAlpha = object.deadOpacity;
-      }
-      ctx.lineWidth = 4 / clientFovMultiplier;
-      ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-      ctx.save();
-      ctx.translate(drawingX, drawingY);
-      ctx.rotate(object.angle);
-      //draw barrels
-      if (object.name!="Pillbox"){//pillbox's barrel is visually a turret
-        Object.keys(object.barrels).forEach((barrel) => {
-          let thisBarrel = object.barrels[barrel];
-          ctx.rotate(((thisBarrel.additionalAngle + 90) * Math.PI) / 180); //rotate to barrel angle
-          ctx.fillStyle = bodyColors.barrel.col;
-          ctx.strokeStyle = bodyColors.barrel.outline;
-          if (thisBarrel.barrelType == "bullet") {
-              drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "drone") {
-              drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "trap") {
-              drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "mine") {
-              drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-            else if (thisBarrel.barrelType == "minion") {
-              drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-            }
-          ctx.rotate((-(thisBarrel.additionalAngle + 90) * Math.PI) / 180); //rotate back
-        });
-      }
-      if (object.name=="Cluster"){
-        //draw the spawning barrels
-        let barrelwidth = object.width*0.7;
-        let barrelheight = object.width*1.2;
-        ctx.fillStyle = bodyColors.barrel.col;
-        ctx.strokeStyle = bodyColors.barrel.outline;
-        ctx.save();
-        ctx.rotate(90 * Math.PI / 180);
-        for (let i = 0; i < 5; i++){
-          if (i!=0){
-            ctx.rotate(72 * Math.PI / 180); //rotate 72 for each barrel
-          }
-          ctx.beginPath();
-          ctx.moveTo(
-            -barrelwidth / 5 / clientFovMultiplier,
-            0
-          );
-          ctx.lineTo(
-            -barrelwidth / clientFovMultiplier,
-            -barrelheight / clientFovMultiplier
-          );
-          ctx.lineTo(
-            barrelwidth / clientFovMultiplier,
-            -barrelheight / clientFovMultiplier
-          );
-          ctx.lineTo(
-            barrelwidth / 5 / clientFovMultiplier,
-            0
-          );
-          ctx.fill();
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-      else if (object.name=="Infestor"){
-        //draw the spawning barrels
-        let barrelwidth = object.width*0.7;
-        let barrelheight = object.width*1.2;
-        ctx.fillStyle = bodyColors.barrel.col;
-        ctx.strokeStyle = bodyColors.barrel.outline;
-        ctx.save();
-        for (let i = 0; i < 4; i++){//normal barrels
-          if (i!=0){
-            ctx.rotate(90 * Math.PI / 180);
-          }
-          ctx.fillRect(
-            -barrelwidth / 2 / clientFovMultiplier,
-            -barrelheight / clientFovMultiplier,
-            barrelwidth / clientFovMultiplier,
-            barrelheight / clientFovMultiplier
-          );
-          ctx.strokeRect(
-            -barrelwidth / 2 / clientFovMultiplier,
-            -barrelheight / clientFovMultiplier,
-            barrelwidth / clientFovMultiplier,
-            barrelheight / clientFovMultiplier
-          );
-        }
-        ctx.restore();
-        ctx.save();
-        ctx.rotate(45 * Math.PI / 180);
-        barrelwidth = object.width*0.6;
-        barrelheight = object.width*2;
-        for (let i = 0; i < 4; i++){//traplike barrels
-          if (i!=0){
-            ctx.rotate(90 * Math.PI / 180);
-          }
-          ctx.fillRect(
-            -barrelwidth / 2 / clientFovMultiplier,
-            -barrelheight * 0.55 / clientFovMultiplier,
-            barrelwidth / clientFovMultiplier,
-            barrelheight * 0.5 / clientFovMultiplier
-          );
-          ctx.strokeRect(
-            -barrelwidth / 2 / clientFovMultiplier,
-            -barrelheight * 0.55 / clientFovMultiplier,
-            barrelwidth / clientFovMultiplier,
-            barrelheight * 0.5 / clientFovMultiplier
-          );
-          ctx.beginPath();
-          ctx.moveTo(
-            -barrelwidth / 2 / clientFovMultiplier,
-            -barrelheight * 0.55 / clientFovMultiplier
-          );
-          ctx.lineTo(
-            -barrelwidth/1.7 / clientFovMultiplier,
-            -barrelheight * 0.65 / clientFovMultiplier
-          );
-          ctx.lineTo(
-            barrelwidth/1.7 / clientFovMultiplier,
-            -barrelheight * 0.65 / clientFovMultiplier
-          );
-          ctx.lineTo(
-            barrelwidth / 2 / clientFovMultiplier,
-            -barrelheight * 0.55 / clientFovMultiplier
-          );
-          ctx.fill();
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-      else if (object.name=="Champion"){
-        //draw spikes
-        var numberOfSpikes = 5;
-        var outerRadius = object.width / clientFovMultiplier * 1.3;
-        var innerRadius = object.width / clientFovMultiplier /1.3;
-        var rot = (Math.PI / 2) * 3;//dont change this, or else will have strange extra lines
-        var x = 0;
-        var y = 0;
-        ctx.fillStyle = bodyColors.barrel.col;
-        ctx.strokeStyle = bodyColors.barrel.outline;
-        ctx.save();
-        ctx.rotate(90 * Math.PI / 180);
-        ctx.beginPath();
-        ctx.moveTo(0, 0 - outerRadius);
-        for (i = 0; i < numberOfSpikes; i++) {
-          x = 0 + Math.cos(rot) * outerRadius;
-          y = 0 + Math.sin(rot) * outerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-          x = 0 + Math.cos(rot) * innerRadius;
-          y = 0 + Math.sin(rot) * innerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-        }
-        ctx.lineTo(0, 0 - outerRadius);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-      var chooseflash = 3;
-      if (object.hit > 0) {
-        //if shape is hit, choose whether it's color is white or original color to create flashing effect
-        chooseflash = Math.floor(Math.random() * 3); //random number 0, 1 or 2
-      }
-      if (chooseflash == 0) {
-        ctx.fillStyle = "white";
-      } else if (chooseflash == 1) {
-        ctx.fillStyle = "pink";
-      } else {
-        ctx.fillStyle = botcolors[object.name].color;
-      }
-      ctx.strokeStyle = botcolors[object.name].outline;
-      //draw body
-      if (object.side==0) {
-        //draw circle
-        ctx.beginPath();
-        ctx.arc(0, 0, object.width / clientFovMultiplier, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.stroke();
-      } else if (object.side>=0) {
-        if (object.hasOwnProperty('randomPointsArrayX')){
-          //draw for rock and boulder
-          //POLYGON WITH IRREGULAR SIDES
-          ctx.rotate(-object.angle); //rotate back so that rock wont rotate to face you
-          var rockSides = object.side;
-          ctx.beginPath();
-          ctx.moveTo((object.width / clientFovMultiplier) * Math.cos(0), (object.width / clientFovMultiplier) * Math.sin(0));
-          for (var i = 1; i <= rockSides; i++) {
-            var XRandom = object.randomPointsArrayX[i - 1] / clientFovMultiplier;
-            var YRandom = object.randomPointsArrayY[i - 1] / clientFovMultiplier;
-            ctx.lineTo(XRandom + (object.width / clientFovMultiplier) * Math.cos((i * 2 * Math.PI) / rockSides),
-              YRandom + (object.width / clientFovMultiplier) * Math.sin((i * 2 * Math.PI) / rockSides)
-            );
-          }
-          ctx.fill();
-          ctx.stroke();
-        }
-        else{//normal spawner
-          if (object.name=="Cluster"||object.name=="Pursuer"||object.name=="Champion"||object.name=="Infestor"||object.name=="Abyssling"){
-            //need to rotate 72/2 degrees so that pentagon not facing vertex towards player
-            ctx.rotate(Math.PI/object.side);//2 PI / sides / 2
-          }
-          ctx.beginPath();
-          ctx.moveTo((object.width / clientFovMultiplier), 0);
-          for (var i = 1; i <= object.side + 1; i += 1) {
-            ctx.lineTo(
-              (object.width / clientFovMultiplier) *
-                  Math.cos((i * 2 * Math.PI) / object.side),
-              (object.width / clientFovMultiplier) *
-                  Math.sin((i * 2 * Math.PI) / object.side)
-            );
-          }
-          ctx.fill();
-          ctx.stroke();
-          if (object.name=="Cluster"||object.name=="Pursuer"){
-            ctx.rotate(-Math.PI/object.side);//rotate back
-            //draw circle on top
-            ctx.fillStyle = bodyColors.barrel.col;//light grey
-            ctx.strokeStyle = bodyColors.barrel.outline;
-            ctx.beginPath();
-            ctx.arc(0, 0, object.width/2 / clientFovMultiplier, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.stroke();
-          }
-          else if (object.name=="Champion"){
-            ctx.rotate(-Math.PI/object.side);//rotate back
-            //draw circle on top
-            ctx.fillStyle = "grey";//darker grey
-            ctx.strokeStyle = "#5e5e5e";
-            ctx.beginPath();
-            ctx.arc(0, 0, object.width/2.5 / clientFovMultiplier, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.stroke();
-          }
-          else if (object.name=="Infestor"){
-            ctx.rotate(-Math.PI/object.side);//rotate back
-            //draw circle on top
-            ctx.fillStyle = bodyColors.barrel.col;//light grey
-            ctx.strokeStyle = bodyColors.barrel.outline;
-            ctx.beginPath();
-            ctx.arc(0, 0, object.width/5 / clientFovMultiplier, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.stroke();
-          }
-          else if (object.name=="Leech"){
-            //draw circle on top
-            ctx.fillStyle = bodyColors.barrel.col;//light grey
-            ctx.strokeStyle = bodyColors.barrel.outline;
-            ctx.beginPath();
-            ctx.arc(0, 0, object.width/2 / clientFovMultiplier, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.stroke();
-          }
-          else if (object.name=="Pillbox"){//pillbox's barrel is visually a turret
-            ctx.lineJoin = "round"; //make nice round corners
-            ctx.rotate(90 * Math.PI / 180);
-            Object.keys(object.barrels).forEach((barrel) => {
-              //note that you must use [barrel] instead of .barrel, if not there will be an error
-              let thisBarrel = object.barrels[barrel];
-              ctx.fillStyle = bodyColors.barrel.col;
-              ctx.strokeStyle = bodyColors.barrel.outline;
-              ctx.fillRect(
-                -thisBarrel.barrelWidth / 2 / clientFovMultiplier +
-                  thisBarrel.x,
-                -(thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
-                  clientFovMultiplier,
-                thisBarrel.barrelWidth / clientFovMultiplier,
-                (thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
-                  clientFovMultiplier
-              );
-              ctx.strokeRect(
-                -thisBarrel.barrelWidth / 2 / clientFovMultiplier +
-                  thisBarrel.x,
-                -(thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
-                  clientFovMultiplier,
-                thisBarrel.barrelWidth / clientFovMultiplier,
-                (thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
-                  clientFovMultiplier
-              );
             });
-            ctx.rotate(-90 * Math.PI / 180);
-            //draw turret base
-            ctx.beginPath();
-            ctx.arc(
-              0,
-              0,
-              (object.width / clientFovMultiplier) * 0.6,
-              0,
-              2 * Math.PI
-            );
-            ctx.fill();
-            ctx.stroke();
-            ctx.lineJoin = "miter"; //change back
-          } else if (object.name=="Abyssling"){
-            //draw upper layer
-            let oldfill = ctx.fillStyle;
-            let oldstroke = ctx.strokeStyle;
-            ctx.fillStyle = "#5f676c";
-            ctx.strokeStyle = "#41494e";
-            ctx.beginPath();
-            ctx.moveTo((object.width*0.75 / clientFovMultiplier), 0);
-            for (var i = 1; i <= object.side + 1; i += 1) {
-              ctx.lineTo(
-                (object.width*0.75 / clientFovMultiplier) *
-                    Math.cos((i * 2 * Math.PI) / object.side),
-                (object.width*0.75 / clientFovMultiplier) *
-                    Math.sin((i * 2 * Math.PI) / object.side)
-              );
-            }
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = oldfill;
-            ctx.strokeStyle = oldstroke;
-            ctx.beginPath();
-            ctx.moveTo((object.width*0.7 / clientFovMultiplier), 0);
-            for (var i = 1; i <= object.side + 1; i += 1) {
-              ctx.lineTo(
-                (object.width*0.7 / clientFovMultiplier) *
-                    Math.cos((i * 2 * Math.PI) / object.side),
-                (object.width*0.7 / clientFovMultiplier) *
-                    Math.sin((i * 2 * Math.PI) / object.side)
-              );
-            }
-            ctx.fill();
-            ctx.stroke();
-            ctx.rotate(-Math.PI/object.side);//rotate back
-            //draw turret on top (only visual)
-            ctx.fillStyle = bodyColors.barrel.col;//light grey
-            ctx.strokeStyle = bodyColors.barrel.outline;
-            let barrelwidth = 35;
-            let barrelheight = 100;
-            ctx.fillRect(
-              -barrelwidth / 2 / clientFovMultiplier,
-              -barrelheight / clientFovMultiplier,
-              barrelwidth / clientFovMultiplier,
-              barrelheight / clientFovMultiplier
-            );
-            ctx.strokeRect(
-              -barrelwidth / 2 / clientFovMultiplier,
-              -barrelheight / clientFovMultiplier,
-              barrelwidth / clientFovMultiplier,
-              barrelheight / clientFovMultiplier
-            );
-            ctx.beginPath();
-            ctx.arc(0, 0, object.width*0.45 / clientFovMultiplier, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.stroke();
-          }
-        }
-      } else{//negative sides, draw a star! (cactus)
-        var numberOfSpikes = -object.side;
-        var outerRadius = object.width / clientFovMultiplier * 1.5;
-        var innerRadius = object.width / clientFovMultiplier;
 
-        var rot = (Math.PI / 2) * 3;//dont change this, or else will have strange extra lines
-        var x = 0;
-        var y = 0;
-        ctx.rotate(-object.angle); //rotate back so that rock wont rotate to face you
-        ctx.beginPath();
-        ctx.moveTo(0, 0 - outerRadius);
-        for (i = 0; i < numberOfSpikes; i++) {
-          x = 0 + Math.cos(rot) * outerRadius;
-          y = 0 + Math.sin(rot) * outerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-          x = 0 + Math.cos(rot) * innerRadius;
-          y = 0 + Math.sin(rot) * innerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-        }
-        ctx.lineTo(0, 0 - outerRadius);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      }
-      ctx.restore();
-      if (object.health < object.maxhealth) {
-        //draw health bar background
-        var w = (object.width * 2) / clientFovMultiplier;
-        var h = 7 / clientFovMultiplier;
-        var r = h / 2;
-        var x = drawingX - object.width / clientFovMultiplier;
-        var y = drawingY + object.width / clientFovMultiplier + 10;
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 2.5 / clientFovMultiplier;
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arcTo(x + w, y, x + w, y + h, r);
-        ctx.arcTo(x + w, y + h, x, y + h, r);
-        ctx.arcTo(x, y + h, x, y, r);
-        ctx.arcTo(x, y, x + w, y, r);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        //draw health bar
-        if (object.health > 0) {
-          w = (w / object.maxhealth) * object.health;
-          if (r * 2 > w) {
-            //prevent weird shape when radius more than width
-            r = w / 2;
-            y += (h - w) / 2; //move health bar so that it is centered vertically in black bar
-            h = w;
-          }
-          ctx.fillStyle = botcolors[object.name].color;
-          ctx.beginPath();
-          ctx.moveTo(x + r, y);
-          ctx.arcTo(x + w, y, x + w, y + h, r);
-          ctx.arcTo(x + w, y + h, x, y + h, r);
-          ctx.arcTo(x, y + h, x, y, r);
-          ctx.arcTo(x, y, x + w, y, r);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        }
-      }
-      ctx.fillStyle = "white";
-      ctx.strokeStyle = "black";
-      ctx.lineWidth = 5 / clientFovMultiplier;
-      ctx.font = "700 " + 20 / clientFovMultiplier + "px Roboto";
-      ctx.textAlign = "center";
-      ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-      //note: if you stroke then fill, the words will be thicker and nicer. If you fill then stroke, the words are thinner.
-      if ((showStaticMobName == "yes"||botcolors[object.name].static=="no") && (showMinionMobName == "yes"||botcolors[object.name].minion=="no")){//settings for showing static and minion names
-        if (botcolors[object.name].specialty != "") {
-          var specialtyText = " (" + botcolors[object.name].specialty + ")";
-        } else {
-          var specialtyText = "";
-        }
-        ctx.strokeText(
-          object.name + specialtyText,
-          drawingX,
-          drawingY - object.width / clientFovMultiplier - 10
-        );
-        ctx.fillText(
-          object.name + specialtyText,
-          drawingX,
-          drawingY - object.width / clientFovMultiplier - 10
-        );
-      }
-      ctx.lineJoin = "miter"; //prevent spikes above the capital letter "M"
-      if (object.hasOwnProperty("deadOpacity")) {
-        //if this is an animation of a dead object
-        ctx.globalAlpha = 1.0; //reset opacity
-      }
-      if (showHitBox == "yes") {
-        //draw hitbox
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(
-          drawingX,
-          drawingY,
-          object.width / clientFovMultiplier,
-          0,
-          2 * Math.PI
-        );
-        ctx.stroke();
-      }
-    } else if (object.type == "shape") {
-      if (object.hasOwnProperty("deadOpacity")) {
-        //if this is an animation of a dead object
-        ctx.globalAlpha = object.deadOpacity;
-      }
-      var radiantAuraSize =
-        document.getElementById("sizevalue").innerHTML * auraWidth; //aura size determined by settings, but default is 5
-      //draw shape
-      ctx.save();
-      ctx.translate(drawingX, drawingY);
-      ctx.rotate((object.angle * Math.PI) / 180);
-      if (object.hasOwnProperty("radtier")) {
-        //radiant shape
-        if (!radiantShapes.hasOwnProperty(id)) {
-          var randomstate = Math.floor(Math.random() * 3); //randomly choose a color state for the radiant shape to start (if not when you spawn in cavern, all shapes same color)
-          var randomtype = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
-          if (randomtype == 1) {
-            if (randomstate == 0) {
-              radiantShapes[id] = {
-                red: 255,
-                blue: 0,
-                green: 0,
-                rgbstate: 1,
-                radtype: randomtype,
-              }; //keep track of radiant shape colors (done in client code)
-            } else if (randomstate == 1) {
-              radiantShapes[id] = {
-                red: 199,
-                blue: 0,
-                green: 150,
-                rgbstate: 2,
-                radtype: randomtype,
-              };
-            } else if (randomstate == 2) {
-              radiantShapes[id] = {
-                red: -1,
-                blue: 200,
-                green: 0,
-                rgbstate: 3,
-                radtype: randomtype,
-              };
-            }
-          } else {
-            if (randomstate == 0) {
-              radiantShapes[id] = {
-                red: 118,
-                blue: 168,
-                green: 151,
-                rgbstate: 1,
-                radtype: randomtype,
-              };
-            } else if (randomstate == 1) {
-              radiantShapes[id] = {
-                red: 209,
-                blue: 230,
-                green: 222,
-                rgbstate: 2,
-                radtype: randomtype,
-              };
-            } else if (randomstate == 2) {
-              radiantShapes[id] = {
-                red: 234,
-                blue: 240,
-                green: 180,
-                rgbstate: 3,
-                radtype: randomtype,
-              };
-            }
-          }
-        }
-        object.red = radiantShapes[id].red;
-        object.blue = radiantShapes[id].blue;
-        object.green = radiantShapes[id].green;
-      }
-      if (object.hasOwnProperty("red")) {
-        //calculate color of spikes, which would be 20 higher than actual rgb value
-        if (object.red + 150 <= 255) {
-          var spikeRed = object.red + 150;
-        } else {
-          var spikeRed = 255;
-        }
-        if (object.blue + 150 <= 255) {
-          var spikeBlue = object.blue + 150;
-        } else {
-          var spikeBlue = 255;
-        }
-        if (object.green + 150 <= 255) {
-          var spikeGreen = object.green + 150;
-        } else {
-          var spikeGreen = 255;
-        }
-        if (object.radtier == 3) {
-          //for high rarity radiant shapes, draw spikes
-          ctx.rotate((extraSpikeRotate * Math.PI) / 180);
-          ctx.fillStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.7)";
-          ctx.strokeStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.3)";
-          var numberOfSpikes = 6;
-          var outerRadius =
-            ((object.width * radiantAuraSize * 3) / clientFovMultiplier) *
-            0.75;
-          var innerRadius = (object.width / clientFovMultiplier) * 0.75;
+            var mousex = 0;
+            var mousey = 0;
 
-          var rot = (Math.PI / 2) * 3;
-          var x = 0;
-          var y = 0;
-
-          ctx.beginPath();
-          ctx.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          ctx.lineTo(0, 0 - outerRadius);
-          ctx.closePath();
-          ctx.lineWidth = 3 / clientFovMultiplier;
-          ctx.fill();
-          ctx.stroke();
-          ctx.rotate((-extraSpikeRotate * Math.PI) / 180);
-        } else if (object.radtier == 4) {
-          //for high rarity radiant shapes, draw spikes
-          ctx.rotate((extraSpikeRotate1 * Math.PI) / 180);
-          ctx.fillStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.7)";
-          ctx.strokeStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.3)";
-          var numberOfSpikes = 3;
-          var outerRadius =
-            (object.width * radiantAuraSize * 3) / clientFovMultiplier;
-          var innerRadius = (object.width / clientFovMultiplier) * 0.5;
-          var rot = (Math.PI / 2) * 3;
-          var x = 0;
-          var y = 0;
-          ctx.beginPath();
-          ctx.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          ctx.lineTo(0, 0 - outerRadius);
-          ctx.closePath();
-          ctx.lineWidth = 3 / clientFovMultiplier;
-          ctx.fill();
-          ctx.stroke();
-          ctx.rotate((-extraSpikeRotate1 * Math.PI) / 180);
-          ctx.rotate((extraSpikeRotate2 * Math.PI) / 180);
-          var numberOfSpikes = 6;
-          var outerRadius =
-            ((object.width * radiantAuraSize * 3) / clientFovMultiplier) *
-            0.5;
-          var innerRadius = (object.width / clientFovMultiplier) * 0.5;
-          var rot = (Math.PI / 2) * 3;
-          var x = 0;
-          var y = 0;
-          ctx.beginPath();
-          ctx.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          ctx.lineTo(0, 0 - outerRadius);
-          ctx.closePath();
-          ctx.lineWidth = 3 / clientFovMultiplier;
-          ctx.fill();
-          ctx.stroke();
-          ctx.rotate((-extraSpikeRotate2 * Math.PI) / 180);
-        } else if (object.radtier == 5) {
-          //for high rarity radiant shapes, draw spikes
-          ctx.rotate((extraSpikeRotate1 * Math.PI) / 180);
-          ctx.fillStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.7)";
-          ctx.strokeStyle =
-            "rgba(" +
-            spikeRed +
-            ", " +
-            spikeGreen +
-            ", " +
-            spikeBlue +
-            ", 0.3)";
-          var numberOfSpikes = 3;
-          var outerRadius =
-            ((object.width * radiantAuraSize * 3) / clientFovMultiplier) *
-            1.5;
-          var innerRadius = (object.width / clientFovMultiplier) * 0.5;
-          var rot = (Math.PI / 2) * 3;
-          var x = 0;
-          var y = 0;
-          ctx.beginPath();
-          ctx.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          ctx.lineTo(0, 0 - outerRadius);
-          ctx.closePath();
-          ctx.lineWidth = 3 / clientFovMultiplier;
-          ctx.fill();
-          ctx.stroke();
-          ctx.rotate((-extraSpikeRotate1 * Math.PI) / 180);
-          ctx.rotate((extraSpikeRotate2 * Math.PI) / 180);
-          var numberOfSpikes = 3;
-          var outerRadius =
-            ((object.width * radiantAuraSize * 3) / clientFovMultiplier) *
-            0.5;
-          var innerRadius = (object.width / clientFovMultiplier) * 0.5;
-          var rot = (Math.PI / 2) * 3;
-          var x = 0;
-          var y = 0;
-          ctx.beginPath();
-          ctx.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          ctx.lineTo(0, 0 - outerRadius);
-          ctx.closePath();
-          ctx.lineWidth = 3 / clientFovMultiplier;
-          ctx.fill();
-          ctx.stroke();
-          ctx.rotate((-extraSpikeRotate2 * Math.PI) / 180);
-        }
-        //if shape is radiant
-        //draw aura
-
-        //old code where aura was a gradient
-        /*
-            const gradient = ctx.createRadialGradient(0, 0, object.width/clientFovMultiplier, 0, 0, object.width/clientFovMultiplier*radiantAuraSize);
-            gradient.addColorStop(0, 'rgba(' + object.red + ', ' + object.green + ', ' + object.blue + ', 0.3)');
-            gradient.addColorStop(0.5, 'rgba(' + object.red + ', ' + object.green + ', ' + object.blue + ', 0.1)');
-            gradient.addColorStop(1, 'rgba(' + object.red + ', ' + object.green + ', ' + object.blue + ', 0.0)');
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            */
-
-        //old code where aura have shape
-        ctx.fillStyle =
-          "rgba(" +
-          object.red +
-          ", " +
-          object.green +
-          ", " +
-          object.blue +
-          ", 0.3)";
-        ctx.strokeStyle =
-          "rgba(" +
-          object.red +
-          ", " +
-          object.green +
-          ", " +
-          object.blue +
-          ", 0.3)";
-        ctx.lineWidth = 3 / clientFovMultiplier;
-        ctx.beginPath();
-
-        var shapeaurasize = object.radtier;
-        if (shapeaurasize > 3) {
-          shapeaurasize = 3; //prevent huge auras
-        }
-        ctx.moveTo(
-          0 +
-            ((object.width * radiantAuraSize * shapeaurasize) /
-              clientFovMultiplier) *
-              Math.cos(0),
-          0 +
-            ((object.width * radiantAuraSize * shapeaurasize) /
-              clientFovMultiplier) *
-              Math.sin(0)
-        );
-        for (var i = 1; i <= object.sides + 1; i += 1) {
-          ctx.lineTo(
-            0 +
-              ((object.width * radiantAuraSize * shapeaurasize) /
-                clientFovMultiplier) *
-                Math.cos((i * 2 * Math.PI) / object.sides),
-            0 +
-              ((object.width * radiantAuraSize * shapeaurasize) /
-                clientFovMultiplier) *
-                Math.sin((i * 2 * Math.PI) / object.sides)
-          );
-        }
-
-        //ctx.arc(0, 0, object.width/clientFovMultiplier*radiantAuraSize, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.stroke();
-        var shadeFactor = 3 / 4; //smaller the value, darker the shade
-        ctx.strokeStyle =
-          "rgb(" +
-          object.red * shadeFactor +
-          ", " +
-          object.green * shadeFactor +
-          ", " +
-          object.blue * shadeFactor +
-          ")";
-        ctx.fillStyle =
-          "rgb(" +
-          object.red +
-          ", " +
-          object.green +
-          ", " +
-          object.blue +
-          ")";
-        if (object.hit > 0) {
-          //if shape is hit
-          ctx.strokeStyle =
-            "rgb(" +
-            (object.red * shadeFactor + 20) +
-            ", " +
-            (object.green * shadeFactor + 20) +
-            ", " +
-            (object.blue * shadeFactor + 20) +
-            ")";
-          ctx.fillStyle =
-            "rgb(" +
-            (object.red + 20) +
-            ", " +
-            (object.green + 20) +
-            ", " +
-            (object.blue + 20) +
-            ")";
-        }
-
-        //choose whether a particle would spawn
-        //particle spawn chance based on number of sides the shape has, so square has less particles
-        if (spawnradparticle == "yes"){
-          var chooseValue = 20 - object.sides * 2; //lower the number means more particles spawned
-          if (chooseValue < 5) {
-            //5 refers to mimimum particle spawn chance
-            chooseValue = 5;
-          }
-          if (object.radtier == 4){
-            chooseValue -= 2;
-          }
-          else if (object.radtier == 5){
-            chooseValue -= 3;
-          }
-          var choosing = Math.floor(Math.random() * chooseValue); //choose if particle spawn
-          if (choosing == 1) {
-            //spawn a particle
-            var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
-            var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
-            var randomDistFromCenter =
-              Math.floor(Math.random() * object.width * 2) - object.width;
-            radparticles[particleID] = {
-              angle: angleRadians,
-              x: object.x + randomDistFromCenter * Math.cos(angleRadians),
-              y: object.y + randomDistFromCenter * Math.sin(angleRadians),
-              width: 5,
-              height: 5,
-              speed: 1,
-              timer: 25,
-              maxtimer: 25,
-              color:
-                "rgba(" +
-                object.red +
-                "," +
-                object.green +
-                "," +
-                object.blue +
-                ",.5)",
-              outline:
-                "rgba(" +
-                (object.red* shadeFactor + 20) +
-                "," +
-                (object.green* shadeFactor + 20) +
-                "," +
-                (object.blue* shadeFactor + 20) +
-                ",.5)",
-              type: "particle",
-            };
-            if (object.radtier == 4){
-              radparticles[particleID].width = Math.floor(Math.random() * 10) + 5;
-            }
-            else if (object.radtier == 5){
-              radparticles[particleID].width = Math.floor(Math.random() * 20) + 5;
-              radparticles[particleID].speed = 3;
-              radparticles[particleID].timer = 50;
-              radparticles[particleID].maxtimer = 50;
-            }
-            particleID++;
-          }
-        }
-      } else {
-        //if not radiant
-        //get shape colors in client code based on theme
-        let shapetype = object.sides - 3;
-        if (object.sides == 4){
-          shapetype = 0;
-        }
-        else if (object.sides == 3){
-          shapetype = 1;
-        }
-        ctx.fillStyle = shapecolors[shapetype];
-        ctx.strokeStyle = shapeoutlines[shapetype];
-        
-        if (object.hit > 0){//if shape is hit
-          if (!shapeHit.hasOwnProperty(id)){
-            shapeHit[id] = 0;
-          }
-          let maxshade = 0.3;//shapes turn 30% whiter when hit  (log, not linear)
-          if (object.sides > 8){//nonagon, decagon, hendecagon etc. dont turn very white upon collision with bullets or players
-            maxshade = 0.03;
-          }
-          shapeHit[id] += (maxshade/25);//make shape whiter
-          if (shapeHit[id] > maxshade){
-            shapeHit[id] = maxshade;
-          }
-        }
-        else if (shapeHit[id] > 0){
-          shapeHit[id] -= (maxshade/25);//make shape whiter
-          if (shapeHit[id] < 0.00001){
-            shapeHit[id] = 0;
-          }
-        }
-        if (shapeHit[id]>0){//even if not hit, still need to animate from whitish color to normal shape color
-          ctx.fillStyle = pSBC ( shapeHit[id], shapecolors[shapetype] );
-          ctx.strokeStyle = pSBC ( shapeHit[id], shapeoutlines[shapetype] );
-        }
-      }
-      ctx.lineJoin = "round"; //make corners of shape round
-      if (object.sides < 0) {
-        //draw a star shape
-
-        var numberOfSpikes = 5;
-        var outerRadius = object.width / clientFovMultiplier;
-        var innerRadius = (object.width / clientFovMultiplier / 2);
-
-        var rot = (Math.PI / 2) * 3;
-        var x = 0;
-        var y = 0;
-
-        ctx.beginPath();
-        ctx.moveTo(0, 0 - outerRadius);
-        for (i = 0; i < numberOfSpikes; i++) {
-          x = 0 + Math.cos(rot) * outerRadius;
-          y = 0 + Math.sin(rot) * outerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-          x = 0 + Math.cos(rot) * innerRadius;
-          y = 0 + Math.sin(rot) * innerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-        }
-        ctx.lineTo(0, 0 - outerRadius);
-        ctx.closePath();
-        ctx.lineWidth = 4 / clientFovMultiplier;
-        ctx.fill();
-        ctx.stroke();
-      } else {
-        ctx.lineWidth = 4 / clientFovMultiplier;
-        ctx.beginPath();
-        ctx.moveTo(
-          0 + (object.width / clientFovMultiplier) * Math.cos(0),
-          0 + (object.width / clientFovMultiplier) * Math.sin(0)
-        );
-        for (var i = 1; i <= object.sides + 1; i += 1) {
-          ctx.lineTo(
-            0 +
-              (object.width / clientFovMultiplier) *
-                Math.cos((i * 2 * Math.PI) / object.sides),
-            0 +
-              (object.width / clientFovMultiplier) *
-                Math.sin((i * 2 * Math.PI) / object.sides)
-          );
-        }
-        ctx.fill();
-        ctx.stroke();
-      }
-      ctx.lineJoin = "miter"; //change back to default
-      ctx.restore(); //must restore to reset angle rotation so health bar wont be rotated sideways
-      //draw shape's health bar
-      if (object.health < object.maxhealth) {
-        //draw health bar background
-        if (!shapeHealthBar.hasOwnProperty(id)){//for health bar width animation when first get damage
-          shapeHealthBar[id] = 0;
-        }
-        else if (shapeHealthBar[id] < 10){
-          shapeHealthBar[id]+=2*deltaTime;
-        }
-        if (shapeHealthBar[id] > 10){
-          shapeHealthBar[id] = 10;
-        }
-        var w = (object.width / clientFovMultiplier) * 2 * (shapeHealthBar[id]/10);
-        var h = 7 / clientFovMultiplier;
-        var r = h / 2;
-        var x = drawingX - object.width / clientFovMultiplier * (shapeHealthBar[id]/10);
-        var y = drawingY + object.width / clientFovMultiplier + 10;
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 2.5 / clientFovMultiplier;//determines with of black area
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arcTo(x + w, y, x + w, y + h, r);
-        ctx.arcTo(x + w, y + h, x, y + h, r);
-        ctx.arcTo(x, y + h, x, y, r);
-        ctx.arcTo(x, y, x + w, y, r);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        //draw health bar
-        if (object.health > 0) {
-          //dont draw health bar if negative health
-          w = (w / object.maxhealth) * object.health;
-          if (r * 2 > w) {
-            //prevent weird shape when radius more than width
-            r = w / 2;
-            y += (h - w) / 2; //move health bar so that it is centered vertically in black bar
-            h = w;
-          }
-          if (object.hasOwnProperty("red")) {
-            //if shape is radiant
-            ctx.fillStyle =
-              "rgb(" +
-              object.red +
-              ", " +
-              object.green +
-              ", " +
-              object.blue +
-              ")";
-          } else {
-            let shapetype = object.sides - 3;
-            if (object.sides == 4){
-              shapetype = 0;
-            }
-            else if (object.sides == 3){
-              shapetype = 1;
-            }
-            ctx.fillStyle = shapecolors[shapetype];
-            if (object.sides==10||object.sides==11||object.sides==14){//these shapes are very dark, cannot see health bar
-              ctx.fillStyle = shapecolors[9];//use dodecagon's grey color for health bar
-            }
-          }
-          ctx.beginPath();
-          ctx.moveTo(x + r, y);
-          ctx.arcTo(x + w, y, x + w, y + h, r);
-          ctx.arcTo(x + w, y + h, x, y + h, r);
-          ctx.arcTo(x, y + h, x, y, r);
-          ctx.arcTo(x, y, x + w, y, r);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        }
-      }
-      if (object.hasOwnProperty("deadOpacity")) {
-        //if this is an animation of a dead object
-        ctx.globalAlpha = 1.0; //reset opacity
-      }
-      if (showHitBox == "yes") {
-        //draw hitbox
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(
-          drawingX,
-          drawingY,
-          object.width / clientFovMultiplier,
-          0,
-          2 * Math.PI
-        );
-        ctx.stroke();
-      }
-      if (showshapeinfo == "yes"){
-        ctx.fillStyle = "white";
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 5 / clientFovMultiplier;
-        ctx.font = "700 " + 20 / clientFovMultiplier + "px Roboto";
-        ctx.textAlign = "center";
-        ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-        let name = "";
-        if (object.radtier == 1){
-          name = "Radiant "
-        }
-        else if (object.radtier == 2){
-          name = "Gleaming "
-        }
-        else if (object.radtier == 3){
-          name = "Luminous "
-        }
-        else if (object.radtier == 4){
-          name = "Lustrous "
-        }
-        else if (object.radtier == 5){
-          name = "Highly Radiant "
-        }
-        let shapetype = object.sides - 3;
-        if (object.sides == 4){
-          shapetype = 0;
-        }
-        else if (object.sides == 3){
-          shapetype = 1;
-        }
-        name += shapeNames[shapetype];
-        ctx.strokeText(
-         name,
-          drawingX,
-          drawingY - object.width / clientFovMultiplier - 10
-        );
-        ctx.fillText(
-          name,
-          drawingX,
-          drawingY - object.width / clientFovMultiplier - 10
-        );
-        ctx.lineJoin = "miter"; //prevent spikes above the capital letter "M"
-      }
-    } else if (object.type == "spawner") {
-      //spawner in sanctuary
-      ctx.save();
-      ctx.translate(drawingX, drawingY);
-      ctx.rotate(object.angle);
-      ctx.lineJoin = "round"; //make corners of shape round
-
-      //actual body
-      ctx.fillStyle = object.baseColor;
-      ctx.strokeStyle = object.baseOutline;
-      ctx.beginPath();
-      ctx.moveTo(
-        0 + (object.basewidth6 / clientFovMultiplier) * Math.cos(0),
-        0 + (object.basewidth6 / clientFovMultiplier) * Math.sin(0)
-      );
-      for (var i = 1; i <= object.sides + 1; i += 1) {
-        ctx.lineTo(
-          0 +
-            (object.basewidth6 / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / object.sides),
-          0 +
-            (object.basewidth6 / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / object.sides)
-        );
-      }
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = object.color;
-      ctx.strokeStyle = object.outline;
-      ctx.beginPath();
-      ctx.moveTo(
-        0 + (object.width / clientFovMultiplier) * Math.cos(0),
-        0 + (object.width / clientFovMultiplier) * Math.sin(0)
-      );
-      for (var i = 1; i <= object.sides + 1; i += 1) {
-        ctx.lineTo(
-          0 +
-            (object.width / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / object.sides),
-          0 +
-            (object.width / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / object.sides)
-        );
-      }
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = object.baseColor;
-      ctx.strokeStyle = object.baseOutline;
-      ctx.beginPath();
-      ctx.moveTo(
-        0 + (object.basewidth4 / clientFovMultiplier) * Math.cos(0),
-        0 + (object.basewidth4 / clientFovMultiplier) * Math.sin(0)
-      );
-      for (var i = 1; i <= object.sides + 1; i += 1) {
-        ctx.lineTo(
-          0 +
-            (object.basewidth4 / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / object.sides),
-          0 +
-            (object.basewidth4 / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / object.sides)
-        );
-      }
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = object.color;
-      ctx.strokeStyle = object.outline;
-      ctx.lineWidth = 4 / clientFovMultiplier;
-      ctx.beginPath();
-      ctx.moveTo(
-        0 + (object.basewidth5 / clientFovMultiplier) * Math.cos(0),
-        0 + (object.basewidth5 / clientFovMultiplier) * Math.sin(0)
-      );
-      for (var i = 1; i <= object.sides + 1; i += 1) {
-        ctx.lineTo(
-          0 +
-            (object.basewidth5 / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / object.sides),
-          0 +
-            (object.basewidth5 / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / object.sides)
-        );
-      }
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = object.baseColor;
-      ctx.strokeStyle = object.baseOutline;
-      ctx.beginPath();
-      ctx.moveTo(
-        0 + (object.basewidth1 / clientFovMultiplier) * Math.cos(0),
-        0 + (object.basewidth1 / clientFovMultiplier) * Math.sin(0)
-      );
-      for (var i = 1; i <= object.sides + 1; i += 1) {
-        ctx.lineTo(
-          0 +
-            (object.basewidth1 / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / object.sides),
-          0 +
-            (object.basewidth1 / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / object.sides)
-        );
-      }
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = object.barrelColor;
-      ctx.strokeStyle = object.barrelOutline;
-      ctx.beginPath();
-      ctx.moveTo(
-        0 + (object.basewidth2 / clientFovMultiplier) * Math.cos(0),
-        0 + (object.basewidth2 / clientFovMultiplier) * Math.sin(0)
-      );
-      for (var i = 1; i <= object.sides + 1; i += 1) {
-        ctx.lineTo(
-          0 +
-            (object.basewidth2 / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / object.sides),
-          0 +
-            (object.basewidth2 / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / object.sides)
-        );
-      }
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = object.color;
-      ctx.strokeStyle = object.outline;
-      ctx.lineWidth = 4 / clientFovMultiplier;
-      ctx.beginPath();
-      ctx.moveTo(
-        0 + (object.basewidth3 / clientFovMultiplier) * Math.cos(0),
-        0 + (object.basewidth3 / clientFovMultiplier) * Math.sin(0)
-      );
-      for (var i = 1; i <= object.sides + 1; i += 1) {
-        ctx.lineTo(
-          0 +
-            (object.basewidth3 / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / object.sides),
-          0 +
-            (object.basewidth3 / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / object.sides)
-        );
-      }
-      ctx.fill();
-      ctx.stroke();
-      //draw barrels
-      ctx.fillStyle = object.barrelColor;
-      ctx.strokeStyle = object.barrelOutline;
-      //trapezoid at the tip
-      var barrelwidth = 140;
-      var barrelheight = 28;
-      //rectangle
-      var barrelwidth2 = 180;
-      var barrelheight2 = 28;
-      //base trapezoid
-      var barrelwidth3 = 140;
-      var barrelheight3 = 80;
-      //note that trapezoids and rectangles are drawn differently
-
-      var barrelDistanceFromCenter = (object.width * (Math.cos(Math.PI/object.sides)));//width of middle of polygon (less than width of circle)
-
-      function drawSancBarrel(barNum){
-        var barAngle = 360/object.sides*(barNum+0.5);//half of a side, cuz barrel is in between sides
-        var barrelX = Math.cos((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter+ barrelheight+ barrelheight2+ barrelheight3);//object.width * 0.9
-        var barrelY = Math.sin((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter+ barrelheight+ barrelheight2+ barrelheight3);
-        var barrelX2 = Math.cos((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight2 + barrelheight3); //move rectangle barrel downwards
-        var barrelY2 = Math.sin((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight2 + barrelheight3);
-        var barrelX3 = Math.cos((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight3); //move base trapezoid barrel downwards
-        var barrelY3 = Math.sin((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight3);
-        //base trapezoid
-        ctx.save();
-        ctx.translate(
-          barrelX3 / clientFovMultiplier,
-          barrelY3 / clientFovMultiplier
-        );
-        ctx.rotate(((barAngle - 90) * Math.PI) / 180);
-        ctx.beginPath();
-        ctx.moveTo(
-          ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
-          -barrelheight3 / clientFovMultiplier
-        );
-        ctx.lineTo(-barrelwidth3 / clientFovMultiplier, 0);
-        ctx.lineTo(barrelwidth3 / clientFovMultiplier, 0);
-        ctx.lineTo(
-          ((barrelwidth3 / 3) * 2) / clientFovMultiplier,
-          -barrelheight3 / clientFovMultiplier
-        );
-        ctx.lineTo(
-          ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
-          -barrelheight3 / clientFovMultiplier
-        );
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-        //rectangle
-        ctx.save();
-        ctx.translate(
-          barrelX2 / clientFovMultiplier,
-          barrelY2 / clientFovMultiplier
-        );
-        ctx.rotate(((barAngle - 90) * Math.PI) / 180);
-        ctx.fillRect(
-          -barrelwidth2 / 2 / clientFovMultiplier,
-          -barrelheight2 / clientFovMultiplier,
-          barrelwidth2 / clientFovMultiplier,
-          barrelheight2 / clientFovMultiplier
-        );
-        ctx.strokeRect(
-          -barrelwidth2 / 2 / clientFovMultiplier,
-          -barrelheight2 / clientFovMultiplier,
-          barrelwidth2 / clientFovMultiplier,
-          barrelheight2 / clientFovMultiplier
-        );
-        ctx.restore();
-        //trapezium at the tip
-        ctx.save();
-        ctx.translate(
-          barrelX / clientFovMultiplier,
-          barrelY / clientFovMultiplier
-        );
-        ctx.rotate(((barAngle - 90) * Math.PI) / 180);
-        ctx.beginPath();
-        ctx.moveTo(-barrelwidth / 2 / clientFovMultiplier, 0);
-        ctx.lineTo(
-          -barrelwidth / clientFovMultiplier,
-          -barrelheight / clientFovMultiplier
-        );
-        ctx.lineTo(
-          barrelwidth / clientFovMultiplier,
-          -barrelheight / clientFovMultiplier
-        );
-        ctx.lineTo(barrelwidth / 2 / clientFovMultiplier, 0);
-        ctx.lineTo(-barrelwidth / 2 / clientFovMultiplier, 0);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      for (let i = 0; i < object.sides; i++) {
-        drawSancBarrel(i);
-      }
-      //draw aura
-      ctx.fillStyle = object.auraColor;
-      ctx.lineWidth = 4 / clientFovMultiplier;
-      ctx.beginPath();
-      ctx.moveTo(
-        0 + (object.auraWidth / clientFovMultiplier) * Math.cos(0),
-        0 + (object.auraWidth / clientFovMultiplier) * Math.sin(0)
-      );
-      for (var i = 1; i <= object.sides + 1; i += 1) {
-        ctx.lineTo(
-          0 +
-            (object.auraWidth / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / object.sides),
-          0 +
-            (object.auraWidth / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / object.sides)
-        );
-      }
-      ctx.fill();
-      ctx.lineJoin = "miter"; //change back
-      ctx.restore();
-      if (showHitBox == "yes") {
-        //draw hitbox
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(
-          drawingX,
-          drawingY,
-          object.width / clientFovMultiplier,
-          0,
-          2 * Math.PI
-        );
-        ctx.stroke();
-      }
-    } else if (object.type == "player") {
-      var spawnProtectionFlashDuration = 3; //higher number indicates longer duration between flashes.
-      if (object.hasOwnProperty("deadOpacity")) {
-        //if this is an animation of a dead object
-        ctx.globalAlpha = object.deadOpacity;
-      }
-      //draw players
-      ctx.save(); //save so later can restore
-      //translate canvas to location of player so that the player is at 0,0 coordinates, allowing rotation around the center of player's body
-      ctx.translate(drawingX, drawingY);
-
-      let objectangle = object.angle;
-      if (
-        id == playerstring &&
-        object.autorotate != "yes" &&
-        object.fastautorotate != "yes"
-      ) {
-        //if this player is the tank that the client is controlling
-        objectangle = clientAngle;
-        ctx.rotate(clientAngle); //instead of using client's actual tank angle, use the angle to the mouse. this reduces lag effect
-      } else {
-        ctx.rotate(object.angle);
-      }
-
-      let spawnProtect = "no";
-      if (object.spawnProtection < object.spawnProtectionDuration && object.spawnProtection % spawnProtectionFlashDuration == 0) {
-        spawnProtect = "yes";
-      }
-
-      let playercolor = "undefined";
-      let playeroutline = "undefined";
-      let eternal = "no";
-      if (object.team == "none") {
-        if (id == playerstring) {
-          playercolor = bodyColors.blue.col;
-          playeroutline = bodyColors.blue.outline;
-          if (object.hit > 0 || spawnProtect == "yes") {
-            playercolor = bodyColors.blue.hitCol
-            playeroutline = bodyColors.blue.hitOutline
-          }
-        }
-        else{
-          playercolor = bodyColors.red.col;
-          playeroutline = bodyColors.red.outline;
-          if (object.hit > 0 || spawnProtect == "yes") {
-            playercolor = bodyColors.red.hitCol
-            playeroutline = bodyColors.red.hitOutline
-          }
-        }
-      } else if (bodyColors.hasOwnProperty(object.team)) {
-          playercolor = bodyColors[object.team].col;
-          playeroutline = bodyColors[object.team].outline;
-          if (object.hit > 0 || spawnProtect == "yes") {
-            playercolor = bodyColors[object.team].hitCol;
-            playeroutline = bodyColors[object.team].hitOutline;
-          }
-          if (object.team == "eternal"){
-            eternal = "yes";
-          }
-      }
-      if (object.developer == "yes") {
-        //if a developer
-        playercolor = object.color;
-        playeroutline = object.outline;
-      }
-      
-      //store player color for upgrade buttons
-      if (id == playerstring){
-        playerBodyCol = playercolor;
-        playerBodyOutline = playeroutline;
-      }
-
-      drawPlayer(ctx, object, clientFovMultiplier, spawnProtect, playercolor, playeroutline, eternal, objectangle, id)//draw barrel and body
-      ctx.restore(); //restore coordinates to saved
-
-      //write player name if not the client's tank
-
-      //draw player health
-      if (object.health < object.maxhealth) {
-        //draw health bar background
-        var w = (object.width / clientFovMultiplier) * 2;
-        var h = 7 / clientFovMultiplier;
-        var r = h / 2;
-        var x = drawingX - object.width / clientFovMultiplier;
-        var y = drawingY + object.width / clientFovMultiplier + 10;
-        ctx.fillStyle = "black";
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 2.5 / clientFovMultiplier;
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arcTo(x + w, y, x + w, y + h, r);
-        ctx.arcTo(x + w, y + h, x, y + h, r);
-        ctx.arcTo(x, y + h, x, y, r);
-        ctx.arcTo(x, y, x + w, y, r);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        //draw health bar
-        if (object.health > 0) {
-          w = (w / object.maxhealth) * object.health;
-          //if (id == playerstring) {
-            //if this player is the tank that the client is controlling
-            if (object.team == "none") {
-              if (id == playerstring) {
-                ctx.fillStyle = bodyColors.blue.col;
-              }
-              else{
-                ctx.fillStyle = bodyColors.red.col;
-              }
-            } else if (bodyColors.hasOwnProperty(object.team)) {
-              ctx.fillStyle = bodyColors[object.team].col;
-            }
-          if (r * 2 > w) {
-            //prevent weird shape when radius more than width
-            r = w / 2;
-            y += (h - w) / 2; //move health bar so that it is centered vertically in black bar
-            h = w;
-          }
-          ctx.beginPath();
-          ctx.moveTo(x + r, y);
-          ctx.arcTo(x + w, y, x + w, y + h, r);
-          ctx.arcTo(x + w, y + h, x, y + h, r);
-          ctx.arcTo(x, y + h, x, y, r);
-          ctx.arcTo(x, y, x + w, y, r);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        }
-      }
-
-      if (object.hasOwnProperty("deadOpacity")) {
-        //if this is an animation of a dead object
-        ctx.globalAlpha = 1.0; //reset opacity
-      }
-      if (showHitBox == "yes") {
-        //draw hitbox
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(
-          drawingX,
-          drawingY,
-          object.width / clientFovMultiplier,
-          0,
-          2 * Math.PI
-        );
-        ctx.stroke();
-      }
-    } else if (object.type == "portal") {
-      //draw the aura below the portal
-      var auraSpeed = 75; //higher number means slower speed
-      var auraWidth = 4; //reative to portal size
-      var portalAuraSize = object.timer % auraSpeed;
-      var portalwidth = portalwidths[id]; //use this for portal width. it keeps track size changes when players touch portal
-      var portalsizeincrease = portalwidths[id] / object.width; //increase in width when someone touch it (needed for the spikes)
-      //first aura
-      var opacityCalculation =
-        1 - ((auraWidth / auraSpeed) * portalAuraSize) / auraWidth; //goes from 0 to 0.3
-      if (opacityCalculation > 0.3) {
-        //max opacity for portal aura
-        opacityCalculation = 0.3;
-      }
-      if (object.hasOwnProperty("red")) {
-        //if portal is radiant
-        ctx.fillStyle =
-          "rgba(" +
-          object.red +
-          ", " +
-          object.green +
-          ", " +
-          object.blue +
-          "," +
-          opacityCalculation +
-          ")";
-      } else {
-        ctx.fillStyle =
-          "rgba(" + object.color + "," + opacityCalculation + ")";
-      }
-      if ((portalwidth * ((auraWidth / auraSpeed) * portalAuraSize)) /
-          clientFovMultiplier > 0){
-        ctx.beginPath();
-        ctx.arc(
-          drawingX,
-          drawingY,
-          (portalwidth * ((auraWidth / auraSpeed) * portalAuraSize)) /
-            clientFovMultiplier,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-      }
-      //second smaller aura
-      portalAuraSize = (object.timer - auraSpeed / 2) % auraSpeed;
-      if (portalAuraSize > 0) {
-        var opacityCalculation =
-          1 - ((auraWidth / auraSpeed) * portalAuraSize) / auraWidth;
-        if (opacityCalculation > 0.3) {
-          //max opacity for portal aura
-          opacityCalculation = 0.3;
-        }
-        if (object.hasOwnProperty("red")) {
-          //if portal is radiant
-          ctx.fillStyle =
-            "rgba(" +
-            object.red +
-            ", " +
-            object.green +
-            ", " +
-            object.blue +
-            "," +
-            opacityCalculation +
-            ")";
-        } else {
-          ctx.fillStyle =
-            "rgba(" + object.color + "," + opacityCalculation + ")";
-        }
-        ctx.beginPath();
-        ctx.arc(
-          drawingX,
-          drawingY,
-          (portalwidth * ((auraWidth / auraSpeed) * portalAuraSize)) /
-            clientFovMultiplier,
-          0,
-          2 * Math.PI
-        );
-        ctx.fill();
-      }
-
-      if (object.hasOwnProperty("deadOpacity")) {
-        //if this is an animation of a dead object
-        ctx.globalAlpha = object.deadOpacity;
-      }
-      //drawing portals
-      //create gradient
-      //const gradient = ctx.createRadialGradient(drawingX, drawingY, object.width/3/clientFovMultiplier, drawingX, drawingY, object.width/clientFovMultiplier);
-
-      // Add two color stops
-      //caluclate color of outline of portal based on time until it die
-      var portalColorCalc = object.timer / object.maxtimer;
-      var portalColor = 255 - portalColorCalc * 255;
-      var portalRGB =
-        "rgb(" +
-        portalColor +
-        "," +
-        portalColor +
-        "," +
-        portalColor +
-        ")";
-      var portalRGBoutline =
-        "rgb(" +
-        (portalColor - 20) +
-        "," +
-        (portalColor - 20) +
-        "," +
-        (portalColor - 20) +
-        ")";
-      if (object.ruptured == 1) {
-        //portal is ruptured!
-        //draw the stars
-        ctx.save(); //save so later can restore
-        ctx.translate(drawingX, drawingY);
-        ctx.fillStyle = "white";
-        ctx.strokeStyle = "lightgrey";
-        ctx.lineWidth = 3 / clientFovMultiplier;
-        ctx.lineJoin = "round";
-        //first star: 3 spikes
-        ctx.rotate((extraSpikeRotate * Math.PI) / 180);
-        var numberOfSpikes = 3;
-        var outerRadius =
-          ((object.width * 3) / clientFovMultiplier) * portalsizeincrease;
-        var innerRadius =
-          (object.width / 3 / clientFovMultiplier) * portalsizeincrease;
-        var rot = (Math.PI / 2) * 3;
-        var x = 0;
-        var y = 0;
-        ctx.beginPath();
-        ctx.moveTo(0, 0 - outerRadius);
-        for (i = 0; i < numberOfSpikes; i++) {
-          x = 0 + Math.cos(rot) * outerRadius;
-          y = 0 + Math.sin(rot) * outerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-          x = 0 + Math.cos(rot) * innerRadius;
-          y = 0 + Math.sin(rot) * innerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-        }
-        ctx.lineTo(0, 0 - outerRadius);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.rotate((-extraSpikeRotate * Math.PI) / 180);
-        //second star: 6 spikes in opposite direction
-        ctx.rotate(((360 - extraSpikeRotate) * 2 * Math.PI) / 180);
-        var numberOfSpikes = 6;
-        var outerRadius =
-          ((object.width * 1.5) / clientFovMultiplier) *
-          portalsizeincrease;
-        var innerRadius =
-          (object.width / 1.2 / clientFovMultiplier) * portalsizeincrease;
-        var rot = (Math.PI / 2) * 3;
-        var x = 0;
-        var y = 0;
-        ctx.beginPath();
-        ctx.moveTo(0, 0 - outerRadius);
-        for (i = 0; i < numberOfSpikes; i++) {
-          x = 0 + Math.cos(rot) * outerRadius;
-          y = 0 + Math.sin(rot) * outerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-          x = 0 + Math.cos(rot) * innerRadius;
-          y = 0 + Math.sin(rot) * innerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-        }
-        ctx.lineTo(0, 0 - outerRadius);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.rotate((-(360 - extraSpikeRotate) * 2 * Math.PI) / 180);
-        //third star: 6 spikes
-        ctx.rotate((extraSpikeRotate * 2 * Math.PI) / 180);
-        var numberOfSpikes = 6;
-        var outerRadius =
-          ((object.width * 1.5) / clientFovMultiplier) *
-          portalsizeincrease;
-        var innerRadius =
-          (object.width / 1.2 / clientFovMultiplier) * portalsizeincrease;
-        var rot = (Math.PI / 2) * 3;
-        var x = 0;
-        var y = 0;
-        ctx.beginPath();
-        ctx.moveTo(0, 0 - outerRadius);
-        for (i = 0; i < numberOfSpikes; i++) {
-          x = 0 + Math.cos(rot) * outerRadius;
-          y = 0 + Math.sin(rot) * outerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-          x = 0 + Math.cos(rot) * innerRadius;
-          y = 0 + Math.sin(rot) * innerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-        }
-        ctx.lineTo(0, 0 - outerRadius);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.rotate((-extraSpikeRotate * 2 * Math.PI) / 180);
-        //fourth star: 6 dark spikes in opposite direction
-        ctx.fillStyle = portalRGB;
-        ctx.strokeStyle = portalRGBoutline;
-        ctx.rotate(((360 - extraSpikeRotate) * 3 * Math.PI) / 180); //times 2 to make it faster
-        var numberOfSpikes = 6;
-        var outerRadius =
-          ((object.width * 1.5) / clientFovMultiplier) *
-          portalsizeincrease;
-        var innerRadius =
-          (object.width / 2 / clientFovMultiplier) * portalsizeincrease;
-        var rot = (Math.PI / 2) * 3;
-        var x = 0;
-        var y = 0;
-        ctx.beginPath();
-        ctx.moveTo(0, 0 - outerRadius);
-        for (i = 0; i < numberOfSpikes; i++) {
-          x = 0 + Math.cos(rot) * outerRadius;
-          y = 0 + Math.sin(rot) * outerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-          x = 0 + Math.cos(rot) * innerRadius;
-          y = 0 + Math.sin(rot) * innerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-        }
-        ctx.lineTo(0, 0 - outerRadius);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.rotate((-(360 - extraSpikeRotate) * 3 * Math.PI) / 180);
-        //fifth star: tiny black spikes
-        ctx.rotate((extraSpikeRotate * 3 * Math.PI) / 180); //times 2 to make it faster
-        var numberOfSpikes = 6;
-        var outerRadius =
-          ((object.width * 1.25) / clientFovMultiplier) *
-          portalsizeincrease;
-        var innerRadius =
-          (object.width / 4 / clientFovMultiplier) * portalsizeincrease;
-        var rot = (Math.PI / 2) * 3;
-        var x = 0;
-        var y = 0;
-        ctx.beginPath();
-        ctx.moveTo(0, 0 - outerRadius);
-        for (i = 0; i < numberOfSpikes; i++) {
-          x = 0 + Math.cos(rot) * outerRadius;
-          y = 0 + Math.sin(rot) * outerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-          x = 0 + Math.cos(rot) * innerRadius;
-          y = 0 + Math.sin(rot) * innerRadius;
-          ctx.lineTo(x, y);
-          rot += Math.PI / numberOfSpikes;
-        }
-        ctx.lineTo(0, 0 - outerRadius);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.rotate((-extraSpikeRotate * 3 * Math.PI) / 180);
-        ctx.restore();
-        ctx.lineJoin = "miter";
-      }
-      ctx.fillStyle = portalRGB;
-      ctx.strokeStyle = portalRGBoutline;
-      ctx.lineWidth = 3 / clientFovMultiplier;
-      ctx.beginPath();
-      ctx.arc(
-        drawingX,
-        drawingY,
-        portalwidth / clientFovMultiplier,
-        0,
-        2 * Math.PI
-      );
-      ctx.fill();
-      ctx.stroke();
-      if (object.hasOwnProperty("deadOpacity")) {
-        //if this is an animation of a dead object
-        ctx.globalAlpha = 1.0; //reset opacity
-      }
-
-      //spawn particles
-      var choosing = Math.floor(Math.random() * 3); //choose if particle spawn. Lower number means more particles
-      if (choosing == 1) {
-        var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
-        var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
-        portalparticles[particleID] = {
-          angle: angleRadians,
-          x: object.x,
-          y: object.y,
-          width: 50,
-          height: 50,
-          speed: 10,
-          timer: 30,
-          maxtimer: 15, //difference between timer and maxtimer is the opacity change of the particle. Larger difference means more or less transparent
-          color: "white",
-          outline: "lightgrey",
-          type: "particle",
-        };
-        particleID++;
-      }
-
-      if (showHitBox == "yes") {
-        //draw hitbox
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(
-          drawingX,
-          drawingY,
-          object.width / clientFovMultiplier,
-          0,
-          2 * Math.PI
-        );
-        ctx.stroke();
-      }
-    } else if (object.type == "Fixedportal") {
-      //drawing rectangular fixed portals, e.g. the portal at top left corner of dune
-      ctx.save(); //save so later can restore
-      ctx.translate(drawingX, drawingY); //translate so white portal is at 0,0 coordinates so can rotate around center of portal
-      ctx.rotate((object.angleDegrees * Math.PI) / 180); //rotate portal
-      ctx.fillStyle = object.color;
-      ctx.strokeStyle = object.outline;
-      ctx.fillRect(
-        -object.width / 2 / clientFovMultiplier,
-        -object.height / 2 / clientFovMultiplier,
-        object.width / clientFovMultiplier,
-        object.height / clientFovMultiplier
-      );
-      ctx.strokeRect(
-        -object.width / 2 / clientFovMultiplier,
-        -object.height / 2 / clientFovMultiplier,
-        object.width / clientFovMultiplier,
-        object.height / clientFovMultiplier
-      );
-      ctx.globalAlpha = 0.7; //transparency
-      ctx.fillStyle = object.color2;
-      ctx.fillRect(
-        -object.width / clientFovMultiplier,
-        -object.height / clientFovMultiplier,
-        (object.width * 2) / clientFovMultiplier,
-        (object.height * 2) / clientFovMultiplier
-      );
-      ctx.strokeRect(
-        -object.width / clientFovMultiplier,
-        -object.height / clientFovMultiplier,
-        (object.width * 2) / clientFovMultiplier,
-        (object.height * 2) / clientFovMultiplier
-      );
-      ctx.globalAlpha = 1.0; //reset transparency
-      ctx.restore(); //restore after translating
-      if (showHitBox == "yes") {
-        //draw hitbox
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(
-          drawingX,
-          drawingY,
-          object.width / 2 / clientFovMultiplier,
-          0,
-          2 * Math.PI
-        );
-        ctx.stroke();
-      }
-    } else if (object.type == "particle") {
-      //draw particles
-      if (object.timer <= 10){
-        ctx.globalAlpha = object.timer / 10;
-      }
-      else if (object.timer >= object.maxtimer-10 && (object.source == "dune" || object.source == "crossroads")) {
-        ctx.globalAlpha = ((((object.timer - object.maxtimer) + 10) - 10) * -1) / 10;
-      }
-      //ctx.globalAlpha = object.timer / object.maxtimer;
-      ctx.fillStyle = object.color;
-      ctx.strokeStyle = object.outline;
-
-      ctx.lineWidth = 3 / clientFovMultiplier;
-      ctx.beginPath();
-      ctx.arc(
-        drawingX,
-        drawingY,
-        object.width / clientFovMultiplier,
-        0,
-        2 * Math.PI
-      );
-      ctx.fill();
-      ctx.stroke();
-      ctx.globalAlpha = 1.0;
-    } else if (object.type == "wall") {
-      //ctx.fillStyle = "#232323";
-      ctx.fillStyle = "rgba(15, 15, 15, .5)";//crossroads wall color
-      if (gamelocation == "sanctuary"){
-        ctx.fillStyle = "rgba(40,40,40, .5)";//sanctuary wall color
-      }
-      else if (gamelocation == "cavern"){
-        ctx.fillStyle = "black";//cavern wall color
-      }
-      ctx.fillRect(
-        drawingX,
-        drawingY,
-        object.w / clientFovMultiplier,
-        object.h / clientFovMultiplier
-      );
-      if (showHitBox == "yes") {
-        //draw hitbox
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 3;
-        ctx.strokeRect(
-          drawingX,
-          drawingY,
-          object.w / clientFovMultiplier,
-          object.h / clientFovMultiplier
-        );
-      }
-    } else if (object.type == "gate") {
-      if (gamelocation == "cavern"){//cavern
-        ctx.save();
-        ctx.translate(drawingX, drawingY);
-        ctx.rotate(object.angle/180*Math.PI);
-        //draw white rectangle below
-        ctx.fillStyle = "rgba(255,255,255,.7)";
-        ctx.strokeStyle = "white";
-        //FIRST WHITE RECTANGLE
-        ctx.globalAlpha = 1.0 * (endGate - gateTimer) / (endGate - 1 - startGate);//gateTimer increases from 0.5 to 9, this equation makes the opacity decrease from 1 to 0
-        ctx.fillRect(
-          -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer,
-          object.width / clientFovMultiplier
-        );
-        ctx.strokeRect(
-          -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer,
-          object.width / clientFovMultiplier
-        );
-        ctx.globalAlpha = 1.0;
-        //SECOND WHITE RECTANGLE
-        let gateTimer2 = gateTimer - endGate/2;
-        if (gateTimer2 < startGate){
-          gateTimer2 = endGate - (startGate - gateTimer2)
-        }
-        ctx.globalAlpha = 1.0 * (endGate - gateTimer2) / (endGate - 1 - startGate);//gateTimer increases from 1 to 7, this equation makes the opacity decrease from 1 to 0
-        ctx.fillRect(
-          -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer2,
-          object.width / clientFovMultiplier
-        );
-        ctx.strokeRect(
-          -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer2,
-          object.width / clientFovMultiplier
-        );
-        //draw arrows
-        for (var i = 0; i < gatearrow.length; i++) {
-          let y = ((object.height / clientFovMultiplier * 9)/2 + object.height / clientFovMultiplier/2)/45*(gatearrow[i]-45);
-          let arrowwidth = 25/clientFovMultiplier;//half of entire width
-          let arrowheight = 25/clientFovMultiplier;
-          //draw 3 arrows in a row
-          if (gatearrow[i] < 20){
-            ctx.globalAlpha = gatearrow[i]/20;
-          }
-          else if (gatearrow[i] > 70){
-            ctx.globalAlpha = (90-gatearrow[i])/20;
-          }
-          else{
-            ctx.globalAlpha = 1;
-          }
-          ctx.lineWidth = 3/clientFovMultiplier;
-          ctx.fillStyle = "white";
-          ctx.beginPath();
-          ctx.moveTo(y-arrowheight, 0-arrowwidth);
-          ctx.lineTo(y, 0);
-          ctx.lineTo(y-arrowheight, 0+arrowwidth);
-          ctx.moveTo(y-arrowheight, object.width/clientFovMultiplier/3-arrowwidth);
-          ctx.lineTo(y, object.width/clientFovMultiplier/3);
-          ctx.lineTo(y-arrowheight, object.width/clientFovMultiplier/3+arrowwidth);
-          ctx.moveTo(y-arrowheight, -object.width/clientFovMultiplier/3-arrowwidth);
-          ctx.lineTo(y, -object.width/clientFovMultiplier/3);
-          ctx.lineTo(y-arrowheight, -object.width/clientFovMultiplier/3+arrowwidth);
-          ctx.stroke();
-          //move arrow
-          gatearrow[i]+=0.1;
-          if (gatearrow[i]>45 && gatearrow[i]<65){//move faster when arrow in the middle
-            gatearrow[i]+=0.4;
-          }
-          else if (gatearrow[i]>90){
-            gatearrow[i] = 0;
-          }
-        }
-        ctx.globalAlpha = 1.0;
-        //draw actual black gate
-        ctx.fillStyle = "black";
-        ctx.fillRect(0,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier,
-          object.width / clientFovMultiplier
-        );
-      }
-      else if (gamelocation != "sanctuary"){//cross (default)
-        ctx.save();
-        ctx.translate(drawingX, drawingY);
-        ctx.rotate(object.angle/180*Math.PI);
-        //draw white rectangle below
-        ctx.fillStyle = "rgba(255,255,255,.7)";
-        ctx.strokeStyle = "white";
-        //FIRST WHITE RECTANGLE
-        ctx.globalAlpha = 1.0 * (endGate - gateTimer) / (endGate - 1 - startGate);//gateTimer increases from 0.5 to 9, this equation makes the opacity decrease from 1 to 0
-        ctx.fillRect(
-          -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer,
-          object.width / clientFovMultiplier
-        );
-        ctx.strokeRect(
-          -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer,
-          object.width / clientFovMultiplier
-        );
-        ctx.globalAlpha = 1.0;
-        //SECOND WHITE RECTANGLE
-        let gateTimer2 = gateTimer - endGate/2;
-        if (gateTimer2 < startGate){
-          gateTimer2 = endGate - (startGate - gateTimer2)
-        }
-        ctx.globalAlpha = 1.0 * (endGate - gateTimer2) / (endGate - 1 - startGate);//gateTimer increases from 1 to 7, this equation makes the opacity decrease from 1 to 0
-        ctx.fillRect(
-          -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer2,
-          object.width / clientFovMultiplier
-        );
-        ctx.strokeRect(
-          -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer2,
-          object.width / clientFovMultiplier
-        );
-        ctx.globalAlpha = 1.0;
-        //draw actual black gate
-        ctx.fillStyle = "black";
-        ctx.fillRect(0,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier,
-          object.width / clientFovMultiplier
-        );
-      }
-      else{//sanc
-        ctx.save();
-        ctx.translate(drawingX, drawingY);
-        ctx.rotate(object.angle/180*Math.PI);
-        //draw white rectangle below
-        ctx.fillStyle = "rgba(0,0,0,.2)";
-        ctx.strokeStyle = "rgba(0,0,0,.5)";
-        //FIRST WHITE RECTANGLE
-        ctx.globalAlpha = 1.0 * (endGate - gateTimer) / (endGate - 1 - startGate);//gateTimer increases from 0.5 to 9, this equation makes the opacity decrease from 1 to 0
-        ctx.fillRect(
-          -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer,
-          object.width / clientFovMultiplier
-        );
-        ctx.strokeRect(
-          -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer,
-          object.width / clientFovMultiplier
-        );
-        ctx.globalAlpha = 1.0;
-        //SECOND WHITE RECTANGLE
-        let gateTimer2 = gateTimer - endGate/2;
-        if (gateTimer2 < startGate){
-          gateTimer2 = endGate - (startGate - gateTimer2)
-        }
-        ctx.globalAlpha = 1.0 * (endGate - gateTimer2) / (endGate - 1 - startGate);//gateTimer increases from 1 to 7, this equation makes the opacity decrease from 1 to 0
-        ctx.fillRect(
-          -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer2,
-          object.width / clientFovMultiplier
-        );
-        ctx.strokeRect(
-          -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier * gateTimer2,
-          object.width / clientFovMultiplier
-        );
-        ctx.globalAlpha = 1.0;
-        //draw actual black gate
-        ctx.fillStyle = "black";
-        ctx.fillRect(0,
-           -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier,
-          object.width / clientFovMultiplier
-        );
-        let numberOfSpikes = 6;
-        let outerRadius = object.width / clientFovMultiplier /8;
-        let innerRadius = object.width / clientFovMultiplier /25;
-        let rot = (Math.PI / 2) * 3;
-        let x = 0;
-        let y = 0;
-        for (let star = 0; star < 4; star++) {
-          x = 0;
-          y = 0;
-
-          ctx.translate(object.height / clientFovMultiplier, object.width / clientFovMultiplier / 5 * (star-1.5))
-          ctx.rotate(Math.PI * (endGate - gateTimer) / (endGate - 1 - startGate) /204 *360)
-          ctx.beginPath();
-          ctx.moveTo(0, 0 - outerRadius);
-          for (i = 0; i < numberOfSpikes; i++) {
-            x = 0 + Math.cos(rot) * outerRadius;
-            y = 0 + Math.sin(rot) * outerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-            x = 0 + Math.cos(rot) * innerRadius;
-            y = 0 + Math.sin(rot) * innerRadius;
-            ctx.lineTo(x, y);
-            rot += Math.PI / numberOfSpikes;
-          }
-          ctx.lineTo(0,0 - outerRadius);
-          ctx.closePath();
-          ctx.fill();
-          ctx.rotate(-Math.PI * (endGate - gateTimer) / (endGate - 1 - startGate) /204 *360)
-          ctx.translate(-object.height / clientFovMultiplier, -object.width / clientFovMultiplier / 5 * (star-1.5))
-        }
-      }
-      if (showHitBox == "yes") {
-        //draw hitbox
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 3;
-        ctx.strokeRect(0,
-         -object.width/2/clientFovMultiplier,
-          object.height / clientFovMultiplier,
-          object.width / clientFovMultiplier
-        );
-      }
-      ctx.restore();
-      //spawn particles
-      if (gamelocation != "sanctuary" && gamelocation != "cavern"){
-        var choosing = Math.floor(Math.random() * 3); //choose if particle spawn. Lower number means more particles
-        if (choosing == 1) {
-            var dir = Math.floor(Math.random() * 2); //choose angle in degrees
-            if (dir == 0){
-              var angleRadians = (object.angle) * Math.PI / 180; //convert to radians
-            }
-            else{
-              var angleRadians = (object.angle - 180) * Math.PI / 180;
-            }
-            let randX = 0;
-            let randY = 0;
-            //code currently does not support particles for gates that are tilted
-            //i dont see a need to add that in the near future
-            if (object.angle == 0 || object.angle == 180 || object.angle == 360){
-              randY = Math.floor(Math.random() * object.width) - object.width/2;
-            }
-            else if (object.angle == 90 || object.angle == 270){
-              randX = Math.floor(Math.random() * object.width) - object.width/2;
-            }
-            portalparticles[particleID] = {
-              angle: angleRadians,
-              x: object.x + randX,
-              y: object.y + randY,
-              width: 50,
-              height: 50,
-              speed: 10,
-              timer: 30,
-              maxtimer: 15, //difference between timer and maxtimer is the opacity change of the particle. Larger difference means more or less transparent
-              color: "white",
-              outline: "lightgrey",
-              type: "particle",
-            };
-            particleID++;
-        }
-      }
-      else if (gamelocation != "cavern"){
-        var choosing = Math.floor(Math.random() * 7); //choose if particle spawn. Lower number means more particles
-        if (choosing == 1) {
-          var dir = Math.floor(Math.random() * 2); //choose angle in degrees
-          if (dir == 0){
-            var angleRadians = (object.angle) * Math.PI / 180; //convert to radians
-          }
-          else{
-            var angleRadians = (object.angle - 180) * Math.PI / 180;
-          }
-          let randX = 0;
-          let randY = 0;
-          //code currently does not support particles for gates that are tilted
-          //i dont see a need to add that in the near future
-          if (object.angle == 0 || object.angle == 180 || object.angle == 360){
-            randY = Math.floor(Math.random() * object.width) - object.width/2;
-          }
-          else if (object.angle == 90 || object.angle == 270){
-            randX = Math.floor(Math.random() * object.width) - object.width/2;
-          }
-          portalparticles[particleID] = {
-            angle: angleRadians,
-            x: object.x + randX,
-            y: object.y + randY,
-            width: 15,
-            height: 15,
-            speed: 5,
-            timer: 20,
-            maxtimer: 20, //difference between timer and maxtimer is the opacity change of the particle. Larger difference means more or less transparent
-            color: "black",
-            outline: "black",
-            type: "particle",
-          };
-          particleID++;
-        }
-      }
-    } else if (object.type == "def") {
-      //base defender in 2tdm
-      ctx.save();
-      ctx.translate(drawingX, drawingY);
-      ctx.rotate(object.angle);
-      ctx.lineJoin = "round"; //make corners of shape round
-      ctx.lineWidth = 4 / clientFovMultiplier;
-
-      //draw octagon base
-      var octagonWidth = object.width/5*6;
-      ctx.fillStyle = bodyColors.asset.col;
-      ctx.strokeStyle = bodyColors.asset.outline;
-      ctx.beginPath();
-      ctx.moveTo(
-        0 + (octagonWidth / clientFovMultiplier) * Math.cos(0),
-        0 + (octagonWidth / clientFovMultiplier) * Math.sin(0)
-      );
-      for (var i = 1; i <= 8 + 1; i += 1) {
-        ctx.lineTo(
-          0 +
-            (octagonWidth / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / 8),
-          0 +
-            (octagonWidth / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / 8)
-        );
-      }
-      ctx.fill();
-      ctx.stroke();
-
-
-      //draw barrels
-      ctx.fillStyle = bodyColors.barrel.col;
-      ctx.strokeStyle = bodyColors.barrel.outline;
-      //trapezoid at the tip
-      var barrelwidth = 70;
-      var barrelheight = 20;
-      //rectangle
-      var barrelwidth2 = 90;
-      var barrelheight2 = 20;
-      //base trapezoid
-      var barrelwidth3 = 70;
-      var barrelheight3 = 60;
-      //note that trapezoids and rectangles are drawn differently
-
-      for (let i = 0; i < 4; i++) {//draw 4 barrels
-        var barrelAngle = 360/4*i;
-        var barrelX = Math.cos((barrelAngle * Math.PI) / 180) * object.width * 1.4;
-        var barrelY = Math.sin((barrelAngle * Math.PI) / 180) * object.width * 1.4;
-        var barrelX2 =
-          Math.cos((barrelAngle * Math.PI) / 180) *
-          (object.width * 1.4 - barrelheight); //move rectangle barrel downwards
-        var barrelY2 =
-          Math.sin((barrelAngle * Math.PI) / 180) *
-          (object.width * 1.4 - barrelheight);
-        var barrelX3 =
-          Math.cos((barrelAngle * Math.PI) / 180) *
-          (object.width * 1.4 - barrelheight - barrelheight2); //move base trapezoid barrel downwards
-        var barrelY3 =
-          Math.sin((barrelAngle * Math.PI) / 180) *
-          (object.width * 1.4 - barrelheight - barrelheight2);
-        //base trapezoid
-        ctx.save();
-        ctx.translate(
-          barrelX3 / clientFovMultiplier,
-          barrelY3 / clientFovMultiplier
-        );
-        ctx.rotate(((barrelAngle - 90) * Math.PI) / 180);
-        ctx.beginPath();
-        ctx.moveTo(
-          ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
-          -barrelheight3 / clientFovMultiplier
-        );
-        ctx.lineTo(-barrelwidth3 / clientFovMultiplier, 0);
-        ctx.lineTo(barrelwidth3 / clientFovMultiplier, 0);
-        ctx.lineTo(
-          ((barrelwidth3 / 3) * 2) / clientFovMultiplier,
-          -barrelheight3 / clientFovMultiplier
-        );
-        ctx.lineTo(
-          ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
-          -barrelheight3 / clientFovMultiplier
-        );
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-        //rectangle
-        ctx.save();
-        ctx.translate(
-          barrelX2 / clientFovMultiplier,
-          barrelY2 / clientFovMultiplier
-        );
-        ctx.rotate(((barrelAngle - 90) * Math.PI) / 180);
-        ctx.fillRect(
-          -barrelwidth2 / 2 / clientFovMultiplier,
-          -barrelheight2 / clientFovMultiplier,
-          barrelwidth2 / clientFovMultiplier,
-          barrelheight2 / clientFovMultiplier
-        );
-        ctx.strokeRect(
-          -barrelwidth2 / 2 / clientFovMultiplier,
-          -barrelheight2 / clientFovMultiplier,
-          barrelwidth2 / clientFovMultiplier,
-          barrelheight2 / clientFovMultiplier
-        );
-        ctx.restore();
-        //trapezium at the tip
-        ctx.save();
-        ctx.translate(
-          barrelX / clientFovMultiplier,
-          barrelY / clientFovMultiplier
-        );
-        ctx.rotate(((barrelAngle - 90) * Math.PI) / 180);
-        ctx.beginPath();
-        ctx.moveTo(-barrelwidth / 2 / clientFovMultiplier, 0);
-        ctx.lineTo(
-          -barrelwidth / clientFovMultiplier,
-          -barrelheight / clientFovMultiplier
-        );
-        ctx.lineTo(
-          barrelwidth / clientFovMultiplier,
-          -barrelheight / clientFovMultiplier
-        );
-        ctx.lineTo(barrelwidth / 2 / clientFovMultiplier, 0);
-        ctx.lineTo(-barrelwidth / 2 / clientFovMultiplier, 0);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      //draw body
-      ctx.fillStyle = object.color;
-      ctx.strokeStyle = object.outline;
-      ctx.beginPath();
-      ctx.arc(
-        0,
-        0,
-        object.width / clientFovMultiplier,
-        0,
-        2 * Math.PI
-      );
-      ctx.fill();
-      ctx.stroke();
-      var octagonWidth = object.width/5*4;
-      ctx.fillStyle = bodyColors.asset.col;
-      ctx.strokeStyle = bodyColors.asset.outline;
-      ctx.beginPath();
-      ctx.moveTo(
-        0 + (octagonWidth / clientFovMultiplier) * Math.cos(0),
-        0 + (octagonWidth / clientFovMultiplier) * Math.sin(0)
-      );
-      for (var i = 1; i <= 8 + 1; i += 1) {
-        ctx.lineTo(
-          0 +
-            (octagonWidth / clientFovMultiplier) *
-              Math.cos((i * 2 * Math.PI) / 8),
-          0 +
-            (octagonWidth / clientFovMultiplier) *
-              Math.sin((i * 2 * Math.PI) / 8)
-        );
-      }
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = object.color;
-      ctx.strokeStyle = object.outline;
-      ctx.beginPath();
-      ctx.arc(
-        0,
-        0,
-        object.width/2 / clientFovMultiplier,
-        0,
-        2 * Math.PI
-      );
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.lineJoin = "miter"; //change back
-      ctx.restore();
-      if (showHitBox == "yes") {
-        //draw hitbox
-        ctx.strokeStyle = "blue";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(
-          drawingX,
-          drawingY,
-          object.width / clientFovMultiplier,
-          0,
-          2 * Math.PI
-        );
-        ctx.stroke();
-      }
-    }
-  }
-  function drawplayerdata(object, id, playerstring, auraWidth) {
-    //function for drawing objects on the canvas. need to provide aura width because this fuction cannot access variables outside
-    var drawingX =
-      (object.x - px) / clientFovMultiplier + canvas.width / 2; //calculate the location on canvas to draw object
-    var drawingY =
-      (object.y - py) / clientFovMultiplier + canvas.height / 2;
-    if(object.type == "player") {
-      //write chats
-      if (id != playerstring) {
-        var firstChatY = object.width / clientFovMultiplier /5*4 + 55 / clientFovMultiplier;
-      }
-      else{
-        var firstChatY = object.width / clientFovMultiplier /5*4;//chat nearer to player body if no need to display name
-      }
-      ctx.font = "700 25px Roboto";
-      ctx.textAlign = "center";
-      ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-      var xpadding = 15;
-      var ypadding = 10;
-      var lineheight = 30;
-      
-      var timeWhenChatRemove = 100;//when change on server code, remember to change here too
-      
-      if (!(chatlist[id])){//used for animating chat positions
-        chatlist[id] = JSON.parse(JSON.stringify(object.chats));
-      }
-      else{
-        let tempArray = [];
-        let messages = {};//prevent bug when multiple chats have same message
-        object.chats.forEach(function (item, index) {
-          let occurence = 0;//prevent bug when multiple chats have same message
-          let foundit = 0;
-          for (var i = 0; i < chatlist[id].length; i++) {//check if oldchats hae this message, to preserve the position for animation
-            if (chatlist[id][i].chat == item.chat){
-              if (messages[item.chat]){//saw a chat with the exact same message before!
-                if (messages[item.chat] <= occurence){//this is a different chat
-                  let k = JSON.parse(JSON.stringify(chatlist[id][i]));
-                  k.time = item.time;
-                  tempArray.push(k);
-                  messages[chatlist[id][i].chat]++;
-                  foundit = 1;
-                  break
+            //mouse move listener
+            if (mobile == "no") {
+              //if not mobile
+              $("html").mousemove(function (e) {
+                if (gamemode == "PvE arena"){
+                  mouseX = e.pageX;
+                  mouseY = e.pageY;
+                  return;
                 }
-                else{//this is the same chat that you saw before, continue hunting for the chat
-                  occurence++;
+                mousex = e.pageX;
+                mousey = e.pageY;
+
+                var angle = Math.atan2(
+                  window.innerHeight / 2 - mousey,
+                  window.innerWidth / 2 - mousex
+                );
+                //below code stores the player's angle (only for the player the client is controlling)
+                //this reduces lag's effect on mouse movement
+                if (keylock == "no"){
+                  clientAngle = (((angle * 180) / Math.PI - 90) * Math.PI) / 180;
                 }
-              }
-              else{
-                let k = JSON.parse(JSON.stringify(chatlist[id][i]));
-                k.time = item.time;
-                tempArray.push(k);
-                messages[chatlist[id][i].chat] = 1;
-                foundit = 1;
-                break
-              }
-            }
-          }
-          if (foundit == 0){//new chat message
-            let k = JSON.parse(JSON.stringify(item));
-            k.opacity = 0;
-            tempArray.push(k);
-          }
-        });
-        chatlist[id] = tempArray;
-      }
+                //change radians to degree, minus 90 degrees, change back to radians
+                //must add 90 degress because tank is drawn facing upwards, but 0 degrees is facing right, not upwards
 
-      object.chats.slice().reverse().forEach((chatObj, index) => {//slice and reverse to loop though array backwards (so older messages are above)
-        ctx.fillStyle = "rgba(69,69,69,.7)";
-
-        var longestLine = 0;
-
-        //multiline chat
-        const wrapText = function(ctx, text, x, y, maxWidth, lineHeight) {
-          // First, start by splitting all of our text into words, but splitting it into an array split by spaces
-          let words = text.split(' ');
-          let line = ''; // This will store the text of the current line
-          let testLine = ''; // This will store the text when we add a word, to test if it's too long
-          let lineArray = []; // This is an array of lines, which the function will return
-
-          // Lets iterate over each word
-          for(var n = 0; n < words.length; n++) {
-              // Create a test line, and measure it..
-              testLine += `${words[n]} `;
-              let metrics = ctx.measureText(testLine);
-              let testWidth = metrics.width;
-              // If the width of this test line is more than the max width
-              if (testWidth > maxWidth && n > 0) {
-                  // Then the line is finished, push the current line into "lineArray"
-                  line = line.slice(0, -1);//remove space at the end of the line
-                  lineArray.push([line, x, y]);
-                  let thislinewidth = ctx.measureText(line).width;
-                  if (thislinewidth > longestLine){
-                    longestLine = thislinewidth;
+                //for drones
+                //this is the mouse coordinates based on game coordinates instead of screen coordinates
+                //var mouseXBasedOnCanvas =  (mousex/window.innerWidth)*canvas.width-drawAreaX;
+                //var mouseYBasedOnCanvas =  (mousey/window.innerHeight)*canvas.height-drawAreaY;
+                var mouseXBasedOnCanvas = (window.innerWidth / 2 - mousex) * clientFovMultiplier;
+                var mouseYBasedOnCanvas = (window.innerHeight / 2 - mousey) * clientFovMultiplier;
+                //note, the angle is in radians, not degrees
+                if (state == "ingame") {
+                  //if playing the game
+                  if (
+                    (Math.abs(mouseXBasedOnCanvas - oldmousex) >= 10 ||
+                    Math.abs(mouseYBasedOnCanvas - oldmousey) >= 10) && keylock == "no"
+                  ) {
+                    if ((Date.now() - prevSendMouse)>30){//limit of one packet sent per 30ms
+                      //mousemove event triggered every 1px of movement, so use this if statement to only trigger every 10px of movement
+                      var packet = JSON.stringify(["mouseMoved", mouseXBasedOnCanvas/window.innerWidth*canvas.width, mouseYBasedOnCanvas/window.innerHeight*canvas.height, angle]);//mouse positions are in screen coords, need to convert to game cavas coords
+                      socket.send(packet)
+                      oldmousex = mouseXBasedOnCanvas;
+                      oldmousey = mouseYBasedOnCanvas;
+                      prevSendMouse = Date.now();
+                    }
                   }
-                  // Increase the line height, so a new line is started
-                  y += lineHeight;
-                  // Update line and test line to use this word as the first word on the next line
-                  line = `${words[n]} `;
-                  testLine = `${words[n]} `;
-              }
-              else {
-                  // If the test line is still less than the max width, then add the word to the current line
-                  line += `${words[n]} `;
-              }
-              // If we never reach the full max width, then there is only one line.. so push it into the lineArray so we return something
-              if(n === words.length - 1) {
-                  line = line.slice(0, -1);//remove space at the end of the line
-                  lineArray.push([line, x, y]);
-                  let thislinewidth = ctx.measureText(line).width;
-                  if (thislinewidth > longestLine){
-                    longestLine = thislinewidth;
-                  }
-              }
-          }
-          // Return the line array
-          return lineArray;
-        }
+                  //check if player mouse touching the upgrade button
+                  if (openedUI=="no"){
+                    let hoverOne = "no";
+                    let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
+                    let resizeDiffY = 1/window.innerHeight*hcanvas.height;
+                    for (let i = 1; i < 15; i++) {
+                      let button = upgradeButtons[i];
+                      let x = button.x/canvas.width*window.innerWidth;
+                      let y = window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX;
+                      let w = button.width/2/canvas.width*window.innerWidth;
+                      if (mousex > (x - w) && mousex < (x + w) && mousey < (y + w*resizeDiffY/resizeDiffX) && mousey > (y - w*resizeDiffY/resizeDiffX)) {//note that x coord is not scaled on different screen sizes, only y coord is affected. For upgrade buttons, it scales from the bottom of the screen
+                        button.hover = 'yes';
+                        hoverOne = "yes";
+                      } else {
+                        button.hover = 'no';
+                      }
+                    }
 
-        let isTypingAnimation = "no";
-        if (chatObj.chat == "typingAnim"){
-          isTypingAnimation = "yes";
-          chatObj.chat = "anim"
-        }
-        let wrappedText = wrapText(ctx, chatObj.chat, drawingX, drawingY - firstChatY, 900, lineheight);//split message into multiline text
-        //draw rect
-        var w = longestLine + xpadding * 2;
-        var h = lineheight * wrappedText.length + ypadding * 2;
-        if (wrappedText.length == 1){//remove spacing between text for single-line text
-          h = 25 + ypadding * 2;
-        }
-        var r = 15;
-        var x = drawingX - longestLine / 2 - xpadding;
-        var y = drawingY - firstChatY - ypadding - h - 20;//the actual y location of this chat message
-        //aniamte towards this y position
-        //remember that the loop is reversed, so indexes are reversed here too
-        let thischat = chatlist[id][chatlist[id].length - 1 - index];
-        let diffpos = 0;
-        if (!thischat.y){
-          thischat.y = y;
-        }
-        else{
-          if (y > thischat.y){
-            thischat.y+=(y - thischat.y)/2*deltaTime;
-            if (y < thischat.y){
-              thischat.y = y;
-            }
-          }
-          else if (y < thischat.y){
-            thischat.y-=(thischat.y - y)/2*deltaTime;
-            if (y > thischat.y){
-              thischat.y = y;
-            }
-          }
-          if (Math.abs(y - thischat.y)<0.1){//small difference between current position and actual position
-            thischat.y = y;
-          }
-          diffpos = y - thischat.y;
-          y = thischat.y;
-        }
-        if (thischat.opacity < 1){
-          thischat.opacity+=0.1;
-        }
-        ctx.globalAlpha = thischat.opacity;
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arcTo(x + w, y, x + w, y + h, r);
-        ctx.arcTo(x + w, y + h, x, y + h, r);
-        ctx.arcTo(x, y + h, x, y, r);
-        ctx.arcTo(x, y, x + w, y, r);
-        ctx.closePath();
-        ctx.fill();
-        if (index == 0){
-          //if this is first chat message, draw triangle
-          let trianglewidth = 20;
-          let triangleheight = 10;
-          ctx.beginPath();
-          ctx.moveTo(x + w/2 - trianglewidth/2, y + h);
-          ctx.lineTo(x + w/2 + trianglewidth/2, y + h);
-          ctx.lineTo(x + w/2, y + h + triangleheight);
-          ctx.fill();
-        }
-        //write words
-        ctx.fillStyle = "white";
-        wrappedText.forEach(function(item) {
-          if (isTypingAnimation == "no"){
-            ctx.fillText(item[0], item[1], item[2]-h-diffpos);//write text
-          }
-          else{//typing animation
-            ctx.beginPath();
-            for (let i = 0; i < 3; i++) {
-              let radiusIncrease = 0;
-              if (typingAnimation <= 3*(i+1)+3*i && typingAnimation >= 6*i){
-                radiusIncrease = (typingAnimation - 6*i);
-              }
-              else if (typingAnimation <= 6*(i+1) && typingAnimation >= 6*i){
-                radiusIncrease = (6*(i+1) - typingAnimation);
-              }
-              if (radiusIncrease < 0){
-                radiusIncrease = 0;
-              }
-              ctx.arc(item[1]+(i-1)*18, item[2]-h-diffpos-6, 5+radiusIncrease, 0, 2 * Math.PI);
-            }
-            ctx.fill();
-          }
-        })
-        ctx.globalAlpha = 1.0;
-        firstChatY += (h + 10); //height of chat plus space between chats
-      });
-      ctx.lineJoin = "miter"; //change it back
-      
-      if (id != playerstring) {
-        ctx.fillStyle = "white";
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 8 / clientFovMultiplier;
-        ctx.font = "700 " + 35 / clientFovMultiplier + "px Roboto";
-        ctx.textAlign = "center";
-        ctx.miterLimit = 2;//prevent text spikes, alternative to linejoin round
-        //ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-        //note: if you stroke then fill, the words will be thicker and nicer. If you fill then stroke, the words are thinner.
-        if (object.name == "unnamed"){
-          //this guy is unnamed, add a 3 digit identifier
-          let thisID = id.substr(id.length - 3);//last 3 digits of ID
-          object.name += (" #" + thisID);
-        }
-        ctx.strokeText(
-          object.name,
-          drawingX,
-          drawingY - (object.width + 40) / clientFovMultiplier
-        );
-        ctx.fillText(
-          object.name,
-          drawingX,
-          drawingY - (object.width + 40) / clientFovMultiplier
-        );
-        //write player level
-        ctx.font = "700 " + 18 / clientFovMultiplier + "px Roboto";
-        ctx.strokeText(
-          "Lvl " +
-            object.level +
-            " " +
-            object.tankType +
-            "-" +
-            object.bodyType,
-          drawingX,
-          drawingY - (object.width + 10) / clientFovMultiplier
-        );
-        ctx.fillText(
-          "Lvl " +
-            object.level +
-            " " +
-            object.tankType +
-            "-" +
-            object.bodyType,
-          drawingX,
-          drawingY - (object.width + 10) / clientFovMultiplier
-        );
-        ctx.lineJoin = "miter"; //change it back
-      }
-    }
-}
-
-  //skill points variables
-  var currentStatPoints = 0;
-  var extraPoints = 0;
-
-function changeGamemode(dir){
-  if (dir == "right") {
-        //removed unnessarry stuff
-        //disconnect and connect to newly selected gamemode
-        socket.close();//disconnect from current server
-        playButton.style.display = "none";
-        nameInput.style.display = "none";
-        connected = "no";
-        connectServer(serverlist[gamemode],"no")
-        console.log("Connecting to "+gamemode)
-        joinedWhichGM = gamemode;//respawn in the gamemode which you spawned in after you died
-      } else if (dir == "left") {
-        
-      } else if (dir == "regionright") {
-        
-      } else if (dir == "regionleft") {
-      }
-}
-
-  //client send stuff to server
-  var autorotate = "no";//keep track of state to create notification
-  var autofire = "no";
-  var fastautorotate = "no";
-  var passivemode = "no";
-  //keep track of whether key is pressed down or not to prevent packet sent multiple times when holding down key
-  var downpressed = "no";
-  var uppressed = "no";
-  var leftpressed = "no";
-  var rightpressed = "no";
-  $("html").keydown(function (e) {
-      if(!$("input,textarea").is(":focus")){//if all input and text area do not have focus
-
-      //prevents triggering commands when typing in input boxes
-      //console.log(e)
-      if (e.key == "ArrowDown" || e.key == "s" || e.key == "S") {
-        if (downpressed == "no"){
-          var packet = JSON.stringify(["down"]);
-          socket.send(packet)
-          downpressed = "yes";
-        }
-      } else if (e.key == "ArrowUp" || e.key == "w" || e.key == "W") {
-        if (uppressed == "no"){
-          var packet = JSON.stringify(["up"]);
-          socket.send(packet)
-          uppressed = "yes";
-        }
-      } else if (e.key == "ArrowLeft" || e.key == "a" || e.key == "A") {
-        if (leftpressed == "no"){
-          leftpressed = "yes";//put this before sending packet to prevent sending error from causing weird movement, usually happen when switching server in main menu using left and right keys
-          var packet = JSON.stringify(["left"]);
-          socket.send(packet)
-        }
-          if (gameStart < 1 && gameStart > -1){
-            changeGamemode("right")
-          }
-      } else if (e.key == "ArrowRight" || e.key == "d" || e.key == "D") {
-        if (rightpressed == "no"){
-          rightpressed = "yes";
-          var packet = JSON.stringify(["right"]);
-          socket.send(packet)
-        }
-        if (gameStart < 1 && gameStart > -1){
-            changeGamemode("left")
-          }
-      } else if (e.key == "Shift"){
-        var packet = JSON.stringify(["mousePressed", 3]);
-        socket.send(packet)
-        //e.which refers to whether it's lfet or right click. leftclick is 1, rightclick is 3
-      } else if (e.key == "e" || e.key == "E") {
-        var packet = JSON.stringify(["auto-fire"]);
-        socket.send(packet)
-        if (autofire == "no"){
-          createNotif("Auto Fire (E): ON",defaultNotifColor,3000)
-          autofire = "yes";
-        }
-        else{
-          createNotif("Auto Fire (E): OFF",defaultNotifColor,3000)
-          autofire = "no";
-        }
-      } else if (e.key == "c" || e.key == "C") {
-        var packet = JSON.stringify(["auto-rotate"]);
-        socket.send(packet)
-        if (autorotate == "no"){
-          createNotif("Auto Rotate (C): ON",defaultNotifColor,3000)
-          autorotate = "yes";
-        }
-        else{
-          createNotif("Auto Rotate (C): OFF",defaultNotifColor,3000)
-          autorotate = "no";
-        }
-      } else if (e.key == "f" || e.key == "F") {
-        var packet = JSON.stringify(["fast-auto-rotate"]);
-        socket.send(packet)
-        if (fastautorotate == "no"){
-          createNotif("Fast Auto Rotate (F): ON",defaultNotifColor,3000)
-          fastautorotate = "yes";
-        }
-        else{
-          createNotif("Fast Auto Rotate (F): OFF",defaultNotifColor,3000)
-          fastautorotate = "no";
-        }
-      } else if (e.key == "x" || e.key == "X") {
-        if (keylock == "yes"){
-          keylock = "no";
-          createNotif("Spin Lock (X): OFF",defaultNotifColor,3000)
-        }
-        else{
-          keylock = "yes";
-          createNotif("Spin Lock (X): ON",defaultNotifColor,3000)
-        }
-      } else if (e.key == "m" || e.key == "M") {
-        //opening and closing debug info box
-        if (showDebug == "no") {
-          //if debug closed
-          showDebug = "yes"; //open debug
-          //notification
-          createNotif("Debug Mode (M): ON",defaultNotifColor,3000)
-        } else if (showDebug == "yes") {
-          //if debug open
-          showDebug = "no"; //hide debug
-          //notification
-          createNotif("Debug Mode (M): OFF",defaultNotifColor,3000)
-        }
-      } else if (e.key == "h" || e.key == "H") {
-        //toggle hitbox
-        if (showHitBox == "no") {
-          showHitBox = "yes";
-          createNotif("Hitbox (H): ON",defaultNotifColor,3000)
-        } else if (showHitBox == "yes") {
-          showHitBox = "no";
-          createNotif("Hitbox (H): OFF",defaultNotifColor,3000)
-        }
-      } else if (e.key == "i" || e.key == "I") {
-        //notification with more info about game
-        //use \n for new line
-        //note: will not work properly anymore as long notifications not supported
-        //createNotif("Controls:\nMouse: point barrel in direction\nW,A,S,D or arrow keys: move tank\nE: toggle auto-fire\nC: toggle auto-rotate\nF: toggle 3x fast auto-rotate\nU: toggle body upgrade tree\nY: toggle weapon upgrade tree\nM: toggle debug\nI: show this notification\nP: passive mode (bullets and auras do not do damage)\nO: open settings\nH: toggle hitbox\nX: spin lock\nUpgrade levels: 1, 5, 20, 45, 100, 111","rgba(15,15,15)",5000)
-      } else if (e.key == "p" || e.key == "P") {
-        var packet = JSON.stringify(["passive-mode"]);
-        socket.send(packet)
-        if (passivemode == "no"){
-          createNotif("Passive Mode (P): ON",defaultNotifColor,3000)
-          passivemode = "yes";
-        }
-        else{
-          createNotif("Passive Mode (P): OFF",defaultNotifColor,3000)
-          passivemode = "no";
-        }
-      } else if (e.key == "Enter" && gameStart >= 1) {
-        //if press enter, add cursor to chat inputbox
-        document.getElementById("chat").focus(); //add cursor to input field
-      } else if (e.key == "Enter" && gameStart < 1) {
-        if (gameStart == -1){
-          //at death screen
-          exitDeathScreen();
-        }
-        else{
-          //if press enter at homepage, enter the game
-          gameStart = 1;
-          randomNotif();
-        }
-      } else if (e.key == "y" || e.key == "Y") {
-        if (showUpgradeTree == "no") {
-          showUpgradeTree = "yes";
-          showBodyUpgradeTree = "no";
-        } else {
-          showUpgradeTree = "no";
-        }
-      } else if (e.key == "u" || e.key == "U") {
-        if (showBodyUpgradeTree == "no") {
-          showBodyUpgradeTree = "yes";
-          showUpgradeTree = "no";
-        } else {
-          showBodyUpgradeTree = "no";
-        }
-      } else if (e.key == "o" || e.key == "O") {
-        //open and close settings
-        if (settingspopup.style.display == "none" || settingspopup.style.display == "") {//if settings popup hidden or havent opened before
-          settingspopup.style.display = "block";
-          document.getElementById("screenDarken").style.display = "block";
-          document.getElementById("screenLighten").style.display = "none";
-        } else {
-          settingspopup.style.display = "none";
-          document.getElementById("screenDarken").style.display = "none";
-          document.getElementById("screenLighten").style.display = "block";
-          setTimeout(function () {
-            document.getElementById("screenLighten").style.display = "none";
-          }, 500); //after animation finish, make buttons below darkness clickable
-        }
-      } else if (
-        (e.key == "1" ||
-          e.key == "2" ||
-          e.key == "3" ||
-          e.key == "4" ||
-          e.key == "5" ||
-          e.key == "6" ||
-          e.key == "7" ||
-          e.key == "8") &&
-        extraPoints > 0
-      ) {
-        //skill points
-        var packet = JSON.stringify(["upgradeSkillPoints", e.key]);
-        socket.send(packet)
-      } else if (e.key == " ") {
-        //space bar
-        var packet = JSON.stringify(["mousePressed"]);
-        socket.send(packet)
-      }
-    } else if (
-      document.activeElement === nameInput
-    ) {
-      //if name input box is selected
-      if (e.key == "Enter") {
-        //if press enter, do the same thing as when pressing the play button
-        gameStart = 1;
-        randomNotif();
-      }
-    } else if (
-      document.activeElement === document.getElementById("chat")
-    ) {
-      //if chat input box is selected
-      if (e.key == "Enter") {
-        //if press enter, send chat message
-        var yourChat = document.getElementById("chat").value; //get message
-        var packet = JSON.stringify(["chat", yourChat]);
-        socket.send(packet)
-        document.getElementById("chat").value = ""; //clear input field
-        document.getElementById("chat").blur(); //remove cursor
-      }
-    } else if (
-      document.activeElement === document.getElementById("devtoken")
-    ) {
-      //if dev token input box is selected
-      if (e.key == "Enter") {
-        //if press enter, send chat message
-        var devToken = document.getElementById("devtoken").value; //get inputted token
-        var packet = JSON.stringify(["developerTest", devToken]);
-        socket.send(packet)
-        document.getElementById("devtoken").value = ""; //clear input field
-        document.getElementById("devtoken").blur(); //remove cursor
-      }
-    }
-  });
-  $("html").keyup(function (e) {
-    if (document.activeElement !== nameInput) {
-      //if the name input box is not selected (prevents triggering commands when typing name)
-      //console.log(e)
-      if (e.key == "ArrowDown" || e.key == "s" || e.key == "S") {
-        if (downpressed == "yes"){
-          var packet = JSON.stringify(["downRelease"]);
-          socket.send(packet)
-          downpressed = "no";
-        }
-      } else if (e.key == "ArrowUp" || e.key == "w" || e.key == "W") {
-        if (uppressed == "yes"){
-          var packet = JSON.stringify(["upRelease"]);
-          socket.send(packet)
-          uppressed = "no";
-        }
-      } else if (e.key == "ArrowLeft" || e.key == "a" || e.key == "A") {
-        if (leftpressed == "yes"){
-          leftpressed = "no";
-          var packet = JSON.stringify(["leftRelease"]);
-          socket.send(packet)
-        }
-      } else if (e.key == "ArrowRight" || e.key == "d" || e.key == "D") {
-        if (rightpressed == "yes"){
-          rightpressed = "no";
-          var packet = JSON.stringify(["rightRelease"]);
-          socket.send(packet)
-        }
-      } else if (e.key == " ") {
-         var packet = JSON.stringify(["mouseReleased"]);
-        socket.send(packet)
-      } else if (e.key == "Shift"){
-        var packet = JSON.stringify(["mousePressed", 1]);//stop drone repel by left click
-        socket.send(packet)
-        var packet = JSON.stringify(["mouseReleased"]);
-        socket.send(packet)
-      }
-    }
-  });
-
-  var mousex = 0;
-  var mousey = 0;
-
-  //mouse move listener
-  if (mobile == "no") {
-    //if not mobile
-    $("html").mousemove(function (e) {
-      mousex = e.pageX;
-      mousey = e.pageY;
-
-      var angle = Math.atan2(
-        window.innerHeight / 2 - mousey,
-        window.innerWidth / 2 - mousex
-      );
-      //below code stores the player's angle (only for the player the client is controlling)
-      //this reduces lag's effect on mouse movement
-      if (keylock == "no"){
-        clientAngle = (((angle * 180) / Math.PI - 90) * Math.PI) / 180;
-      }
-      //change radians to degree, minus 90 degrees, change back to radians
-      //must add 90 degress because tank is drawn facing upwards, but 0 degrees is facing right, not upwards
-
-      //for drones
-      //this is the mouse coordinates based on game coordinates instead of screen coordinates
-      //var mouseXBasedOnCanvas =  (mousex/window.innerWidth)*canvas.width-drawAreaX;
-      //var mouseYBasedOnCanvas =  (mousey/window.innerHeight)*canvas.height-drawAreaY;
-      var mouseXBasedOnCanvas = (window.innerWidth / 2 - mousex) * clientFovMultiplier;
-      var mouseYBasedOnCanvas = (window.innerHeight / 2 - mousey) * clientFovMultiplier;
-      //note, the angle is in radians, not degrees
-      if (gameStart == 2.3) {
-        //if playing the game
-        if (
-          (Math.abs(mouseXBasedOnCanvas - oldmousex) >= 10 ||
-          Math.abs(mouseYBasedOnCanvas - oldmousey) >= 10) && keylock == "no"
-        ) {
-          if ((Date.now() - prevSendMouse)>30){//limit of one packet sent per 30ms
-            //mousemove event triggered every 1px of movement, so use this if statement to only trigger every 10px of movement
-            var packet = JSON.stringify(["mouseMoved", mouseXBasedOnCanvas/window.innerWidth*canvas.width, mouseYBasedOnCanvas/window.innerHeight*canvas.height, angle]);//mouse positions are in screen coords, need to convert to game cavas coords
-            socket.send(packet)
-            oldmousex = mouseXBasedOnCanvas;
-            oldmousey = mouseYBasedOnCanvas;
-            prevSendMouse = Date.now();
-          }
-        }
-        //check if player mouse touching the upgrade button
-        if (openedUI=="no"){
-        let hoverOne = "no";
-        let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
-        let resizeDiffY = 1/window.innerHeight*hcanvas.height;
-      //*resizeDiffY/resizeDiffX
-        for (let i = 1; i < 15; i++) {
-          let button = upgradeButtons[i];
-          if (
-            mousex > (button.x/canvas.width*window.innerWidth - button.width/2/canvas.width*window.innerWidth) &&
-            mousex < (button.x/canvas.width*window.innerWidth + button.width/2/canvas.width*window.innerWidth) &&
-            mousey < (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX + button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-            mousey > (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX - button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX)
-          ) {//note that x coord is not scaled on different screen sizes, only y coord is affected. For upgrade buttons, it scales from the bottom of the screen
-            button.hover = 'yes';
-            hoverOne = "yes";
-          } else {
-            button.hover = 'no';
-          }
-        }
-
-        if (
-          mousey > hcanvas.height - 280 &&
-          (mousex > hcanvas.width - 320 || mousex < 320)
-        ) {
-          //make skill points appear
-          mouseToSkillPoints = "yes";
-        } else {
-          mouseToSkillPoints = "no";
-        }
-        
-        //circular button for skill points
-        for (let i = 0; i < 8; i++) {
-          let button = skillpointsbutton[i];
-          let x;
-          let y;
-          let width = 20;
-          if (i < 4){
-            x = 17 * 15 / 2 + skillpointspos - 20 + 5;//15 is number of upgrade points
-            y = (hcanvas.height - 40 - (3 - i)*33) + 25 / 2 + 3;//25 is height
-          }
-          else{
-            x = -17 * 15/2 + hcanvas.width - skillpointspos + 20 - 5;
-            y = (hcanvas.height - 40 - (7-i)*33) + 25 / 2 + 3;
-          }
-          if (button.clickable == "yes" && 
-             mousex > (x/canvas.width*window.innerWidth - width/2/canvas.width*window.innerWidth) &&
-            mousex < (x/canvas.width*window.innerWidth + width/2/canvas.width*window.innerWidth) &&
-            mousey < (window.innerHeight - (hcanvas.height - y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX + width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-            mousey > (window.innerHeight - (hcanvas.height - y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX - width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX)){
-            button.hover = 'yes';
-            hoverOne = "yes";
-          }
-          else{
-            button.hover = 'no';
-          }
-        }
-        
-        let ignorebutton = ignorebuttonw;
-        if (mousex > (ignorebutton.x/canvas.width*window.innerWidth) &&
-            mousex < (ignorebutton.x/canvas.width*window.innerWidth + ignorebutton.width/canvas.width*window.innerWidth) &&
-            mousey < (window.innerHeight - (hcanvas.height - ignorebutton.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX + ignorebutton.height/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-            mousey > (window.innerHeight - (hcanvas.height - ignorebutton.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX)){
-            ignorebutton.hover = 'yes';
-            hoverOne = "yes";
-          }
-          else{
-            ignorebutton.hover = 'no';
-          }
-        ignorebutton = ignorebuttonb;
-        if (mousex > (ignorebutton.x/canvas.width*window.innerWidth) &&
-            mousex < (ignorebutton.x/canvas.width*window.innerWidth + ignorebutton.width/canvas.width*window.innerWidth) &&
-            mousey < (window.innerHeight - (hcanvas.height - ignorebutton.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX + ignorebutton.height/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-            mousey > (window.innerHeight - (hcanvas.height - ignorebutton.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX)){
-            ignorebutton.hover = 'yes';
-            hoverOne = "yes";
-          }
-          else{
-            ignorebutton.hover = 'no';
-          }
-        
-        if (hoverOne == "yes"){
-          //one of the button is hovered
-          if (hcanvas.style.cursor != "pointer"){
-            hcanvas.style.cursor = "pointer";//change mouse to a pointer
-          }
-        }
-        else{
-          if (hcanvas.style.cursor != "auto"){
-            hcanvas.style.cursor = "auto";
-          }
-        }
-        }
-        
-      } else if (gameStart > 0 && gameStart <= 0.5) {
-        //if on homepage
-        //check for mouse touch with gamemode selection arrows
-      }
-    });
-
-    //mouse press listener
-    $("html").mousedown(function (e) {
-      var packet = JSON.stringify(["mousePressed", e.which]);
-      socket.send(packet)
-      //e.which refers to whether it's lfet or right click. leftclick is 1, rightclick is 3
-    });
-
-    //mouse release listener
-    $("html").mouseup(function (e) {
-      var packet = JSON.stringify(["mouseReleased", e.which]);
-      socket.send(packet);
-      if (openedUI=="no"){
-      let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
-      let resizeDiffY = 1/window.innerHeight*hcanvas.height;
-      for (let i = 1; i < 15; i++) {
-        let button = upgradeButtons[i];
-        if (
-          mousex > (button.x/canvas.width*window.innerWidth - button.width/2/canvas.width*window.innerWidth) &&
-          mousex < (button.x/canvas.width*window.innerWidth + button.width/2/canvas.width*window.innerWidth) &&
-          mousey < (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX + button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-          mousey > (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX - button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-          ((ignorebuttonw.ignore == "no" || i>7) && (ignorebuttonb.ignore == "no" || i<=7))
-        ) {
-          //if player release mouse at button
-          if (i <= 7) {
-            var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "weaponUpgrade"]);
-            socket.send(packet)
-          } else {
-            var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "bodyUpgrade"]);
-            socket.send(packet)
-          }
-        }
-      }
-      for (let i = 0; i < 8; i++) {
-        if (skillpointsbutton[i].hover == "yes"){
-          //skill points
-          var packet = JSON.stringify(["upgradeSkillPoints", (i+1).toString()]);
-          socket.send(packet)
-        }
-      }
-      if (ignorebuttonw.hover == "yes"){
-        ignorebuttonw.ignore = "yes";
-        levelwhenignorew = player.level;
-      }
-      if (ignorebuttonb.hover == "yes"){
-        ignorebuttonb.ignore = "yes";
-        levelwhenignoreb = player.level;
-      }
-      }
-    });
-  }
-
-  //mobile touch
-  if (mobile == "yes") {
-    setInterval(function () {
-      if (touches[0].state == "moving" && touches[0].oldangle != touches[0].angle) {
-        let tankAngleInDegrees = (touches[0].angle * 180) / Math.PI;
-        if (tankAngleInDegrees < 0) {
-          tankAngleInDegrees += 360;
-        }
-        touches[0].oldangle = touches[0].angle;
-        var packet = JSON.stringify(["360move",tankAngleInDegrees]);
-        socket.send(packet)
-      }
-      else if (touches[1].state == "moving" && touches[1].oldangle != touches[1].angle) {
-        let tankAngleInDegrees = (touches[1].angle * 180) / Math.PI;
-        if (tankAngleInDegrees < 0) {
-          tankAngleInDegrees += 360;
-        }
-        touches[1].oldangle = touches[1].angle;
-        var packet = JSON.stringify(["360move",tankAngleInDegrees]);
-        socket.send(packet)
-      }
-      if (touches[0].state == "shooting") {
-        var packet = JSON.stringify(["mouseMoved",
-          touches[0].x,
-          touches[0].y,
-          touches[0].angle]);
-              socket.send(packet)
-        if (mobileSentMousePress=="no"){
-          var packet = JSON.stringify(["mousePressed", 1]);
-          socket.send(packet)
-          mobileSentMousePress = "yes";
-        }
-      } else if (touches[1].state == "shooting") {
-        var packet = JSON.stringify(["mouseMoved",
-          touches[1].x,
-          touches[1].y,
-          touches[1].angle]);
-              socket.send(packet)
-        if (mobileSentMousePress=="no"){
-          var packet = JSON.stringify(["mousePressed", 1]);
-          socket.send(packet)
-          mobileSentMousePress = "yes";
-        }
-      }
-    }, 30);
-    document.addEventListener("touchmove", function (e) {
-      e.preventDefault();
-      //only support 2 touch at each point in time
-      let mousex0 = e.touches[0].pageX;
-      let mousey0 = e.touches[0].pageY;
-      let mousex1;
-      let mousey1;
-      touches[0].xpos = mousex0;//for drawing the circle on the joystick
-      touches[0].ypos = mousey0;//for drawing the circle on the joystick
-      if (e.touches[1]) {
-        //if have two touches (might only have one touch)
-        mousex1 = e.touches[1].pageX;
-        mousey1 = e.touches[1].pageY;
-        touches[1].xpos = mousex1;//for drawing the circle on the joystick
-        touches[1].ypos = mousey1;//for drawing the circle on the joystick
-      }
-      //for drones
-      touches[0].x =
-        (window.innerWidth / 2 - mousex0) * clientFovMultiplier;
-      touches[0].y =
-        (window.innerHeight / 2 - mousey0) * clientFovMultiplier;
-      if (e.touches[1]) {
-        touches[1].x =
-          (window.innerWidth / 2 - mousex0) * clientFovMultiplier;
-        touches[1].y =
-          (window.innerHeight / 2 - mousey0) * clientFovMultiplier;
-      }
-      //get joystick position relative to screen size, not canvas size
-      var joystick1Locationx =
-        (window.innerWidth / hcanvas.width) *
-        (hcanvas.width / 2 + joystick1.xFromCenter);
-      var joystick1Locationy =
-        (window.innerHeight / hcanvas.height) *
-        (hcanvas.height / 2 + joystick1.yFromCenter);
-      var joystick2Locationx =
-        (window.innerWidth / hcanvas.width) *
-        (hcanvas.width / 2 + joystick2.xFromCenter);
-      var joystick2Locationy =
-        (window.innerHeight / hcanvas.height) *
-        (hcanvas.height / 2 + joystick2.yFromCenter);
-      var joystick1size =
-        (window.innerHeight / hcanvas.height) * joystick1.size;
-      var joystick2size =
-        (window.innerHeight / hcanvas.height) * joystick2.size;
-      //there would be two or more touches, so need to figure out whic touch is for which joystick
-      //first touch
-      if (
-        Math.pow(joystick1Locationx - mousex0, 2) +
-          Math.pow(joystick1Locationy - mousey0, 2) <
-        Math.pow(joystick1size, 2)
-      ) {
-        //if touch is inside joystick
-        touches[0].state = "moving";
-      } else if (
-        Math.pow(joystick2Locationx - mousex0, 2) +
-          Math.pow(joystick2Locationy - mousey0, 2) <
-        Math.pow(joystick2size, 2)
-      ) {
-        //if touch is inside joystick
-        touches[0].state = "shooting";
-      }
-      if (touches[0].state == "shooting") {
-        touches[0].angle = Math.atan2(
-          joystick2Locationy - mousey0,
-          joystick2Locationx - mousex0
-        );
-        //below code stores the player's angle (only for the player the client is controlling)
-        //this reduces lag's effect on mouse movement
-        clientAngle =
-          (((touches[0].angle * 180) / Math.PI - 90) * Math.PI) / 180;
-      } else if (touches[0].state == "moving") {
-        touches[0].angle = Math.atan2(
-          joystick1Locationy - mousey0,
-          joystick1Locationx - mousex0
-        );
-      }
-      //second touch
-      if (e.touches[1]) {
-        if (
-          Math.pow(joystick1Locationx - mousex1, 2) +
-            Math.pow(joystick1Locationy - mousey1, 2) <
-          Math.pow(joystick1size, 2)
-        ) {
-          //if touch is inside joystick
-          touches[1].state = "moving";
-        } else if (
-          Math.pow(joystick2Locationx - mousex1, 2) +
-            Math.pow(joystick2Locationy - mousey1, 2) <
-          Math.pow(joystick2size, 2)
-        ) {
-          //if touch is inside joystick
-          touches[1].state = "shooting";
-        }
-        if (touches[1].state == "shooting") {
-          touches[1].angle = Math.atan2(
-            joystick2Locationy - mousey1,
-            joystick2Locationx - mousex1
-          );
-          //below code stores the player's angle (only for the player the client is controlling)
-          //this reduces lag's effect on mouse movement
-          clientAngle =
-            (((touches[0].angle * 180) / Math.PI - 90) * Math.PI) / 180;
-        } else if (touches[1].state == "moving") {
-          touches[1].angle = Math.atan2(
-            joystick1Locationy - mousey1,
-            joystick1Locationx - mousex1
-          );
-        }
-      }
-      //check if player touching the upgrade button
-
-      if (!e.touches[1]) {
-        mousex1 = 0;
-      }
-      if (!e.touches[1]) {
-        mousey1 = 0;
-      }
-      
-      /*
-      mousey0 < (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX + button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-            mousey0 > (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX - button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX)
-      */
-
-      let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
-      let resizeDiffY = 1/window.innerHeight*hcanvas.height;
-      for (let i = 1; i < 15; i++) {
-        let button = upgradeButtons[i];
-        if (
-          (
-          mousex0 > (button.x/canvas.width*window.innerWidth - button.width/2/canvas.width*window.innerWidth) &&
-          mousex0 < (button.x/canvas.width*window.innerWidth + button.width/2/canvas.width*window.innerWidth) &&
-          mousey0 < (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX + button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-          mousey0 > (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX - button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX)
-          ) ||
-          (
-          mousex1 > (button.x/canvas.width*window.innerWidth - button.width/2/canvas.width*window.innerWidth) &&
-          mousex1 < (button.x/canvas.width*window.innerWidth + button.width/2/canvas.width*window.innerWidth) &&
-          mousey1 < (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX + button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-          mousey1 > (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX - button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-          e.touches[1]
-          )
-        ) {
-          button.hover = 'yes';
-        } else {
-          button.hover = 'no';
-        }
-      }
-    });
-
-    //mouse press listener
-    document.addEventListener("touchend", function (e) {
-      if (e.changedTouches[0]) {
-        if (e.changedTouches[0].pageX==touches[0].xpos&&e.changedTouches[0].pageY==touches[0].ypos){
-          if (touches[0].state == "moving") {
-            var packet = JSON.stringify(["360Release"]);
-            socket.send(packet)
-          } else {
-            if (mobileSentMousePress=="yes"){
-              var packet = JSON.stringify(["mouseReleased", 1]);
-              socket.send(packet)
-              mobileSentMousePress = "no";
-            }
-          }
-          touches[0].state = "no";
-        }
-        else if (e.changedTouches[0].pageX==touches[1].xpos&&e.changedTouches[0].pageY==touches[1].ypos){
-          if (touches[1].state == "moving") {
-            var packet = JSON.stringify(["360Release"]);
-            socket.send(packet)
-          } else {
-            if (mobileSentMousePress=="yes"){
-              var packet = JSON.stringify(["mouseReleased", 1]);
-              socket.send(packet)
-              mobileSentMousePress = "no";
-            }
-          }
-          touches[1].state = "no";
-        }
-      }
-      if (e.changedTouches[1]) {
-        if (e.changedTouches[1].pageX==touches[0].xpos&&e.changedTouches[1].pageY==touches[0].ypos){
-          if (touches[0].state == "moving") {
-            var packet = JSON.stringify(["360Release"]);
-            socket.send(packet)
-          } else {
-            if (mobileSentMousePress=="yes"){
-              var packet = JSON.stringify(["mouseReleased", 1]);
-              socket.send(packet)
-              mobileSentMousePress = "no";
-            }
-          }
-          touches[0].state = "no";
-        }
-        else if (e.changedTouches[1].pageX==touches[1].xpos&&e.changedTouches[1].pageY==touches[1].ypos){
-          if (touches[1].state == "moving") {
-            var packet = JSON.stringify(["360Release"]);
-            socket.send(packet)
-          } else {
-            if (mobileSentMousePress=="yes"){
-              var packet = JSON.stringify(["mouseReleased", 1]);
-              socket.send(packet)
-              mobileSentMousePress = "no";
-            }
-          }
-          touches[1].state = "no";
-        }
-      }
-      for (let j = 0; j < e.changedTouches.length; j++) {
-        let mousex = e.changedTouches[j].pageX;
-        let mousey = e.changedTouches[j].pageY;
-        let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
-        let resizeDiffY = 1/window.innerHeight*hcanvas.height;
-        for (let i = 1; i < 15; i++) {
-          let button = upgradeButtons[i];
-          if (
-            mousex > (button.x/canvas.width*window.innerWidth - button.width/2/canvas.width*window.innerWidth) &&
-            mousex < (button.x/canvas.width*window.innerWidth + button.width/2/canvas.width*window.innerWidth) &&
-            mousey < (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX + button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-            mousey > (window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX - button.width/2/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX)
-          ) {
-            //if player release mouse at button
-            if (i <= 7) {
-              var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "weaponUpgrade"]);
-              socket.send(packet)
-            } else {
-              var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "bodyUpgrade"]);
-              socket.send(packet)
-            }
-          }
-        }
-        for (let i = 1; i < 9; i++) {//skill points (can only click on mobile)
-          let something = 0;
-          if (i>4){
-            something = 4-(i-4);
-          }
-          else{
-            something = 4-i;
-          }
-          //something is 3,2,1,0,3,2,1,0 from top to bottom of the 8 skill points
-          let skilly = hcanvas.height - 40 - 32*something;
-          let skillx = 0;
-          if (i<4){
-            skillx = -140 + skillpointspos
-          }
-          else{
-            skillx = -140 + hcanvas.width - skillpointspos
-          }
-          let skillwidth = 280;
-          let skillheight = 30;
-          if (
-            mousex > (skillx/hcanvas.width*window.innerWidth) &&
-            mousex < (skillx/hcanvas.width*window.innerWidth+skillwidth/hcanvas.width*window.innerWidth) &&
-            mousey < (window.innerHeight - (hcanvas.height - skilly)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX + skillheight/hcanvas.width*window.innerWidth*resizeDiffY/resizeDiffX) &&
-            mousey > (window.innerHeight - (hcanvas.height - skilly)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX)
-          ) {
-            //if player release mouse at skill point
-            var packet = JSON.stringify(["upgradeSkillPoints", i]);
-            socket.send(packet)
-          }
-        }
-        if (gameStart > 0 && gameStart <= 0.5) {
-          //old codefor gamemode selector arrows
-        }
-      }
-
-    });
-  }
-
-  
-      var lerpDrawnX = 0;
-      var lerpDrawnY = 0;
-      let updateInterval = 60;//server send update every 60ms (17 fps)
-      function simpleLerpPos(obj,oldobj,currentLocation){
-        let timeDiff = Date.now() - latestServerUpdateTime;
-        lerpDrawnX = oldobj.x + (obj.x - oldobj.x)/updateInterval*timeDiff;
-        lerpDrawnY = oldobj.y + (obj.y - oldobj.y)/updateInterval*timeDiff;
-      }
-      function simpleLerpAngle(obj,oldobj){
-        let timeDiff = Date.now() - latestServerUpdateTime;
-        let oldangle = oldobj.angle;
-        let newangle = obj.angle;
-        //note: player angle in radians
-        if ((oldangle - newangle)>5.25){//angle went from 360 to 0
-          oldangle-=2*Math.PI;
-        }
-        else if ((newangle - oldangle)>5.25){//angle went from 0 to 360
-          oldangle+=2*Math.PI;
-        }
-        let lerpedAngle = oldangle + (newangle - oldangle)/updateInterval*timeDiff;
-        return lerpedAngle
-      }
-      function lerpProperty(obj,oldobj,property){
-        let timeDiff = Date.now() - latestServerUpdateTime;
-        let oldangle = oldobj[property];
-        let newangle = obj[property];
-        let lerpedAngle = oldangle + (newangle - oldangle)/updateInterval*timeDiff;
-        return lerpedAngle
-      }
-
-  //variable for background image
-  var img = new Image();
-  var imageloaded = "no";
-
-
-  var requestInterval = function (fn, delay) {
-    var requestAnimFrame = (function () {
-      return window.requestAnimationFrame || function (callback, element) {
-        window.setTimeout(callback, 1000 / 60);
-      };
-    })(),
-    start = new Date().getTime(),
-    handle = {};
-    function loop() {
-      handle.value = requestAnimFrame(loop);
-      var current = new Date().getTime(),
-      delta = current - start;
-      if (delta >= delay) {
-        fn.call();
-        start = new Date().getTime();
-      }
-    }
-    handle.value = requestAnimFrame(loop);
-    return handle;
-  };
-
-
-  //setInterval(() => {//dont use setinterval anymore cuz it affected latency for mobile users (running 30fps on mobile will cause lag cuz it cant do 30fps)
-  function screenDrawLoop(){//everything happens here
-      var starting = Date.now(); //start client code execution timer
-    
-    //calculate delta
-    let currentLoopTime = Date.now();
-     if (prevLoopTime == 0) { //if this is first loop
-        deltaTime = 1;
-     } else {
-        let timeLapsed = currentLoopTime - prevLoopTime;
-        deltaTime = timeLapsed / 30;//30fps would be the speed at which animations should run
-     }
-     prevLoopTime = currentLoopTime;
-
-    var resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
-    var resizeDiffY = 1/window.innerHeight*hcanvas.height;
-
-    //check if player clicked play button and if joined
-    if (canLogIn == "yes") {
-      //if client wants to log into an account
-      if (acctype != "edit"){
-        var packet = JSON.stringify(["logInOrSignUp",
-        accusername,
-        accpassword,
-        accdesc,
-        acctype]);
-              socket.send(packet)
-        canLogIn = "no";
-      }
-      else{
-        var packet = JSON.stringify(["editaccount",
-        loggedInAccount.name,
-        loggedInAccount.pw,
-        loggedInAccount.desc,
-        accusername,
-        accpassword,
-        accdesc]);
-              socket.send(packet)
-        canLogIn = "no";
-      }
-    }
-    if (gameStart == 0) {
-      //client have not clicked play
-      hctx.clearRect(0, 0, hcanvas.width, hcanvas.height);
-      gameStart = 0.01; //start animation
-        backgroundWidth = 1153; //get width and height of image
-        backgroundHeight = 725;
-        //note: you can change zoomedWidth value below, but if increase, then radius variable need to decrease, and vice versa.
-        //original value used was 2 for all the values below including radius variable, but image was blurry as it was too zoomed in
-        zoomedWidth = backgroundWidth / 1.5;
-        zoomedHeight = backgroundHeight / 1.5;
-        radius = backgroundHeight / 2.66; //assume background width bigge than height. this variable refers to dist from center of image to center of zoomed in image
-        //caculate amount to multiply to prevent canvas from looking stretched
-        var xDiff = Math.abs(hcanvas.width - backgroundWidth);
-        var yDiff = Math.abs(hcanvas.height - backgroundHeight);
-        if (yDiff > xDiff) {
-          xChange =
-            ((hcanvas.height / zoomedHeight) * zoomedWidth) /
-            hcanvas.width;
-        } else if (xDiff > yDiff) {
-          yChange =
-            ((hcanvas.width / zoomedWidth) * zoomedHeight) /
-            hcanvas.height;
-        }
-        document.getElementById("menuTitle").style.display = "block";
-        mainMenuOpacity = 0;
-
-    } else if (gameStart > 0 && gameStart <= 0.5) {
-      //draw homepage
-        if (gameStart >= 0.45) {
-          //gameStart might be 0.4500000000000004 due to precision error
-          gameStart = 0.5;
-        } else {
-          gameStart += 0.05;
-        }
-        if (mainMenuOpacity < 1){
-          mainMenuOpacity+=0.05;
-        }
-        hctx.globalAlpha = mainMenuOpacity; //This is for opacity animation when opening website
-        hctx.clearRect(0, 0, hcanvas.width, hcanvas.height);
-        //draw the panned image
-        //how it works: put image in center of screen and move it in a circular path, then image is stretched to fit screen, x and y coordinates also need to be changed
-        //hctx.drawImage(img, , , , );
-        step+=0.5*deltaTime; //move position (higher number means faster)
-        //calculate circular movement of objects on homepage
-        var topleftcornerX = hcanvas.width / 2 - backgroundWidth / 2 + radius * Math.cos(speed * step) - ((backgroundWidth / zoomedWidth) * hcanvas.width - backgroundWidth) / 2;
-        var topleftcornerY = hcanvas.height / 2 - backgroundHeight / 2 + radius * Math.sin(speed * step) - ((backgroundHeight / zoomedHeight) * hcanvas.height - backgroundHeight) / 2;
-        var zoomamountWidth = (backgroundWidth / zoomedWidth) * hcanvas.width * xChange;
-        //var zoomamountHeight = backgroundHeight/zoomedHeight*hcanvas.height*yChange;
-        var imgwidth = 1153; //although changed the code so no longer is an image, still need this for zooming in
-        //var imgheight = 725;//dont use this or else background will stretch more in x or y direction. intsead, use only one
-        var zoomamount = zoomamountWidth / imgwidth;
-        //draw background
-        hctx.fillStyle = "#CDCDCD";
-        hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
-        //draw grid
-        hctx.strokeStyle = "#BEBEBE";
-        hctx.lineWidth = 1;
-        var gridHeight = 30;
-        for (
-          let x =
-            -gridHeight -
-            ((hcanvas.width / 2 - topleftcornerX) % gridHeight);
-          x < hcanvas.width;
-          x += gridHeight
-        ) {
-          hctx.moveTo(x, 0);
-          hctx.lineTo(x, hcanvas.height);
-        }
-        for (
-          let y =
-            -gridHeight -
-            ((hcanvas.height / 2 - topleftcornerY) % gridHeight);
-          y < hcanvas.height;
-          y += gridHeight
-        ) {
-          hctx.moveTo(0, y);
-          hctx.lineTo(hcanvas.width, y);
-        }
-        hctx.stroke();
-
-      hctx.lineJoin = "round";
-        hctx.lineWidth = 1.7;
-        function drawshapeonbackground(sides, width, x, y, angle) {
-          hctx.save();
-          hctx.translate(
-            x + topleftcornerX,
-            y + topleftcornerY
-          );
-          hctx.scale(zoomamount, zoomamount*resizeDiffY/resizeDiffX);
-          hctx.rotate((angle * Math.PI) / 180);
-          let shapetype = sides - 3;
-          if (sides == 4){
-            shapetype = 0;
-          }
-          else if (sides == 3){
-            shapetype = 1;
-          }
-          hctx.fillStyle = shapecolors[shapetype];
-          hctx.strokeStyle = shapeoutlines[shapetype];
-          hctx.beginPath();
-          hctx.moveTo(width, 0);
-          for (var i = 1; i <= sides + 1; i += 1) {
-            hctx.lineTo(width * Math.cos((i * 2 * Math.PI) / sides), width * Math.sin((i * 2 * Math.PI) / sides));
-          }
-          hctx.fill();
-          hctx.stroke();
-          hctx.restore();
-        }
-      
-      function moveToPos(x,y){
-        hctx.save();
-        hctx.translate(x, y);
-        hctx.scale(1, resizeDiffY/resizeDiffX);
-      }
-      
-      function drawFFA(){
-        drawshapeonbackground(3, 6, 800, 500, 50);
-        drawshapeonbackground(3, 6, 800, 540, 140);
-        drawshapeonbackground(4, 10, 850, 540, 140);
-        drawshapeonbackground(5, 17, 500, 300, 90);
-        drawshapeonbackground(5, 17, 2000, 800, 10);
-        drawshapeonbackground(5, 17, 2500, 1000, 30);
-        drawshapeonbackground(6, 25, 1150, 720, 110);
-        drawshapeonbackground(6, 25, 2600, 1250, 140);
-        drawshapeonbackground(7, 40, 800, 1250, 10);
-        drawshapeonbackground(7, 40, 1100, 200, 10);
-        drawshapeonbackground(8, 65, 2200, 200, 10);
-        drawshapeonbackground(9, 85, 1500, 1450, 10);
-        drawshapeonbackground(10, 125, 300, 900, 10);
-        hctx.lineWidth = 1.7*zoomamount;
-        hctx.save();
-        hctx.translate(topleftcornerX, topleftcornerY);
-        moveToPos(800,700)
-        drawFakePlayer("cyclone",0,0,20*zoomamount,45*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        drawFakePlayer("inferno",0,0,20*zoomamount,45*Math.PI/180,"#F04F54","#b33b3f","body")
-        hctx.restore();
-        moveToPos(1200,900)
-        drawFakePlayer("centrefire",0,0,15*zoomamount,150*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        hctx.restore();
-        moveToPos(2000,500)
-        drawFakePlayer("basic",0,0,12*zoomamount,45*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        drawFakePlayer("mono",0,0,12*zoomamount,180*Math.PI/180,"#F04F54","#b33b3f","body")
-        hctx.restore();
-        moveToPos(1500,100)
-        drawFakePlayer("booster",0,0,15*zoomamount,45*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        drawFakePlayer("rocketer",0,0,15*zoomamount,180*Math.PI/180,"#F04F54","#b33b3f","body")
-        hctx.restore();
-        moveToPos(1800,1050)
-        drawFakePlayer("riot",0,0,15*zoomamount,45*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        hctx.restore();
-        moveToPos(2200,1350)
-        drawFakePlayer("protector",0,0,15*zoomamount,45*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        hctx.restore();
-        moveToPos(550,1350)
-        drawFakePlayer("factory",0,0,15*zoomamount,45*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        hctx.restore();
-        moveToPos(1500,700)
-        drawFakePlayer("veteran",0,0,20*zoomamount,225*Math.PI/180,"#934c93","#660066","weapon")
-        hctx.restore();
-        hctx.restore();
-      }
-      function draw2tdm(){
-        drawshapeonbackground(6, 25, 800, 500, 50);
-        drawshapeonbackground(3, 6, 850, 540, 140);
-        drawshapeonbackground(5, 17, 500, 300, 90);
-        drawshapeonbackground(5, 17, 2000, 800, 10);
-        drawshapeonbackground(5, 17, 2500, 1000, 30);
-        drawshapeonbackground(4, 10, 1150, 720, 110);
-        drawshapeonbackground(7, 40, 2600, 1250, 140);
-        drawshapeonbackground(7, 40, 350, 1250, 140);
-        drawshapeonbackground(5, 17, 2200, 200, 10);
-        drawshapeonbackground(9, 85, 2500, 700, 10);
-        drawshapeonbackground(13, 150, 1500, 500, 0);
-        drawshapeonbackground(10, 125, 1000, 1300, 10);
-        hctx.lineWidth = 1.7*zoomamount;
-        hctx.save();
-        hctx.translate(topleftcornerX, topleftcornerY);
-        moveToPos(1000,700)
-        drawFakePlayer("stronghold",0,0,20*zoomamount,90*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        drawFakePlayer("inferno",0,0,20*zoomamount,90*Math.PI/180,"#F04F54","#b33b3f","body")
-        hctx.restore();
-        moveToPos(750,850)
-        drawFakePlayer("hex",0,0,20*zoomamount,90*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        hctx.restore();
-        moveToPos(900,200)
-        drawFakePlayer("marksman",0,0,20*zoomamount,110*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        drawFakePlayer("propeller",0,0,20*zoomamount,110*Math.PI/180,"#F04F54","#b33b3f","body")
-        hctx.restore();
-        moveToPos(1200,900)
-        drawFakePlayer("machine",0,0,15*zoomamount,75*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        hctx.restore();
-        moveToPos(2000,500)
-        drawFakePlayer("cyclone",0,0,15*zoomamount,270*Math.PI/180,"#00E06C","#00C24E","weapon")
-        drawFakePlayer("snowstorm",0,0,15*zoomamount,270*Math.PI/180,"#00E06C","#00C24E","body")
-        hctx.restore();
-        moveToPos(1500,150)
-        drawFakePlayer("guardian",0,0,15*zoomamount,225*Math.PI/180,"#00E06C","#00C24E","weapon")
-        drawFakePlayer("juggernaut",0,0,15*zoomamount,225*Math.PI/180,"#00E06C","#00C24E","body")
-        hctx.restore();
-        moveToPos(1600,1200)
-        drawFakePlayer("fighter",0,0,15*zoomamount,270*Math.PI/180,"#00E06C","#00C24E","weapon")
-        hctx.restore();
-        moveToPos(1600,900)
-        drawFakePlayer("thunderstorm",0,0,22*zoomamount,225*Math.PI/180,"#934c93","#660066","weapon")
-        drawFakePlayer("heliosphere",0,0,22*zoomamount,225*Math.PI/180,"#934c93","#660066","body")
-        hctx.restore();
-        hctx.restore();
-      }
-      function draw4tdm(){
-        /*
-        //old 4tdm background
-        drawshapeonbackground(3, 6, 800, 500, 50);
-        drawshapeonbackground(3, 6, 800, 540, 140);
-        drawshapeonbackground(4, 10, 850, 540, 140);
-        drawshapeonbackground(5, 17, 500, 300, 90);
-        drawshapeonbackground(14, 20, 2000, 800, 10);
-        drawshapeonbackground(5, 17, 2500, 1000, 30);
-        drawshapeonbackground(5, 100, 1150, 850, 110);
-        drawshapeonbackground(6, 25, 2600, 1250, 140);
-        hctx.lineWidth = 1.7*zoomamount;
-        hctx.save();
-        hctx.translate(topleftcornerX, topleftcornerY);
-        moveToPos(800,900)
-        drawFakePlayer("bunker",0,0,22*zoomamount,225*Math.PI/180,"#C0C0C0","#A2A2A2","weapon")
-        hctx.restore();
-        hctx.restore();
-        */
-        drawshapeonbackground(4, 10, 800, 500, 280);
-        drawshapeonbackground(4, 10, 300, 200, 230);
-        drawshapeonbackground(4, 10, 700, 100, 100);
-        drawshapeonbackground(3, 6, 1500, 200, 20);
-        drawshapeonbackground(3, 6, 2300, 150, 20);
-        drawshapeonbackground(3, 6, 2000, 1200, 20);
-        drawshapeonbackground(6, 25, 1400, 100, 320);
-        drawshapeonbackground(5, 17, 700, 600, 220);
-        drawshapeonbackground(3, 6, 2500, 540, 180);
-        drawshapeonbackground(5, 17, 1600, 1500, 0);
-        drawshapeonbackground(3, 6, 600, 1300, 80);
-        drawshapeonbackground(3, 6, 600, 1300, 350);
-        drawshapeonbackground(3, 6, 600, 1300, 80);
-        drawshapeonbackground(7, 40, 1100, 1000, 140);
-        drawshapeonbackground(7, 40, 2700, 700, 290);
-        drawshapeonbackground(5, 17, 200, 1100, 290);
-        drawshapeonbackground(6, 25, 200, 1100, 290);
-        drawshapeonbackground(11, 135, 1300, 600, 10);
-        drawshapeonbackground(10, 125, 2600, 1300, 64);
-        drawshapeonbackground(14, 175, 2100, 600, 64);
-        hctx.lineWidth = 1.7*zoomamount;
-        hctx.save();
-        hctx.translate(topleftcornerX, topleftcornerY);
-        moveToPos(1800,1400)
-        drawFakePlayer("CEO",0,0,22*zoomamount,-30*Math.PI/180,"#00B0E1","#0092C3","weapon")
-        drawFakePlayer("juggernaut",0,0,22*zoomamount,-30*Math.PI/180,"#00B0E1","#0092C3","body")
-        hctx.restore();
-        moveToPos(1600,1200)
-        drawFakePlayer("stronghold",0,0,20*zoomamount,130*Math.PI/180,"#F04F54","#b33b3f","weapon")
-        drawFakePlayer("inferno",0,0,20*zoomamount,130*Math.PI/180,"#F04F54","#b33b3f","body")
-        hctx.restore();
-        moveToPos(2000,50)
-        drawFakePlayer("amalgam",0,0,20*zoomamount,170*Math.PI/180,"#BE7FF5","#A061D7","weapon")
-        drawFakePlayer("fabricator",0,0,20*zoomamount,170*Math.PI/180,"#BE7FF5","#A061D7","body")
-        hctx.restore();
-        moveToPos(600,300)
-        drawFakePlayer("comet",0,0,20*zoomamount,80*Math.PI/180,"#00E06C","#00C24E","weapon")
-        drawFakePlayer("rocketer",0,0,20*zoomamount,80*Math.PI/180,"#00E06C","#00C24E","body")
-        hctx.restore();
-        moveToPos(950,875)
-        drawFakePlayer("sniper",0,0,12*zoomamount,140*Math.PI/180,"#00E06C","#00C24E","weapon")
-        drawFakePlayer("bastion",0,0,12*zoomamount,115*Math.PI/180,"#00E06C","#00C24E","body")
-        hctx.restore();
-        moveToPos(1100,1400)
-        drawFakePlayer("veteran",0,0,22*zoomamount,-110*Math.PI/180,"#934c93","#660066","weapon")
-        drawFakePlayer("firebolt",0,0,22*zoomamount,-110*Math.PI/180,"#934c93","#660066","body")
-        hctx.restore();
-        moveToPos(750,1475)
-        drawFakePlayer("harbinger",0,0,20*zoomamount,84*Math.PI/180,"#BE7FF5","#A061D7","weapon")
-        drawFakePlayer("fabricator",0,0,20*zoomamount,84*Math.PI/180,"#BE7FF5","#A061D7","body")
-        hctx.restore();
-        hctx.restore();
-      }
-      function drawEditor(){
-        drawshapeonbackground(3, 6, 600, 500, 50);
-        drawshapeonbackground(3, 6, 750, 540, 140);
-        drawshapeonbackground(5, 17, 550, 300, 90);
-        drawshapeonbackground(5, 17, 2100, 800, 10);
-        drawshapeonbackground(5, 17, 2700, 1000, 30);
-        drawshapeonbackground(4, 10, 1300, 720, 110);
-        drawshapeonbackground(4, 10, 2250, 1250, 140);
-        drawshapeonbackground(5, 17, 2200, 200, 10);
-        drawshapeonbackground(3, 6, 1700, 500, 0);
-        drawshapeonbackground(3, 300, 1700, 500, 0);
-        hctx.lineWidth = 1.7*zoomamount;
-        hctx.save();
-        hctx.translate(topleftcornerX, topleftcornerY);
-        moveToPos(800,900)
-        drawFakePlayer("destroyer",0,0,22*zoomamount,45*Math.PI/180,"#DE5D83","#e75480","weapon")
-        drawFakePlayer("duel",0,0,22*zoomamount,45*Math.PI/180,"#DE5D83","#e75480","weapon")
-        drawFakePlayer("gamma",0,0,22*zoomamount,225*Math.PI/180,"#DE5D83","#e75480","weapon")
-        hctx.restore();
-        hctx.restore();
-      }
-      function drawBg(gm){
-        //let gmView = gamemodeBgFoV[gm];//removed
-        let gmView = 1;
-        let gmName = gamemodeList[gm];
-        hctx.save();
-        hctx.translate(topleftcornerX+hcanvas.width/2, topleftcornerY+hcanvas.height/2);//middle of screen
-        hctx.scale(gmView, gmView);//scale for man menu fov
-        hctx.translate(-topleftcornerX-hcanvas.width/2, -topleftcornerY-hcanvas.height/2);//middle of screen
-        if (gmName == "Free For All"){
-          drawFFA()
-        }
-        else if (gmName == "2 Teams"){
-          draw2tdm()
-        }
-        else if (gmName == "4 Teams"){
-          draw4tdm()
-        }
-        else if (gmName == "Tank Editor"){
-          drawEditor()
-        }
-        hctx.restore();
-      }
-
-      
-        hctx.lineJoin = "miter"; //change back
-      //removed home screen drawing stuff
-        hctx.fillStyle = "white";
-        hctx.strokeStyle = "black";
-        hctx.lineWidth = 6;
-        hctx.font = "700 70px Roboto";
-        hctx.textAlign = "center";
-
-        //functions for color lerping when changing gamemode
-        function hexToRgb(hex) {
-            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-              r: parseInt(result[1], 16),
-              g: parseInt(result[2], 16),
-              b: parseInt(result[3], 16)
-            } : null;
-          }
-          function getRgb(color) {
-            var getRGB = hexToRgb(color);
-            let r = getRGB.r;
-            let g = getRGB.g;
-            let b = getRGB.b;
-            return {
-              r,
-              g,
-              b
-            }
-          }
-          function colorInterpolate(colorA, colorB, intval) {
-            const rgbA = getRgb(colorA),
-              rgbB = getRgb(colorB);
-            const colorVal = (prop) =>
-              Math.round(rgbA[prop] * (1 - intval) + rgbB[prop] * intval);
-            return {
-              r: colorVal('r'),
-              g: colorVal('g'),
-              b: colorVal('b'),
-            }
-          }
-
-        //old code for canvas drawing of gamemode selector was here
-        hctx.textBaseline = "alphabetic"; //change back
-        hctx.lineJoin = "miter"; //change back
-      
-    } else if (gameStart >= 1 && gameStart < 2.1) {
-      //if client clicked play already but server havent replied
-      if (gameStart == 1) {
-        //only do once
-        var yourName = nameInput.value;
-        let mySlurslist = [
-          "n!g",
-          "nig",
-          "fag",
-          "f@g",
-          "fuc",
-          "fuk",
-          "porn",
-          "bitch",
-          "bich",
-          "dick",
-          "cunt",
-          "cock",
-          "penis",
-          "slut",
-          "pussy",
-        ];
-        for (i of mySlurslist) {
-          yourName = yourName.replace(i, "***");//if name has fuck, will become ***k
-        }
-
-        var packet = JSON.stringify(["joinGame", yourName]);
-        socket.send(packet)
-        startPlayTime = Date.now();//needed to get time played
-
-        if (gamelocation=="tank-editor" && shownEditButton=="no"){
-            document.getElementById("openEditor").style.display = "block";
-            shownEditButton = "yes";
-        }
-        //clear list of objects
-        objects = {
-          wall: {},//walls drawn below everything
-          gate: {},
-          Fixedportal: {},
-          shape: {},
-          bot: {},
-        };//shapes and bots always below player, fixed portals always under everything
-        portals = {};
-        oldportals = {};
-        playButton.style.display = "none"; //remove play button, reason for hiding it instead of removing is to make sure it is still behind the popups
-        nameInput.style.display = "none"; //remove name input
-        changelogbutton.remove(); //remove changelog button
-        settingsbutton.remove(); //remove settings button
-        wrlbbutton.remove();//remove world record button
-        howToPlaybutton.remove(); //remove how to player button
-        accountsbutton.style.display = "none"; //hide accounts button, might need to change account name inside
-        discordbutton.remove(); //remove discord button
-        redditbutton.remove(); //remove reddit button
-        tokeninput.remove(); //remove token input box
-        document.getElementById("advert").style.display = "none";
-        document.getElementById("respawnScoreDiv").innerHTML = "";
-        document.getElementById("respawnScoreDiv").style.display = "none";
-        document.getElementById("featuredyoutuber").style.display = "none";
-        document.getElementById("changelogDisplay").style.display = "none";
-        document.getElementById("subtitle").style.display = "none";
-        document.getElementById("menuTitle").style.display = "none";
-        try {
-          //store name, so next time when open the game, will auto-fill the previous name
-          localStorage.setItem("prevname", yourName);
-          const kitty = localStorage.getItem("prevname");
-        } catch (e) {
-          console.log("An error occured when saving your name: " + e);
-        }
-        if (mobile == "yes"){
-          /* Get the documentElement (<html>) to display the page in fullscreen */
-          //var elem = document.documentElement;
-          let elem = document.body;
-
-          /* View in fullscreen */
-          if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-            createNotif("Your device is detected as a mobile device","darkorange",5000)
-          } else if (elem.webkitRequestFullscreen) { /* Safari */
-            elem.webkitRequestFullscreen();
-          } else if (elem.msRequestFullscreen) { /* IE11 */
-            elem.msRequestFullscreen();
-          }
-        }
-      }
-      //draw loading words
-      hctx.clearRect(0, 0, hcanvas.width, hcanvas.height); //clear home page
-      hctx.fillStyle = "black";
-      hctx.font = "700 100px Roboto";
-      hctx.textAlign = "center";
-      hctx.fillText(
-        "Joining Game...",
-        hcanvas.width / 2,
-        hcanvas.height / 2
-      );
-      //homepage background slowly disappears
-      var canvasopacity = 2 - gameStart; //set transparency, which depends on time since clicked play button to create animation. Gamestart changes from 1 to 2
-      if (canvasopacity < 0) {
-        canvasopacity = 0;
-        //gameStart might be 1.5000000000000004 instead of 1.5 due to js precision error, so this prevents transparency to be less than 0
-      }
-      hctx.globalAlpha = canvasopacity;
-      hctx.drawImage(img, 0, 0, hcanvas.width, hcanvas.height);
-      hctx.globalAlpha = 1.0; //reset transparency
-      gameStart += 0.1;
-    } else if (gameStart > 2.1 && gameStart < 2.2) {
-      hctx.clearRect(0, 0, hcanvas.width, hcanvas.height); //clear home page after animation complete
-      document.getElementById("chat").style.display = "block"; //show chat box
-
-      gameStart = 2.3;
-    } else if (gameStart == 2.3 && sentStuffBefore == "yes") {
-      //DRAW THE GAME STUFF
-      
-    //reset to prevent restore bugs (hctx.restore wont happen if there is an error in the code)
-    if (typeof hctx.reset == 'function') { 
-      hctx.reset();
-    }
-      
-      //for chat animation
-      typingAnimation+=0.5*deltaTime;
-      if (typingAnimation > 20){
-        typingAnimation = 0;
-      }
-      
-      auraRotate += (80)/30*deltaTime;
-      if(auraRotate < 0) {auraRotate = 360}
-      if(auraRotate > 360) {auraRotate = 0}
-      auraWidth = (Math.sin((auraRotate * Math.PI / 180))/20)+0.125;
-
-      //change radiant shape aura width multiplier
-      /*
-      if (auraWidth >= 0.2) {
-        auraWidthDirection = "decreasing";
-      } else if (auraWidth <= 0.1) {
-        auraWidthDirection = "increasing";
-      }
-      if (auraWidthDirection == "increasing") {
-        auraWidth += 0.003;
-      } else if (auraWidthDirection == "decreasing") {
-        auraWidth -= 0.003;
-      }
-      //new radiant shape aura width
-      //newaurawidth
-      if ((0.2 - newaurawidth) <= 0.01) {
-        newauraWidthDirection = "decreasing";
-      } else if ((newaurawidth - 0.1) <= 0.01) {
-        newauraWidthDirection = "increasing";
-      }
-      if (newauraWidthDirection == "increasing") {
-        newaurawidth += (0.2 - newaurawidth)/30*deltaTime;
-        if (newaurawidth > 0.2){
-          newaurawidth = 0.2;
-        }
-      } else if (newauraWidthDirection == "decreasing") {
-        newaurawidth -= (newaurawidth - 0.1)/30*deltaTime;
-        if (newaurawidth < 0.1){
-          newaurawidth = 0.1;
-        }
-      }
-      */
-      //for radiant shape spike
-      extraSpikeRotate++;
-      if (extraSpikeRotate >= 360) {
-        extraSpikeRotate -= 360;
-      }
-      extraSpikeRotate1 += 2;
-      if (extraSpikeRotate1 >= 360) {
-        extraSpikeRotate1 -= 360;
-      }
-      extraSpikeRotate2--;
-      if (extraSpikeRotate2 <= 0) {
-        extraSpikeRotate2 += 360;
-      }
-      //for radiant colors
-      for (const id in radiantShapes) {
-        let animationSpeed = 3;
-        let radtype = radiantShapes[id].radtype;
-        if (radtype == 1) {
-          //red yellow blue
-          if (radiantShapes[id].rgbstate == 0) {
-            radiantShapes[id].rgbstate = 1;
-          } else if (radiantShapes[id].rgbstate == 1) {
-            if (radiantShapes[id].red > 200) {
-              radiantShapes[id].red -= animationSpeed;
-            }
-            radiantShapes[id].green += animationSpeed;
-            if (radiantShapes[id].green >= 150) {
-              radiantShapes[id].rgbstate = 2; //change to next state
-            }
-          } else if (radiantShapes[id].rgbstate == 2) {
-            radiantShapes[id].blue += animationSpeed;
-            if (radiantShapes[id].green > 0) {
-              radiantShapes[id].green -= animationSpeed;
-            }
-            if (radiantShapes[id].red > 0) {
-              radiantShapes[id].red -= animationSpeed;
-            }
-            if (radiantShapes[id].blue >= 200) {
-              radiantShapes[id].rgbstate = 3; //change state
-            }
-          } else if (radiantShapes[id].rgbstate == 3) {
-            radiantShapes[id].blue -= animationSpeed;
-            radiantShapes[id].red += animationSpeed;
-            if (
-              radiantShapes[id].blue <= 0 &&
-              radiantShapes[id].red >= 255
-            ) {
-              radiantShapes[id].rgbstate = 1; //change state
-              radiantShapes[id].red = 255;
-              radiantShapes[id].blue = 0;
-            }
-          }
-        } else {
-          //greyish-green white yellow 118, 168, 151 -> 209, 230, 222 -> 234, 240, 180
-          if (radiantShapes[id].rgbstate == 0) {
-            radiantShapes[id].rgbstate = 1;
-          } else if (radiantShapes[id].rgbstate == 1) {
-            if (
-              radiantShapes[id].red >= 118 &&
-              radiantShapes[id].red < 209
-            ) {
-              radiantShapes[id].red += animationSpeed;
-              radiantShapes[id].blue += animationSpeed;
-              radiantShapes[id].green += animationSpeed;
-            } else {
-              radiantShapes[id].rgbstate = 2; //change to next state
-            }
-          } else if (radiantShapes[id].rgbstate == 2) {
-            radiantShapes[id].blue -= animationSpeed;
-            if (radiantShapes[id].green < 240) {
-              radiantShapes[id].green += animationSpeed;
-            }
-            if (radiantShapes[id].red < 234) {
-              radiantShapes[id].red += animationSpeed;
-            }
-            if (radiantShapes[id].blue <= 180) {
-              radiantShapes[id].rgbstate = 3; //change state
-            }
-          } else if (radiantShapes[id].rgbstate == 3) {
-            radiantShapes[id].red -= animationSpeed;
-            if (radiantShapes[id].green > 168) {
-              radiantShapes[id].green -= animationSpeed;
-            }
-            if (radiantShapes[id].blue > 151) {
-              radiantShapes[id].blue -= animationSpeed;
-            }
-            if (radiantShapes[id].red <= 118) {
-              radiantShapes[id].rgbstate = 1; //change state
-              radiantShapes[id].red = 118;
-              radiantShapes[id].blue = 168;
-              radiantShapes[id].green = 151;
-            }
-          }
-        }
-      }
-      //for gates
-      gateTimer += 0.1 * deltaTime;
-      if (gateTimer >= endGate){
-        gateTimer = startGate;
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height); //clear screen so can redraw
-      hctx.clearRect(0, 0, hcanvas.width, hcanvas.height); //clear screen so can redraw
-      //shake canvas if touch portal
-      let prevShakeYN = shakeYN;//this one doesnt change later on
-      if (shakeYN == "yes") {
-        ctx.save();
-        var dx = Math.random() * 20 * (1 - shakeIntensity) - 10 * (1 - shakeIntensity);
-        var dy = Math.random() * 20 * (1 - shakeIntensity) - 10 * (1 - shakeIntensity);
-        //-10 at the end so that the chosen number has a range of between -10 and 10
-        //shake intensity 0 means that players is at center of portal
-        ctx.translate(dx, dy);
-      }
-      else if (slightshake == "yes"){
-        if (slightshakeIntensity<0){
-          slightshake = "no";
-        }
-        else{
-          ctx.save();
-          var dx = Math.random() * 10 * slightshakeIntensity - 5 * slightshakeIntensity;
-          var dy = Math.random() * 10 * slightshakeIntensity - 5 * slightshakeIntensity;
-          //-10 at the end so that the chosen number has a range of between -10 and 10
-          ctx.translate(dx, dy);
-          slightshakeIntensity-=0.1;
-        }
-      }
-      //the canvas is the whole screen
-     
-      //interpolate the player's position first
-      lerpDrawnX = 0;
-      lerpDrawnY = 0;
-      if (objects.player && oldobjects.player && interpolatedobjects.player){
-        interpolatedobjects.player[playerstring] = JSON.parse(JSON.stringify(objects.player[playerstring]));
-        simpleLerpPos(objects.player[playerstring],oldobjects.player[playerstring],interpolatedobjects.player[playerstring])
-        px = lerpDrawnX;//needed for drawing stuff
-        py = lerpDrawnY;
-      }
-      else{
-        px = player.x;
-        py = player.y;
-      }
-
-      //now we are drawing the game area
-      if (playerstring != "error") {
-        //checks if server has already sent player's id to client
-        drawAreaX = canvas.width / 2 - px; //needed for mouse movement
-        drawAreaY = canvas.height / 2 - py;
-        window["x"] = px;
-        window["y"] = py;
-        //COLOR OF AREA OUTSIDE PLAYABLE AREA
-      }
-      if (gamelocation == "dune") {
-        //dune background
-        ctx.fillStyle = "#fcdcbb";
-      } else if (gamelocation == "cavern") {
-        //cavern background
-        ctx.fillStyle = "#010101";
-      } else if (gamelocation == "sanctuary") {
-        //sanc background
-        ctx.fillStyle = "#404040";
-      } else if (gamelocation == "crossroads") {
-        //crossroads background
-        ctx.fillStyle = "#1f1f1f";
-      } else {
-        //arena background
-        ctx.fillStyle = "#bebebe";
-      }
-      ctx.fillRect(0, 0, canvas.width, canvas.height); //drawing background
-      //COLOR OF PLAYABLE AREA
-      if (gamelocation == "dune") {
-        //dune background
-        ctx.fillStyle = "#ffead4";
-      } else if (gamelocation == "cavern") {
-        //cavern background
-        ctx.fillStyle = "#141414";
-      } else if (gamelocation == "sanctuary") {
-        //sanc background
-        ctx.fillStyle = "#595959";
-      } else if (gamelocation == "crossroads") {
-        //crossroads background
-        ctx.fillStyle = "#303030";
-      } else {
-        //arena background
-        ctx.fillStyle = "#CDCDCD";
-      }
-      ctx.fillRect(
-        canvas.width / 2 - px / clientFovMultiplier,
-        canvas.height / 2 - py / clientFovMultiplier,
-        gameAreaSize / clientFovMultiplier,
-        gameAreaSize / clientFovMultiplier
-      ); //drawing area
-
-      if (gamelocation == "2tdm") {//draw team base
-        var baseSize = 1500;
-        let firstColor = teamColors[0];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          gameAreaSize / clientFovMultiplier
-        );
-        firstColor = teamColors[1];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier + gameAreaSize / clientFovMultiplier - baseSize / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          gameAreaSize / clientFovMultiplier
-        );
-      }
-      if (gamelocation == "4tdm") {//draw team base
-        var baseSize = 1500;
-        let firstColor = teamColors[0];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";//c7bccf
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier
-        );
-        firstColor = teamColors[1];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier + gameAreaSize / clientFovMultiplier - baseSize / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier
-        );
-        firstColor = teamColors[2];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier + gameAreaSize / clientFovMultiplier - baseSize / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier + gameAreaSize / clientFovMultiplier - baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier
-        );
-        
-
-        firstColor = teamColors[3];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier + gameAreaSize / clientFovMultiplier - baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier
-        );
-      }
-      if (gamelocation == "tank-editor"){//draw safe zone
-        ctx.fillStyle = safeZoneColor;
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier + gameAreaSize / clientFovMultiplier /2 - safeZone / clientFovMultiplier /2,
-          canvas.height / 2 - py / clientFovMultiplier + gameAreaSize / clientFovMultiplier /2 - safeZone / clientFovMultiplier /2,
-          safeZone / clientFovMultiplier,
-          safeZone / clientFovMultiplier
-        );
-      }
-
-      //drawin grid lines
-      ctx.beginPath();
-      ctx.lineWidth = 1; //thickness of grid
-      var gridHeight = 30 / clientFovMultiplier;
-      if (gamelocation == "dune") {
-        //dune grid color
-        //ctx.strokeStyle = "#ede9c5";
-        ctx.strokeStyle = "#edddc5";
-      } else if (gamelocation == "cavern") {
-        //cavern grid color
-        //ctx.strokeStyle = "#1d1942";
-        ctx.strokeStyle = "#242424";
-        gridHeight = 80 / clientFovMultiplier;
-      } else if (gamelocation == "sanctuary") {
-        //sanc grid color
-        ctx.strokeStyle = "#363636";
-        ctx.lineWidth = 3 / clientFovMultiplier;
-      } else if (gamelocation == "crossroads") {
-        //crossroads grid color
-        //ctx.strokeStyle = "#0f0f0f";
-        //ctx.strokeStyle = "#262626";
-        ctx.strokeStyle = "rgba(18, 18, 18, .5)";
-        gridHeight = 80 / clientFovMultiplier;
-        ctx.lineWidth = 3; //thickness of grid
-      } else {
-        //arena grid color
-        //ctx.strokeStyle = "#a9a9a9";//old color
-        //ctx.strokeStyle = "#BEBEBE";//newer color that looked ok, except for grid above team bases
-        ctx.lineWidth = 4; //thickness of grid
-        gridHeight = 24 / clientFovMultiplier;
-        ctx.strokeStyle = "rgba(180, 180, 180, .2)";
-      }
-
-      //How does drawing the grid lines work: the equation below is to calculate the negative of the closest number to drawAreaX that is divisible by gridHeight, with drawAreaX referring to the distance from left side of screen to arena, and gridHeight is distance between lines drawn. By calculating this, we can find out the position to start drawing the first line on the left side of the screen, producing the effect of the grid moving in the opposite direction of the user. Need to be opposite, that's why negative in equation. Because the lines are drawn relative to the left and top of arena, that's why the lines are always drawn exactly on the left and top of arena on screen, unless people disconnect or connect, resulting in change og arena size.
-      //for x: -gridHeight-(-drawAreaX%gridHeight)
-      //for y: -gridHeight-(-drawAreaY%gridHeight)
-      //edit: instead of using drawAreaX, use (canvas.width/2 - player.x/fov) for accurate grid drawing
-      if (player.fovMultiplier < 10) {
-        //dont draw grid lines if field of vision is high, to prevent lag from drawing too many grid lines
-        for (
-          let x =
-            -gridHeight -
-            (-(canvas.width / 2 - px / clientFovMultiplier) %
-              gridHeight);
-          x < canvas.width;
-          x += gridHeight
-        ) {
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, canvas.height);
-        }
-        for (
-          let y =
-            -gridHeight -
-            (-(canvas.height / 2 - py / clientFovMultiplier) %
-              gridHeight);
-          y < canvas.height;
-          y += gridHeight
-        ) {
-          ctx.moveTo(0, y);
-          ctx.lineTo(canvas.width, y);
-        }
-        ctx.stroke();
-      }
-      
-      
-      //drawing the objects that are sent from the server, order of drawings are already changed by the server, so if you want something to be below another thing, change the order of adding to the object list in the server code, not the client code
-      //Object.keys(portalparticles).forEach((id) => {
-      for (const id in portalparticles) {
-        //potral particle list first, so that it is drawn at the bottom
-        let thisobject = portalparticles[id];
-        thisobject.x += Math.cos(thisobject.angle) * thisobject.speed*deltaTime;
-        thisobject.y += Math.sin(thisobject.angle) * thisobject.speed*deltaTime;
-        drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
-        thisobject.timer-=1*deltaTime;
-        if (thisobject.timer < 0) {
-          delete portalparticles[id];
-        }
-      };
-      shakeYN = "no"; //reset portal screen shake
-      shakeIntensity = 1;
-      Object.keys(portals).forEach((id) => {
-        //draw portals. portals not inside object list because all need to be sent for the minimap anyways
-        if (!portalwidths.hasOwnProperty(id)) {
-          portalwidths[id] = portals[id].width; //this is used for keeping track the sizes of portal that changes when player enter and exit a portal
-        } else {
-          //if this portal already existed
-          if (
-            portalwidths[id] <
-            portals[id].width + portals[id].peopleTouch * 45
-          ) {
-            //45px portal size growth per person
-            portalwidths[id] += 3;
-          } else if (
-            portalwidths[id] >
-            portals[id].width + portals[id].peopleTouch * 45
-          ) {
-            portalwidths[id] -= 3;
-          }
-        }
-        var thisobject = portals[id];
-        thisobject.type = "portal";
-        let oldtimer = thisobject.timer;
-        if (oldportals[id]){
-          thisobject.timer = lerpProperty(thisobject,oldportals[id],'timer')
-        }
-        drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
-        thisobject.timer = oldtimer;//reset timer to original (not lerped)
-
-        //check for collision with portal to check if shake canvas or not
-        var DistanceBetween = Math.sqrt(
-          (player.x - thisobject.x) * (player.x - thisobject.x) +
-            (player.y - thisobject.y) * (player.y - thisobject.y)
-        ); //calculate distance between center of portal and player
-        if (DistanceBetween <= player.width + thisobject.width * 3) {
-          //portal width times 3 so that shake will be felt from a distance
-          shakeYN = "yes";
-          if (
-            DistanceBetween / (player.width + thisobject.width * 3) <
-            shakeIntensity
-          ) {
-            //if new shake intensity higher than shake intensity from anither portal
-            shakeIntensity =
-              DistanceBetween / (player.width + thisobject.width * 3); //ranges from 1 to 0, 0 meaning player is at center of portal
-          }
-        }
-      });
-      
-      //smoothly change player's fov
-      if (player.fovMultiplier){
-        if (clientFovMultiplier != player.fovMultiplier){
-          clientFovMultiplier += (player.fovMultiplier - clientFovMultiplier)/5;
-          if (Math.abs(clientFovMultiplier - player.fovMultiplier)<0.001){
-            clientFovMultiplier = player.fovMultiplier;
-          }
-        }
-      }
-      
-      
-      for (const type in objects) {
-        for (const id in objects[type]) {
-          var thisobject = JSON.parse(JSON.stringify(objects[type][id]));
-          if (!interpolatedobjects[type]){
-            interpolatedobjects[type] = {};
-          }
-          interpolatedobjects[type][id] = JSON.parse(JSON.stringify(objects[type][id]));
-          if (oldobjects[type]){
-            if (oldobjects[type][id]){
-              //do lerping if not new object
-              if (id != playerstring){//not the player
-                if (type != "bullet" || thisobject.bulletType != "bullet"){
-                  lerpDrawnX = thisobject.x;
-                  lerpDrawnY = thisobject.y;
-                  simpleLerpPos(thisobject,oldobjects[type][id],interpolatedobjects[type][id])
-                  thisobject.x = lerpDrawnX;
-                  thisobject.y = lerpDrawnY;
-                  if (type == "player" || type == "shape" || type == "def"){//lerp angle
-                    thisobject.angle = simpleLerpAngle(thisobject,oldobjects[type][id])
-                    if (type == "shape"){
-                      thisobject.health = lerpProperty(thisobject,oldobjects[type][id],'health')
+                    if (mousey > hcanvas.height - 280 && (mousex > hcanvas.width - 320 || mousex < 320)) { //make skill points appear
+                      mouseToSkillPoints = "yes";
+                    } else {
+                      mouseToSkillPoints = "no";
+                    }
+                    
+                    //circular button for skill points
+                    let x;
+                    let y;
+                    let width = 20;
+                    for (let i = 0; i < 8; i++) {
+                      let button = skillpointsbutton[i];
+                      if (i < 4){
+                        x = 17 * 15 / 2 + skillpointspos - 20 + 5;//15 is number of upgrade points
+                        y = (hcanvas.height - 40 - (3 - i)*33) + 25 / 2 + 3;//25 is height
+                      }
+                      else{
+                        x = -17 * 15/2 + hcanvas.width - skillpointspos + 20 - 5;
+                        y = (hcanvas.height - 40 - (7-i)*33) + 25 / 2 + 3;
+                      }
+                      x = x/canvas.width*window.innerWidth;
+                      y = window.innerHeight - (hcanvas.height - y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX;
+                      let w = width/2/canvas.width*window.innerWidth;
+                      if (button.clickable == "yes" && mousex > (x - w) && mousex < (x + w) && mousey < (y + w*resizeDiffY/resizeDiffX) && mousey > (y - w*resizeDiffY/resizeDiffX)){
+                        button.hover = 'yes';
+                        hoverOne = "yes";
+                      }
+                      else{
+                        button.hover = 'no';
+                      }
+                    }
+                    
+                    let ignorebutton = ignorebuttonw;
+                    x = ignorebutton.x/canvas.width*window.innerWidth;
+                    y = window.innerHeight - (hcanvas.height - ignorebutton.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX;
+                    if (mousex > x && mousex < (x + ignorebutton.width/canvas.width*window.innerWidth) && mousey < (y + ignorebutton.height/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) && mousey > y){
+                      ignorebutton.hover = 'yes';
+                      hoverOne = "yes";
+                    }
+                    else{
+                      ignorebutton.hover = 'no';
+                    }
+                    ignorebutton = ignorebuttonb;
+                    x = ignorebutton.x/canvas.width*window.innerWidth;
+                    y = window.innerHeight - (hcanvas.height - ignorebutton.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX;
+                    if (mousex > x && mousex < (x + ignorebutton.width/canvas.width*window.innerWidth) && mousey < (y + ignorebutton.height/canvas.width*window.innerWidth*resizeDiffY/resizeDiffX) && mousey > y){
+                      ignorebutton.hover = 'yes';
+                      hoverOne = "yes";
+                    }
+                    else{
+                      ignorebutton.hover = 'no';
+                    }
+                    
+                    if (hoverOne == "yes"){
+                      //one of the button is hovered
+                      if (hcanvas.style.cursor != "pointer"){
+                        hcanvas.style.cursor = "pointer";//change mouse to a pointer
+                      }
+                    }
+                    else{
+                      if (hcanvas.style.cursor != "auto"){
+                        hcanvas.style.cursor = "auto";
+                      }
                     }
                   }
                 }
-              }
-              else{
-                //camera is lerped
-                simpleLerpPos(thisobject,oldobjects[type][id],interpolatedobjects[type][id])
-                thisobject.x = px;
-                thisobject.y = py;
-                thisobject.angle = simpleLerpAngle(thisobject,oldobjects[type][id])
-              }
-            }
-          }
-          thisobject.type = type;
-          interpolatedobjects[type][id].x = thisobject.x;
-          interpolatedobjects[type][id].y = thisobject.y;
-          if (type == "bullet" && thisobject.bulletType == "bullet"){
-            //server wont send bullet updates all the time if the bullet is a bullet and not a trap or drone or minion etc.
-            //client move bullet yourself
-            //console.log(id + ',' + objects[type][id].x + ',1')
-            objects[type][id].y += Math.sin(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
-            objects[type][id].x += Math.cos(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
-            //console.log(id + ',' + objects[type][id].x + ',2')
-          }
-          drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
-        }
-      }
-      
-        for (const id in objects.player) {
-          var thisobject = JSON.parse(JSON.stringify(objects.player[id]));
-          if (oldobjects.player){
-            if (oldobjects.player[id]){
-              //do lerping if not new object
-              if (id != playerstring){//not the player
-                lerpDrawnX = thisobject.x;
-                lerpDrawnY = thisobject.y;
-                simpleLerpPos(thisobject,oldobjects.player[id],interpolatedobjects.player[id])
-                thisobject.x = lerpDrawnX;
-                thisobject.y = lerpDrawnY;
-                thisobject.angle = simpleLerpAngle(thisobject,oldobjects.player[id])
-              }
-              else{
-                simpleLerpPos(thisobject,oldobjects.player[id],interpolatedobjects.player[id])
-                thisobject.x = px;
-                thisobject.y = py;
-              }
-            }
-          }
-          thisobject.type = "player";
-          interpolatedobjects.player[id].x = thisobject.x;
-          interpolatedobjects.player[id].y = thisobject.y;
-          drawplayerdata(thisobject, id, playerstring, auraWidth); //draw the obcjects on the canvas
-        }
-      
-      listofdeadobjects.forEach((object) => {
-        //dead object array
-        if (object.bulletType != "aura") {
-          if (object.type == "bullet") {
-            //check if bullet belongs to player. usually server does this, but not for dead objects
-            if (object.ownerId == playerstring) {
-              object.ownsIt = "yes";
-            }
-          }
-          else if (object.type == "shape"){
-            if (shapeHealthBar.hasOwnProperty(object.id)){//for health bar width animation when die
-              if (shapeHealthBar[object.id] > 0){
-                shapeHealthBar[object.id]-=5*deltaTime;
-              }
-              if (shapeHealthBar[object.id] < 0){
-                shapeHealthBar[object.id] = 0;
-              }
-            }
-          }
-          if (object.hasOwnProperty("deadanimation")) {
-            object.deadanimation--; //animate object
-            //object.width += 5;
-            object.width *= 1.1;
-            if (object.deadOpacity > 0) {
-              object.deadOpacity -= 0.2;
-            }
-            if (object.deadOpacity < 0) {
-              object.deadOpacity = 0;
-            }
-            if (object.deadanimation < 0) {
-              //remove object from array
-              var index = listofdeadobjects.indexOf(object);
-              if (index > -1) {
-                // only splice array when item is found
-                listofdeadobjects.splice(index, 1); // 2nd parameter means remove one item only
-              }
-            }
-          } else {
-            object.deadanimation = 5; //duration of dead animation
-            object.deadOpacity = 1;
-          }
-          drawobjects(object, object.id, playerstring, auraWidth); //draw the objects on the canvas
-        }
-      });
-      Object.keys(radparticles).forEach((id) => {
-        //radiant particle list last so that it is drawn at the top
-        var thisobject = radparticles[id];
-        drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
-        thisobject.x += Math.cos(thisobject.angle) * thisobject.speed*deltaTime;
-        thisobject.y += Math.sin(thisobject.angle) * thisobject.speed*deltaTime;
-        thisobject.timer-=1*deltaTime;
-        if(thisobject.source == "dune") {
-           thisobject.angle = (((-90 * Math.PI) / 180) + (thisobject.angle * 199)) / 200;
-        }
+              });
 
-        if (thisobject.timer < 0) {
-          delete radparticles[id];
-        }
-      });
-      //update fps
-      fpsvaluenow++;
+              //mouse press listener
+              $("html").mousedown(function (e) {
+                if (gamemode == "PvE arena"){
+                  mouseDown = true;
+                }
+                else{
+                  var packet = JSON.stringify(["mousePressed", e.which]);
+                  socket.send(packet)
+                }
+                //e.which refers to whether it's lfet or right click. leftclick is 1, rightclick is 3
+              });
 
-      if (gamelocation == "dune") {
-        //spawn random particles if in dune
-        if (spawnduneparticle == "yes"){
-          var choosing = Math.floor((Math.random() * 10)/clientFovMultiplier); //choose if particle spawn
-          if (choosing <= 0) {
-            //spawn a particle
-            let angleRadians = (-30+Math.floor(Math.random() * 30) * Math.PI) / 180; //convert to radians
-            var size = 50*(Math.floor(Math.random() * 3) + 1)-25;
-            var randomDistFromCenterX = (Math.floor(Math.random() * canvas.width+size) - (canvas.width+size)/2)*clientFovMultiplier;
-            var randomDistFromCenterY = (Math.floor(Math.random() * canvas.height+size) - (canvas.height+size)/2)*clientFovMultiplier;
-            radparticles[particleID] = {
-              angle: angleRadians,
-              x: player.x + randomDistFromCenterX,// * Math.cos(angleRadians),
-              y: player.y - randomDistFromCenterY,// * Math.sin(angleRadians),
-              width: size,
-              height: size,
-              speed: 5,
-              timer: 200,
-              maxtimer: 200,
-              color: `rgba(222, 152, 22, ${0.3/((size/50)+1)})`,
-              outline: `rgba(0,0,0,${0.1/((size/50)+1)})`,
-              type: "particle",
-              source: "dune",
+              //mouse release listener
+              $("html").mouseup(function (e) {
+                if (gamemode == "PvE arena"){
+                  mouseDown = false;
+                  return;
+                }
+                var packet = JSON.stringify(["mouseReleased", e.which]);
+                socket.send(packet);
+                if (openedUI=="no"){
+                let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
+                let resizeDiffY = 1/window.innerHeight*hcanvas.height;
+                for (let i = 1; i < 15; i++) {
+                  let button = upgradeButtons[i];
+                  let x = button.x/canvas.width*window.innerWidth;
+                  let w = button.width/2/canvas.width*window.innerWidth;
+                  let y = window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX;
+                  if (mousex > (x - w) && mousex < (x + w) && mousey < (y + w*resizeDiffY/resizeDiffX) && mousey > (y - w*resizeDiffY/resizeDiffX) &&
+                    ((ignorebuttonw.ignore == "no" || i>7) && (ignorebuttonb.ignore == "no" || i<=7))
+                  ) {
+                    //if player release mouse at button
+                    if (i <= 7) {
+                      var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "weaponUpgrade"]);
+                      socket.send(packet)
+                    } else {
+                      var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "bodyUpgrade"]);
+                      socket.send(packet)
+                    }
+                  }
+                }
+                for (let i = 0; i < 8; i++) {
+                  if (skillpointsbutton[i].hover == "yes"){
+                    //skill points
+                    var packet = JSON.stringify(["upgradeSkillPoints", (i+1).toString()]);
+                    socket.send(packet)
+                  }
+                }
+                if (ignorebuttonw.hover == "yes"){
+                  ignorebuttonw.ignore = "yes";
+                  levelwhenignorew = player.level;
+                }
+                if (ignorebuttonb.hover == "yes"){
+                  ignorebuttonb.ignore = "yes";
+                  levelwhenignoreb = player.level;
+                }
+                }
+              });
+            }
+
+            //mobile touch
+            if (mobile == "yes") {
+              setInterval(function () {
+                if (touches[0].state == "moving" && touches[0].oldangle != touches[0].angle) {
+                  let tankAngleInDegrees = (touches[0].angle * 180) / Math.PI;
+                  if (tankAngleInDegrees < 0) {
+                    tankAngleInDegrees += 360;
+                  }
+                  touches[0].oldangle = touches[0].angle;
+                  var packet = JSON.stringify(["360move",tankAngleInDegrees]);
+                  socket.send(packet)
+                }
+                else if (touches[1].state == "moving" && touches[1].oldangle != touches[1].angle) {
+                  let tankAngleInDegrees = (touches[1].angle * 180) / Math.PI;
+                  if (tankAngleInDegrees < 0) {
+                    tankAngleInDegrees += 360;
+                  }
+                  touches[1].oldangle = touches[1].angle;
+                  var packet = JSON.stringify(["360move",tankAngleInDegrees]);
+                  socket.send(packet)
+                }
+                if (touches[0].state == "shooting") {
+                  var packet = JSON.stringify(["mouseMoved", touches[0].x, touches[0].y, touches[0].angle]);
+                  socket.send(packet)
+                  if (mobileSentMousePress=="no"){
+                    var packet = JSON.stringify(["mousePressed", 1]);
+                    socket.send(packet)
+                    mobileSentMousePress = "yes";
+                  }
+                } else if (touches[1].state == "shooting") {
+                  var packet = JSON.stringify(["mouseMoved", touches[1].x, touches[1].y, touches[1].angle]);
+                  socket.send(packet)
+                  if (mobileSentMousePress=="no"){
+                    var packet = JSON.stringify(["mousePressed", 1]);
+                    socket.send(packet)
+                    mobileSentMousePress = "yes";
+                  }
+                }
+              }, 30);
+              document.addEventListener("touchmove", function (e) {
+                e.preventDefault();
+                //only support 2 touch at each point in time
+                let mousex0 = e.touches[0].pageX;
+                let mousey0 = e.touches[0].pageY;
+                let mousex1;
+                let mousey1;
+                touches[0].xpos = mousex0;//for drawing the circle on the joystick
+                touches[0].ypos = mousey0;//for drawing the circle on the joystick
+                if (e.touches[1]) {
+                  //if have two touches (might only have one touch)
+                  mousex1 = e.touches[1].pageX;
+                  mousey1 = e.touches[1].pageY;
+                  touches[1].xpos = mousex1;//for drawing the circle on the joystick
+                  touches[1].ypos = mousey1;//for drawing the circle on the joystick
+                }
+                //for drones
+                touches[0].x = (window.innerWidth / 2 - mousex0) * clientFovMultiplier;
+                touches[0].y = (window.innerHeight / 2 - mousey0) * clientFovMultiplier;
+                if (e.touches[1]) {
+                  touches[1].x = (window.innerWidth / 2 - mousex0) * clientFovMultiplier;
+                  touches[1].y = (window.innerHeight / 2 - mousey0) * clientFovMultiplier;
+                }
+                //get joystick position relative to screen size, not canvas size
+                var joystick1Locationx = (window.innerWidth / hcanvas.width) * (hcanvas.width / 2 + joystick1.xFromCenter);
+                var joystick1Locationy = (window.innerHeight / hcanvas.height) * (hcanvas.height / 2 + joystick1.yFromCenter);
+                var joystick2Locationx = (window.innerWidth / hcanvas.width) * (hcanvas.width / 2 + joystick2.xFromCenter);
+                var joystick2Locationy = (window.innerHeight / hcanvas.height) * (hcanvas.height / 2 + joystick2.yFromCenter);
+                var joystick1size = (window.innerHeight / hcanvas.height) * joystick1.size;
+                var joystick2size = (window.innerHeight / hcanvas.height) * joystick2.size;
+                //there would be two or more touches, so need to figure out whic touch is for which joystick
+                //first touch
+                if (Math.pow(joystick1Locationx - mousex0, 2) + Math.pow(joystick1Locationy - mousey0, 2) < Math.pow(joystick1size, 2)) { //if touch is inside joystick
+                  touches[0].state = "moving";
+                }
+                else if (Math.pow(joystick2Locationx - mousex0, 2) + Math.pow(joystick2Locationy - mousey0, 2) < Math.pow(joystick2size, 2)) { //if touch is inside joystick
+                  touches[0].state = "shooting";
+                }
+                if (touches[0].state == "shooting") {
+                  touches[0].angle = Math.atan2(
+                    joystick2Locationy - mousey0,
+                    joystick2Locationx - mousex0
+                  );
+                  //below code stores the player's angle (only for the player the client is controlling)
+                  //this reduces lag's effect on mouse movement
+                  clientAngle = (((touches[0].angle * 180) / Math.PI - 90) * Math.PI) / 180;
+                } else if (touches[0].state == "moving") {
+                  touches[0].angle = Math.atan2(
+                    joystick1Locationy - mousey0,
+                    joystick1Locationx - mousex0
+                  );
+                }
+                //second touch
+                if (e.touches[1]) {
+                  if (Math.pow(joystick1Locationx - mousex1, 2) + Math.pow(joystick1Locationy - mousey1, 2) < Math.pow(joystick1size, 2)) { //if touch is inside joystick
+                    touches[1].state = "moving";
+                  } else if (Math.pow(joystick2Locationx - mousex1, 2) + Math.pow(joystick2Locationy - mousey1, 2) < Math.pow(joystick2size, 2)) { //if touch is inside joystick
+                    touches[1].state = "shooting";
+                  }
+                  if (touches[1].state == "shooting") {
+                    touches[1].angle = Math.atan2(
+                      joystick2Locationy - mousey1,
+                      joystick2Locationx - mousex1
+                    );
+                    clientAngle = (((touches[0].angle * 180) / Math.PI - 90) * Math.PI) / 180;
+                  } else if (touches[1].state == "moving") {
+                    touches[1].angle = Math.atan2(
+                      joystick1Locationy - mousey1,
+                      joystick1Locationx - mousex1
+                    );
+                  }
+                }
+                //check if player touching the upgrade button
+                if (!e.touches[1]) {
+                  mousex1 = 0;
+                }
+                if (!e.touches[1]) {
+                  mousey1 = 0;
+                }
+                let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
+                let resizeDiffY = 1/window.innerHeight*hcanvas.height;
+                for (let i = 1; i < 15; i++) {
+                  let button = upgradeButtons[i];
+                  let x = button.x/canvas.width*window.innerWidth;
+                  let y = window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX;
+                  let w = button.width/2/canvas.width*window.innerWidth;
+                  if (
+                    (mousex0 > (x - w) && mousex0 < (x + w) && mousey0 < (y + w*resizeDiffY/resizeDiffX) && mousey0 > (y - w*resizeDiffY/resizeDiffX)) ||
+                    (mousex1 > (x - w) && mousex1 < (x + w) && mousey1 < (y + w*resizeDiffY/resizeDiffX) && mousey1 > (y - w*resizeDiffY/resizeDiffX) && e.touches[1])
+                  ) {
+                    button.hover = 'yes';
+                  } else {
+                    button.hover = 'no';
+                  }
+                }
+              });
+
+              //mouse press listener
+              document.addEventListener("touchend", function (e) {
+                if (e.changedTouches[0]) {
+                  if (e.changedTouches[0].pageX==touches[0].xpos&&e.changedTouches[0].pageY==touches[0].ypos){
+                    if (touches[0].state == "moving") {
+                      var packet = JSON.stringify(["360Release"]);
+                      socket.send(packet)
+                    } else {
+                      if (mobileSentMousePress=="yes"){
+                        var packet = JSON.stringify(["mouseReleased", 1]);
+                        socket.send(packet)
+                        mobileSentMousePress = "no";
+                      }
+                    }
+                    touches[0].state = "no";
+                  }
+                  else if (e.changedTouches[0].pageX==touches[1].xpos&&e.changedTouches[0].pageY==touches[1].ypos){
+                    if (touches[1].state == "moving") {
+                      var packet = JSON.stringify(["360Release"]);
+                      socket.send(packet)
+                    } else {
+                      if (mobileSentMousePress=="yes"){
+                        var packet = JSON.stringify(["mouseReleased", 1]);
+                        socket.send(packet)
+                        mobileSentMousePress = "no";
+                      }
+                    }
+                    touches[1].state = "no";
+                  }
+                }
+                if (e.changedTouches[1]) {
+                  if (e.changedTouches[1].pageX==touches[0].xpos&&e.changedTouches[1].pageY==touches[0].ypos){
+                    if (touches[0].state == "moving") {
+                      var packet = JSON.stringify(["360Release"]);
+                      socket.send(packet)
+                    } else {
+                      if (mobileSentMousePress=="yes"){
+                        var packet = JSON.stringify(["mouseReleased", 1]);
+                        socket.send(packet)
+                        mobileSentMousePress = "no";
+                      }
+                    }
+                    touches[0].state = "no";
+                  }
+                  else if (e.changedTouches[1].pageX==touches[1].xpos&&e.changedTouches[1].pageY==touches[1].ypos){
+                    if (touches[1].state == "moving") {
+                      var packet = JSON.stringify(["360Release"]);
+                      socket.send(packet)
+                    } else {
+                      if (mobileSentMousePress=="yes"){
+                        var packet = JSON.stringify(["mouseReleased", 1]);
+                        socket.send(packet)
+                        mobileSentMousePress = "no";
+                      }
+                    }
+                    touches[1].state = "no";
+                  }
+                }
+                for (let j = 0; j < e.changedTouches.length; j++) {
+                  let mousex = e.changedTouches[j].pageX;
+                  let mousey = e.changedTouches[j].pageY;
+                  let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
+                  let resizeDiffY = 1/window.innerHeight*hcanvas.height;
+                  for (let i = 1; i < 15; i++) {
+                    let button = upgradeButtons[i];
+                    let x = button.x/canvas.width*window.innerWidth;
+                    let y = window.innerHeight - (hcanvas.height - button.y)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX;
+                    let w = button.width/2/canvas.width*window.innerWidth;
+                    if (mousex > (x - w) && mousex < (x + w) && mousey < (y + w*resizeDiffY/resizeDiffX) && mousey > (y - w*resizeDiffY/resizeDiffX)) { //if player release mouse at button
+                      if (i <= 7) {
+                        var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "weaponUpgrade"]);
+                        socket.send(packet)
+                      } else {
+                        var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "bodyUpgrade"]);
+                        socket.send(packet)
+                      }
+                    }
+                  }
+                  let skillwidth = 280/hcanvas.width*window.innerWidth;
+                  let skillheight = 30/hcanvas.width*window.innerWidth*resizeDiffY/resizeDiffX;
+                  for (let i = 1; i < 9; i++) {//skill points (can only click on mobile)
+                    let something = 0;//something is 3,2,1,0,3,2,1,0 from top to bottom of the 8 skill points
+                    let skillx = 0;
+                    if (i>4){
+                      something = 8-i;
+                      skillx = (hcanvas.width - skillpointspos - 140)/hcanvas.width*window.innerWidth;
+                    }
+                    else{
+                      something = 4-i;
+                      skillx = (skillpointspos - 140)/hcanvas.width*window.innerWidth;
+                    }
+                    let skilly = window.innerHeight - (40 + 32*something)/canvas.height*window.innerHeight*resizeDiffY/resizeDiffX;
+                    if (mousex > skillx && mousex < (skillx+skillwidth) && mousey < (skilly + skillheight) && mousey > skilly) { //if player release mouse at skill point
+                      var packet = JSON.stringify(["upgradeSkillPoints", i]);
+                      socket.send(packet)
+                    }
+                  }
+                }
+              });
+            }
+
+  
+            var lerpDrawnX = 0;
+            var lerpDrawnY = 0;
+            let updateInterval = 60;//server send update every 60ms (17 fps)
+            function simpleLerpPos(obj,oldobj){
+              let timeDiff = Date.now() - latestServerUpdateTime;
+              lerpDrawnX = oldobj.x + (obj.x - oldobj.x)/updateInterval*timeDiff;
+              lerpDrawnY = oldobj.y + (obj.y - oldobj.y)/updateInterval*timeDiff;
+            }
+            function simpleLerpAngle(obj,oldobj){
+              let timeDiff = Date.now() - latestServerUpdateTime;
+              let oldangle = oldobj.angle;
+              let newangle = obj.angle;
+              //note: player angle in radians
+              if ((oldangle - newangle)>5.25){//angle went from 360 to 0
+                oldangle-=2*Math.PI;
+              }
+              else if ((newangle - oldangle)>5.25){//angle went from 0 to 360
+                oldangle+=2*Math.PI;
+              }
+              let lerpedAngle = oldangle + (newangle - oldangle)/updateInterval*timeDiff;
+              return lerpedAngle
+            }
+            function lerpProperty(obj,oldobj,property){
+              let timeDiff = Date.now() - latestServerUpdateTime;
+              let oldangle = oldobj[property];
+              let newangle = obj[property];
+              let lerpedAngle = oldangle + (newangle - oldangle)/updateInterval*timeDiff;
+              return lerpedAngle
+            }
+
+            var requestInterval = function (fn, delay) {//dont use setinterval anymore cuz it affected latency for mobile users (running 30fps on mobile will cause lag cuz it cant do 30fps)
+              var requestAnimFrame = (function () {
+                return window.requestAnimationFrame || function (callback, element) {
+                  window.setTimeout(callback, 1000 / 60);
+                };
+              })(),
+              start = new Date().getTime(),
+              handle = {};
+              function loop() {
+                handle.value = requestAnimFrame(loop);
+                var current = new Date().getTime(),
+                delta = current - start;
+                if (delta >= delay) {
+                  fn.call();
+                  start = new Date().getTime();
+                }
+              }
+              handle.value = requestAnimFrame(loop);
+              return handle;
             };
-            particleID++;
-          }
-        }
-        //cover whole screen in darkness for dune
-        ctx.fillStyle = "rgba(0,0,0,.2)"; //make background darker
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-      function anglecalc(cx, cy, ex, ey) {
-        var dy = ey - cy ;
-        var dx = cx - ex ;
-        return Math.atan2(dx, dy) * 180 / Math.PI;
-      }
-      if (player.x && player.y){
-        var rangeX = player.x-(gameAreaSize/2);
-        var rangeY = player.y-(gameAreaSize/2);
-      }
-      else{
-        var rangeX = 0;
-        var rangeY = 0;
-      }
-      crossroadRadians = (crossroadRadians*29 + anglecalc(0, 0, rangeX, rangeY)+90) / 30;   
-      if(isNaN(crossroadRadians)) {
-        crossroadRadians = anglecalc(0, 0, rangeX, rangeY)+90; // not really radians but ok
-      }
 
-      if (gamelocation == "crossroads") {
-        //spawn random particles if in crossroads
-        if (spawncrossroadsparticle == "yes"){
-          var choosing = Math.floor((Math.random() * 2)/clientFovMultiplier); //choose if particle spawn
-          if (choosing <= 0) {
-            //spawn a particle
+            function screenDrawLoop(){//everything happens here
+              var starting = Date.now(); //start client code execution timer
+              
+              //calculate delta
+              let currentLoopTime = Date.now();
+              if (prevLoopTime == 0) { //if this is first loop
+                  deltaTime = 1;
+              } else {
+                  let timeLapsed = currentLoopTime - prevLoopTime;
+                  deltaTime = timeLapsed / 30;//30fps would be the speed at which animations should run
+              }
+              prevLoopTime = currentLoopTime;
 
-            let angleRadians = crossroadRadians+ ((-30 + Math.floor(Math.random() * 60)));
-            var size = 50*(Math.floor(Math.random() * 3) + 1)-25;
-            var randomDistFromCenterX = (Math.floor(Math.random() * canvas.width+size) - (canvas.width+size)/2)*clientFovMultiplier;
-            var randomDistFromCenterY = (Math.floor(Math.random() * canvas.height+size) - (canvas.height+size)/2)*clientFovMultiplier;
-            radparticles[particleID] = {
-              angle: angleRadians * Math.PI / 180,
-              x: player.x + randomDistFromCenterX,// * Math.cos(angleRadians),
-              y: player.y - randomDistFromCenterY,// * Math.sin(angleRadians),
-              width: size,
-              height: size,
-              speed: 25,
-              timer: 100,
-              maxtimer: 100,
-              color: `rgba(152, 152, 152, ${0.3})`,
-              outline: `rgba(0,0,0,${0.1})`,
-              type: "particle",
-              source: "crossroads",
-            };
-            particleID++;
-          }
-        }
-      }
-      //console.log(crossroadRadians, rangeX, rangeY);//was making my fps die
+              var resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
+              var resizeDiffY = 1/window.innerHeight*hcanvas.height;
 
-      if (prevShakeYN == "yes" || slightshake == "yes") {
-        ctx.restore();
-      }
+              //check if player clicked play button and if joined
+              if (canLogIn == "yes") {
+                //if client wants to log into an account
+                if (acctype != "edit"){
+                  var packet = JSON.stringify(["logInOrSignUp", accusername, accpassword, accdesc, acctype]);
+                  socket.send(packet)
+                  canLogIn = "no";
+                }
+                else{
+                  var packet = JSON.stringify(["editaccount", loggedInAccount.name, loggedInAccount.pw, loggedInAccount.desc, accusername, accpassword, accdesc]);
+                  socket.send(packet)
+                  canLogIn = "no";
+                }
+              }
+              if (state == "ingame" && sentStuffBefore == "yes") {
+                //DRAW THE GAME STUFF
+                
+                //reset to prevent restore bugs (hctx.restore wont happen if there is an error in the code)
+                if (typeof hctx.reset == 'function') { 
+                  hctx.reset();
+                }
+      
+                //for chat animation
+                typingAnimation+=0.5*deltaTime;
+                if (typingAnimation > 20){
+                  typingAnimation = 0;
+                }
+      
+                auraRotate += (80)/30*deltaTime;
+                if(auraRotate < 0) {auraRotate = 360}
+                if(auraRotate > 360) {auraRotate = 0}
+                auraWidth = (Math.sin((auraRotate * Math.PI / 180))/20)+0.125;
+                //for radiant shape spike
+                extraSpikeRotate++;
+                if (extraSpikeRotate >= 360) {
+                  extraSpikeRotate -= 360;
+                }
+                extraSpikeRotate1 += 2;
+                if (extraSpikeRotate1 >= 360) {
+                  extraSpikeRotate1 -= 360;
+                }
+                extraSpikeRotate2--;
+                if (extraSpikeRotate2 <= 0) {
+                  extraSpikeRotate2 += 360;
+                }
+                //for radiant colors
+                for (const id in radiantShapes) {
+                  let animationSpeed = 3;
+                  let thisShape = radiantShapes[id];
+                  let radtype = thisShape.radtype;
+                  if (radtype == 1) {
+                    //red yellow blue
+                    if (thisShape.rgbstate == 0) {
+                      thisShape.rgbstate = 1;
+                    } else if (thisShape.rgbstate == 1) {
+                      if (thisShape.red > 200) {
+                        thisShape.red -= animationSpeed;
+                      }
+                      thisShape.green += animationSpeed;
+                      if (thisShape.green >= 150) {
+                        thisShape.rgbstate = 2; //change to next state
+                      }
+                    } else if (thisShape.rgbstate == 2) {
+                      thisShape.blue += animationSpeed;
+                      if (thisShape.green > 0) {
+                        thisShape.green -= animationSpeed;
+                      }
+                      if (thisShape.red > 0) {
+                        thisShape.red -= animationSpeed;
+                      }
+                      if (thisShape.blue >= 200) {
+                        thisShape.rgbstate = 3; //change state
+                      }
+                    } else if (thisShape.rgbstate == 3) {
+                      thisShape.blue -= animationSpeed;
+                      thisShape.red += animationSpeed;
+                      if (thisShape.blue <= 0 && thisShape.red >= 255) {
+                        thisShape.rgbstate = 1; //change state
+                        thisShape.red = 255;
+                        thisShape.blue = 0;
+                      }
+                    }
+                  } else {
+                    //greyish-green white yellow 118, 168, 151 -> 209, 230, 222 -> 234, 240, 180
+                    if (thisShape.rgbstate == 0) {
+                      thisShape.rgbstate = 1;
+                    } else if (thisShape.rgbstate == 1) {
+                      if (thisShape.red >= 118 && thisShape.red < 209) {
+                        thisShape.red += animationSpeed;
+                        thisShape.blue += animationSpeed;
+                        thisShape.green += animationSpeed;
+                      } else {
+                        thisShape.rgbstate = 2; //change to next state
+                      }
+                    } else if (thisShape.rgbstate == 2) {
+                      thisShape.blue -= animationSpeed;
+                      if (thisShape.green < 240) {
+                        thisShape.green += animationSpeed;
+                      }
+                      if (thisShape.red < 234) {
+                        thisShape.red += animationSpeed;
+                      }
+                      if (thisShape.blue <= 180) {
+                        thisShape.rgbstate = 3; //change state
+                      }
+                    } else if (thisShape.rgbstate == 3) {
+                      thisShape.red -= animationSpeed;
+                      if (thisShape.green > 168) {
+                        thisShape.green -= animationSpeed;
+                      }
+                      if (thisShape.blue > 151) {
+                        thisShape.blue -= animationSpeed;
+                      }
+                      if (thisShape.red <= 118) {
+                        thisShape.rgbstate = 1; //change state
+                        thisShape.red = 118;
+                        thisShape.blue = 168;
+                        thisShape.green = 151;
+                      }
+                    }
+                  }
+                }
+                //for gates
+                gateTimer += 0.1 * deltaTime;
+                if (gateTimer >= endGate){
+                  gateTimer = startGate;
+                }
 
-      if (gamelocation == "crossroads") {
-        //draw the darkness for crossroads
-        //the rectangle (entire screen)
-        hctx.fillStyle = "rgba(0,0,0,.7)";
-        hctx.fillRect(0,0,hcanvas.width,hcanvas.height)
-        
-        if (barrelsDarkness.length == 0){//no barrels
-          barrelsDarkness.push(0);//circle tourchlight
-        }
-      
-        hctx.save();
-        hctx.translate(hcanvas.width/2, hcanvas.height/2);//bottom left of screen
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back after scaling
-        hctx.globalCompositeOperation='destination-out';//'erase' the darkness
-        //let circleWidth = player.width * 4 + 50;
-        let circleWidth = player.width * 6;
-        //let barrelCorner = 25;//radius of rounded corner
-        let barrelCorner = player.width;//radius of rounded corner
-        hctx.beginPath();
-        hctx.save();
-        hctx.translate(canvas.width / 2, canvas.height / 2);
-        let playerAngle = clientAngle;
-        if (player.autorotate == "yes" || player.fastautorotate == "yes"){
-          playerAngle = player.angle;
-        }
-        hctx.rotate(playerAngle - (90 * Math.PI) / 180);
-      
-        let holeInArc = 0.15 * Math.PI;//angle towards edge of torchlight, same value as the value used to arc (code above this line)
-        let radius = circleWidth+crDarknessSize;
-        //calculate the endpoint of the arc around the player
-        let torchlightHeightDefault = circleWidth/4*3+crDarknessSize;//size of torchlight
-        let torchlightWidthAngle = 10/180*Math.PI;//angle of torchlight
-        let endx;
-        let endy;
-        let extraamount = player.width/25*4.2;//if there is a spike at the corner of the barrel, change this value
-      
-        function drawBarrelDarkness(angle,prevAngle){
-          if (prevAngle == 0){
-            prevAngle = 2 * Math.PI;
-          }
-          hctx.arc(0, 0, circleWidth+crDarknessSize, prevAngle-holeInArc, angle+holeInArc, true); //draw an incomplete circle (circle around the tank)
-      
-          //the torchlight
-          
-          hctx.save();
-          hctx.rotate(angle);
-          endx = Math.cos(holeInArc) * radius;
-          endy = Math.sin(holeInArc) * radius;
-          endx += Math.cos(torchlightWidthAngle) * torchlightHeightDefault;
-          endy += Math.sin(torchlightWidthAngle) * torchlightHeightDefault;
-          hctx.lineTo(endx, endy);
-          //rounded corner of barrel
-          hctx.arc(endx-barrelCorner, endy-barrelCorner-extraamount, barrelCorner, 0.5 * Math.PI, 0, true); //-2 cuz barrel is slanted line
-          //line furthest from player
-          endx = Math.cos(-holeInArc) * radius;
-          endy = Math.sin(-holeInArc) * radius;
-          endx += Math.cos(-torchlightWidthAngle) * torchlightHeightDefault;
-          endy += Math.sin(-torchlightWidthAngle) * torchlightHeightDefault;
-          hctx.lineTo(endx, endy);
-        //rounded corner of barrel
-          hctx.arc(endx-barrelCorner, endy+barrelCorner+extraamount, barrelCorner, 2 * Math.PI, 1.5 * Math.PI, true); //27 instead of 25 cuz barrel is slanted line
-          //line back player towards
-          endx = Math.cos(-holeInArc) * radius;
-          endy = Math.sin(-holeInArc) * radius;
-          hctx.lineTo(endx, endy);
-          hctx.restore();
-          
-        }
-      
-        for (var i = 0; i < barrelsDarkness.length; i++) {
-            let thisAngle = barrelsDarkness[i];
-            let previousAngle = barrelsDarkness[i-1]
-            if (i == 0){
-              previousAngle = barrelsDarkness[barrelsDarkness.length-1]
-            }
-            let barrelHeight = correspondingBarrelHeight[thisAngle]*player.width
-            torchlightHeightDefault = circleWidth/4*3/45*barrelHeight+crDarknessSize;
-            drawBarrelDarkness(thisAngle*Math.PI/180, previousAngle*Math.PI/180)
-        }
-      
-        hctx.closePath();
-        hctx.restore();
-      
-        hctx.fillStyle = "white";//make a hole in the darkness
-        hctx.fill();
-        hctx.restore();
-        
-        //create the second inner circle
-        circleWidth = player.width * 4;
-        barrelCorner = player.width/2;//radius of rounded corner
-        hctx.globalCompositeOperation='source-over';
-        hctx.fillStyle = "rgba(0,0,0,.4)";
-        hctx.fillRect(0,0,hcanvas.width,hcanvas.height)
-      
-        hctx.save();
-        hctx.translate(hcanvas.width/2, hcanvas.height/2);//bottom left of screen
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back after scaling
-        hctx.globalCompositeOperation='destination-out';//'erase' the darkness
-        hctx.beginPath();
-        hctx.save();
-        hctx.translate(canvas.width / 2, canvas.height / 2);
-        playerAngle = clientAngle;
-        if (player.autorotate == "yes" || player.fastautorotate == "yes"){
-          playerAngle = player.angle;
-        }
-        hctx.rotate(playerAngle - (90 * Math.PI) / 180);
-        
-        //the torchlight
-        holeInArc = 0.1 * Math.PI;
-        radius = circleWidth+crDarknessSize;
-        extraamount /= 2;//if there is a spike at the corner of the barrel, change this value
-      
-        for (var i = 0; i < barrelsDarkness.length; i++) {
-            let thisAngle = barrelsDarkness[i];
-            let previousAngle = barrelsDarkness[i-1]
-            if (i == 0){
-              previousAngle = barrelsDarkness[barrelsDarkness.length-1]
-            }
-            let barrelHeight = correspondingBarrelHeight[thisAngle]*player.width
-            torchlightHeightDefault = (circleWidth + player.width*2)/4*3/45*barrelHeight+crDarknessSize;
-            drawBarrelDarkness(thisAngle*Math.PI/180, previousAngle*Math.PI/180)
-        }
-        
-        hctx.closePath();
-        hctx.restore();
-        hctx.fillStyle = "white";
-        hctx.fill();
-        
-        if (darknessGrowth == "yes"){
-          crDarknessSize+=0.2;
-          if (crDarknessSize >= 50){
-            darknessGrowth = "no";
-          }
-        }
-        else{
-          crDarknessSize-=0.2;
-          if (crDarknessSize <= 0){
-            darknessGrowth = "yes";
-          }
-        }
-      
-        hctx.restore();
-        hctx.globalCompositeOperation='source-over';
-      }
+                ctx.clearRect(0, 0, canvas.width, canvas.height); //clear screen so can redraw
+                hctx.clearRect(0, 0, hcanvas.width, hcanvas.height); //clear screen so can redraw
+                //shake canvas if touch portal
+                let prevShakeYN = shakeYN;//this one doesnt change later on
+                if (shakeYN == "yes") {
+                  ctx.save();
+                  let dx = Math.random() * 20 * (1 - shakeIntensity) - 10 * (1 - shakeIntensity);
+                  let dy = Math.random() * 20 * (1 - shakeIntensity) - 10 * (1 - shakeIntensity);
+                  //-10 at the end so that the chosen number has a range of between -10 and 10
+                  //shake intensity 0 means that players is at center of portal
+                  ctx.translate(dx, dy);
+                }
+                else if (slightshake == "yes"){
+                  if (slightshakeIntensity<0){
+                    slightshake = "no";
+                  }
+                  else{
+                    ctx.save();
+                    let dx = Math.random() * 10 * slightshakeIntensity - 5 * slightshakeIntensity;
+                    let dy = Math.random() * 10 * slightshakeIntensity - 5 * slightshakeIntensity;
+                    ctx.translate(dx, dy);
+                    slightshakeIntensity-=0.1;
+                  }
+                }
+     
+                //interpolate the player's position first
+                lerpDrawnX = 0;
+                lerpDrawnY = 0;
+                if (objects.player && oldobjects.player && interpolatedobjects.player){
+                  interpolatedobjects.player[playerstring] = JSON.parse(JSON.stringify(objects.player[playerstring]));
+                  simpleLerpPos(objects.player[playerstring],oldobjects.player[playerstring]);
+                  px = lerpDrawnX;//needed for drawing stuff
+                  py = lerpDrawnY;
+                }
+                else{
+                  px = player.x;
+                  py = player.y;
+                }
 
-      if (mobile == "yes") {
-        //mobile joystick controls
-        hctx.fillStyle = "rgba(69,69,69,.5)";
-        let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
-        let resizeDiffY = 1/window.innerHeight*hcanvas.height;
-        hctx.save();
-        hctx.translate(
-          hcanvas.width / 2 + joystick1.xFromCenter,
-          hcanvas.height / 2 + joystick1.yFromCenter
-        );
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        
-        //first joystick
-        hctx.beginPath();
-        hctx.arc(
-          0,
-          0,
-          joystick1.size,
-          0,
-          2 * Math.PI
-        );
-        hctx.fill();
-        
-        hctx.restore();
-        hctx.save();
-        hctx.translate(
-          hcanvas.width / 2 + joystick2.xFromCenter,
-          hcanvas.height / 2 + joystick2.yFromCenter
-        );
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        
-        //second joystick
-        hctx.beginPath();
-        hctx.arc(
-          0,
-          0,
-          joystick2.size,
-          0,
-          2 * Math.PI
-        );
-        hctx.fill();
-        
-        hctx.restore();
-        //circle at thumb when using joystick
-        hctx.fillStyle = "rgba(0,0,0,.5)";
-        if (touches[0].state!="no"){
-          //calculate position on joystick
-          
-          //get angle of touch from joystick
-          //position of touch
-          let ex = touches[0].xpos/window.innerWidth*hcanvas.width;
-          let ey = touches[0].ypos/window.innerHeight*hcanvas.height;
-          //position of joystick
-          let cx;
-          let cy;
-          let radius;
-          if (touches[0].state=="moving"){
-            cx = hcanvas.width / 2 + joystick1.xFromCenter;
-            cy = hcanvas.height / 2 + joystick1.yFromCenter;
-            radius = joystick1.size;
-          }
-          else{
-            cx = hcanvas.width / 2 + joystick2.xFromCenter;
-            cy = hcanvas.height / 2 + joystick2.yFromCenter;
-            radius = joystick2.size;
-          }
-          let dy = ey - cy;
-          let dx = ex - cx;
-          let theta = -Math.atan2(dy, dx) + 90/180*Math.PI;
-          
-          dx = radius * Math.sin(theta) + cx;
-          dy = radius * Math.cos(theta) + cy;
-          
-          hctx.save();
-          hctx.translate(
-            cx,
-            cy
-          );
-          hctx.scale(1,resizeDiffY/resizeDiffX);
-          
-          hctx.beginPath();
-          hctx.arc(
-            dx - cx,
-            dy - cy,
-            joystick2.size/2,
-            0,
-            2 * Math.PI
-          );
-          hctx.fill();
-          
-          hctx.restore();
-        }
-        if (touches[1].state!="no"){
-          //calculate position on joystick
-          
-          //get angle of touch from joystick
-          //position of touch
-          let ex = touches[1].xpos/window.innerWidth*hcanvas.width;
-          let ey = touches[1].ypos/window.innerHeight*hcanvas.height;
-          //position of joystick
-          let cx;
-          let cy;
-          let radius;
-          if (touches[1].state=="moving"){
-            cx = hcanvas.width / 2 + joystick1.xFromCenter;
-            cy = hcanvas.height / 2 + joystick1.yFromCenter;
-            radius = joystick1.size;
-          }
-          else{
-            cx = hcanvas.width / 2 + joystick2.xFromCenter;
-            cy = hcanvas.height / 2 + joystick2.yFromCenter;
-            radius = joystick2.size;
-          }
-          let dy = ey - cy;
-          let dx = ex - cx;
-          let theta = -Math.atan2(dy, dx) + 90/180*Math.PI;
-          
-          dx = radius * Math.sin(theta) + cx;
-          dy = radius * Math.cos(theta) + cy;
-          
-          hctx.save();
-          hctx.translate(
-            cx,
-            cy
-          );
-          hctx.scale(1,resizeDiffY/resizeDiffX);
-          
-          hctx.beginPath();
-          hctx.arc(
-            dx - cx,
-            dy - cy,
-            joystick2.size/2,
-            0,
-            2 * Math.PI
-          );
-          hctx.fill();
-          
-          hctx.restore();
-        }
-      }
+                //now we are drawing the game area
+                if (playerstring != "error") {//checks if server has already sent player's id to client
+                  drawAreaX = canvas.width / 2 - px; //needed for mouse movement
+                  drawAreaY = canvas.height / 2 - py;
+                }
+                //COLOR OF AREA OUTSIDE PLAYABLE AREA
+                if (gamemode == "dune") {
+                  ctx.fillStyle = "#fcdcbb";
+                } else if (gamemode == "cavern") {
+                  ctx.fillStyle = "#010101";
+                } else if (gamemode == "sanctuary") {
+                  ctx.fillStyle = "#404040";
+                } else if (gamemode == "crossroads") {
+                  ctx.fillStyle = "#1f1f1f";
+                } else {
+                  ctx.fillStyle = "#bebebe";
+                }
+                ctx.fillRect(0, 0, canvas.width, canvas.height); //drawing background
+                //COLOR OF PLAYABLE AREA
+                if (gamemode == "dune") {
+                  ctx.fillStyle = "#ffead4";
+                } else if (gamemode == "cavern") {
+                  ctx.fillStyle = "#141414";
+                } else if (gamemode == "sanctuary") {
+                  ctx.fillStyle = "#595959";
+                } else if (gamemode == "crossroads") {
+                  ctx.fillStyle = "#303030";
+                } else {
+                  ctx.fillStyle = "#CDCDCD";
+                }
+                ctx.fillRect(
+                  canvas.width / 2 - px / clientFovMultiplier,
+                  canvas.height / 2 - py / clientFovMultiplier,
+                  MAP_WIDTH / clientFovMultiplier,
+                  MAP_WIDTH / clientFovMultiplier
+                ); //drawing area
+
+                if (gamemode == "2 Teams") {//draw team base
+                  var baseSize = 1500;
+                  let firstColor = teamColors[0];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    MAP_WIDTH / clientFovMultiplier
+                  );
+                  firstColor = teamColors[1];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    MAP_WIDTH / clientFovMultiplier
+                  );
+                }
+                if (gamemode == "4 Teams") {//draw team base
+                  var baseSize = 1500;
+                  let firstColor = teamColors[0];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";//c7bccf
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier
+                  );
+                  firstColor = teamColors[1];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier
+                  );
+                  firstColor = teamColors[2];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier
+                  );
+                  
+
+                  firstColor = teamColors[3];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier
+                  );
+                }
+                if (gamemode == "Tank Editor"){//draw safe zone
+                  ctx.fillStyle = safeZoneColor;
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier /2 - safeZone / clientFovMultiplier /2,
+                    canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier /2 - safeZone / clientFovMultiplier /2,
+                    safeZone / clientFovMultiplier,
+                    safeZone / clientFovMultiplier
+                  );
+                }
+
+                //drawin grid lines
+                ctx.beginPath();
+                ctx.lineWidth = 1; //thickness of grid
+                var gridHeight = 30 / clientFovMultiplier;
+                if (gamemode == "dune") {
+                  ctx.strokeStyle = "#edddc5";
+                } else if (gamemode == "cavern") {
+                  ctx.strokeStyle = "#242424";
+                  gridHeight = 80 / clientFovMultiplier;
+                } else if (gamemode == "sanctuary") {
+                  ctx.strokeStyle = "#363636";
+                  ctx.lineWidth = 3 / clientFovMultiplier;
+                } else if (gamemode == "crossroads") {
+                  ctx.strokeStyle = "rgba(18, 18, 18, .5)";
+                  gridHeight = 80 / clientFovMultiplier;
+                  ctx.lineWidth = 3; //thickness of grid
+                } else {
+                  ctx.lineWidth = 4; //thickness of grid
+                  gridHeight = 24 / clientFovMultiplier;
+                  ctx.strokeStyle = "rgba(180, 180, 180, .2)";
+                }
+
+                //How does drawing the grid lines work: the equation below is to calculate the negative of the closest number to drawAreaX that is divisible by gridHeight, with drawAreaX referring to the distance from left side of screen to arena, and gridHeight is distance between lines drawn. By calculating this, we can find out the position to start drawing the first line on the left side of the screen, producing the effect of the grid moving in the opposite direction of the user. Need to be opposite, that's why negative in equation. Because the lines are drawn relative to the left and top of arena, that's why the lines are always drawn exactly on the left and top of arena on screen, unless people disconnect or connect, resulting in change og arena size.
+                //for x: -gridHeight-(-drawAreaX%gridHeight)
+                //for y: -gridHeight-(-drawAreaY%gridHeight)
+                //edit: instead of using drawAreaX, use (canvas.width/2 - player.x/fov) for accurate grid drawing
+                if (player.fovMultiplier < 10) {
+                  //dont draw grid lines if field of vision is high, to prevent lag from drawing too many grid lines
+                  for (let x = -gridHeight - (-(canvas.width / 2 - px / clientFovMultiplier) % gridHeight); x < canvas.width; x += gridHeight) {
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                  }
+                  for (let y = -gridHeight - (-(canvas.height / 2 - py / clientFovMultiplier) % gridHeight); y < canvas.height; y += gridHeight) {
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                  }
+                  ctx.stroke();
+                }
+                
+                
+                //drawing the objects that are sent from the server, order of drawings are already changed by the server, so if you want something to be below another thing, change the order of adding to the object list in the server code, not the client code
+                for (const id in portalparticles) {
+                  //potral particle list first, so that it is drawn at the bottom
+                  let thisobject = portalparticles[id];
+                  thisobject.x += Math.cos(thisobject.angle) * thisobject.speed*deltaTime;
+                  thisobject.y += Math.sin(thisobject.angle) * thisobject.speed*deltaTime;
+                  drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
+                  thisobject.timer-=1*deltaTime;
+                  if (thisobject.timer < 0) {
+                    delete portalparticles[id];
+                  }
+                };
+                shakeYN = "no"; //reset portal screen shake
+                shakeIntensity = 1;
+                Object.keys(portals).forEach((id) => {
+                  //draw portals. portals not inside object list because all need to be sent for the minimap anyways
+                  if (!portalwidths.hasOwnProperty(id)) {
+                    portalwidths[id] = portals[id].width; //this is used for keeping track the sizes of portal that changes when player enter and exit a portal
+                  } else {
+                    //if this portal already existed
+                    if (portalwidths[id] < portals[id].width + portals[id].peopleTouch * 45) { //45px portal size growth per person
+                      portalwidths[id] += 3;
+                    } else if (portalwidths[id] > portals[id].width + portals[id].peopleTouch * 45) {
+                      portalwidths[id] -= 3;
+                    }
+                  }
+                  var thisobject = portals[id];
+                  thisobject.type = "portal";
+                  let oldtimer = thisobject.timer;
+                  if (oldportals[id]){
+                    thisobject.timer = lerpProperty(thisobject,oldportals[id],'timer')
+                  }
+                  drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
+                  thisobject.timer = oldtimer;//reset timer to original (not lerped)
+
+                  //check for collision with portal to check if shake canvas or not
+                  var DistanceBetween = Math.sqrt(
+                    (player.x - thisobject.x) * (player.x - thisobject.x) +
+                      (player.y - thisobject.y) * (player.y - thisobject.y)
+                  ); //calculate distance between center of portal and player
+                  if (DistanceBetween <= player.width + thisobject.width * 3) {
+                    //portal width times 3 so that shake will be felt from a distance
+                    shakeYN = "yes";
+                    if (DistanceBetween / (player.width + thisobject.width * 3) < shakeIntensity) { //if new shake intensity higher than shake intensity from anither portal
+                      shakeIntensity = DistanceBetween / (player.width + thisobject.width * 3); //ranges from 1 to 0, 0 meaning player is at center of portal
+                    }
+                  }
+                });
+      
+                //smoothly change player's fov
+                if (player.fovMultiplier){
+                  if (clientFovMultiplier != player.fovMultiplier){
+                    clientFovMultiplier += (player.fovMultiplier - clientFovMultiplier)/5;
+                    if (Math.abs(clientFovMultiplier - player.fovMultiplier)<0.001){
+                      clientFovMultiplier = player.fovMultiplier;
+                    }
+                  }
+                }
+      
+      
+                for (const type in objects) {
+                  for (const id in objects[type]) {
+                    var thisobject = JSON.parse(JSON.stringify(objects[type][id]));
+                    if (!interpolatedobjects[type]){
+                      interpolatedobjects[type] = {};
+                    }
+                    interpolatedobjects[type][id] = JSON.parse(JSON.stringify(objects[type][id]));
+                    if (oldobjects[type]){
+                      if (oldobjects[type][id]){
+                        //do lerping if not new object
+                        if (id != playerstring){//not the player
+                          if (type != "bullet" || thisobject.bulletType != "bullet"){
+                            lerpDrawnX = thisobject.x;
+                            lerpDrawnY = thisobject.y;
+                            simpleLerpPos(thisobject,oldobjects[type][id])
+                            thisobject.x = lerpDrawnX;
+                            thisobject.y = lerpDrawnY;
+                            if (type == "player" || type == "shape" || type == "def"){//lerp angle
+                              thisobject.angle = simpleLerpAngle(thisobject,oldobjects[type][id])
+                              if (type == "shape"){
+                                thisobject.health = lerpProperty(thisobject,oldobjects[type][id],'health')
+                              }
+                            }
+                          }
+                        }
+                        else{
+                          //camera is lerped
+                          simpleLerpPos(thisobject,oldobjects[type][id])
+                          thisobject.x = px;
+                          thisobject.y = py;
+                          thisobject.angle = simpleLerpAngle(thisobject,oldobjects[type][id])
+                        }
+                      }
+                    }
+                    thisobject.type = type;
+                    interpolatedobjects[type][id].x = thisobject.x;
+                    interpolatedobjects[type][id].y = thisobject.y;
+                    if (type == "bullet" && thisobject.bulletType == "bullet"){
+                      //server wont send bullet updates all the time if the bullet is a bullet and not a trap or drone or minion etc.
+                      //client move bullet yourself
+                      //console.log(id + ',' + objects[type][id].x + ',1')
+                      objects[type][id].y += Math.sin(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
+                      objects[type][id].x += Math.cos(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
+                      //console.log(id + ',' + objects[type][id].x + ',2')
+                    }
+                    drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
+                  }
+                }
+                
+                  for (const id in objects.player) {
+                    var thisobject = JSON.parse(JSON.stringify(objects.player[id]));
+                    if (oldobjects.player){
+                      if (oldobjects.player[id]){
+                        //do lerping if not new object
+                        if (id != playerstring){//not the player
+                          lerpDrawnX = thisobject.x;
+                          lerpDrawnY = thisobject.y;
+                          simpleLerpPos(thisobject,oldobjects.player[id])
+                          thisobject.x = lerpDrawnX;
+                          thisobject.y = lerpDrawnY;
+                          thisobject.angle = simpleLerpAngle(thisobject,oldobjects.player[id])
+                        }
+                        else{
+                          simpleLerpPos(thisobject,oldobjects.player[id])
+                          thisobject.x = px;
+                          thisobject.y = py;
+                        }
+                      }
+                    }
+                    thisobject.type = "player";
+                    interpolatedobjects.player[id].x = thisobject.x;
+                    interpolatedobjects.player[id].y = thisobject.y;
+                    drawplayerdata(thisobject, id, playerstring, auraWidth); //draw the obcjects on the canvas
+                  }
+                
+                listofdeadobjects.forEach((object) => {
+                  //dead object array
+                  if (object.bulletType != "aura") {
+                    if (object.type == "bullet") {
+                      //check if bullet belongs to player. usually server does this, but not for dead objects
+                      if (object.ownerId == playerstring) {
+                        object.ownsIt = "yes";
+                      }
+                    }
+                    else if (object.type == "shape"){
+                      if (shapeHealthBar.hasOwnProperty(object.id)){//for health bar width animation when die
+                        if (shapeHealthBar[object.id] > 0){
+                          shapeHealthBar[object.id]-=5*deltaTime;
+                        }
+                        if (shapeHealthBar[object.id] < 0){
+                          shapeHealthBar[object.id] = 0;
+                        }
+                      }
+                    }
+                    if (object.hasOwnProperty("deadanimation")) {
+                      object.deadanimation--; //animate object
+                      //object.width += 5;
+                      object.width *= 1.1;
+                      if (object.deadOpacity > 0) {
+                        object.deadOpacity -= 0.2;
+                      }
+                      if (object.deadOpacity < 0) {
+                        object.deadOpacity = 0;
+                      }
+                      if (object.deadanimation < 0) {
+                        //remove object from array
+                        var index = listofdeadobjects.indexOf(object);
+                        if (index > -1) {
+                          // only splice array when item is found
+                          listofdeadobjects.splice(index, 1); // 2nd parameter means remove one item only
+                        }
+                      }
+                    } else {
+                      object.deadanimation = 5; //duration of dead animation
+                      object.deadOpacity = 1;
+                    }
+                    drawobjects(object, object.id, playerstring, auraWidth); //draw the objects on the canvas
+                  }
+                });
+                Object.keys(radparticles).forEach((id) => {
+                  //radiant particle list last so that it is drawn at the top
+                  var thisobject = radparticles[id];
+                  drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
+                  thisobject.x += Math.cos(thisobject.angle) * thisobject.speed*deltaTime;
+                  thisobject.y += Math.sin(thisobject.angle) * thisobject.speed*deltaTime;
+                  thisobject.timer-=1*deltaTime;
+                  if(thisobject.source == "dune") {
+                    thisobject.angle = (((-90 * Math.PI) / 180) + (thisobject.angle * 199)) / 200;
+                  }
+
+                  if (thisobject.timer < 0) {
+                    delete radparticles[id];
+                  }
+                });
+
+                // FPS counter update
+                frameCount++;
+                const now = performance.now();
+                if (now >= lastFpsUpdate + 1000) { // Update every second
+                    fps = frameCount;
+                    frameCount = 0;
+                    lastFpsUpdate = now;
+                    fpsCounter.textContent = `FPS: ${fps}`;
+                    fpsCounter.className = 
+                      fps >= 60 ? 'high' : 
+                      fps >= 30 ? 'medium' : 'low';
+                }
+
+                if (gamemode == "dune") {
+                  //spawn random particles if in dune
+                  if (spawnduneparticle == "yes"){
+                    var choosing = Math.floor((Math.random() * 10)/clientFovMultiplier); //choose if particle spawn
+                    if (choosing <= 0) {
+                      //spawn a particle
+                      let angleRadians = (-30+Math.floor(Math.random() * 30) * Math.PI) / 180; //convert to radians
+                      var size = 50*(Math.floor(Math.random() * 3) + 1)-25;
+                      var randomDistFromCenterX = (Math.floor(Math.random() * canvas.width+size) - (canvas.width+size)/2)*clientFovMultiplier;
+                      var randomDistFromCenterY = (Math.floor(Math.random() * canvas.height+size) - (canvas.height+size)/2)*clientFovMultiplier;
+                      radparticles[particleID] = {
+                        angle: angleRadians,
+                        x: player.x + randomDistFromCenterX,// * Math.cos(angleRadians),
+                        y: player.y - randomDistFromCenterY,// * Math.sin(angleRadians),
+                        width: size,
+                        height: size,
+                        speed: 5,
+                        timer: 200,
+                        maxtimer: 200,
+                        color: `rgba(222, 152, 22, ${0.3/((size/50)+1)})`,
+                        outline: `rgba(0,0,0,${0.1/((size/50)+1)})`,
+                        type: "particle",
+                        source: "dune",
+                      };
+                      particleID++;
+                    }
+                  }
+                  //cover whole screen in darkness for dune
+                  ctx.fillStyle = "rgba(0,0,0,.2)"; //make background darker
+                  ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+                function anglecalc(cx, cy, ex, ey) {
+                  var dy = ey - cy ;
+                  var dx = cx - ex ;
+                  return Math.atan2(dx, dy) * 180 / Math.PI;
+                }
+                if (player.x && player.y){
+                  var rangeX = player.x-(MAP_WIDTH/2);
+                  var rangeY = player.y-(MAP_WIDTH/2);
+                }
+                else{
+                  var rangeX = 0;
+                  var rangeY = 0;
+                }
+                crossroadRadians = (crossroadRadians*29 + anglecalc(0, 0, rangeX, rangeY)+90) / 30;   
+                if(isNaN(crossroadRadians)) {
+                  crossroadRadians = anglecalc(0, 0, rangeX, rangeY)+90; // not really radians but ok
+                }
+
+                if (gamemode == "crossroads") {
+                  //spawn random particles if in crossroads
+                  if (spawncrossroadsparticle == "yes"){
+                    var choosing = Math.floor((Math.random() * 2)/clientFovMultiplier); //choose if particle spawn
+                    if (choosing <= 0) {
+                      //spawn a particle
+
+                      let angleRadians = crossroadRadians+ ((-30 + Math.floor(Math.random() * 60)));
+                      var size = 50*(Math.floor(Math.random() * 3) + 1)-25;
+                      var randomDistFromCenterX = (Math.floor(Math.random() * canvas.width+size) - (canvas.width+size)/2)*clientFovMultiplier;
+                      var randomDistFromCenterY = (Math.floor(Math.random() * canvas.height+size) - (canvas.height+size)/2)*clientFovMultiplier;
+                      radparticles[particleID] = {
+                        angle: angleRadians * Math.PI / 180,
+                        x: player.x + randomDistFromCenterX,// * Math.cos(angleRadians),
+                        y: player.y - randomDistFromCenterY,// * Math.sin(angleRadians),
+                        width: size,
+                        height: size,
+                        speed: 25,
+                        timer: 100,
+                        maxtimer: 100,
+                        color: `rgba(152, 152, 152, ${0.3})`,
+                        outline: `rgba(0,0,0,${0.1})`,
+                        type: "particle",
+                        source: "crossroads",
+                      };
+                      particleID++;
+                    }
+                  }
+                }
+
+                if (prevShakeYN == "yes" || slightshake == "yes") {
+                  ctx.restore();
+                }
+
+                if (gamemode == "crossroads") {
+                  //draw the darkness for crossroads
+                  //the rectangle (entire screen)
+                  hctx.fillStyle = "rgba(0,0,0,.7)";
+                  hctx.fillRect(0,0,hcanvas.width,hcanvas.height)
+                  
+                  if (barrelsDarkness.length == 0){//no barrels
+                    barrelsDarkness.push(0);//circle tourchlight
+                  }
+                
+                  hctx.save();
+                  hctx.translate(hcanvas.width/2, hcanvas.height/2);//bottom left of screen
+                  hctx.scale(1,resizeDiffY/resizeDiffX);
+                  hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back after scaling
+                  hctx.globalCompositeOperation='destination-out';//'erase' the darkness
+                  //let circleWidth = player.width * 4 + 50;
+                  let circleWidth = player.width * 6;
+                  //let barrelCorner = 25;//radius of rounded corner
+                  let barrelCorner = player.width;//radius of rounded corner
+                  hctx.beginPath();
+                  hctx.save();
+                  hctx.translate(canvas.width / 2, canvas.height / 2);
+                  let playerAngle = clientAngle;
+                  if (player.autorotate == "yes" || player.fastautorotate == "yes"){
+                    playerAngle = player.angle;
+                  }
+                  hctx.rotate(playerAngle - (90 * Math.PI) / 180);
+                
+                  let holeInArc = 0.15 * Math.PI;//angle towards edge of torchlight, same value as the value used to arc (code above this line)
+                  let radius = circleWidth+crDarknessSize;
+                  //calculate the endpoint of the arc around the player
+                  let torchlightHeightDefault = circleWidth/4*3+crDarknessSize;//size of torchlight
+                  let torchlightWidthAngle = 10/180*Math.PI;//angle of torchlight
+                  let endx;
+                  let endy;
+                  let extraamount = player.width/25*4.2;//if there is a spike at the corner of the barrel, change this value
+                
+                  function drawBarrelDarkness(angle,prevAngle){
+                    if (prevAngle == 0){
+                      prevAngle = 2 * Math.PI;
+                    }
+                    hctx.arc(0, 0, circleWidth+crDarknessSize, prevAngle-holeInArc, angle+holeInArc, true); //draw an incomplete circle (circle around the tank)
+                
+                    //the torchlight
+                    
+                    hctx.save();
+                    hctx.rotate(angle);
+                    endx = Math.cos(holeInArc) * radius;
+                    endy = Math.sin(holeInArc) * radius;
+                    endx += Math.cos(torchlightWidthAngle) * torchlightHeightDefault;
+                    endy += Math.sin(torchlightWidthAngle) * torchlightHeightDefault;
+                    hctx.lineTo(endx, endy);
+                    //rounded corner of barrel
+                    hctx.arc(endx-barrelCorner, endy-barrelCorner-extraamount, barrelCorner, 0.5 * Math.PI, 0, true); //-2 cuz barrel is slanted line
+                    //line furthest from player
+                    endx = Math.cos(-holeInArc) * radius;
+                    endy = Math.sin(-holeInArc) * radius;
+                    endx += Math.cos(-torchlightWidthAngle) * torchlightHeightDefault;
+                    endy += Math.sin(-torchlightWidthAngle) * torchlightHeightDefault;
+                    hctx.lineTo(endx, endy);
+                  //rounded corner of barrel
+                    hctx.arc(endx-barrelCorner, endy+barrelCorner+extraamount, barrelCorner, 2 * Math.PI, 1.5 * Math.PI, true); //27 instead of 25 cuz barrel is slanted line
+                    //line back player towards
+                    endx = Math.cos(-holeInArc) * radius;
+                    endy = Math.sin(-holeInArc) * radius;
+                    hctx.lineTo(endx, endy);
+                    hctx.restore();
+                    
+                  }
+                
+                  for (var i = 0; i < barrelsDarkness.length; i++) {
+                      let thisAngle = barrelsDarkness[i];
+                      let previousAngle = barrelsDarkness[i-1]
+                      if (i == 0){
+                        previousAngle = barrelsDarkness[barrelsDarkness.length-1]
+                      }
+                      let barrelHeight = correspondingBarrelHeight[thisAngle]*player.width
+                      torchlightHeightDefault = circleWidth/4*3/45*barrelHeight+crDarknessSize;
+                      drawBarrelDarkness(thisAngle*Math.PI/180, previousAngle*Math.PI/180)
+                  }
+                
+                  hctx.closePath();
+                  hctx.restore();
+                
+                  hctx.fillStyle = "white";//make a hole in the darkness
+                  hctx.fill();
+                  hctx.restore();
+                  
+                  //create the second inner circle
+                  circleWidth = player.width * 4;
+                  barrelCorner = player.width/2;//radius of rounded corner
+                  hctx.globalCompositeOperation='source-over';
+                  hctx.fillStyle = "rgba(0,0,0,.4)";
+                  hctx.fillRect(0,0,hcanvas.width,hcanvas.height)
+                
+                  hctx.save();
+                  hctx.translate(hcanvas.width/2, hcanvas.height/2);//bottom left of screen
+                  hctx.scale(1,resizeDiffY/resizeDiffX);
+                  hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back after scaling
+                  hctx.globalCompositeOperation='destination-out';//'erase' the darkness
+                  hctx.beginPath();
+                  hctx.save();
+                  hctx.translate(canvas.width / 2, canvas.height / 2);
+                  playerAngle = clientAngle;
+                  if (player.autorotate == "yes" || player.fastautorotate == "yes"){
+                    playerAngle = player.angle;
+                  }
+                  hctx.rotate(playerAngle - (90 * Math.PI) / 180);
+                  
+                  //the torchlight
+                  holeInArc = 0.1 * Math.PI;
+                  radius = circleWidth+crDarknessSize;
+                  extraamount /= 2;//if there is a spike at the corner of the barrel, change this value
+                
+                  for (var i = 0; i < barrelsDarkness.length; i++) {
+                      let thisAngle = barrelsDarkness[i];
+                      let previousAngle = barrelsDarkness[i-1]
+                      if (i == 0){
+                        previousAngle = barrelsDarkness[barrelsDarkness.length-1]
+                      }
+                      let barrelHeight = correspondingBarrelHeight[thisAngle]*player.width
+                      torchlightHeightDefault = (circleWidth + player.width*2)/4*3/45*barrelHeight+crDarknessSize;
+                      drawBarrelDarkness(thisAngle*Math.PI/180, previousAngle*Math.PI/180)
+                  }
+                  
+                  hctx.closePath();
+                  hctx.restore();
+                  hctx.fillStyle = "white";
+                  hctx.fill();
+                  
+                  if (darknessGrowth == "yes"){
+                    crDarknessSize+=0.2;
+                    if (crDarknessSize >= 50){
+                      darknessGrowth = "no";
+                    }
+                  }
+                  else{
+                    crDarknessSize-=0.2;
+                    if (crDarknessSize <= 0){
+                      darknessGrowth = "yes";
+                    }
+                  }
+                
+                  hctx.restore();
+                  hctx.globalCompositeOperation='source-over';
+                }
+
+                if (mobile == "yes") {
+                  //mobile joystick controls
+                  hctx.fillStyle = "rgba(69,69,69,.5)";
+                  let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
+                  let resizeDiffY = 1/window.innerHeight*hcanvas.height;
+                  hctx.save();
+                  hctx.translate(hcanvas.width / 2 + joystick1.xFromCenter,hcanvas.height / 2 + joystick1.yFromCenter);
+                  hctx.scale(1,resizeDiffY/resizeDiffX);
+                  
+                  //first joystick
+                  hctx.beginPath();
+                  hctx.arc(0, 0, joystick1.size, 0, 2 * Math.PI);
+                  hctx.fill();
+                  
+                  hctx.restore();
+                  hctx.save();
+                  hctx.translate(hcanvas.width / 2 + joystick2.xFromCenter,hcanvas.height / 2 + joystick2.yFromCenter);
+                  hctx.scale(1,resizeDiffY/resizeDiffX);
+                  
+                  //second joystick
+                  hctx.beginPath();
+                  hctx.arc(0, 0, joystick2.size, 0, 2 * Math.PI);
+                  hctx.fill();
+                  
+                  hctx.restore();
+                  //circle at thumb when using joystick
+                  hctx.fillStyle = "rgba(0,0,0,.5)";
+                  if (touches[0].state!="no"){
+                    //calculate position on joystick
+                    
+                    //get angle of touch from joystick
+                    //position of touch
+                    let ex = touches[0].xpos/window.innerWidth*hcanvas.width;
+                    let ey = touches[0].ypos/window.innerHeight*hcanvas.height;
+                    //position of joystick
+                    let cx;
+                    let cy;
+                    let radius;
+                    if (touches[0].state=="moving"){
+                      cx = hcanvas.width / 2 + joystick1.xFromCenter;
+                      cy = hcanvas.height / 2 + joystick1.yFromCenter;
+                      radius = joystick1.size;
+                    }
+                    else{
+                      cx = hcanvas.width / 2 + joystick2.xFromCenter;
+                      cy = hcanvas.height / 2 + joystick2.yFromCenter;
+                      radius = joystick2.size;
+                    }
+                    let dy = ey - cy;
+                    let dx = ex - cx;
+                    let theta = -Math.atan2(dy, dx) + 90/180*Math.PI;
+                    
+                    dx = radius * Math.sin(theta) + cx;
+                    dy = radius * Math.cos(theta) + cy;
+                    
+                    hctx.save();
+                    hctx.translate(cx,cy);
+                    hctx.scale(1,resizeDiffY/resizeDiffX);
+                    
+                    hctx.beginPath();
+                    hctx.arc(dx - cx,dy - cy,joystick2.size/2,0,2 * Math.PI);
+                    hctx.fill();
+                    
+                    hctx.restore();
+                  }
+                  if (touches[1].state!="no"){
+                    //calculate position on joystick
+                    
+                    //get angle of touch from joystick
+                    //position of touch
+                    let ex = touches[1].xpos/window.innerWidth*hcanvas.width;
+                    let ey = touches[1].ypos/window.innerHeight*hcanvas.height;
+                    //position of joystick
+                    let cx;
+                    let cy;
+                    let radius;
+                    if (touches[1].state=="moving"){
+                      cx = hcanvas.width / 2 + joystick1.xFromCenter;
+                      cy = hcanvas.height / 2 + joystick1.yFromCenter;
+                      radius = joystick1.size;
+                    }
+                    else{
+                      cx = hcanvas.width / 2 + joystick2.xFromCenter;
+                      cy = hcanvas.height / 2 + joystick2.yFromCenter;
+                      radius = joystick2.size;
+                    }
+                    let dy = ey - cy;
+                    let dx = ex - cx;
+                    let theta = -Math.atan2(dy, dx) + 90/180*Math.PI;
+                    
+                    dx = radius * Math.sin(theta) + cx;
+                    dy = radius * Math.cos(theta) + cy;
+                    
+                    hctx.save();
+                    hctx.translate(cx,cy);
+                    hctx.scale(1,resizeDiffY/resizeDiffX);
+                    
+                    hctx.beginPath();
+                    hctx.arc(dx - cx,dy - cy,joystick2.size/2,0,2 * Math.PI);
+                    hctx.fill();
+                    
+                    hctx.restore();
+                  }
+                }
 
       //note: ctx requires /clientFovMultiplier, but hctx does not because the canvas size does not change
       //drawing upgrade buttons
-      function buttondraw(
-        buttonNumber,
-        one,
-        two,
-        three,
-        four,
-        five,
-        six,
-        seven
-      ) {
+      function buttondraw(buttonNumber,one,two,three,four,five,six,seven) {
         if ((ignorebuttonw.ignore == "no" || buttonNumber>7) && (ignorebuttonb.ignore == "no" || buttonNumber<=7)){//if not ignore
         let thisbutton = upgradeButtons[buttonNumber];
         thisbutton.tankRotate += 1.5*deltaTime; //make tank in upgrade button rotate
@@ -15109,7 +10328,7 @@ function changeGamemode(dir){
       }
 
       //lvl 60 upgrade
-      else if (gamelocation == "sanctuary" && ((player.level >= 60 && player.tankTypeLevel < 60)||(player.level >= 70 && player.tankTypeLevel < 70))) {
+      else if (gamemode == "sanctuary" && ((player.level >= 60 && player.tankTypeLevel < 60)||(player.level >= 70 && player.tankTypeLevel < 70))) {
         //if in sanctuary, then upgrade button appear
         if (player.level >= 60 && player.tankTypeLevel < 60) {
           //if player can upgrade but havent
@@ -15719,7 +10938,7 @@ function changeGamemode(dir){
             );
           }
         }
-      } else if (gamelocation == "sanctuary" && ((player.level >= 60 && player.bodyTypeLevel < 60)||(player.level >= 70 && player.bodyTypeLevel < 70))) {
+      } else if (gamemode == "sanctuary" && ((player.level >= 60 && player.bodyTypeLevel < 60)||(player.level >= 70 && player.bodyTypeLevel < 70))) {
         if (player.level >= 60 && player.bodyTypeLevel < 60) {
           //if player can upgrade but havent
           if (player.bodyType == "primordial") {
@@ -18077,7 +13296,7 @@ function changeGamemode(dir){
 
       //drawing minimap
       if (openedUI=="no"){//in tank editor, only draw when editor is closed
-        if (gamelocation != "crossroads" && gamelocation != "cavern") {
+        if (gamemode != "crossroads" && gamemode != "cavern") {
           //dont draw anything on minimap for crossroads and cavern
           let mmX = 10;
           let mmY = 10;
@@ -18094,7 +13313,7 @@ function changeGamemode(dir){
 
           hctx.fillRect(mmX, mmY, mmSize, mmSize);//MINIMAP
 
-          if (gamelocation == "2tdm") {//draw team base
+          if (gamemode == "2 Teams") {//draw team base
             var baseSize = 1500;
             let firstColor = teamColors[0];
             //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
@@ -18110,7 +13329,7 @@ function changeGamemode(dir){
             else if (firstColor == "purple"){
               hctx.fillStyle = "#c0b3c9";
             }
-            hctx.fillRect(mmX, mmY, baseSize / gameAreaSize * mmSize, mmSize);
+            hctx.fillRect(mmX, mmY, baseSize / MAP_WIDTH * mmSize, mmSize);
             firstColor = teamColors[1];
             //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
             if (firstColor == "red"){
@@ -18125,10 +13344,10 @@ function changeGamemode(dir){
             else if (firstColor == "purple"){
               hctx.fillStyle = "#c0b3c9";
             }
-            hctx.fillRect(mmX + mmSize - baseSize / gameAreaSize * mmSize, mmY, baseSize / gameAreaSize * mmSize, mmSize);
+            hctx.fillRect(mmX + mmSize - baseSize / MAP_WIDTH * mmSize, mmY, baseSize / MAP_WIDTH * mmSize, mmSize);
           }
 
-          if (gamelocation == "4tdm") {//draw team base
+          if (gamemode == "4 Teams") {//draw team base
             var baseSize = 1500;
             let firstColor = teamColors[0];
             //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
@@ -18144,7 +13363,7 @@ function changeGamemode(dir){
             else if (firstColor == "purple"){
               hctx.fillStyle = "#c0b3c9";
             }
-            hctx.fillRect(mmX, mmY, baseSize / gameAreaSize * mmSize,  baseSize / gameAreaSize * mmSize);
+            hctx.fillRect(mmX, mmY, baseSize / MAP_WIDTH * mmSize,  baseSize / MAP_WIDTH * mmSize);
             firstColor = teamColors[1];
             //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
             if (firstColor == "red"){
@@ -18159,7 +13378,7 @@ function changeGamemode(dir){
             else if (firstColor == "purple"){
               hctx.fillStyle = "#c0b3c9";
             }
-            hctx.fillRect(mmX + mmSize - baseSize / gameAreaSize * mmSize, mmY, baseSize / gameAreaSize * mmSize, baseSize / gameAreaSize * mmSize);
+            hctx.fillRect(mmX + mmSize - baseSize / MAP_WIDTH * mmSize, mmY, baseSize / MAP_WIDTH * mmSize, baseSize / MAP_WIDTH * mmSize);
             firstColor = teamColors[2];
             //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
             if (firstColor == "red"){
@@ -18174,7 +13393,7 @@ function changeGamemode(dir){
             else if (firstColor == "purple"){
               hctx.fillStyle = "#c0b3c9";
             }
-            hctx.fillRect(mmX + mmSize - baseSize / gameAreaSize * mmSize, mmY + mmSize - baseSize / gameAreaSize * mmSize, baseSize / gameAreaSize * mmSize, baseSize / gameAreaSize * mmSize);
+            hctx.fillRect(mmX + mmSize - baseSize / MAP_WIDTH * mmSize, mmY + mmSize - baseSize / MAP_WIDTH * mmSize, baseSize / MAP_WIDTH * mmSize, baseSize / MAP_WIDTH * mmSize);
             firstColor = teamColors[3];
             //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
             if (firstColor == "red"){
@@ -18189,21 +13408,21 @@ function changeGamemode(dir){
             else if (firstColor == "purple"){
               hctx.fillStyle = "#c0b3c9";
             }
-            hctx.fillRect(mmX, mmY + mmSize - baseSize / gameAreaSize * mmSize, baseSize / gameAreaSize * mmSize, baseSize / gameAreaSize * mmSize);
+            hctx.fillRect(mmX, mmY + mmSize - baseSize / MAP_WIDTH * mmSize, baseSize / MAP_WIDTH * mmSize, baseSize / MAP_WIDTH * mmSize);
           }
 
           hctx.strokeRect(mmX, mmY, mmSize, mmSize);//MINIMAP OUTLINE
 
-          if (gamelocation == "tank-editor"){//draw safe zone
+          if (gamemode == "Tank Editor"){//draw safe zone
             hctx.fillStyle = safeZoneColor;
-            hctx.fillRect(mmX + mmSize/2 - safeZone/gameAreaSize*mmSize/2, mmY + mmSize/2 - safeZone/gameAreaSize*mmSize/2, safeZone/gameAreaSize*mmSize, safeZone/gameAreaSize*mmSize);
+            hctx.fillRect(mmX + mmSize/2 - safeZone/MAP_WIDTH*mmSize/2, mmY + mmSize/2 - safeZone/MAP_WIDTH*mmSize/2, safeZone/MAP_WIDTH*mmSize, safeZone/MAP_WIDTH*mmSize);
           }
 
 
           //player location on minimap
           hctx.fillStyle = "rgb(90,90,90)"; //player always darkgrey triangle on minimap
           hctx.save();
-          hctx.translate((player.x / gameAreaSize) * mmSize + mmX, (player.y / gameAreaSize) * mmSize + mmY);
+          hctx.translate((player.x / MAP_WIDTH) * mmSize + mmX, (player.y / MAP_WIDTH) * mmSize + mmY);
           hctx.rotate(clientAngle);
           hctx.beginPath();//draw triangle
           let h = 10;
@@ -18231,8 +13450,8 @@ function changeGamemode(dir){
             }
             hctx.beginPath();
             hctx.arc(
-              (portal.x / gameAreaSize) * mmSize + mmX,
-              (portal.y / gameAreaSize) * mmSize + mmY,
+              (portal.x / MAP_WIDTH) * mmSize + mmX,
+              (portal.y / MAP_WIDTH) * mmSize + mmY,
               4,
               0,
               2 * Math.PI
@@ -18746,7 +13965,7 @@ function changeGamemode(dir){
         hctx.lineWidth = 4;
         hctx.textAlign = "center";
         hctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-        if (teleportingLocation=="arena" || teleportingLocation=="2tdm" || teleportingLocation=="4tdm"){
+        if (teleportingLocation=="Free For All" || teleportingLocation=="2 Teams" || teleportingLocation=="4 Teams"){
           if (oldteleportingLocation == "crossroads"){
             hctx.strokeText("Returning from The Crossroads...", hcanvas.width/2, hcanvas.height/2);
             hctx.fillText("Returning from The Crossroads...", hcanvas.width/2, hcanvas.height/2);
@@ -18760,8 +13979,8 @@ function changeGamemode(dir){
             hctx.fillText("Returning from The Dunes...", hcanvas.width/2, hcanvas.height/2);
           }
           else{
-            hctx.strokeText("Returning to the "+teleportingLocation+"...", hcanvas.width/2, hcanvas.height/2);
-            hctx.fillText("Returning to the "+teleportingLocation+"...", hcanvas.width/2, hcanvas.height/2);
+            hctx.strokeText("Exiting The "+oldteleportingLocation+"...", hcanvas.width/2, hcanvas.height/2);
+            hctx.fillText("Exiting The "+oldteleportingLocation+"...", hcanvas.width/2, hcanvas.height/2);
           }
         }
         else if (teleportingLocation=="sanc"){
@@ -18813,66 +14032,43 @@ function changeGamemode(dir){
         }
       }
 
-      if (showDebug == "yes" && openedUI=="no") {
-        //draw debug
-        hctx.fillStyle = "white";
-        hctx.font = "900 " + 19.5/resizeDiffX + "px Roboto";
-        hctx.strokeStyle = "black";
-        hctx.lineWidth = 4/resizeDiffX;
-        hctx.textAlign = "left";
-        hctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-        hctx.save();
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        hctx.translate(20,195);
+      if (debugState == "open" && openedUI=="no") {
+        //update debug
+        let pingdiv = document.getElementById("ping");
         if (latency < 250) {
-          hctx.fillStyle = "white";
+          pingdiv.style.color = "white";
         } else if (latency < 350) {
-          hctx.fillStyle = "orange";
+          pingdiv.style.color = "orange";
         } else if (latency < 600) {
-          hctx.fillStyle = "red";
+          pingdiv.style.color = "red";
         } else {
-          hctx.fillStyle = "#800000";
+          pingdiv.style.color = "#800000";
         }
-        hctx.strokeText("Ping: " + latency + "ms", 0, 0);
-        hctx.fillText("Ping: " + latency + "ms", 0, 0);
-        if (fpsvalue > 25) {
-          hctx.fillStyle = "white";
-        } else if (fpsvalue > 20) {
-          hctx.fillStyle = "orange";
-        } else {
-          hctx.fillStyle = "red";
-        }
-        hctx.strokeText("FPS: " + fpsvalue, 0, 38/resizeDiffX);
-        hctx.fillText("FPS: " + fpsvalue, 0, 38/resizeDiffX);
+        pingdiv.textContent = "Ping: " + latency + "ms";
+        let servertick = document.getElementById("servertick");
         if (serverCodeTime < 40) {
-          hctx.fillStyle = "white";
+          servertick.style.color = "white";
         } else if (serverCodeTime < 50) {
-          hctx.fillStyle = "orange";
+          servertick.style.color = "orange";
         } else {
-          hctx.fillStyle = "red";
+          servertick.style.color = "red";
         }
-        hctx.strokeText("Server Tick Time: " + serverCodeTime + "ms", 0, 76/resizeDiffX);
-        hctx.fillText("Server Tick Time: " + serverCodeTime + "ms", 0, 76/resizeDiffX);
-        if (clientTick < 5) {
-          hctx.fillStyle = "white";
-        } else if (clientTick < 10) {
-          hctx.fillStyle = "orange";
-        } else {
-          hctx.fillStyle = "red";
-        }
-        hctx.strokeText("Client Tick Time: " + clientTick + "ms", 0, 114/resizeDiffX);
-        hctx.fillText("Client Tick Time: " + clientTick + "ms", 0, 114/resizeDiffX);
-        hctx.fillStyle = "white";
-        hctx.strokeText("Player Count: " + playerCount, 0, 152/resizeDiffX);
-        hctx.fillText("Player Count: " + playerCount, 0, 152/resizeDiffX);
-        hctx.strokeText("Global Player Count: " + globalPlayerCount, 0, 190/resizeDiffX);
-        hctx.fillText("Global Player Count: " + globalPlayerCount, 0, 190/resizeDiffX);
-        hctx.strokeText("Dimension: " + gamelocation, 0, 228/resizeDiffX);
-        hctx.fillText("Dimension: " + gamelocation, 0, 228/resizeDiffX);
-        let region = "Virginia #1";
-        hctx.strokeText("Region: " + region, 0, 266/resizeDiffX);
-        hctx.fillText("Region: " + region, 0, 266/resizeDiffX);
+        servertick.textContent = "Server Tick Time: " + serverCodeTime + "ms";
 
+        if (clientTick > 5){
+          clientTickDiv.style.color = "yellow";
+        }
+        else if (clientTick > 15){
+          clientTickDiv.style.color = "red";
+        }
+        else{
+          clientTickDiv.style.color = "white";
+        }
+        clientTickDiv.textContent = "Client Tick Time: " + Math.round(clientTick * 10) / 10 + "ms";//change to 1 decimal place
+        clientTick = performance.now() - starting;
+        document.getElementById("playercount").textContent = "Player Count: " + playerCount;
+        document.getElementById("globalplayercount").textContent = "Global Player Count: " + globalPlayerCount;
+        document.getElementById("dimension").textContent = "Dimension: " + gamemode;
 
         //shownBandwidth
         if (shownBandwidth < 15000) {
@@ -18889,35 +14085,28 @@ function changeGamemode(dir){
         }
         var newbandwidth = shownBandwidth / 1000; //__k bytes
         newbandwidth = Math.round(newbandwidth * 100) / 100;//2 decimal place
-        hctx.strokeText("Bandwidth: " + newbandwidth + "kb/s", 0, 304/resizeDiffX);
-        hctx.fillText("Bandwidth: " + newbandwidth + "kb/s", 0, 304/resizeDiffX);
-        hctx.fillStyle = "white";
+        //hctx.strokeText("Bandwidth: " + newbandwidth + "kb/s", 0, 304/resizeDiffX);
+        //hctx.fillText("Bandwidth: " + newbandwidth + "kb/s", 0, 304/resizeDiffX);//re-add next time
         var numberOfObjectsDrawn = 0;
         for (const type in objects) {
           for (const item in objects[type]) {
             numberOfObjectsDrawn++;
           }
         }
-        hctx.strokeText("Drawn Entities: " + numberOfObjectsDrawn, 0, 342/resizeDiffX);
-        hctx.fillText("Drawn Entities: " + numberOfObjectsDrawn, 0, 342/resizeDiffX);
-        hctx.restore();
-        hctx.lineJoin = "miter"; //change it back
+        document.getElementById("drawnEntities").textContent = "Drawn Entities: " + numberOfObjectsDrawn;
       }
     }
   //}, 30); //check every 30ms //dont use setinterval anymore
-
-
-      clientTick = Date.now() - starting; //client code runtime
+        requestAnimationFrame(screenDrawLoop);//chage this to request interval after figuring out how to call it and stop it
   }
 
-requestInterval(screenDrawLoop,10);//number refers to delay between redraws, e.g. 16 = 60fps
+//requestInterval(screenDrawLoop,10);//number refers to delay between redraws, e.g. 16 = 60fps
 
   //auto fill in previous name into text input field
-  if (localStorage.getItem("prevname")) {
-    const kittys = localStorage.getItem("prevname");
-    nameInput.value = kittys;
+  if (localStorage.prevname) {
+    nameInput.value = localStorage.prevname;
   }
-
+/*
   //sandbox
   //listen for enter presses to change tank properties
   var inputfield0 = document.getElementById("tank-name");
@@ -19661,111 +14850,7 @@ $('#bbUI').on('focusout', 'input', function(event) {
     }
   })
 //});
-//weapon upgrade tree
-var showUpgradeTree = "no";
-var upgradetreepos = -750; //current position of upgrade tree
-var upgradetreestart = -750; //start position
-var upgradetreeend = 165; //end position
-//body upgrade tree
-var showBodyUpgradeTree = "no";
-var bupgradetreepos = -750; //current position of upgrade tree
-var bupgradetreestart = -750; //start position
-var bupgradetreeend = 165; //end position
 
-var skillpointspos = -370; //current position of skill points bar
-var skillpointsstart = -370; //start position
-var skillpointsend = 155; //end position
-//skillpoints
-
-var closepopup = document.getElementById("closePopup");
-var changelogpopup = document.getElementById("changelogPopup");
-var changelogbutton = document.getElementById("changelog");
-var settingspopup = document.getElementById("settingsPopup");
-var settingsbutton = document.getElementById("settings");
-var closesettingspopup = document.getElementById("closeSettingsPopup");
-var wrlbpopup = document.getElementById("wrlbPopup");
-var wrlbbutton = document.getElementById("wrlb");
-var closewrlbpopup = document.getElementById("closewrlbPopup");
-var howToPlaybutton = document.getElementById("howToPlay");
-var setclosepopup = document.getElementById("closeAccountsPopup");
-var accountspopup = document.getElementById("accountsPopup");
-var accountsbutton = document.getElementById("accounts");
-var discordbutton = document.getElementById("discord");
-var redditbutton = document.getElementById("reddit");
-var tokeninput = document.getElementById("devtoken");
-//changelog close
-closepopup.onclick = function () {
-  changelogpopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "none";
-  document.getElementById("screenLighten").style.display = "block";
-  setTimeout(function () {
-    document.getElementById("screenLighten").style.display = "none";
-  }, 500); //after animation finish, make buttons below darkness clickable
-};
-//changelog open
-changelogbutton.onclick = function () {
-  changelogpopup.style.display = "block";
-  accountspopup.style.display = "none";
-  settingspopup.style.display = "none";
-  wrlbpopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "block";
-  document.getElementById("screenLighten").style.display = "none";
-};
-//accounts close
-setclosepopup.onclick = function () {
-  accountspopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "none";
-  document.getElementById("screenLighten").style.display = "block";
-  setTimeout(function () {
-    document.getElementById("screenLighten").style.display = "none";
-  }, 500); //after animation finish, make buttons below darkness clickable
-};
-//accounts open
-accountsbutton.onclick = function () {
-  accountspopup.style.display = "block";
-  changelogpopup.style.display = "none";
-  settingspopup.style.display = "none";
-  wrlbpopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "block";
-  document.getElementById("screenLighten").style.display = "none";
-};
-//settings close
-closesettingspopup.onclick = function () {
-  settingspopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "none";
-  document.getElementById("screenLighten").style.display = "block";
-  setTimeout(function () {
-    document.getElementById("screenLighten").style.display = "none";
-  }, 500); //after animation finish, make buttons below darkness clickable
-  updateSettings()
-};
-//settings open
-settingsbutton.onclick = function () {
-  settingspopup.style.display = "block";
-  accountspopup.style.display = "none";
-  changelogpopup.style.display = "none";
-  wrlbpopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "block";
-  document.getElementById("screenLighten").style.display = "none";
-};
-//wr close
-closewrlbpopup.onclick = function () {
-  wrlbpopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "none";
-  document.getElementById("screenLighten").style.display = "block";
-  setTimeout(function () {
-    document.getElementById("screenLighten").style.display = "none";
-  }, 500); //after animation finish, make buttons below darkness clickable
-};
-//wr open
-wrlbbutton.onclick = function () {
-  wrlbpopup.style.display = "block";
-  accountspopup.style.display = "none";
-  changelogpopup.style.display = "none";
-  settingspopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "block";
-  document.getElementById("screenLighten").style.display = "none";
-};
 //change radiant aura size when move slider in settings
 var slider = document.getElementById("radiantSizeRange");
 var output = document.getElementById("sizevalue");
@@ -19829,11 +14914,6 @@ function providedUsername() {
     accdesc = descGiven;
   }
 }
-
-//update fps
-let fpsvalue = 0;//the value shown
-let fpsvaluenow = 0;//changes
-setInterval(function () {fpsvalue = fpsvaluenow;fpsvaluenow = 0;}, 1000);//update fps every 1 second
 
 //tank editor
 //allowing to swap the object
@@ -19927,7 +15007,7 @@ function addBarrelDiv(first) {
       htmlObject.innerHTML = textnode;
       htmlObject.setAttribute("id", specialID);
       document.getElementById("btn"+specialID).before(htmlObject);//add before the delete barrel button
-  if (gamelocation=="tank-editor"){//prevent error which causes editor to not be able to open
+  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
     var packet = JSON.stringify(["barrel",specialID]);
     socket.send(packet)
   }
@@ -19973,7 +15053,7 @@ function addAssetDiv() {
   document.getElementById("assetUI").appendChild(htmlObject);
   document.getElementById("assets").innerHTML = "Assets (" + $("#assetUI").children().length + ")";//update barrel count on button
   assetnumberid++;
-  if (gamelocation=="tank-editor"){//prevent error which causes editor to not be able to open
+  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
     var packet = JSON.stringify(["asset",specialID]);
     socket.send(packet)
   }
@@ -20043,7 +15123,7 @@ function addBBDiv() {
       htmlObject.innerHTML = textnode;
       htmlObject.setAttribute("id", specialID);
       document.getElementById("btn"+specialID).before(htmlObject);//add before the delete barrel button
-  if (gamelocation=="tank-editor"){//prevent error which causes editor to not be able to open
+  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
     var packet = JSON.stringify(["bodybarrel",specialID]);
     socket.send(packet)
   }
@@ -20478,7 +15558,7 @@ function addCustomAssetDiv(id,barrel) {
 function delbar(e) {//barrel
   var par = $(event.target).parent();
   var parID = par.attr('id');
-  if (gamelocation=="tank-editor"){//prevent error which causes editor to not be able to open
+  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
     var packet = JSON.stringify(["delbarrel",parID]);//tell server to delete barrel
     socket.send(packet)
   }
@@ -20488,7 +15568,7 @@ function delbar(e) {//barrel
 function delass(e) {//asset
   var par = $(event.target).parent();
   var parID = par.attr('id');
-  if (gamelocation=="tank-editor"){//prevent error which causes editor to not be able to open
+  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
     var packet = JSON.stringify(["delasset",parID]);//tell server to delete barrel
     socket.send(packet)
   }
@@ -20498,7 +15578,7 @@ function delass(e) {//asset
 function delbb(e) {//bodybarrel
   var par = $(event.target).parent();
   var parID = par.attr('id');
-  if (gamelocation=="tank-editor"){//prevent error which causes editor to not be able to open
+  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
     var packet = JSON.stringify(["delbb",parID]);//tell server to delete barrel
     socket.send(packet)
   }
@@ -20518,7 +15598,7 @@ function duplicatebar(e){
       specialID += dataidgen[Math.floor(Math.random() * dataidgen.length)];
     }
   var buttonID = 'btn'+specialID;
-  if (gamelocation=="tank-editor"){//prevent error which causes editor to not be able to open
+  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
     var packet = JSON.stringify(["dupbarrel",parID, specialID]);//tell server to duplicate barrel
     socket.send(packet)
   }
@@ -20573,7 +15653,7 @@ function duplicateass(e){
       specialID += dataidgen[Math.floor(Math.random() * dataidgen.length)];
     }
   var buttonID = 'btn'+specialID;
-  if (gamelocation=="tank-editor"){//prevent error which causes editor to not be able to open
+  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
     var packet = JSON.stringify(["dupasset",parID, specialID]);//tell server to duplicate barrel
     socket.send(packet)
   }
@@ -20618,7 +15698,7 @@ function duplicatebb(e){
     }
   
   var buttonID = 'btn'+specialID;
-  if (gamelocation=="tank-editor"){//prevent error which causes editor to not be able to open
+  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
     var packet = JSON.stringify(["dupbb",parID, specialID]);//tell server to duplicate barrel
     socket.send(packet)
   }
@@ -20771,12 +15851,11 @@ function getTankCode(){
 function changepfp(weapon){
   alert(weapon)
 }
-
+*/
 window.onbeforeunload = () =>  {
-    if(gameStart >= 1){//in game (show confirmation)
+    if(state == "ingame"){//in game (show confirmation)
        return true
     }else{//dont show
        return null
     }
 }//confirmation dialog when close tab
-        }
