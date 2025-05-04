@@ -1946,7 +1946,7 @@ console.log(bodyupgrades);
         }
         function loadChangelog() {//copied from scenexe2 code, thanks cobalt
           return new Promise(function (AS) {
-            fetch("/changelog.txt").then(function (AU) {
+            fetch("./changelog.txt").then(function (AU) {
               return AU.text();
             }).then(function (AU) {
               (function (AP) {
