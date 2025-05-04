@@ -1,0 +1,33 @@
+Next update: copy homescreen code from rocketer, add settings (add option to turn off health bars when max health, add option to change debug text color to #ccc) + import the settings function
+ADD BODY COLLISION, and make sure to this.healingValue = 0;//reset the healing delay time
+make bigger shapes rarer, and add special shapes, e.g. gem
+add funny mode where shapes rotate super fast
+add a limit of 60fps to prevent good devices from having fast animations (or add delta like rocketer)
+remember to add numberOfObjectsDrawn to all the drawing functions
+
+Next update: add scenexe tanks (keep rocketer tanks for legacy), add body collision, remove and respwn shapes when play again
+
+add feature where clicking on the gamemode in the home screen will show the list of gamemodes, and add animation for gamemode region on gamemode select div
+
+FIX CLCIKING PLAY BUTTON AFTER EXITING DEATH SCREEN
+
+REMOVE STAR SHAPE (both client and server)
+MSGPACKR
+
+In the future: add world record leaderboard and featured youtubers, add accounts (fix the code for the divs) + add ach notif, re-add tank editor divs (and line 2942: editedtank and exportcode) + remove them on death (line 3012)
+Add chat, which removes in deathscreen function
+Change shape xp to scenexe xp system
+After adding upgrading to PvE, remember to make death screen show correct upgrade tanks, and add a rotating canvas drawing of the tank
+Tomorrow: add closing popup animation (settimeout remove)
+
+Why does client need to disconnect and reconnect if it dies and respawn in same server? (check returntohomescreen function)
+
+change clientfovmultiplier to fov?
+check if can reduce mobile mouse movement setinterval from every 30ms to 60ms
+CHANGE PVE requestanimframe to requestInterval
+add quickchat functionality (when you open quick chat and press 1, 2, 3 or 4, then close the quick chat and send the message) + save quick chats to local storage
+quickchat fix flipped text (both the quick chat and the number)
+
+stopped at line 8052
+
+Note: this file is for my reference, isnt used ingame
