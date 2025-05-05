@@ -3,7 +3,6 @@ ALPHA 0.0.19 - May 5, 2025
 - (note: you cannot access the FFA server unless I open it)
 - Error notifications now show up as modals
 - Fixed some bugs
-- testing push
 
 ALPHA 0.0.18 - May 4, 2025
 - Officially merged the old rocketer code with the new code!
