@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+    <meta name="application-name" content="rocketer.io" />
+    <meta name="description" content="Scenexe.io but bad." />
+    <title>Offline Rocketer</title>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://cdn.glitch.global/92cf917f-5d16-4251-8140-4f5181b6661b/favicon.png?v=1679492856483"
+    />
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #222;
+            text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
+            font-weight: 700;
+            font-family: "Roboto", sans-serif;
+            color: white;
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* Internet Explorer/Edge */
+            user-select: none;         /* Standard */
+        }
+        canvas {
+            display: block;
+            background-color: transparent;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+      
+        /*Scrollbars*/
+      ::-webkit-scrollbar {
+          width: 1vmin;
+      }
+
+      ::-webkit-scrollbar-track {
+          background: #00000000;
+      }
+
+      ::-webkit-scrollbar-thumb {
+          background: #7a7a7a;
+          border-radius: 1vmin;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+          background: #8f8f8f;
+      }
+      
+        #gameCanvas {
+          background-color: grey;
+        }
+        #changelogPreview {
+            position: absolute;
+            top: 2%;
+            left: 1%;
+            font-size: 2vmin;
+            font-weight: 900;
+            line-height: 1.5;
+            width: 35vw;/*maximum width of the text to prevent long lines of changelog on home screen, and also for mobile users*/
+        }
+        #hometitle {
+            position: absolute;
+            top: 4.5%;
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 7vmin;
+            letter-spacing: 0.2vmin;
+            text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+        }
+        #subtitle {
+            position: absolute;
+            top: calc(6.5% + 3.5vmin);
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 3.5vmin;
+            font-weight: 400;
+            letter-spacing: 0.2vmin;
+            text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+        }
+        #subsubtitle {
+            position: absolute;
+            top: calc(55% - 20vmin);
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 5.5vmin;
+            font-weight: 400;
+            letter-spacing: 0.2vmin;
+            text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+            font-family: "Yantramanav";
+        }
+        #gamemodeSelector {
+            position: absolute;
+            top: calc(55% - 11vmin);
+            left: 50%;
+            height: 12vmin;
+            width: 39.5vmin;
+            transform: translateY(-50%) translateX(-50%);
+            background-color: #a2a2a2;
+            /*background-image: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 50%, rgba(225,225,225,0.5) 51%);/*create a lighter shade for the top part of the button, #D82BCF*/
+            font-size: 4vmin;
+            font-weight: 900;
+            font-family: "Roboto", sans-serif;
+            border: .5vmin solid black;
+            border-radius: 1vmin;
+            white-space: nowrap;
+            text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+            transition: all .3s ease-out;
+        }
+        #gamemodeSelectorLighterColor {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 50%;
+            width: 100%;
+            background-color: #c0c0c0;
+            border-radius: 0.5vmin;
+            white-space: nowrap;
+            transition: all .3s ease-out;
+        }
+        #gamemodeTitle {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            transition: font-size .3s ease-out;
+        }
+        #gamemodeTitle:hover {
+            font-size: 4.5vmin;
+            cursor: pointer;
+        }
+        #gamemodeTitleAnimation {
+            position: absolute;
+            top: 25%;
+            left: -50%;
+            opacity: 0;/*hide it until animation occurs (this allows two gamemode words to appear during animation when you click the arrow button left or right)*/
+            transform: translateY(-50%) translateX(-50%);
+        }
+        #gamemodeTitle.animatePrev{/*change to previous gamemode*/
+          animation-name: fadeOutOldGamemodePrev;
+          animation-duration: .5s;
+        }
+        #gamemodeTitle.animateNext{/*change to next gamemode*/
+          animation-name: fadeOutOldGamemodeNext;
+          animation-duration: .5s;
+        }
+        #gamemodeTitleAnimation.animatePrev{
+          animation-name: fadeInNewGamemodePrev;
+          animation-duration: .5s;
+        }
+        #gamemodeTitleAnimation.animateNext{
+          animation-name: fadeInNewGamemodeNext;
+          animation-duration: .5s;
+        }
+        @keyframes fadeOutOldGamemodePrev {
+          0% {
+            left: 50%;
+            opacity: 1;
+          }
+          50% {
+            opacity: 0;
+          }
+          100% {
+            left: 100%;
+            opacity: 0;
+          }
+        }
+        @keyframes fadeOutOldGamemodeNext {
+          0% {
+            left: 50%;
+            opacity: 1;
+          }
+          50% {
+            opacity: 0;
+          }
+          100% {
+            left: 0%;
+            opacity: 0;
+          }
+        }
+        @keyframes fadeInNewGamemodePrev {
+          0% {
+            left: 0%;
+            opacity: 0;
+          }
+          50% {
+            opacity: 0.3;
+          }
+          100% {
+            left: 50%;
+            opacity: 1;
+          }
+        }
+        @keyframes fadeInNewGamemodeNext {
+          0% {
+            left: 100%;
+            opacity: 0;
+          }
+          50% {
+            opacity: 0.3;
+          }
+          100% {
+            left: 50%;
+            opacity: 1;
+          }
+        }
+        #regionWord {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 2vmin;
+        }
+        #regionTitle {
+            position: absolute;
+            top: 83%;
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 2.5vmin;
+        }
+        #gamemodeArrow1 {
+            position: absolute;
+            top: 25%;
+            left: 7%;
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 6vmin;
+            transition: all 0.3s ease-out;
+            cursor: pointer;
+        }
+        #gamemodeArrow2 {
+            position: absolute;
+            top: 25%;
+            left: 93%;
+            transform: translateY(-50%) translateX(-50%);
+            font-size: 6vmin;
+            transition: all 0.3s ease-out;
+            cursor: pointer;
+        }
+        #regionArrow1 {
+            position: absolute;
+            top: 83%;
+            left: 27%;
+            transform: translateY(-50%) translateX(-50%);
+            color: lightgrey;
+            transition: all 0.3s ease-out;
+            /*cursor: pointer;*/
+        }
+        #regionArrow2 {
+            position: absolute;
+            top: 83%;
+            left: 73%;
+            transform: translateY(-50%) translateX(-50%);
+            color: lightgrey;
+            transition: all 0.3s ease-out;
+            /*cursor: pointer;*/
+        }
+        #gamemodeArrow1:hover, #gamemodeArrow2:hover{
+          font-size: 7.5vmin;
+        }
+      /*
+        #regionArrow1:hover, #regionArrow2:hover{
+          font-size: 5.5vmin;
+        }*/
+        #ovalAnimation {/*the big black oval that yeets across your screen when you change gamemode*/
+          position: fixed;
+          top: -45%;
+          left: 100%;
+          width: 100%;
+          height: 190%;
+          background-color: black;
+          border-radius: 50%;
+        }
+        #ovalAnimation.left{
+          animation-name: yeetLeft;
+          animation-duration: 1s;
+        }
+        #ovalAnimation.right{
+          animation-name: yeetRight;
+          animation-duration: 1.2s;
+        }
+        @keyframes yeetLeft {
+          from {left: 100%;}
+          to {left: -100%;}
+        }
+        @keyframes yeetRight {
+          from {left: -100%;}
+          to {left: 100%;}
+        }
+        h3, h1{
+          padding: 0px;
+          margin: .5vmin;    
+        }
+        #openChangelogButton {
+          background:none;
+          border:none;
+          margin:0;
+          padding:0;
+          cursor: pointer;
+          color: rgb(0, 176, 225);
+          display: inline;/*make the button not jump to the next line, so that 'you can view the full changelog' is on the same line as 'here'*/
+        }
+        #openChangelogButton:hover {
+          text-decoration:underline;
+          color: rgb(0, 123, 255);
+        }
+        .otherlinks {
+          background:none;
+          border:none;
+          margin:0;
+          padding:0;
+          cursor: pointer;
+          font-size: 3vmin;
+          text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
+          font-weight: 900;
+          font-family: "Roboto", sans-serif;
+          color: rgb(0, 176, 225);
+          display: inline;/*make the button not jump to the next line*/
+        }
+        .otherlinks:hover {
+          text-decoration:underline;
+          color: rgb(0, 123, 255);
+        }
+        #not-signed-in-text {
+          position: fixed;
+          top: 1vmin;
+          right: 7vmin;
+          font-size: 3vmin;
+        }
+        .popUpBackground {
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            line-height: 1.5;
+            background-color: rgba(0, 0, 0, .5);
+            height: 100%;
+            width: 100%;
+            font-weight: 900;
+            display: none;
+            animation-name: opacityFade;
+            animation-duration: .5s;
+        }
+        .popUp {
+          padding: 2vmin 3vmin;
+          background-color: rgba(0, 0, 0, .5);
+          border: .5vmin solid black;
+          border-radius: .5vmin;
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translateY(-50%) translateX(-50%);
+          text-align: center;
+          animation-name: dropFromTop;
+          animation-duration: .5s;
+        }
+        .debug {/*debug closed by default*/
+            display: none;
+        }
+        .debugopen {/*change to this class to open the debug*/
+            position: absolute;
+            font-size: 2.1vmin;
+            left: 20px;
+            display: block;
+        }
+        #score {
+            position: absolute;
+            bottom: 3%;
+            left: 0%;
+            font-size: 2.5vmin;
+            text-align: center;
+            width: 100%;
+            display: none;
+        }
+        #mapSize {
+          top: calc(17% + 40vmin);
+        }
+        #botnumber{
+          top: calc(17% + 32vmin);
+        }
+        #shapenumber{
+          top: calc(17% + 36vmin);
+        }
+        #dimension {
+          top: calc(17% + 24vmin);
+        }
+        #drawnEntities {
+          top: calc(17% + 28vmin);
+        }
+        #ping {
+          top: 17%;
+        }
+        #playercount {
+          top: calc(17% + 16vmin);
+        }
+        #globalplayercount {
+          top: calc(17% + 20vmin);
+        }
+        #servertick {
+          top: calc(17% + 8vmin);
+        }
+        #clienttick {
+          top: calc(17% + 12vmin);
+        }
+        #fpsCounter {
+          position: absolute;
+          top: calc(17% + 4vmin);
+          left: 20px;
+          color: #ccc;
+          font-size: 2.1vmin;
+          display: none;
+        }
+        #fpsCounter.high { color: #2ecc71; }  /* Green for 60 FPS */
+        #fpsCounter.medium { color: #f39c12; } /* Yellow for 30-59 FPS */
+        #fpsCounter.low { color: #e74c3c; }   /* Red for <30 FPS */
+        #deathScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            font-weight: 900;
+            text-align: center;
+            line-height: 0.5;
+            animation-name: opacityFade;
+            animation-duration: .7s;
+        }
+        .death-content-top {
+            position: fixed;
+            left: 0;
+            bottom: 60%;
+            width: 100%;
+            height: 30%;
+            line-height: 1;
+            animation-name: deathScreenDropDown;
+            animation-duration: .7s;
+        }
+        @keyframes deathScreenDropDown {
+          from {bottom: 160%;}
+          to {bottom: 60%;}
+        }
+        .death-content-bottom {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 30%;
+            animation-name: deathScreenDropDown2;
+            animation-duration: .7s;
+        }
+        @keyframes deathScreenDropDown2 {
+          from {top: -50%;}
+          to {top: 50%;}
+        }
+
+        #deathScreen.hidden {
+          display: none;
+        }
+
+        .deathScreenButton {
+            background-color: white;
+            color: black;
+            padding: .7vmin 1vmin;
+            font-size: 2.3vmin;
+            font-weight: 900;
+            font-family: "Roboto", sans-serif;
+            border: .5vmin solid black;
+            border-radius: 1vmin;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .deathScreenButton:hover {
+            background-color: lightgrey;
+        }
+        #playButton {
+            position: absolute;
+            top: 55%;
+            left: calc(50% + 15.3vmin);
+            transform: translateY(-50%) translateX(-50%);
+            background-color: rgb(56, 183, 100);
+            color: white;
+            border: none;
+            padding: 0.5vmin;
+            height: 5vmin;
+            font-size: 3vmin;
+            font-weight: 900;
+            font-family: "Roboto", sans-serif;
+            border-radius: .5vmin;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            animation-name: opacityFade;/*whenever you change the display from none to block*/
+            animation-duration: .5s;
+            display: none;
+        }
+        #playButton:hover {
+            background-color: #48f083;
+        }
+        #respawnInfo {
+            position: absolute;
+            top: 61%;
+            left: 50%;
+            font-size: 2vmin;
+            transform: translateY(-50%) translateX(-50%);
+            display: none;
+        }
+        #connecting {
+          position: absolute;
+          top: 55%;
+          left: 50%;
+          transform: translateY(-50%) translateX(-50%);
+          text-align:center;
+          font-size: 6vmin;
+          font-weight: 900;
+          font-family: "Roboto", sans-serif;
+          text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+          animation-name: opacityFade;
+          animation-duration: .5s;
+        }
+        @keyframes opacityFade {
+          from {opacity: 0;}
+          to {opacity: 1;}
+        }
+        #display-name-input {
+            position: absolute;
+            top: 55%;
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
+            width: 28.5vmin;
+            padding-left: 1vmin;
+            padding-top: 1.1vmin;
+            padding-bottom: 1.1vmin;
+            padding-right: 10vmin;
+            font-size: 3vmin;
+            font-weight: 900;
+            font-family: "Roboto", sans-serif;
+            border: .5vmin solid black;
+            border-radius: 1vmin;
+            animation-name: opacityFade;
+            animation-duration: .5s;
+            display: none;
+        }
+        /*input box styling*/
+        input:focus {
+          outline: none;
+        }
+        ::placeholder {
+          color: #b9b9b9;
+          opacity: 1; /* Firefox */
+        }
+        ::-ms-input-placeholder { /* Edge 12 -18 */
+          color: #b9b9b9;
+        }
+      .hsFlexbox{/*for the button containers on the home screen*/
+        position: fixed;
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15vmin;
+        text-align: center;
+      }
+      #left-buttons {
+        left: 0.15vmin;
+        bottom: 0;
+      }
+      #top-buttons {
+        right: 0.15vmin;
+        top: 0;
+      }
+      #right-buttons {
+        right: 0.15vmin;
+        bottom: 0;
+        flex-direction: row;
+      }
+      #reddit {
+        background-color: #f94404;
+      }
+      #reddit:hover {
+        background-color: #f97b4b;
+      }
+      #discord {
+        background-color: #5b64ee;
+      }
+      #discord:hover {
+        background-color: #8b93f1;
+      }
+      #star {
+        background-color: #ffe449;
+      }
+      #star:hover {
+        background-color: #ffec80;
+      }
+      #person {
+        background-color: #0092c3;
+      }
+      #person:hover {
+        background-color: #4db3d5;
+      }
+      #settings {
+        background-color: #888888;
+      }
+      #settings:hover {
+        background-color: #acacac;
+      }
+      #feedback {
+        background-color: #b58eff;
+      }
+      #feedback:hover {
+        background-color: #cbb0ff;
+      }
+      #reportbug {
+        background-color: #fdcdac;
+      }
+      #reportbug:hover {
+        background-color: #fedcc5;
+      }
+      .hsButtons {
+        width: 5.8vmin;
+        height: 5.8vmin;
+        border: .5vmin solid black;
+        border-radius: 1vmin;
+        cursor: pointer;
+        color: white;
+        /*center the icon using flex, cuz text-align center doesnt work for the icon*/
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .hsButtons.text {
+        width: fit-content;
+        padding-left: 1vmin;
+        padding-right: 1vmin;
+        font-size: 3vmin;
+        font-weight: 700;
+        font-family: "Roboto", sans-serif;
+        text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+      }
+      .material-icons.hsIcons {
+        font-size: 4.5vmin;
+        text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+      }
+      .hsImage {
+        object-fit: contain;
+        width: 5vmin;
+        height: 5vmin;
+      }
+      
+      /* Tooltip text Right*/
+      .hsButtons .tooltiptext {
+        opacity: 0;
+        visibility: hidden; /*prevent tooltip itself (button div's child) from having hover detection, only button have hover detection*/
+        background-color: black;
+        color: #fff;
+        font-family: Roboto;
+        font-weight: 700;
+        font-size: 2vmin;
+        padding: 0 0.5vmin;
+        text-align: center;
+        border-radius: 0.5vmin;
+        position: absolute;
+        right: 0;
+        z-index: 1;
+        transition: all 0.2s ease-out;
+      }
+
+      /* Show the tooltip text when you mouse over the tooltip container */
+      .hsButtons:hover .tooltiptext {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-7.2vmin)
+      }
+      
+      /* Tooltip text Left*/
+      .hsButtons .tooltiptext2 {
+        opacity: 0;
+        background-color: black;
+        color: #fff;
+        font-family: Roboto;
+        font-weight: 700;
+        font-size: 2vmin;
+        padding: 0 0.5vmin;
+        text-align: center;
+        border-radius: 0.5vmin;
+        position: absolute;
+        left: 0;/*this is diff from right tooltip*/
+        z-index: 1;
+        transition: all 0.2s ease-out;
+      }
+      .hsButtons:hover .tooltiptext2 {
+        opacity: 1;
+        transform: translateX(7.2vmin)/*this also changed*/
+      }
+      
+      .modal{
+        line-height: 1.5;
+        font-size: 1vmin;
+        box-sizing: border-box;
+        background-color: rgba(0,0,0,.5);
+        border-radius: .5vmin;
+        box-shadow: 0 0 0 .4vmin #000;
+        color: white;
+        font-family: Roboto;
+        font-weight: 700;
+        left: 50%;
+        opacity: 1;
+        padding: 2vmin 3vmin;
+        position: fixed;
+        text-align: center;
+        top: 50%;
+        transform: translateY(-50%) translateX(-50%);
+        display:none;
+        animation-name: dropFromTop;
+        animation-duration: .5s;
+      }
+      @keyframes dropFromTop {
+          from {top: 0;}
+          to {top: 50%;}
+      }
+      .modalButton{
+        text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
+        font-weight: 900;
+        font-family: "Roboto", sans-serif;
+        color: #fff;
+        font-size: 1.8vmin;
+        border: .5vmin solid black;
+        border-radius: 1vmin;
+        background-color: rgba(0, 0, 0, .5);
+        padding: .5vmin 1vmin;
+        /*Hover transition*/
+        -webkit-transition: all 0.3s ease-out;
+        -moz-transition: all 0.3s ease-out;
+        -o-transition: all 0.3s ease-out;
+        transition: all 0.3s ease-out;
+        cursor: pointer;
+      }
+      .modalButton:hover {
+          background-color: rgba(69,69,69,.5);
+        }
+      .modalText{
+        box-sizing: border-box;
+        font-size: 3.5vmin;
+        margin-bottom: .5vmin;
+        margin-top: .5vmin;
+      }
+      .modalTextSmall{
+        box-sizing: border-box;
+        font-size: 2vmin;
+        font-weight: 400;
+        margin: 1vmin;
+        margin-bottom: .5vmin;
+        margin-top: .5vmin;
+        max-height: 70vh;
+        overflow-y: auto;
+        padding: 0.5vw;
+      }
+      #blackScreen {
+        position: absolute;
+        top: 0%;
+        left: 0%;
+        background-color: rgba(0, 0, 0, .5);
+        height: 100%;
+        width: 100%;
+        display: none;
+        animation-name: opacityFade;
+        animation-duration: .5s;
+      }
+      #loadingWords {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 100%;
+        font-size: 10vmin;
+        font-weight: 900;
+        text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+        line-height: 1.5;
+        display: none;
+        white-space: nowrap;/*prevent the text from wrapping to the next line*/
+      }
+      #loadingWords1 {
+        position: fixed;
+        left: 50%;
+        top: 47%;
+        transform: translateY(-50%) translateX(-50%);
+        animation-name: opacityFade;
+        animation-duration: 1s;
+        display: none;
+      }
+      #loadingWords2 {
+        position: fixed;
+        left: 50%;
+        top: 55%;
+        transform: translateY(-50%) translateX(-50%);
+        font-size: 2.5vmin;
+        animation-name: opacityFade;
+        animation-duration: 1s;
+        display: none;
+      }
+      #loadingWords3 {
+        position: fixed;
+        left: 50%;
+        top: 59%;
+        transform: translateY(-50%) translateX(-50%);
+        font-size: 2vmin;
+          animation-name: opacityFade;
+          animation-duration: 1s;
+        display: none;
+      }
+      
+      /*toggle switch in settings*/
+      /* The switch - the box around the slider */
+      .switch {
+        position: relative;
+        top: 1.5vmin;/*line-height only seem to affect the text, so we'll add this to shift it next to the text*/
+        display: inline-block;
+        width: 60px;
+        height: 25px;
+      }
+
+      /* Hide default HTML checkbox */
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+
+      input:checked + .slider {
+        background-color: #38b764;
+      }
+
+      input:focus + .slider {
+        box-shadow: 0 0 1px #38b764;
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(34px);
+      }
+
+      /* Rounded sliders */
+      .slider.round {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: black;
+        border: none;
+        transition: .4s;
+        border-radius: 25px;
+        height: 25px;
+        width: 60px;
+        opacity: 1;
+      }
+
+      .slider.round:before {
+        position: absolute;
+        content: "";
+        height: 17px;
+        width: 17px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+      }
+      
+      #notifFlex {
+        position: fixed;
+        top: 15px;
+        left: 0px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      /*above is to style the notification container, below is to style the notification*/
+      .alert {
+        color: white;
+        opacity: 0.75;
+        text-align: center;
+        font-weight: 700;
+        font-family: "Roboto", sans-serif;
+        border-radius: 1vmin;
+        font-size: 2.6vmin; /*the words change size based on browser width*/
+        padding: 0.25vmin 1.5vmin;
+        margin: 0.3vmin;
+        animation-name: animateNotif;
+        animation-duration: .5s;
+        transition-timing-function: ease-in-out;
+        text-shadow: none;
+      }
+      @keyframes animateNotif {/*fade in*/
+        0% {
+          opacity: 0;
+          max-height: 0;/*dont use height*/
+        }
+        100% {
+          opacity: 0.75;
+          max-height: 3.5vmin;/*set this value to a value that will be bigger than the height is*/
+        }
+      }
+      @keyframes animateNotifRemove {/*fade out*/
+        0% {opacity: 0.75;}
+        100% {opacity: 0;}
+      }
+      .translucentInput {
+          width: 28vmin;
+          padding: 0.5vmin;
+          font-size: 2vmin;
+          font-weight: 400;
+          font-family: "Roboto", sans-serif;
+          border: .5vmin solid black;
+          border-radius: 1vmin;
+          background-color: rgba(0, 0, 0, .5);
+          color: white;
+          margin-top: 1vmin;
+          margin-bottom: 1vmin;
+      }
+      .loader {
+        position: relative;
+        left: calc(50% - 1.5vmin);
+        border: 0.5vmin solid lightgrey;
+        border-radius: 50%;
+        border-top: 0.5vmin solid transparent;
+        width: 3vmin;
+        height: 3vmin;
+        margin-top: 2vmin;
+        animation: spin 2s linear infinite;
+        display: none;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .quickchatsectors {/*the container*/
+        height: 25vmin;/*height should be half of width to make a semicircle. this is assuming there is always more than 2 quickchats (scenexe had minimum 4)*/
+        width: 50vmin;
+        overflow: hidden;/*hide the 'cropped' part of the semicricle. it isnt actually cropped, just hidden outside when you rotate it*/
+        position: fixed;
+        transition: all 0.3s ease-out;
+        transform-origin: 50% 100%;/*for transform scale during transition*/
+        pointer-events: none; /* Disables hover on the parent */
+        font-size: 13vmin;
+        color: #3c3c3c;/*color of the cross*/
+        text-shadow: -0.5vmin -0.5vmin 0 #000, 0 -0.5vmin 0 #000, 0.5vmin -0.5vmin 0 #000, 0.5vmin 0 0 #000, 0.5vmin 0.5vmin 0 #000, 0 0.5vmin 0 #000, -0.5vmin 0.5vmin 0 #000, -0.5vmin 0 0 #000;
+        border-bottom: 0.5vmin solid black;/*need border bottom cuz the actual outline of the semicircle will get partially cropped out when you crop part of it to make a sector*/
+        border-image: linear-gradient(to left, #000 50%, transparent 50%) 100% 1;/*when you rotate the semicricle, only half of the bottom border is gone (the radius, not the diameter), so use border image to make half of the border transparent*/
+      }
+      .quickchatsectors::before {/*the semicircle, cropped into sector*/
+        height: inherit;
+        width: inherit;
+        position: absolute;
+        content: "";
+        border-radius: 25vmin 25vmin 0 0;/*THIS NEEDS TO BE EQUAL TO THE QUICKCHATSECTORS HEIGHT*/
+        background-color: rgba(0, 0, 0, .5);
+        outline: 0.5vmin solid black;/*dont use border, use outline (cuz the border will get cropped out when you crop out the unwanted angle to create the secctor)*/
+        outline-offset: -0.5vmin;/*should equal to the outline width above*/
+        transform-origin: 50% 100%;
+        transform: rotate(90deg); /*THIS SHOULD BE (180 - ANGLE OF SECTOR), e.g. a 40 degree sector should be rotate(140deg), reason is because the original sector is 180 degree, and this crops out the 140 degree*/
+        transition: all 0.3s ease-out;
+        pointer-events: auto; /* Re-enables hover ONLY on ::before */
+        cursor: pointer;
+      }
+      .quickchatsectors:hover::before {/*hover must be in front of before pseudo element because element cannot detect hover, only container*/
+        background-color: rgba(30, 30, 30, .5);/*only the pseudo element, not the whole container, cuz the container is a rectangle with no background*/
+      }
+      #quickchat1 {/*the top right quadrant*/
+        bottom: 50%;
+        left: calc(50% - 25vmin);
+        animation-name: growing1;/*animation when you open quick chat*/
+        animation-duration: .5s;
+      }
+      @keyframes growing1 {
+          from {transform: scale(0.1);opacity: 0;}
+          to {transform: scale(1);opacity:1;}
+      }
+      #quickchat1:hover:not(:has(.qcmore:hover)) {/*when mouse hover, scale the container UNLESS it is hovering over the three dots*/
+        transform: scale(1.1);
+      }
+      #quickchat2 {/*the top left quadrant*/
+        bottom: 50%;
+        left: calc(50% - 24.5vmin);
+        transform: scaleX(-1);
+        animation-name: growing2;
+        animation-duration: .5s;
+      }
+      @keyframes growing2 {
+          from {transform: scale(-0.1,0.1);opacity: 0;}
+          to {transform: scale(-1,1);opacity:1;}
+      }
+      #quickchat2:hover:not(:has(.qcmore:hover)) {
+        transform: scale(-1.1,1.1);/*because quickchat2 is horizontally flipped*/
+      }
+      #quickchat3 {/*bottom right*/
+        bottom: calc(50% + 0.5vmin);
+        left: calc(50% - 25vmin);
+        transform: scaleY(-1);
+        animation-name: growing3;
+        animation-duration: .5s;
+      }
+      @keyframes growing3 {
+          from {transform: scale(0.1,-0.1);opacity: 0;}
+          to {transform: scale(1,-1);opacity:1;}
+      }
+      #quickchat3:hover:not(:has(.qcmore:hover)) {
+        transform: scale(1.1,-1.1);/*because quickchat3 is vertically flipped*/
+      }
+      #quickchat4 {/*bottom left*/
+        bottom: calc(50% + 0.5vmin);
+        left: calc(50% - 24.5vmin);
+        transform: scale(-1);
+        animation-name: growing4;
+        animation-duration: .5s;
+      }
+      @keyframes growing4 {
+          from {transform: scale(-0.1);opacity: 0;}
+          to {transform: scale(-1);opacity:1;}
+      }
+      #quickchat4:hover:not(:has(.qcmore:hover)) {
+        transform: scale(-1.1);
+      }
+      .thecross {
+        position: absolute;
+        right: 8.5vmin;
+        top: 3.5vmin;
+      }
+      .actualqc {
+        position: absolute;
+        right: 12.5vmin;
+        top: 12.5vmin;
+        color: white;
+        font-size: 3vmin;
+        font-weight: 700;
+        text-align: center;
+        text-shadow: none;
+      }
+      .qcmore {
+        position: absolute;
+        right: 1vmin;
+        top: 1vmin;
+        color: lightgrey;
+        font-size: 3vmin;
+        line-height: 1.5vmin;
+        font-weight: 900;
+        text-align: center;
+        text-shadow: none;
+        pointer-events: auto; /* Re-enables hover*/
+        cursor: pointer;
+        background-color: rgba(0, 0, 0, .5);
+        border: 0.5vmin solid black;
+        border-radius: 50%;
+        width: 3vmin;
+        height: 3vmin;
+        transition: all 0.3s ease-out;
+        display: none;
+      }
+      .qcmore:hover {
+        transform: scale(1.5);
+        background-color: rgba(30, 30, 30, .5);
+      }
+      .qcnumber {
+        position: absolute;
+        right: 20vmin;
+        top: 20vmin;
+        color: white;
+        font-size: 3vmin;
+        text-shadow: none;
+        display: none;
+      }
+      .qcnumber.two {/*div is flipped, so text will be flipped too, so now we flip the text back*/
+        transform: scaleX(-1);
+      }
+      .qcnumber.three {
+        transform: scaleY(-1);
+      }
+      .qcnumber.four {
+        transform: scale(-1);
+      }
+      .actualqc.two {/*div is flipped, so text will be flipped too, so now we flip the text back*/
+        transform: scaleX(-1);
+      }
+      .actualqc.three {
+        transform: scaleY(-1);
+      }
+      .actualqc.four {
+        transform: scale(-1);
+      }
+      #quickchattext {
+        position: absolute;
+        top: 13vmin;
+        left: 50%;
+        transform: translateY(-50%) translateX(-50%);
+        font-size: 5vmin;
+        text-shadow: -0.5vmin -0.5vmin 0 #000, 0 -0.5vmin 0 #000, 0.5vmin -0.5vmin 0 #000, 0.5vmin 0 0 #000, 0.5vmin 0.5vmin 0 #000, 0 0.5vmin 0 #000, -0.5vmin 0.5vmin 0 #000, -0.5vmin 0 0 #000;
+        animation-name: falling;
+        animation-duration: .5s;
+      }
+      @keyframes falling {
+          from {top: 0;}
+          to {top: 13vmin;}
+      }
+      #quickchat {
+        display: none;
+      }
+
+      #chat {/*the chat box ingame*/
+        position: fixed;
+        top: 25.5vmin;
+        right: 0.5vmin;
+        width: 22.5vmin;
+        font-size: 1.9vmin;
+        font-weight: 400;
+        font-family: "Roboto", sans-serif;
+        padding: 0.6vmin 0.3vmin;
+        background-color: rgba(15,15,15, .75);
+        border: 0.23vw solid #000000;
+        border-radius: 1vmin;
+        color: white;
+      }
+    </style>
+</head>
+<body>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Yantramanav:wght@400&display=swap"
+      rel="stylesheet"
+    />
+    <canvas id="gameCanvas"></canvas>
+    <div id="score">Score: 0</div>
+    <div id="ping" class="debug">Ping: 0.0ms</div>
+    <div id="servertick" class="debug">Server Tick Time: 0.0ms</div>
+    <div id="clienttick" class="debug">Client Tick Time: ?.?ms</div>
+    <div id="playercount" class="debug">Player Count: 1</div>
+    <div id="globalplayercount" class="debug">Global Player Count: 1</div>
+    <div id="mapSize" class="debug">Map: 4000x4000</div>
+    <div id="fpsCounter">FPS: 0</div>
+    <div id="botnumber" class="debug">Number of enemies: 0</div>
+    <div id="shapenumber" class="debug">Number of shapes: 0</div>
+    <div id="dimension" class="debug">Dimension: PvE</div>
+    <div id="drawnEntities" class="debug">Drawn Entities: xx</div>
+    <input type="text" enterkeyhint="send" autocomplete="off" id="chat" placeholder="Click or press ENTER" onfocus="sendTypingIndicator()" onblur="removeTypingIndicator()" />
+    <div id="notifFlex"></div>
+    <div id="deathScreen" class="hidden">
+        <div class="death-content-top">
+            <h1 style="font-size: 5vmin;">You died!</h1>
+            <p style="font-size: 2.5vmin;">you were killed by <span id="killer">???</span></p>
+        </div>
+        <div class="death-content-bottom">
+            <p style="font-size: 2.5vmin;">Level <span id="finalLvl">???</span> <span id="playerUpgrade">???-???</span></p>
+            <br><p style="font-size: 2.5vmin;">Time Played: <span id="totalTime">??:??:??</span></p>
+            <p style="font-size: 2.5vmin;">Score: <span id="finalScore">0</span></p>
+            <p style="font-size: 2.5vmin;">Kills: <span id="totalKills">?</span></p>
+            <button id="restartButton" class="deathScreenButton">Play Again</button>
+            <button id="continueButton" class="deathScreenButton">Continue</button>
+        </div>
+    </div>
+    <canvas id="homeScreen"></canvas>
+    <div id="ovalAnimation"></div>
+    <div id="connecting">Connecting...</div>
+    <input enterkeyhint="go" id="display-name-input" placeholder="Display Name" maxlength="50">
+    <button id="playButton">PLAY</button>
+    <div id="changelogPreview">ALPHA ?.?.?<br>- Loading changelog...<br>you can view the full changelog here</div>
+    <div id="hometitle">rocketer 2.0</div>
+    <div id="subtitle">ALPHA ?.?.?</div>
+    <div id="subsubtitle">Gamemode</div>
+    <div id="gamemodeSelector">
+      <div id="gamemodeSelectorLighterColor"></div>
+        <div id="gamemodeTitle">Connecting...</div>
+        <div id="gamemodeTitleAnimation">Connecting...</div>
+        <div id="gamemodeArrow1" onclick="changeGamemode('p')">&lt;</div>
+        <div id="gamemodeArrow2" onclick="changeGamemode('n')">&gt;</div>
+        <div id="regionWord">Region</div>
+        <div id="regionTitle">???</div>
+        <div id="regionArrow1">&lt;</div>
+        <div id="regionArrow2">&gt;</div>
+    </div>
+    <div id="respawnInfo">You will respawn at level <span id="respawnLvl">0</span></div>
+    <div id="not-signed-in-text"><button id="loginButton" class="otherlinks">Log In</button> - <button id="signupButton" class="otherlinks">Sign Up</button></div>
+    <div id="quickchat">
+      <div id="quickchattext">Quick Chat</div>
+      <div id="quickchat1" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc"></span><div class="qcmore">...</div><span class="qcnumber">1</span></div>
+      <div id="quickchat2" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc two"></span><div class="qcmore">...</div><span class="qcnumber two">2</span></div>
+      <div id="quickchat3" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc three"></span><div class="qcmore">...</div><span class="qcnumber three">3</span></div>
+      <div id="quickchat4" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc four"></span><div class="qcmore">...</div><span class="qcnumber four">4</span></div>
+    </div>
+    <div id="left-buttons" class="hsFlexbox">
+      <button id="reddit" class="hsButtons">
+        <span class="material-icons hsIcons" onclick="window.open('https://www.reddit.com/r/rocketer/')">
+        reddit
+        </span>
+        <span class="tooltiptext2">Subreddit</span>
+      </button>
+      <button id="discord" class="hsButtons">
+        <span class="material-icons hsIcons" onclick="window.open('https://discord.com/invite/R83VfCXDFN')">
+        discord
+        </span>
+        <span class="tooltiptext2">Discord Server</span>
+      </button>
+    </div>
+    <div id="right-buttons" class="hsFlexbox">
+      <button id="feedback" class="hsButtons text" onclick="bugs()">Submit Feedback</button>
+      <button id="reportbug" class="hsButtons text" onclick="bugs()">Report Bugs</button>
+    </div>
+    <div id="top-buttons" class="hsFlexbox">
+      <button id="star" class="hsButtons">
+        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconStar.png?v=1745762544465" alt="Achievements" class="hsImage" onclick="accounts()">
+        <span class="tooltiptext">Achievements</span>
+      </button>
+      <button id="person" class="hsButtons">
+        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconProfile.png?v=1745762589212" alt="Profile" class="hsImage" onclick="accounts()">
+        <span class="tooltiptext">Account</span>
+      </button>
+      <button id="settings" class="hsButtons">
+        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconSettings.png?v=1745762626908" alt="Settings" class="hsImage" onclick="openSettings()">
+        <span class="tooltiptext">Settings</span>
+      </button>
+    </div>
+    <div id="full-changelog" class="popUpBackground">
+        <div id="changelogtextdiv" class="popUp">
+          <h1>Changelog</h1>
+          <hr />
+          <p style="overflow: auto; height: 70vh; width: 70vw; text-align: left; font-size: 2vmin;font-weight: 400;">- Loading changelog...</p>
+          <hr /><button id="exit-changelog" class="modalButton">BACK</button>
+        </div>
+    </div>
+    <div id="full-settings" class="popUpBackground">
+        <div id="settingstextdiv" class="popUp">
+          <h1>Settings</h1>
+          <hr />
+          <div style="overflow: auto; height: 73vh; width: 24.5vw; text-align: center; font-size: 2vmin;font-weight: 400;line-height:3;">
+            <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Names &amp; Chat</h3><hr>
+            Show Chat&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Names&emsp;<label class="switch"><input type="checkbox" settingid="showname" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Clickable Chat Links&emsp;<label class="switch"><input type="checkbox" settingid="clickablechatlinks" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Own Name&emsp;<label class="switch"><input type="checkbox" settingid="showownname" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Silent Typing&emsp;<label class="switch"><input type="checkbox" settingid="silenttyping" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Typing Indicators&emsp;<label class="switch"><input type="checkbox" settingid="showtypingindicators" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Debug Mode</h3><hr>
+            Show IDs&emsp;<label class="switch"><input type="checkbox" settingid="showids" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Tick Time&emsp;<label class="switch"><input type="checkbox" settingid="showticktime" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Server Name&emsp;<label class="switch"><input type="checkbox" settingid="showservername" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Player Count&emsp;<label class="switch"><input type="checkbox" settingid="showplayercount" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Global Player Count&emsp;<label class="switch"><input type="checkbox" settingid="showglobalplayercount" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show FPS&emsp;<label class="switch"><input type="checkbox" settingid="showfps" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Ping&emsp;<label class="switch"><input type="checkbox" settingid="showping" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Position&emsp;<label class="switch"><input type="checkbox" settingid="showposition" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Extra Performance Info&emsp;<label class="switch"><input type="checkbox" settingid="showextraperformanceinfo" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Hitboxes&emsp;<label class="switch"><input type="checkbox" settingid="showhitboxes" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Graphics</h3><hr>
+            Show Minimap&emsp;<label class="switch"><input type="checkbox" settingid="showminimap" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Percentages on Health Bars&emsp;<label class="switch"><input type="checkbox" settingid="showhealthpercentages" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Health Bar on HUD&emsp;<label class="switch"><input type="checkbox" settingid="showhealthbarHUD" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Keybinds</h3><hr>
+            Escape&emsp;<button id="1" class="modalButton">ESCAPE</button><br>
+            Enter&emsp;<button id="2" class="modalButton">ENTER</button><br>
+            Open Command&emsp;<button id="3" class="modalButton">SLASH</button><br>
+            Quick Chat&emsp;<button id="4" class="modalButton">T</button><br>
+            Shoot&emsp;<button id="5" class="modalButton">SPACE / MOUSE DOWN</button><br>
+            Repel Drones&emsp;<button id="6" class="modalButton">SHIFT</button><br>
+            Move Up&emsp;<button id="7" class="modalButton">W</button><br>
+            Move Down&emsp;<button id="8" class="modalButton">A</button><br>
+            Move Left&emsp;<button id="9" class="modalButton">S</button><br>
+            Move Right&emsp;<button id="10" class="modalButton">D</button><br>
+            Move Up (alternate)&emsp;<button id="11" class="modalButton">UP ARROW</button><br>
+            Move Down (alternate)&emsp;<button id="12" class="modalButton">DOWN ARROW</button><br>
+            Move Left (alternate)&emsp;<button id="13" class="modalButton">LEFT ARROW</button><br>
+            Move Right (alternate)&emsp;<button id="14" class="modalButton">RIGHT ARROW</button><br>
+            Toggle Auto Fire&emsp;<button id="15" class="modalButton">E</button><br>
+            Toggle Auto Spin&emsp;<button id="16" class="modalButton">C</button><br>
+            Toggle Spin Lock&emsp;<button id="17" class="modalButton">X</button><br>
+            Toggle Passive Mode&emsp;<button id="18" class="modalButton">V</button><br>
+            Toggle Debug Mode&emsp;<button id="19" class="modalButton">M</button><br>
+            Open Weapon Upgrade Tree&emsp;<button id="20" class="modalButton">Y</button><br>
+            Open Body Upgrade Tree&emsp;<button id="21" class="modalButton">U</button><br>
+            Open Settings (In-Game)&emsp;<button id="22" class="modalButton">O</button><br>
+            <hr>
+          </div>
+          <hr /><button id="exit-settings-apply" class="modalButton">APPLY</button>&emsp;<button id="exit-settings-cancel" class="modalButton">CANCEL</button>
+        </div>
+    </div>
+    <div id="blackScreen"></div>
+    <div id="modal" class="modal"><h1 id="message-popup-title" class="modalText">Error</h1><hr><p id="message-popup-text"  class="modalTextSmall">Accounts will be added soon</p><hr><button id="ok-button" class="modalButton" onclick="closeModal()">OK</button></div>
+    <div id="modal2" class="modal"><h1 class="modalText">Feedback/Bugs</h1><hr><p class="modalTextSmall">Please join our Discord server!</p><hr><button class="modalButton" onclick="closeModal2()">OK</button></div>
+    <div id="modal3" class="modal"><h1 class="modalText">Disconnected</h1><hr><p class="modalTextSmall">An unexpected error occurred. Try reloading the page.</p><hr><button class="modalButton" onclick="closeModal3()">RECONNECT</button></div>
+    <div id="modal3a" class="modal"><h1 class="modalText">Connection Error</h1><hr><p class="modalTextSmall" id="modal3aErr">An unexpected error occurred. Try reloading the page.</p><hr><button class="modalButton" onclick="closeModal3a()">RECONNECT</button></div>
+    <div id="modal4" class="modal"><h1 class="modalText">Too Many Connections</h1><hr><p class="modalTextSmall">You have too many connections to this server from your IP address. Either close one of your other connections or join another server.</p><hr><button class="modalButton" onclick="closeModal4()">OK</button></div>
+    <div id="quickchatmsg" class="modal"><h1 class="modalText">Create Quick Chat Message</h1><hr><input class="translucentInput" placeholder="Message" maxlength="750" id="createQuickChat"></input><hr><button class="modalButton" onclick="createquickchat()">CREATE</button>&emsp;<button class="modalButton" onclick="closeModalquickchat()">CANCEL</button></div>
+    <div id="modal7" class="modal"><h1 class="modalText">Mobile support is experimental</h1><hr><p class="modalTextSmall">Some features may not work properly on this device.</p><hr><button class="modalButton" onclick="closeModal7()">OK</button></div>
+    <div id="login" class="modal" style="overflow:hidden;">
+      <h1 class="modalText">Log In</h1><hr>
+      <input class="translucentInput" placeholder="Username" maxlength="100" id="loginuser"></input><br>
+      <input class="translucentInput" placeholder="Password" maxlength="100" id="loginpw" type="password"></input><br>
+      <p class="modalTextSmall" style="line-height:1.5;">Show Password&emsp;<label class="switch" style="top:0.2vmin;"><input type="checkbox" onclick="togglePasswordVisibility()"><span class="slider round"></span></label></p><br><hr>
+      <button class="modalButton" onclick="login()">LOG IN</button>&emsp;<button class="modalButton" onclick="closeModal5()">CANCEL</button>
+      <div class="loader" id="loginLoading"></div>
+    </div>
+    <div id="signup" class="modal" style="overflow:hidden;">
+      <h1 class="modalText">Sign Up</h1><hr>
+      <input class="translucentInput" placeholder="Username" maxlength="100" id="signupuser"></input><br>
+      <input class="translucentInput" placeholder="Password" maxlength="100" id="signuppw" type="password" onblur="checkPw()"></input><br>
+      <input class="translucentInput" placeholder="Confirm Password" maxlength="100" id="confirmpw" type="password" onblur="checkPw()"></input>
+      <p class="modalTextSmall" style="line-height:1.5;margin-top:0;padding-top:0;">
+        <span id="pwWrong" style="font-size:1.5vmin;display:none;">Passwords do not match.<br></span><br>
+        Show Password&emsp;<label class="switch" style="top:0.2vmin;"><input type="checkbox" onclick="togglePasswordVisibility()"><span class="slider round"></span></label>
+      </p><br><hr>
+      <button class="modalButton" onclick="signup()">SIGN UP</button>&emsp;<button class="modalButton" onclick="closeModal6()">CANCEL</button>
+      <div class="loader" id="signupLoading"></div>
+    </div>
+    <div id="loadingWords"><span id="loadingWords1">Joining Server...</span><span id="loadingWords2">If this takes too long, there might be a problem with the server or your connection.</span><span id="loadingWords3">Reloading the page may fix the problem.</span></div>
+  
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src="/pako.js"></script>
+    <script type="module" src="./tankUpgrades.js"></script>
+    <script type="module" src="./index.js"></script>
+    <script type="module">
+      //html file cannot access functions inside a module js file, only a normal js file
+      import { closeModal,closeModal2,closeModal3,closeModal3a,closeModal5,closeModal6,closeModal7,closeModalquickchat,openModalquickchat,createquickchat,openSettings,accounts,bugs,changeGamemode,togglePasswordVisibility,checkPw,login,signup } from "./index.js";//add updateTempSettings and closemodal3 etc. later
+      window.closeModal = closeModal;
+      window.closeModal2 = closeModal2;
+      window.closeModal3 = closeModal3;
+      window.closeModal3a = closeModal3a;
+      window.closeModal5 = closeModal5;
+      window.closeModal6 = closeModal6;
+      window.closeModal7 = closeModal7;
+      window.openSettings = openSettings;
+      window.accounts = accounts;
+      window.bugs = bugs;
+      //window.updateTempSettings = updateTempSettings;
+      //window.sendTypingIndicator = sendTypingIndicator;
+      //window.removeTypingIndicator = removeTypingIndicator;
+      window.changeGamemode = changeGamemode;
+      window.togglePasswordVisibility = togglePasswordVisibility;
+      window.checkPw = checkPw;
+      window.login = login;
+      window.signup = signup;
+      window.createquickchat = createquickchat;
+      window.closeModalquickchat = closeModalquickchat;
+      window.openModalquickchat = openModalquickchat;
+    </script>
+  </body>
+</html>

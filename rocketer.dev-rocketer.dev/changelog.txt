@@ -1,0 +1,116 @@
+ALPHA 0.0.19 - May 5, 2025
+- FFA now works, but lots of bugs to fix
+- (note: you cannot access the FFA server unless I open it)
+- Error notifications now show up as modals
+- Fixed some bugs
+- testing push
+
+ALPHA 0.0.18 - May 4, 2025
+- Officially merged the old rocketer code with the new code!
+- Added many new functions
+- You can now use arrow keys to change gamemodes
+- Added confirmation dialog when closing the tab
+- Added notifications
+- Reduced the basic tank's barrel width
+- Keybinds now work when caps lock is on
+
+ALPHA 0.0.17 - May 3, 2025
+- Added Quick Chat with basic functionalities
+- Changed the game tips
+- Performance improvements
+- The debug now scales properly for mobile users
+- Added the chat box
+- Fixed a particle rendering bug
+
+ALPHA 0.0.16 - May 2, 2025
+- The home screen is now more mobile friendly
+
+ALPHA 0.0.15 - May 1, 2025
+- The death screen now shows your level, tank upgrade, body upgrade, and killer
+- Added deathscreen animation
+- Replaced disconnected notifications with modal popups
+
+ALPHA 0.0.14 - April 30, 2025
+- Added entities in the home screen background for 4tdm and Tank Editor
+- Re-wrote some parts of the old code
+- Added some account functions
+
+ALPHA 0.0.13 - April 29, 2025
+- Fixed a rendering bug on the home screen canvas
+- Added zoom and darkness animations to the home screen
+- Added entities in the home screen background for PvE, FFA, and 2tdm
+
+ALPHA 0.0.12 - April 28, 2025
+- Many code changes that does not affect functionality
+
+ALPHA 0.0.11 - April 27, 2025
+- Added tooltips for buttons on the home screen
+- You can press 'o' and 'p' to adjust FOV in PvE. This is a temporary feature.
+- Added modal animation
+- Changed to scenexe's icons (thanks acropolis)
+- Other minor changes
+
+ALPHA 0.0.10 - April 26, 2025
+- Added non-functioning settings
+- Canvas now resizes properly when your browser size changes
+- Home screen background now scales correctly
+- Added FOV to PvE
+- Added notifications
+
+ALPHA 0.0.9 - April 25, 2025
+- Fixed bullet jitter in PvE
+
+ALPHA 0.0.8 - April 24, 2025
+- FFA server tick time is now rounded to 1 decimal place
+- Significant bandwidth optimization in FFA
+
+ALPHA 0.0.7 - April 23, 2025
+- Added joining server waiting screen
+- Added shape collision
+- Added enemy collision
+- Added shape movement
+- Added shape mass
+- Added shape, enemy, and bullet whitening when hit
+- Improved the bot colors
+- Fixed a flexbox bug
+- Added more respawning functionality
+- Changed shape xp to scenexe's
+- Added time played to the death screen
+- Score is now abbreviated
+
+ALPHA 0.0.6 - April 22, 2025
+- Home screen looks more like scenexe now
+- Added player spawn particle effect, removed shape death particle effect
+- Improved death screen, added continue button
+- Added shape hitbox and name to the debug mode
+- Added more info to the debug
+
+ALPHA 0.0.5 - April 21, 2025
+- Added some animation when changing gamemode
+- Fixed the background grid
+- Improved the home screen canvas render
+
+ALPHA 0.0.4 - April 19, 2025
+- Made changes to the home screen
+- You can now press m to toggle debug
+
+ALPHA 0.0.3 - April 18, 2025
+- Added player healing (6 sec delay, 8 sec full healing)
+- Changed the debug to mimic rocketer
+- Added a minimap
+- Bullets can now pass through objects (added penetration)
+- Nerfed basic's damage
+- Added all shapes up until tetradecagon
+- Added spawning chances for different shapes
+- Fixed drawing sequence (shapes now drawn at the bottom, particles rendered last)
+- Fixed rotation speed
+
+ALPHA 0.0.2 - April 15, 2025
+- Added a death screen and respawning
+- Added a simple home screen
+
+ALPHA 0.0.1 - April 14, 2025
+- Moved the game to this website
+- This game is a rewritten version of the old singleplayer rocketer
+- Fixed the map borders and health bars
+- Older changelog entries are no longer available. The game was created on 28 May 2022, and first released on 6 March 2023.
