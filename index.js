@@ -102,6 +102,8 @@ console.log(bodyupgrades);
         let fov = 1;
         let fovscale = 1;//the amount for canvas to scale, NOT same as FOV, e.g. if fov is 2, then fov scale is 1/2
         let fovAnimation = 1;//slowly change this value to the actual fov value to create nice zooming effect
+        let maxshade = 0.3;//whitening effect when objects get hit
+        let spawnprotectionShade = 0.1;
         let players = [];//for pve this will be the actual player obj, for oher multiplayer, this is the leaderboard
         const bullets = [];
         const enemies = [];
@@ -233,6 +235,11 @@ console.log(bodyupgrades);
         let rotationAngle = 0;//in degree, the angle of the circular path that the map is at now (usedto calculate the x and y coords)
         let hsCameraX = hsMAP_SIZE/2 + rotationRadius  - canvas.width / 2;
         let hsCameraY = hsMAP_SIZE/2  - canvas.height / 2;
+
+        //settings variables
+        let showshapeinfo = "yes";
+        let showstats = "no";
+        let spawnradparticle = "yes";
 
         function abbreviateScore(score) {//only done when displaying scores, actual scores are not abbreviated (obviously)
           if (score >= 1000) {
@@ -1713,7 +1720,7 @@ console.log(bodyupgrades);
         let darknessValue = 0;//scren slowly become darker when opening website
         let drawingGamemode = currentGamemodeID;//the gamemode that is being drawn on home screen. While gamemode changes immediately when clicking arrow, this value changes after 0.6 seconda (when black oval is half way across the screen)
         function homeScreenLoop() {
-            if (players.length > 0) return;//dont do anything if ingame
+            if (state == "ingame") return;//dont do anything if ingame
             //start drawing the homescreen if not ingame
             hctx.fillStyle = '#CDCDCD';
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
@@ -1861,9 +1868,13 @@ console.log(bodyupgrades);
         playButton.addEventListener('click', startGame);
         function startGame(){
           state = "ingame";
+          officialGameStart = "no";//becomes "yes" when receive gam info packet
           //remove home screen divs
           playButton.style.display = "none";
-          hcanvas.style.display = "none";
+          if (gamemode == "PvE arena"){
+            hcanvas.style.display = "none";
+            document.getElementById('score').style.display = "block";
+          }
           nameInput.style.display = "none";
           document.getElementById('connecting').style.display = "none";
           changelogPreview.style.display = "none";
@@ -1875,8 +1886,6 @@ console.log(bodyupgrades);
           document.getElementById('top-buttons').style.display = "none";
           document.getElementById('right-buttons').style.display = "none";
           signupdiv.style.display = "none";
-          //add game divs
-          document.getElementById('score').style.display = "block";
           //open debug
           fpsCounter.style.display = "block";
           let allOtherDebugDivs = document.querySelectorAll(".debug");
@@ -1885,6 +1894,8 @@ console.log(bodyupgrades);
           }
           debugState = "open";
           //start the game
+          hctx.fillStyle = "#cdcdcd";
+          hctx.fillRect(0,0,hcanvas.width,hcanvas.height);
           document.getElementById('loadingWords').style.display = "block";
           document.getElementById('loadingWords1').style.display = "block";
           setTimeout(() => {
@@ -1905,7 +1916,7 @@ console.log(bodyupgrades);
             //only do once
             let yourName = nameInput.value;
             let mySlurslist = ["n!g","nig","fag","f@g","fuck","fuk","porn","bitch","bich","dick","cunt","cock","penis","slut","pussy",];
-            for (i of mySlurslist) {
+            for (const i of mySlurslist) {
               yourName = yourName.replace(i, "*".repeat(i.length));//if name has fuck, will become ****
             }
             let packet = JSON.stringify(["joinGame", yourName]);
@@ -2129,6 +2140,7 @@ console.log(bodyupgrades);
         var connected = "no";
         var mainMenuOpacity = 0;
         var state = "homepage"; //homepage, ingame, or deathscreen
+        var officialGameStart = "no";//only becomes yes when receive game info
         var drawAreaX = 0; //these two variable placed outside so that can access in mousemove event listener
         var drawAreaY = 0;
         var px = 0;
@@ -2218,6 +2230,7 @@ console.log(bodyupgrades);
 
         if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {//check if this is a mobile device
           document.getElementById('modal7').style.display = "block";
+          darken.style.display = "block";
           mobile = "yes";
         } else {
           // false for not mobile device
@@ -2415,6 +2428,7 @@ console.log(bodyupgrades);
         var keylock = "no";
 
         var shapeHit = {};//animate change in color when shapes get hit, for all gamemodes except PvE (PvE have it stored in the shape object itself)
+        var playerHit = {};
 
         function getTanksThatCanUpgradeTo(list,tankname){//for upgrade tree
           //get an array of tanks that can upgrade to in the future (these tanks wont be greyed out on upgrade tree)
@@ -2517,6 +2531,7 @@ console.log(bodyupgrades);
                 if (teleportingTransition!="yes"){//disconnected and reconnected, but not teleporting
                   playButton.style.display = "block";
                   nameInput.style.display = "block";
+                  document.getElementById('connecting').style.display = "none";
                 }
                 //retrieve world record from server
                 var packet = JSON.stringify(["wr"]);
@@ -2595,7 +2610,14 @@ console.log(bodyupgrades);
                   else if (type=="newNotification"){//create notification when server sends it
                     let text = info[1];
                     let color = info[2];
-                    createNotif(text,color,5000);
+                    if (color != "red"){
+                      createNotif(text,color,5000);
+                    }
+                    else{//server sent an error
+                      document.getElementById('modal3a').style.display = "block";
+                      document.getElementById('modal3aErr').textContent = "An unexpected error occurred: "+text;
+                      darken.style.display = "block";
+                    }
                   }
                   else if (type=="tankButton"){
                     let dummyTank = info[1];
@@ -2925,6 +2947,10 @@ console.log(bodyupgrades);
                       teleportingTransition = "no";
                       teleportingcount = 2.1;
                     }
+                    if (officialGameStart == "no"){
+                      connectedToServer();
+                      officialGameStart = "yes";
+                    }
                     let gameobjects = info[1];
                     let serverruntime = info[2];
                     let portalslist = info[3];
@@ -3232,8 +3258,10 @@ console.log(bodyupgrades);
                       //disconnect notification
                       //when socket disconnect, this is automatically triggered
                       //createNotif("Disconnected. Reload the page.","rgb(150,0,0)",10000)
-                      document.getElementById('modal3').style.display = "block";
-                      darken.style.display = "block";
+                      if (document.getElementById('modal3a').style.display != "block"){//if connection error modal is not open
+                        document.getElementById('modal3').style.display = "block";
+                        darken.style.display = "block";
+                      }
                       returnToHomeScreen("disconnect");
                       connected = "no";
                       playButton.style.display = "none";
@@ -3575,7 +3603,7 @@ console.log(bodyupgrades);
               //fov is clientFovMultiplier for ctx, hctx is 1
                 canvas.lineJoin = "round"; //make nice round corners
                 //draw assets below body, e.g. rammer body base
-                for (assetID in object.assets){
+                for (const assetID in object.assets){
                   var asset = object.assets[assetID];
                   if (asset.type == "under") {
                     let assetcolor = asset.color;
@@ -3594,15 +3622,15 @@ console.log(bodyupgrades);
                 //draw barrel
                 canvas.lineWidth = 4 / fov;
                 //weapon barrels
-                for (barrel in object.barrels){
+                for (const barrel in object.barrels){
                   let thisBarrel = object.barrels[barrel];
                   canvas.rotate((thisBarrel.additionalAngle * Math.PI) / 180); //rotate to barrel angle
                   canvas.fillStyle = bodyColors.barrel.col;
                   canvas.strokeStyle = bodyColors.barrel.outline;
                   if (spawnProtect == "yes") {
                     //if have spawn protection
-                    canvas.fillStyle = bodyColors.barrel.hitCol;
-                    canvas.strokeStyle = bodyColors.barrel.hitOutline;
+                    canvas.fillStyle = pSBC ( spawnprotectionShade, bodyColors.barrel.col );
+                    canvas.strokeStyle = pSBC ( spawnprotectionShade, bodyColors.barrel.outline );
                   }
                   //lerp barrel animation
                   let oldbarrelheight;
@@ -3702,7 +3730,7 @@ console.log(bodyupgrades);
                   object.red = radiantShapes[id].red;
                   object.blue = radiantShapes[id].blue;
                   object.green = radiantShapes[id].green;
-                  let radiantAuraSize = document.getElementById("sizevalue").innerHTML * auraWidth;
+                  let radiantAuraSize = 5 * auraWidth;
                   //calculate color of spikes, which would be 20 higher than actual rgb value
                   if (object.red + 150 <= 255) {
                     var spikeRed = object.red + 150;
@@ -4079,7 +4107,7 @@ console.log(bodyupgrades);
                 }
 
                 //barrels in body upgrade
-                for (barrel in object.bodybarrels){
+                for (const barrel in object.bodybarrels){
                   let thisBarrel = object.bodybarrels[barrel];
           //lerp barrel angle
                   let oldangle;
@@ -4103,8 +4131,8 @@ console.log(bodyupgrades);
                   canvas.strokeStyle = bodyColors.barrel.outline;
                   if (spawnProtect == "yes") {
                     //if have spawn protection
-                    canvas.fillStyle = bodyColors.barrel.hitCol;
-                    canvas.strokeStyle = bodyColors.barrel.hitOutline;
+                    canvas.fillStyle = pSBC ( spawnprotectionShade, bodyColors.barrel.col );
+                    canvas.strokeStyle = pSBC ( spawnprotectionShade, bodyColors.barrel.outline );
                   }
                   //lerp barrel animation
                   let oldbarrelheight;
@@ -4154,7 +4182,7 @@ console.log(bodyupgrades);
                 }
 
                 //draw assets above body, e.g. aura assets
-                for (assetID in object.assets){
+                for (const assetID in object.assets){
                   var asset = object.assets[assetID];
                   if (asset.type == "above") {
                     let assetcolor = asset.color;
@@ -5076,8 +5104,7 @@ console.log(bodyupgrades);
                   //if this is an animation of a dead object
                   ctx.globalAlpha = object.deadOpacity;
                 }
-                var radiantAuraSize =
-                  document.getElementById("sizevalue").innerHTML * auraWidth; //aura size determined by settings, but default is 5
+                var radiantAuraSize = 5 * auraWidth; //aura size determined by settings, but default is 5
                 //draw shape
                 ctx.save();
                 ctx.translate(drawingX, drawingY);
@@ -5530,9 +5557,11 @@ console.log(bodyupgrades);
                     if (!shapeHit.hasOwnProperty(id)){
                       shapeHit[id] = 0;
                     }
-                    let maxshade = 0.3;//shapes turn 30% whiter when hit  (log, not linear)
                     if (object.sides > 8){//nonagon, decagon, hendecagon etc. dont turn very white upon collision with bullets or players
                       maxshade = 0.03;
+                    }
+                    else{
+                      maxshade = 0.3;//shapes turn 30% whiter when hit  (log, not linear)
                     }
                     shapeHit[id] += (maxshade/25);//make shape whiter
                     if (shapeHit[id] > maxshade){
@@ -6045,29 +6074,41 @@ console.log(bodyupgrades);
                   if (id == playerstring) {
                     playercolor = bodyColors.blue.col;
                     playeroutline = bodyColors.blue.outline;
-                    if (object.hit > 0 || spawnProtect == "yes") {
-                      playercolor = bodyColors.blue.hitCol
-                      playeroutline = bodyColors.blue.hitOutline
-                    }
                   }
                   else{
                     playercolor = bodyColors.red.col;
                     playeroutline = bodyColors.red.outline;
-                    if (object.hit > 0 || spawnProtect == "yes") {
-                      playercolor = bodyColors.red.hitCol
-                      playeroutline = bodyColors.red.hitOutline
-                    }
                   }
                 } else if (bodyColors.hasOwnProperty(object.team)) {
                     playercolor = bodyColors[object.team].col;
                     playeroutline = bodyColors[object.team].outline;
-                    if (object.hit > 0 || spawnProtect == "yes") {
-                      playercolor = bodyColors[object.team].hitCol;
-                      playeroutline = bodyColors[object.team].hitOutline;
-                    }
                     if (object.team == "eternal"){
                       eternal = "yes";
                     }
+                }
+                if (spawnProtect == "yes"){//make body color lighter
+                  playercolor = pSBC ( spawnprotectionShade, playercolor );
+                  playeroutline = pSBC ( spawnprotectionShade, playeroutline );
+                }
+                if (object.hit > 0){//if bro got hit
+                  if (!playerHit.hasOwnProperty(id)){
+                    playerHit[id] = 0;
+                  }
+                  maxshade = 0.1;//player change color less
+                  playerHit[id] += (maxshade/25);//make shape whiter
+                  if (playerHit[id] > maxshade){
+                    playerHit[id] = maxshade;
+                  }
+                  playercolor = pSBC ( playerHit[id], playercolor );
+                  playeroutline = pSBC ( playerHit[id], playeroutline );
+                }
+                else if (playerHit[id] > 0){
+                  playerHit[id] -= (maxshade/25);//make shape whiter
+                  if (playerHit[id] < 0.00001){
+                    playerHit[id] = 0;
+                  }
+                  playercolor = pSBC ( playerHit[id], playercolor );
+                  playeroutline = pSBC ( playerHit[id], playeroutline );
                 }
                 if (object.developer == "yes") {
                   //if a developer
@@ -8112,7 +8153,7 @@ console.log(bodyupgrades);
             };
 
             function screenDrawLoop(){//everything happens here
-              var starting = Date.now(); //start client code execution timer
+              starting = performance.now();//for client tick time
               
               //calculate delta
               let currentLoopTime = Date.now();
@@ -9215,7 +9256,7 @@ console.log(bodyupgrades);
           //draw assets, e.g. rammer body base
           hctx.lineJoin = "round";
           if (thisbuttontank.assets) {
-            for (assetID in thisbuttontank.assets){
+            for (const assetID in thisbuttontank.assets){
               let asset = thisbuttontank.assets[assetID];
               if (asset.type == "under") {
                 hctx.lineWidth = asset.outlineThickness;
@@ -9225,7 +9266,7 @@ console.log(bodyupgrades);
           }
 
           //draw barrel
-          for (barrel in thisbuttontank.barrels){
+          for (const barrel in thisbuttontank.barrels){
             //note that you must use [barrel] instead of .barrel, if not there will be an error
             let thisBarrel = thisbuttontank.barrels[barrel];
             hctx.rotate((thisBarrel.additionalAngle * Math.PI) / 180); //rotate to barrel angle
@@ -9420,7 +9461,7 @@ console.log(bodyupgrades);
           }
 
           hctx.lineJoin = "round"; //make nice round corners
-          for (barrel in thisbuttontank.bodybarrels){
+          for (const barrel in thisbuttontank.bodybarrels){
             let thisBarrel = thisbuttontank.bodybarrels[barrel];
             hctx.rotate(thisBarrel.additionalAngle); //rotate to barrel angle
             hctx.fillStyle = bodyColors.barrel.col;
@@ -9524,7 +9565,7 @@ console.log(bodyupgrades);
           hctx.lineJoin = "miter"; //change back
 
           if (thisbuttontank.assets) {
-            for (assetID in thisbuttontank.assets){
+            for (const assetID in thisbuttontank.assets){
               let asset = thisbuttontank.assets[assetID];
               if (asset.type == "above") {
                 hctx.lineWidth = asset.outlineThickness;

@@ -10,6 +10,7 @@ Next update: add scenexe tanks (keep rocketer tanks for legacy), add body collis
 add feature where clicking on the gamemode in the home screen will show the list of gamemodes, and add animation for gamemode region on gamemode select div
 
 FIX CLCIKING PLAY BUTTON AFTER EXITING DEATH SCREEN
+RE_ENABLE BOT PREVENTION IN SERVER (multiple tabs + req.headers.origin check)
 
 REMOVE STAR SHAPE (both client and server)
 MSGPACKR
@@ -38,6 +39,7 @@ fix holding down 'm' key
 
 clean up the keyup keydown functions, remove pve ones
 change resize function to all gamemodes, and remove all the resizediffx and resizediffy
+change all bullet flash to the psbc
 
 stopped at line 8052
 
