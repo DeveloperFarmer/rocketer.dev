@@ -19,6 +19,11 @@ Add chat, which removes in deathscreen function
 Change shape xp to scenexe xp system
 After adding upgrading to PvE, remember to make death screen show correct upgrade tanks, and add a rotating canvas drawing of the tank
 Tomorrow: add closing popup animation (settimeout remove)
+document.getElementById("screenDarken").style.display = "none";
+  document.getElementById("screenLighten").style.display = "block";
+  setTimeout(function () {
+    document.getElementById("screenLighten").style.display = "none";
+  }, 500); //after animation finish, make buttons below darkness clickable
 
 Why does client need to disconnect and reconnect if it dies and respawn in same server? (check returntohomescreen function)
 
@@ -27,6 +32,12 @@ check if can reduce mobile mouse movement setinterval from every 30ms to 60ms
 CHANGE PVE requestanimframe to requestInterval
 add quickchat functionality (when you open quick chat and press 1, 2, 3 or 4, then close the quick chat and send the message) + save quick chats to local storage
 quickchat fix flipped text (both the quick chat and the number)
+re-add bandwidth in the future
+remove toggling hitbox using 'h' key
+fix holding down 'm' key
+
+clean up the keyup keydown functions, remove pve ones
+change resize function to all gamemodes, and remove all the resizediffx and resizediffy
 
 stopped at line 8052
 

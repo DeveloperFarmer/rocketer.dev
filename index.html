@@ -894,27 +894,30 @@
         color: white;
         opacity: 0.75;
         text-align: center;
-        font-weight: 900;
+        font-weight: 700;
         font-family: "Roboto", sans-serif;
-        border-radius: 0.6vw;
-        font-size: 1.3vw; /*the words change size based on browser width*/
-        padding: 2.5px 15px;
-        margin: 6px;
+        border-radius: 1vmin;
+        font-size: 2.6vmin; /*the words change size based on browser width*/
+        padding: 0.25vmin 1.5vmin;
+        margin: 0.3vmin;
         animation-name: animateNotif;
-        animation-duration: 1s;
+        animation-duration: .5s;
         transition-timing-function: ease-in-out;
+        text-shadow: none;
       }
-      @keyframes animateNotif {
+      @keyframes animateNotif {/*fade in*/
         0% {
           opacity: 0;
           max-height: 0;/*dont use height*/
         }
-        50% {
-          opacity: 0.75;
-        }
         100% {
-          max-height: 100px;/*set this value to a value that will be bigger than the height is*/
+          opacity: 0.75;
+          max-height: 3.5vmin;/*set this value to a value that will be bigger than the height is*/
         }
+      }
+      @keyframes animateNotifRemove {/*fade out*/
+        0% {opacity: 0.75;}
+        100% {opacity: 0;}
       }
       .translucentInput {
           width: 28vmin;
@@ -1082,6 +1085,24 @@
         text-shadow: none;
         display: none;
       }
+      .qcnumber.two {/*div is flipped, so text will be flipped too, so now we flip the text back*/
+        transform: scaleX(-1);
+      }
+      .qcnumber.three {
+        transform: scaleY(-1);
+      }
+      .qcnumber.four {
+        transform: scale(-1);
+      }
+      .actualqc.two {/*div is flipped, so text will be flipped too, so now we flip the text back*/
+        transform: scaleX(-1);
+      }
+      .actualqc.three {
+        transform: scaleY(-1);
+      }
+      .actualqc.four {
+        transform: scale(-1);
+      }
       #quickchattext {
         position: absolute;
         top: 13vmin;
@@ -1181,9 +1202,9 @@
     <div id="quickchat">
       <div id="quickchattext">Quick Chat</div>
       <div id="quickchat1" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc"></span><div class="qcmore">...</div><span class="qcnumber">1</span></div>
-      <div id="quickchat2" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc"></span><div class="qcmore">...</div><span class="qcnumber">2</span></div>
-      <div id="quickchat3" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc"></span><div class="qcmore">...</div><span class="qcnumber">3</span></div>
-      <div id="quickchat4" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc"></span><div class="qcmore">...</div><span class="qcnumber">4</span></div>
+      <div id="quickchat2" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc two"></span><div class="qcmore">...</div><span class="qcnumber two">2</span></div>
+      <div id="quickchat3" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc three"></span><div class="qcmore">...</div><span class="qcnumber three">3</span></div>
+      <div id="quickchat4" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc four"></span><div class="qcmore">...</div><span class="qcnumber four">4</span></div>
     </div>
     <div id="left-buttons" class="hsFlexbox">
       <button id="reddit" class="hsButtons">
@@ -1310,6 +1331,7 @@
     </div>
     <div id="loadingWords"><span id="loadingWords1">Joining Server...</span><span id="loadingWords2">If this takes too long, there might be a problem with the server or your connection.</span><span id="loadingWords3">Reloading the page may fix the problem.</span></div>
   
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script type="module" src="./tankUpgrades.js"></script>
     <script type="module" src="./index.js"></script>
     <script type="module">

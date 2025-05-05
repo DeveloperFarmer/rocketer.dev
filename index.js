@@ -102,7 +102,7 @@ console.log(bodyupgrades);
         let fov = 1;
         let fovscale = 1;//the amount for canvas to scale, NOT same as FOV, e.g. if fov is 2, then fov scale is 1/2
         let fovAnimation = 1;//slowly change this value to the actual fov value to create nice zooming effect
-        const players = [];
+        let players = [];//for pve this will be the actual player obj, for oher multiplayer, this is the leaderboard
         const bullets = [];
         const enemies = [];
         const particles = [];
@@ -281,7 +281,7 @@ console.log(bodyupgrades);
                 this.bulletCooldownMax = 30;
                 this.score = 0;
                 this.barrelLength = 48;
-                this.barrelWidth = 25;
+                this.barrelWidth = 23;
                 this.barrelOffset = 0;
                 this.bulletDamage = 10.5;
                 this.bulletSpeed = 4;
@@ -1367,7 +1367,7 @@ console.log(bodyupgrades);
         let mouseX = 0;
         let mouseY = 0;
         let mouseDown = false;
-
+/*
         canvas.addEventListener('mousemove', (e) => {
             mouseX = e.pageX;
             mouseY = e.pageY;
@@ -1390,7 +1390,7 @@ console.log(bodyupgrades);
         window.addEventListener('keyup', (e) => {
             keys[e.key] = false;
         });
-
+*/
         // Window resize
         const maxWidth = 1920;
         const maxHeight = 1080;
@@ -1411,12 +1411,12 @@ console.log(bodyupgrades);
             }
         }
         window.addEventListener('resize', () => {
+          if (gamemode == "PvE arena"){
             resizeCanvas();
-            //canvas.width = window.innerWidth;
-            //canvas.height = window.innerHeight;
+          }
         });
         resizeCanvas();
-      
+      /*
         function checkForKeybinds(key){//pressed a key, check if the key represents anything (except player movement)
           if (key == "m" && players.length > 0){//if ingame and press m
             if (debugState == "open"){//close the debug
@@ -1452,7 +1452,7 @@ console.log(bodyupgrades);
             }
           }
         }
-      
+      */
         function spawnShape() {
             shapes.push(new Shape(
                 Math.random() * MAP_WIDTH,
@@ -1692,7 +1692,8 @@ console.log(bodyupgrades);
             hctx.restore();
         }
 
-        function drawFakePlayer(team,weapontype,bodytype,x,y,rot,size){//only for home screen background
+        function drawFakePlayer2(team,weapontype,bodytype,x,y,rot,size){//only for home screen background
+          //integrate into drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which)
             hctx.save();//add tank type later
             hctx.translate(x-hsCameraX, y-hsCameraY);
             hctx.rotate(rot/180*Math.PI);
@@ -1756,16 +1757,16 @@ console.log(bodyupgrades);
               drawPolygon(4,1300,1580,50)
               drawPolygon(4,1230,1600,340)
               drawPolygon(3,1270,1530,0)
-              drawFakePlayer("red","split","wall",890,2000,45,50)
-              drawFakePlayer("red","beta","thorn",750,2150,45,60)
-              drawFakePlayer("red","alpha","saw",1100,1450,70,70)
-              drawFakePlayer("red","annihilator","ziggurat",1400,2050,20,70)
-              drawFakePlayer("red","emperor","mothership",1980,1250,20,70)
-              drawFakePlayer("red","wave","saw",2200,1350,290,70)
-              drawFakePlayer("red","palisade","bombard",2500,2050,45,70)
-              drawFakePlayer("red","riot","inferno",1470,1050,170,70)
-              drawFakePlayer("red","marksman","saw",890,1050,60,70)
-              drawFakePlayer("celestial","pulsar","chasm",1470,1530,55,90)
+              drawFakePlayer2("red","split","wall",890,2000,45,50)
+              drawFakePlayer2("red","beta","thorn",750,2150,45,60)
+              drawFakePlayer2("red","alpha","saw",1100,1450,70,70)
+              drawFakePlayer2("red","annihilator","ziggurat",1400,2050,20,70)
+              drawFakePlayer2("red","emperor","mothership",1980,1250,20,70)
+              drawFakePlayer2("red","wave","saw",2200,1350,290,70)
+              drawFakePlayer2("red","palisade","bombard",2500,2050,45,70)
+              drawFakePlayer2("red","riot","inferno",1470,1050,170,70)
+              drawFakePlayer2("red","marksman","saw",890,1050,60,70)
+              drawFakePlayer2("celestial","pulsar","chasm",1470,1530,55,90)
             }
             else if (drawingGamemode == 2){//2tdm
               drawPolygon(9,2100,2200,55)
@@ -1773,53 +1774,53 @@ console.log(bodyupgrades);
               drawPolygon(7,750,1350,350)
               drawPolygon(7,1900,1200,350)
               drawPolygon(5,900,1800,350)
-              drawFakePlayer("red","assassin","artillery",1600,1150,225,60)
-              drawFakePlayer("red","penta","saw",1680,1400,90,70)
-              drawFakePlayer("red","alpha","saw",1600,1700,270,70)
-              drawFakePlayer("red","amalgam","bastion",1625,1600,260,70)
-              drawFakePlayer("red","blockade","artillery",1900,1560,45,60)
-              drawFakePlayer("red","palisade","bombard",1830,1650,290,70)
-              drawFakePlayer("red","minigun","ziggurat",1600,1840,280,70)
-              drawFakePlayer("red","trio","artillery",1830,1860,270,60)
-              drawFakePlayer("red","arc","artillery",1715,1940,60,60)
-              drawFakePlayer("red","marksman","saw",2250,1250,170,70)
-              drawFakePlayer("red","riot","inferno",2400,1750,170,70)
+              drawFakePlayer2("red","assassin","artillery",1600,1150,225,60)
+              drawFakePlayer2("red","penta","saw",1680,1400,90,70)
+              drawFakePlayer2("red","alpha","saw",1600,1700,270,70)
+              drawFakePlayer2("red","amalgam","bastion",1625,1600,260,70)
+              drawFakePlayer2("red","blockade","artillery",1900,1560,45,60)
+              drawFakePlayer2("red","palisade","bombard",1830,1650,290,70)
+              drawFakePlayer2("red","minigun","ziggurat",1600,1840,280,70)
+              drawFakePlayer2("red","trio","artillery",1830,1860,270,60)
+              drawFakePlayer2("red","arc","artillery",1715,1940,60,60)
+              drawFakePlayer2("red","marksman","saw",2250,1250,170,70)
+              drawFakePlayer2("red","riot","inferno",2400,1750,170,70)
               
-              drawFakePlayer("blue","conglomerate","thorn",1300,1300,45,60)
-              drawFakePlayer("blue","manager","castle",1300,1400,45,60)
-              drawFakePlayer("blue","quadro","ziggurat",1350,1500,70,70)
-              drawFakePlayer("blue","streamliner","saw",1400,1700,20,70)
-              drawFakePlayer("blue","beta","thorn",1200,1800,20,60)
-              drawFakePlayer("blue","annihilator","bastion",1370,1850,290,70)
-              drawFakePlayer("blue","gunner","artillery",1300,1950,45,60)
-              drawFakePlayer("blue","octo","quadruplet",1000,1650,170,70)
-              drawFakePlayer("blue","emperor","mothership",1200,2000,60,70)
-              drawFakePlayer("blue","executive","ziggurat",1000,1050,60,70)
-              drawFakePlayer("blue","horizon","fabricator",1000,1970,170,70)
-              drawFakePlayer("blue","split","wall",800,1900,170,50)
-              drawFakePlayer("blue","duo","turret",1250,1650,170,50)
+              drawFakePlayer2("blue","conglomerate","thorn",1300,1300,45,60)
+              drawFakePlayer2("blue","manager","castle",1300,1400,45,60)
+              drawFakePlayer2("blue","quadro","ziggurat",1350,1500,70,70)
+              drawFakePlayer2("blue","streamliner","saw",1400,1700,20,70)
+              drawFakePlayer2("blue","beta","thorn",1200,1800,20,60)
+              drawFakePlayer2("blue","annihilator","bastion",1370,1850,290,70)
+              drawFakePlayer2("blue","gunner","artillery",1300,1950,45,60)
+              drawFakePlayer2("blue","octo","quadruplet",1000,1650,170,70)
+              drawFakePlayer2("blue","emperor","mothership",1200,2000,60,70)
+              drawFakePlayer2("blue","executive","ziggurat",1000,1050,60,70)
+              drawFakePlayer2("blue","horizon","fabricator",1000,1970,170,70)
+              drawFakePlayer2("blue","split","wall",800,1900,170,50)
+              drawFakePlayer2("blue","duo","turret",1250,1650,170,50)
             }
             else if (drawingGamemode == 3){//4tdm
               drawPolygon(10,1600,1700,55)
               drawPolygon(10,1050,1000,0)
               drawPolygon(7,750,1700,350)
               drawPolygon(5,2300,1700,350)
-              drawFakePlayer("red","trio","castle",1500,2000,30,60)
-              drawFakePlayer("red","palisade","bombard",1400,1930,10,70)
-              drawFakePlayer("red","penta","saw",800,2130,315,70)
-              drawFakePlayer("purple","mono","sentry",750,1550,170,50)
-              drawFakePlayer("purple","annihilator","bombard",1300,1600,100,70)
-              drawFakePlayer("purple","riot","saw",1350,1450,135,70)
-              drawFakePlayer("purple","flank","fortress",1470,1430,135,50)
-              drawFakePlayer("purple","horizon","ziggurat",550,1130,280,70)
-              drawFakePlayer("green","overlord","battleship",1700,1390,180,60)
-              drawFakePlayer("green","shrapnel","inferno",1850,1450,170,70)
-              drawFakePlayer("green","gunner","artillery",1900,1550,260,60)
-              drawFakePlayer("green","trapper","smasher",1870,1650,260,50)
-              drawFakePlayer("green","mono","node",2300,1100,45,50)
-              drawFakePlayer("blue","manufacturer","saw",2100,1830,280,70)
-              drawFakePlayer("blue","arsenal","ziggurat",1880,1930,305,70)
-              drawFakePlayer("blue","spread","triplet",1780,1950,325,60)
+              drawFakePlayer2("red","trio","castle",1500,2000,30,60)
+              drawFakePlayer2("red","palisade","bombard",1400,1930,10,70)
+              drawFakePlayer2("red","penta","saw",800,2130,315,70)
+              drawFakePlayer2("purple","mono","sentry",750,1550,170,50)
+              drawFakePlayer2("purple","annihilator","bombard",1300,1600,100,70)
+              drawFakePlayer2("purple","riot","saw",1350,1450,135,70)
+              drawFakePlayer2("purple","flank","fortress",1470,1430,135,50)
+              drawFakePlayer2("purple","horizon","ziggurat",550,1130,280,70)
+              drawFakePlayer2("green","overlord","battleship",1700,1390,180,60)
+              drawFakePlayer2("green","shrapnel","inferno",1850,1450,170,70)
+              drawFakePlayer2("green","gunner","artillery",1900,1550,260,60)
+              drawFakePlayer2("green","trapper","smasher",1870,1650,260,50)
+              drawFakePlayer2("green","mono","node",2300,1100,45,50)
+              drawFakePlayer2("blue","manufacturer","saw",2100,1830,280,70)
+              drawFakePlayer2("blue","arsenal","ziggurat",1880,1930,305,70)
+              drawFakePlayer2("blue","spread","triplet",1780,1950,325,60)
             }
             else if (drawingGamemode == 4){//tank editor
               hctx.fillStyle = "rgba(89, 168, 192, 0.3)";//draw safe zone
@@ -1835,7 +1836,7 @@ console.log(bodyupgrades);
               drawPolygon(5,1100,2000,0)
               drawPolygon(3,500,2075,0)
               drawPolygon(3,650,1250,0)
-              drawFakePlayer("blue","split","wall",1300,1600,10,50)
+              drawFakePlayer2("blue","split","wall",1300,1600,10,50)
             }//increase x value to move right, increase y value to move downwards
             //im assuming 0 degrees is pointing upwards, check this later
             hctx.restore();//restore zoom
@@ -1859,7 +1860,7 @@ console.log(bodyupgrades);
 
         playButton.addEventListener('click', startGame);
         function startGame(){
-          // First time start game
+          state = "ingame";
           //remove home screen divs
           playButton.style.display = "none";
           hcanvas.style.display = "none";
@@ -1925,6 +1926,7 @@ console.log(bodyupgrades);
             };//shapes and bots always below player, fixed portals always under everything
             portals = {};
             oldportals = {};
+            screenDrawLoop();//start the canvas drawing
             try {//store name, so next time when open the game, will auto-fill the previous name
               localStorage.prevname = yourName;
             } catch (e) {
@@ -1946,7 +1948,7 @@ console.log(bodyupgrades);
         }
         function loadChangelog() {//copied from scenexe2 code, thanks cobalt
           return new Promise(function (AS) {
-            fetch("./changelog.txt").then(function (AU) {
+            fetch("/changelog.txt").then(function (AU) {
               return AU.text();
             }).then(function (AU) {
               (function (AP) {
@@ -2072,7 +2074,7 @@ console.log(bodyupgrades);
           }
         }
         function returnToHomeScreen(type){//if type does not exist: return from death screen to home screen, or else if type is disconnect
-          gameStart = 0;
+          state = "homepage";
           if (!type){
             //playButton.style.display = "block";
             //nameInput.style.display = "block";//later gonna connect anyway
@@ -2123,12 +2125,10 @@ console.log(bodyupgrades);
         //ABOVE IS SINGLEPLAYER CODE
         //------------------------------------------------------------------------------------------------------------------------------------------------
         //BELOW IS MULTIPLAYER CODE (COPIED FROM OLD ROCKETER)
-      
-        function multiplayer(){
         
         var connected = "no";
         var mainMenuOpacity = 0;
-        var gameStart = 0; //gamestart variable outside so that can access in play button onclick in code above
+        var state = "homepage"; //homepage, ingame, or deathscreen
         var drawAreaX = 0; //these two variable placed outside so that can access in mousemove event listener
         var drawAreaY = 0;
         var px = 0;
@@ -2209,6 +2209,9 @@ console.log(bodyupgrades);
           notifone.style.backgroundColor = color;
           notifications.prepend(notifone);//prepend is appendchild but insert at top
           setTimeout(() => {
+            notifone.style.animation = "animateNotifRemove .5s";//0.5 seconds animation fade out
+          }, (timer-500));//0.5 seconds before removing
+          setTimeout(() => {
             notifone.remove();
           }, timer);
         }
@@ -2259,7 +2262,7 @@ console.log(bodyupgrades);
           showname: true,
           clickablechatlinks: true,
           showownname: false,
-          silentTyping: false,
+          silenttyping: false,
           showtypingindicators: true,
           showids: false,
           showticktime: true,
@@ -2303,27 +2306,33 @@ console.log(bodyupgrades);
           //localStorage.settings = JSON.stringify({"spawnduneparticle":"yes","spawncrossroadsparticle":"yes","spawnradparticle":"yes","showStaticMobName":"no","showMinionMobName":"no","showshapeinfo":"no","radiantSizeRange":5,"theme":"default",showstats:"no",});
           localStorage.settings = JSON.stringify(settingsList);
         }
-        else if (Object.keys(JSON.parse(localStorage.settings)).length != Object.keys(settingsList).length){//there are new or removed settings!
-          let newsettings = {};
-          let oldsettings = JSON.parse(localStorage.settings);
-          for (const settingProp in settingsList) {//loop through new settings
-            if (oldsettings.hasOwnProperty(settingProp)){//this setting existed, didnt change
-              newsettings[settingProp] = oldsettings[settingProp];
-            }
-            else{//new setting!
-              newsettings[settingProp] = settingsList[settingProp];
-            }
+        else{
+          //check if stored settings and new settings are the same
+          let old = Object.keys(JSON.parse(localStorage.settings)).sort();
+          let current = Object.keys(settingsList).sort();//sort by alphabetical order to prevent differet ordering from causing mismatch
+          if (JSON.stringify(old) === JSON.stringify(current)){//usual
+            settingsList = JSON.parse(localStorage.settings);
           }
-          //now update the settings
-          settingsList = newsettings;
-          localStorage.settings = JSON.stringify(newsettings);
-          console.log("Updated settings. This is due to an update.")
-        }
-        else{//usual
-          settingsList = JSON.parse(localStorage.settings);
+          else{//update
+            let newsettings = {};
+            let oldsettings = JSON.parse(localStorage.settings);
+            for (const settingProp in settingsList) {//loop through new settings
+              if (oldsettings.hasOwnProperty(settingProp)){//this setting existed, didnt change
+                newsettings[settingProp] = oldsettings[settingProp];
+              }
+              else{//new setting!
+                newsettings[settingProp] = settingsList[settingProp];
+              }
+            }
+            //now update the settings
+            settingsList = newsettings;
+            localStorage.settings = JSON.stringify(newsettings);
+            console.log("Updated settings. This is due to an update.")
+          }
         }
           
         //now we update the divs (the switches)
+        console.log(settingsList)
         for (const settingProp in settingsList) {//loop through all settings
           if (settingsList[settingProp] === true){
             document.querySelector('input[settingid="'+settingProp+'"]').setAttribute('checked','true');
@@ -2331,7 +2340,15 @@ console.log(bodyupgrades);
           else if (settingsList[settingProp] === false){
             document.querySelector('input[settingid="'+settingProp+'"]').removeAttribute('checked');
           }
-          else if (typeof settingProp === 'number'){//keybind (properties are numbers)
+          else if (settingProp.startsWith("1")||
+          settingProp.startsWith("2")||
+          settingProp.startsWith("3")||
+          settingProp.startsWith("4")||
+          settingProp.startsWith("5")||
+          settingProp.startsWith("6")||
+          settingProp.startsWith("7")||
+          settingProp.startsWith("8")||
+          settingProp.startsWith("9")){//keybind (properties are numbers, but obj prop names are converted to strings)
             //settingsList[settingProp];//add function to change keybinds in the future
           }
           else{//invalid property value
@@ -2436,7 +2453,7 @@ console.log(bodyupgrades);
         //check whether mouse is near left side of screen, which will make skillpoints appear
         var mouseToSkillPoints = "no";
 
-        let defaultNotifColor = "rgb(90,90,90)";
+        let defaultNotifColor = "rgb(45,45,45)";
         function randomNotif() {
           //random notification when player joined game
           let randomFunFact = [
@@ -2465,8 +2482,8 @@ console.log(bodyupgrades);
         var socket = "null";
         // Connect to server
         if (window.location.href.includes("developer-rocketer")||window.location.href.includes("offline-rocketer")||window.location.href.includes("127.0.0.1")){//this is a testing website, or local host
-          createNotif("Connected to the developer's testing servers.","rgba(150,0,0)",5000)
-          createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)
+          //createNotif("Connected to the developer's testing servers.","rgba(150,0,0)",5000)
+          //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)
           var serverlist = {
             "Free For All": "wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/",
             "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
@@ -3136,7 +3153,7 @@ console.log(bodyupgrades);
                       killer = shapeNames[shapetype];
                     }
                     showDeathScreen(endscore,killer,player.level,player.tankType,player.bodyType);
-                    gameStart = -1;//ensure that hctx canvas doesnt clear//remove?
+                    state = "deathscreen";//ensure that hctx canvas doesnt clear//remove?
                     
                     //calculating respawn score, change this if server caculation changes
                     let respawnlvl = 0;
@@ -3340,7 +3357,7 @@ console.log(bodyupgrades);
             var shakeIntensity = 1;
             var slightshake = "no";//spawn/upgrade screen shake
             var slightshakeIntensity = 1;
-            var players = "error";
+            //var players = "error";
             var player = "error";
             var objects = {};
             var oldobjects = {};//for client interpolation
@@ -3351,7 +3368,6 @@ console.log(bodyupgrades);
             var sentStuffBefore = "no";
             var latency = "Checking latency...";
             var start;
-            var showDebug = "yes";
             var showHitBox = "no";
             var shownBandwidth = 0; //bandwidth that is shown, updates every second
             var bandwidth = 0; //size of packet sent from server
@@ -3391,6 +3407,20 @@ console.log(bodyupgrades);
                 oldangle: "no",
               },
             };
+            //weapon upgrade tree
+            var showUpgradeTree = "no";
+            var upgradetreepos = -750; //current position of upgrade tree
+            var upgradetreestart = -750; //start position
+            var upgradetreeend = 165; //end position
+            //body upgrade tree
+            var showBodyUpgradeTree = "no";
+            var bupgradetreepos = -750; //current position of upgrade tree
+            var bupgradetreestart = -750; //start position
+            var bupgradetreeend = 165; //end position
+            //skillpoints
+            var skillpointspos = -370; //current position of skill points bar
+            var skillpointsstart = -370; //start position
+            var skillpointsend = 155; //end position
 
             const shootBarrelMax = 100;//reduce this value for a larger shooting height change
 
@@ -7311,40 +7341,60 @@ console.log(bodyupgrades);
                 //prevents triggering commands when typing in input boxes
                 //console.log(e)
                 if (e.key == "ArrowDown" || e.key == "s" || e.key == "S") {
-                  if (downpressed == "no"){
-                    var packet = JSON.stringify(["down"]);
-                    socket.send(packet)
+                  if (downpressed == "no" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["down"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = true;
+                    }
                     downpressed = "yes";
                   }
                 } else if (e.key == "ArrowUp" || e.key == "w" || e.key == "W") {
-                  if (uppressed == "no"){
-                    var packet = JSON.stringify(["up"]);
-                    socket.send(packet)
+                  if (uppressed == "no" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["up"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = true;
+                    }
                     uppressed = "yes";
                   }
                 } else if (e.key == "ArrowLeft" || e.key == "a" || e.key == "A") {
-                  if (leftpressed == "no"){
-                    leftpressed = "yes";//put this before sending packet to prevent sending error from causing weird movement, usually happen when switching server in main menu using left and right keys
-                    var packet = JSON.stringify(["left"]);
-                    socket.send(packet)
+                  if (leftpressed == "no" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["left"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = true;
+                    }
+                    leftpressed = "yes";
                   }
-                    if (gameStart < 1 && gameStart > -1){
+                    else if (state == "homepage"){
                       changeGamemode("p")
                     }
                 } else if (e.key == "ArrowRight" || e.key == "d" || e.key == "D") {
-                  if (rightpressed == "no"){
+                  if (rightpressed == "no" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["right"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = true;
+                    }
                     rightpressed = "yes";
-                    var packet = JSON.stringify(["right"]);
-                    socket.send(packet)
                   }
-                  if (gameStart < 1 && gameStart > -1){
+                  else if (state == "homepage"){
                       changeGamemode("n")
                     }
-                } else if (e.key == "Shift"){
+                } else if (e.key == "Shift" && state=="ingame" && gamemode != "PvE arena"){
                   var packet = JSON.stringify(["mousePressed", 3]);
                   socket.send(packet)
                   //e.which refers to whether it's lfet or right click. leftclick is 1, rightclick is 3
-                } else if (e.key == "e" || e.key == "E") {
+                } else if ((e.key == "e" || e.key == "E") && state=="ingame" && gamemode != "PvE arena") {
                   var packet = JSON.stringify(["auto-fire"]);
                   socket.send(packet)
                   if (autofire == "no"){
@@ -7355,7 +7405,7 @@ console.log(bodyupgrades);
                     createNotif("Auto Fire (E): OFF",defaultNotifColor,3000)
                     autofire = "no";
                   }
-                } else if (e.key == "c" || e.key == "C") {
+                } else if ((e.key == "c" || e.key == "C") && state=="ingame" && gamemode != "PvE arena") {
                   var packet = JSON.stringify(["auto-rotate"]);
                   socket.send(packet)
                   if (autorotate == "no"){
@@ -7366,7 +7416,7 @@ console.log(bodyupgrades);
                     createNotif("Auto Rotate (C): OFF",defaultNotifColor,3000)
                     autorotate = "no";
                   }
-                } else if (e.key == "f" || e.key == "F") {
+                } else if ((e.key == "f" || e.key == "F") && state=="ingame" && gamemode != "PvE arena") {
                   var packet = JSON.stringify(["fast-auto-rotate"]);
                   socket.send(packet)
                   if (fastautorotate == "no"){
@@ -7377,7 +7427,7 @@ console.log(bodyupgrades);
                     createNotif("Fast Auto Rotate (F): OFF",defaultNotifColor,3000)
                     fastautorotate = "no";
                   }
-                } else if (e.key == "x" || e.key == "X") {
+                } else if ((e.key == "x" || e.key == "X") && state=="ingame" && gamemode != "PvE arena") {
                   if (keylock == "yes"){
                     keylock = "no";
                     createNotif("Spin Lock (X): OFF",defaultNotifColor,3000)
@@ -7386,20 +7436,26 @@ console.log(bodyupgrades);
                     keylock = "yes";
                     createNotif("Spin Lock (X): ON",defaultNotifColor,3000)
                   }
-                } else if (e.key == "m" || e.key == "M") {
+                } else if ((e.key == "m" || e.key == "M") && state=="ingame") {
                   //opening and closing debug info box
-                  if (showDebug == "no") {
-                    //if debug closed
-                    showDebug = "yes"; //open debug
-                    //notification
-                    createNotif("Debug Mode (M): ON",defaultNotifColor,3000)
-                  } else if (showDebug == "yes") {
-                    //if debug open
-                    showDebug = "no"; //hide debug
-                    //notification
+                  if (debugState == "open") {
+                    fpsCounter.style.display = "none";
+                    let allOtherDebugDivs = document.querySelectorAll(".debugopen");
+                    for(let i = 0; i < allOtherDebugDivs.length; i++){
+                      document.getElementById(allOtherDebugDivs[i].id).className = "debug";
+                    }
+                    debugState = "close";
                     createNotif("Debug Mode (M): OFF",defaultNotifColor,3000)
+                  } else {
+                    fpsCounter.style.display = "block";
+                    let allOtherDebugDivs = document.querySelectorAll(".debug");
+                    for(let i = 0; i < allOtherDebugDivs.length; i++){
+                      document.getElementById(allOtherDebugDivs[i].id).className = "debugopen";
+                    }
+                    debugState = "open";
+                    createNotif("Debug Mode (M): ON",defaultNotifColor,3000)
                   }
-                } else if (e.key == "h" || e.key == "H") {
+                } else if ((e.key == "h" || e.key == "H") && state=="ingame") {
                   //toggle hitbox
                   if (showHitBox == "no") {
                     showHitBox = "yes";
@@ -7408,12 +7464,15 @@ console.log(bodyupgrades);
                     showHitBox = "no";
                     createNotif("Hitbox (H): OFF",defaultNotifColor,3000)
                   }
-                } else if (e.key == "i" || e.key == "I") {
-                  //notification with more info about game
-                  //use \n for new line
-                  //note: will not work properly anymore as long notifications not supported
-                  //createNotif("Controls:\nMouse: point barrel in direction\nW,A,S,D or arrow keys: move tank\nE: toggle auto-fire\nC: toggle auto-rotate\nF: toggle 3x fast auto-rotate\nU: toggle body upgrade tree\nY: toggle weapon upgrade tree\nM: toggle debug\nI: show this notification\nP: passive mode (bullets and auras do not do damage)\nO: open settings\nH: toggle hitbox\nX: spin lock\nUpgrade levels: 1, 5, 20, 45, 100, 111","rgba(15,15,15)",5000)
-                } else if (e.key == "p" || e.key == "P") {
+                } else if ((e.key == "t" || e.key == "T") && state=="ingame") {
+                  if (quickchat.style.display == "block"){
+                    quickchat.style.display = "none";
+                  }
+                  else{//if display is none or " "
+                    //js will return display as " " because it cant read the css, unless you set it using js before
+                    quickchat.style.display = "block";
+                  }
+                } else if ((e.key == "p" || e.key == "P") && state=="ingame" && gamemode != "PvE arena") {
                   var packet = JSON.stringify(["passive-mode"]);
                   socket.send(packet)
                   if (passivemode == "no"){
@@ -7424,18 +7483,15 @@ console.log(bodyupgrades);
                     createNotif("Passive Mode (P): OFF",defaultNotifColor,3000)
                     passivemode = "no";
                   }
-                } else if (e.key == "Enter" && gameStart >= 1) {
+                } else if (e.key == "Enter" && state == "ingame") {
                   //if press enter, add cursor to chat inputbox
                   document.getElementById("chat").focus(); //add cursor to input field
-                } else if (e.key == "Enter" && gameStart < 1) {
-                  if (gameStart == -1){
-                    //at death screen
+                } else if (e.key == "Enter" && state != "ingame") {
+                  if (state == "deathscreen"){
                     returnToHomeScreen();
                   }
-                  else{
-                    //if press enter at homepage, enter the game
-                    gameStart = 1;
-                    randomNotif();
+                  else{//if press enter at homepage, enter the game
+                    startGame();
                   }
                 } else if (e.key == "y" || e.key == "Y") {
                   if (showUpgradeTree == "no") {
@@ -7453,17 +7509,10 @@ console.log(bodyupgrades);
                   }
                 } else if (e.key == "o" || e.key == "O") {
                   //open and close settings
-                  if (settingspopup.style.display == "none" || settingspopup.style.display == "") {//if settings popup hidden or havent opened before
-                    settingspopup.style.display = "block";
-                    document.getElementById("screenDarken").style.display = "block";
-                    document.getElementById("screenLighten").style.display = "none";
+                  if (settings.style.display == "none" || settings.style.display == "") {//if settings popup hidden or havent opened before
+                    settings.style.display = "block";
                   } else {
-                    settingspopup.style.display = "none";
-                    document.getElementById("screenDarken").style.display = "none";
-                    document.getElementById("screenLighten").style.display = "block";
-                    setTimeout(function () {
-                      document.getElementById("screenLighten").style.display = "none";
-                    }, 500); //after animation finish, make buttons below darkness clickable
+                    settings.style.display = "none";
                   }
                 } else if (
                   (e.key == "1" ||
@@ -7474,7 +7523,7 @@ console.log(bodyupgrades);
                     e.key == "6" ||
                     e.key == "7" ||
                     e.key == "8") &&
-                  extraPoints > 0
+                  extraPoints > 0  && state=="ingame" && gamemode != "PvE arena"
                 ) {
                   //skill points
                   var packet = JSON.stringify(["upgradeSkillPoints", e.key]);
@@ -7490,14 +7539,13 @@ console.log(bodyupgrades);
                 //if name input box is selected
                 if (e.key == "Enter") {
                   //if press enter, do the same thing as when pressing the play button
-                  gameStart = 1;
-                  randomNotif();
+                  startGame();
                 }
               } else if (
                 document.activeElement === document.getElementById("chat")
               ) {
                 //if chat input box is selected
-                if (e.key == "Enter") {
+                if (e.key == "Enter"  && state=="ingame" && gamemode != "PvE arena") {
                   //if press enter, send chat message
                   var yourChat = document.getElementById("chat").value; //get message
                   var packet = JSON.stringify(["chat", yourChat]);
@@ -7524,33 +7572,53 @@ console.log(bodyupgrades);
                 //if the name input box is not selected (prevents triggering commands when typing name)
                 //console.log(e)
                 if (e.key == "ArrowDown" || e.key == "s" || e.key == "S") {
-                  if (downpressed == "yes"){
-                    var packet = JSON.stringify(["downRelease"]);
-                    socket.send(packet)
+                  if (downpressed == "yes" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["downRelease"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = false;
+                    }
                     downpressed = "no";
                   }
                 } else if (e.key == "ArrowUp" || e.key == "w" || e.key == "W") {
-                  if (uppressed == "yes"){
-                    var packet = JSON.stringify(["upRelease"]);
-                    socket.send(packet)
+                  if (uppressed == "yes" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["upRelease"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = false;
+                    }
                     uppressed = "no";
                   }
                 } else if (e.key == "ArrowLeft" || e.key == "a" || e.key == "A") {
-                  if (leftpressed == "yes"){
+                  if (leftpressed == "yes" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["leftRelease"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = false;
+                    }
                     leftpressed = "no";
-                    var packet = JSON.stringify(["leftRelease"]);
-                    socket.send(packet)
                   }
                 } else if (e.key == "ArrowRight" || e.key == "d" || e.key == "D") {
-                  if (rightpressed == "yes"){
+                  if (rightpressed == "yes" && state=="ingame"){
+                    if (gamemode != "PvE arena"){
+                      var packet = JSON.stringify(["rightRelease"]);
+                      socket.send(packet)
+                    }
+                    else{
+                      keys[e.key] = false;
+                    }
                     rightpressed = "no";
-                    var packet = JSON.stringify(["rightRelease"]);
-                    socket.send(packet)
                   }
-                } else if (e.key == " ") {
+                } else if (e.key == " " && state=="ingame" && gamemode != "PvE arena") {
                   var packet = JSON.stringify(["mouseReleased"]);
                   socket.send(packet)
-                } else if (e.key == "Shift"){
+                } else if (e.key == "Shift" && state=="ingame" && gamemode != "PvE arena"){
                   var packet = JSON.stringify(["mousePressed", 1]);//stop drone repel by left click
                   socket.send(packet)
                   var packet = JSON.stringify(["mouseReleased"]);
@@ -7566,6 +7634,11 @@ console.log(bodyupgrades);
             if (mobile == "no") {
               //if not mobile
               $("html").mousemove(function (e) {
+                if (gamemode == "PvE arena"){
+                  mouseX = e.pageX;
+                  mouseY = e.pageY;
+                  return;
+                }
                 mousex = e.pageX;
                 mousey = e.pageY;
 
@@ -7588,7 +7661,7 @@ console.log(bodyupgrades);
                 var mouseXBasedOnCanvas = (window.innerWidth / 2 - mousex) * clientFovMultiplier;
                 var mouseYBasedOnCanvas = (window.innerHeight / 2 - mousey) * clientFovMultiplier;
                 //note, the angle is in radians, not degrees
-                if (gameStart == 2.3) {
+                if (state == "ingame") {
                   //if playing the game
                   if (
                     (Math.abs(mouseXBasedOnCanvas - oldmousex) >= 10 ||
@@ -7691,13 +7764,22 @@ console.log(bodyupgrades);
 
               //mouse press listener
               $("html").mousedown(function (e) {
-                var packet = JSON.stringify(["mousePressed", e.which]);
-                socket.send(packet)
+                if (gamemode == "PvE arena"){
+                  mouseDown = true;
+                }
+                else{
+                  var packet = JSON.stringify(["mousePressed", e.which]);
+                  socket.send(packet)
+                }
                 //e.which refers to whether it's lfet or right click. leftclick is 1, rightclick is 3
               });
 
               //mouse release listener
               $("html").mouseup(function (e) {
+                if (gamemode == "PvE arena"){
+                  mouseDown = false;
+                  return;
+                }
                 var packet = JSON.stringify(["mouseReleased", e.which]);
                 socket.send(packet);
                 if (openedUI=="no"){
@@ -8059,1024 +8141,920 @@ console.log(bodyupgrades);
                   canLogIn = "no";
                 }
               }
-              if (gameStart >= 0 && gameStart <= 0.5) {
-                //home screen stuff got removed
-              } else if (gameStart >= 1 && gameStart < 2.1) {
-                //if client clicked play already but server havent replied
-                if (gameStart == 1) {//transfer this part to the join game function?
-                  //startgame function
-      }
-      //draw loading words
-      hctx.clearRect(0, 0, hcanvas.width, hcanvas.height); //clear home page
-      hctx.fillStyle = "black";
-      hctx.font = "700 100px Roboto";
-      hctx.textAlign = "center";
-      hctx.fillText(
-        "Joining Game...",
-        hcanvas.width / 2,
-        hcanvas.height / 2
-      );
-      //homepage background slowly disappears
-      var canvasopacity = 2 - gameStart; //set transparency, which depends on time since clicked play button to create animation. Gamestart changes from 1 to 2
-      if (canvasopacity < 0) {
-        canvasopacity = 0;
-        //gameStart might be 1.5000000000000004 instead of 1.5 due to js precision error, so this prevents transparency to be less than 0
-      }
-      hctx.globalAlpha = canvasopacity;
-      //hctx.drawImage(img, 0, 0, hcanvas.width, hcanvas.height);//FIX THIS //Homepage background is no longer an image
-      hctx.globalAlpha = 1.0; //reset transparency
-      gameStart += 0.1;
-    } else if (gameStart > 2.1 && gameStart < 2.2) {
-      hctx.clearRect(0, 0, hcanvas.width, hcanvas.height); //clear home page after animation complete
-      document.getElementById("chat").style.display = "block"; //show chat box
-
-      gameStart = 2.3;
-    } else if (gameStart == 2.3 && sentStuffBefore == "yes") {
-      //DRAW THE GAME STUFF
+              if (state == "ingame" && sentStuffBefore == "yes") {
+                //DRAW THE GAME STUFF
+                
+                //reset to prevent restore bugs (hctx.restore wont happen if there is an error in the code)
+                if (typeof hctx.reset == 'function') { 
+                  hctx.reset();
+                }
       
-    //reset to prevent restore bugs (hctx.restore wont happen if there is an error in the code)
-    if (typeof hctx.reset == 'function') { 
-      hctx.reset();
-    }
+                //for chat animation
+                typingAnimation+=0.5*deltaTime;
+                if (typingAnimation > 20){
+                  typingAnimation = 0;
+                }
       
-      //for chat animation
-      typingAnimation+=0.5*deltaTime;
-      if (typingAnimation > 20){
-        typingAnimation = 0;
-      }
-      
-      auraRotate += (80)/30*deltaTime;
-      if(auraRotate < 0) {auraRotate = 360}
-      if(auraRotate > 360) {auraRotate = 0}
-      auraWidth = (Math.sin((auraRotate * Math.PI / 180))/20)+0.125;
-      //for radiant shape spike
-      extraSpikeRotate++;
-      if (extraSpikeRotate >= 360) {
-        extraSpikeRotate -= 360;
-      }
-      extraSpikeRotate1 += 2;
-      if (extraSpikeRotate1 >= 360) {
-        extraSpikeRotate1 -= 360;
-      }
-      extraSpikeRotate2--;
-      if (extraSpikeRotate2 <= 0) {
-        extraSpikeRotate2 += 360;
-      }
-      //for radiant colors
-      for (const id in radiantShapes) {
-        let animationSpeed = 3;
-        let radtype = radiantShapes[id].radtype;
-        if (radtype == 1) {
-          //red yellow blue
-          if (radiantShapes[id].rgbstate == 0) {
-            radiantShapes[id].rgbstate = 1;
-          } else if (radiantShapes[id].rgbstate == 1) {
-            if (radiantShapes[id].red > 200) {
-              radiantShapes[id].red -= animationSpeed;
-            }
-            radiantShapes[id].green += animationSpeed;
-            if (radiantShapes[id].green >= 150) {
-              radiantShapes[id].rgbstate = 2; //change to next state
-            }
-          } else if (radiantShapes[id].rgbstate == 2) {
-            radiantShapes[id].blue += animationSpeed;
-            if (radiantShapes[id].green > 0) {
-              radiantShapes[id].green -= animationSpeed;
-            }
-            if (radiantShapes[id].red > 0) {
-              radiantShapes[id].red -= animationSpeed;
-            }
-            if (radiantShapes[id].blue >= 200) {
-              radiantShapes[id].rgbstate = 3; //change state
-            }
-          } else if (radiantShapes[id].rgbstate == 3) {
-            radiantShapes[id].blue -= animationSpeed;
-            radiantShapes[id].red += animationSpeed;
-            if (
-              radiantShapes[id].blue <= 0 &&
-              radiantShapes[id].red >= 255
-            ) {
-              radiantShapes[id].rgbstate = 1; //change state
-              radiantShapes[id].red = 255;
-              radiantShapes[id].blue = 0;
-            }
-          }
-        } else {
-          //greyish-green white yellow 118, 168, 151 -> 209, 230, 222 -> 234, 240, 180
-          if (radiantShapes[id].rgbstate == 0) {
-            radiantShapes[id].rgbstate = 1;
-          } else if (radiantShapes[id].rgbstate == 1) {
-            if (
-              radiantShapes[id].red >= 118 &&
-              radiantShapes[id].red < 209
-            ) {
-              radiantShapes[id].red += animationSpeed;
-              radiantShapes[id].blue += animationSpeed;
-              radiantShapes[id].green += animationSpeed;
-            } else {
-              radiantShapes[id].rgbstate = 2; //change to next state
-            }
-          } else if (radiantShapes[id].rgbstate == 2) {
-            radiantShapes[id].blue -= animationSpeed;
-            if (radiantShapes[id].green < 240) {
-              radiantShapes[id].green += animationSpeed;
-            }
-            if (radiantShapes[id].red < 234) {
-              radiantShapes[id].red += animationSpeed;
-            }
-            if (radiantShapes[id].blue <= 180) {
-              radiantShapes[id].rgbstate = 3; //change state
-            }
-          } else if (radiantShapes[id].rgbstate == 3) {
-            radiantShapes[id].red -= animationSpeed;
-            if (radiantShapes[id].green > 168) {
-              radiantShapes[id].green -= animationSpeed;
-            }
-            if (radiantShapes[id].blue > 151) {
-              radiantShapes[id].blue -= animationSpeed;
-            }
-            if (radiantShapes[id].red <= 118) {
-              radiantShapes[id].rgbstate = 1; //change state
-              radiantShapes[id].red = 118;
-              radiantShapes[id].blue = 168;
-              radiantShapes[id].green = 151;
-            }
-          }
-        }
-      }
-      //for gates
-      gateTimer += 0.1 * deltaTime;
-      if (gateTimer >= endGate){
-        gateTimer = startGate;
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height); //clear screen so can redraw
-      hctx.clearRect(0, 0, hcanvas.width, hcanvas.height); //clear screen so can redraw
-      //shake canvas if touch portal
-      let prevShakeYN = shakeYN;//this one doesnt change later on
-      if (shakeYN == "yes") {
-        ctx.save();
-        var dx = Math.random() * 20 * (1 - shakeIntensity) - 10 * (1 - shakeIntensity);
-        var dy = Math.random() * 20 * (1 - shakeIntensity) - 10 * (1 - shakeIntensity);
-        //-10 at the end so that the chosen number has a range of between -10 and 10
-        //shake intensity 0 means that players is at center of portal
-        ctx.translate(dx, dy);
-      }
-      else if (slightshake == "yes"){
-        if (slightshakeIntensity<0){
-          slightshake = "no";
-        }
-        else{
-          ctx.save();
-          var dx = Math.random() * 10 * slightshakeIntensity - 5 * slightshakeIntensity;
-          var dy = Math.random() * 10 * slightshakeIntensity - 5 * slightshakeIntensity;
-          //-10 at the end so that the chosen number has a range of between -10 and 10
-          ctx.translate(dx, dy);
-          slightshakeIntensity-=0.1;
-        }
-      }
-      //the canvas is the whole screen
-     
-      //interpolate the player's position first
-      lerpDrawnX = 0;
-      lerpDrawnY = 0;
-      if (objects.player && oldobjects.player && interpolatedobjects.player){
-        interpolatedobjects.player[playerstring] = JSON.parse(JSON.stringify(objects.player[playerstring]));
-        simpleLerpPos(objects.player[playerstring],oldobjects.player[playerstring]);
-        px = lerpDrawnX;//needed for drawing stuff
-        py = lerpDrawnY;
-      }
-      else{
-        px = player.x;
-        py = player.y;
-      }
-
-      //now we are drawing the game area
-      if (playerstring != "error") {
-        //checks if server has already sent player's id to client
-        drawAreaX = canvas.width / 2 - px; //needed for mouse movement
-        drawAreaY = canvas.height / 2 - py;
-        window["x"] = px;
-        window["y"] = py;
-        //COLOR OF AREA OUTSIDE PLAYABLE AREA
-      }
-      if (gamemode == "dune") {
-        ctx.fillStyle = "#fcdcbb";
-      } else if (gamemode == "cavern") {
-        ctx.fillStyle = "#010101";
-      } else if (gamemode == "sanctuary") {
-        ctx.fillStyle = "#404040";
-      } else if (gamemode == "crossroads") {
-        ctx.fillStyle = "#1f1f1f";
-      } else {
-        ctx.fillStyle = "#bebebe";
-      }
-      ctx.fillRect(0, 0, canvas.width, canvas.height); //drawing background
-      //COLOR OF PLAYABLE AREA
-      if (gamemode == "dune") {
-        ctx.fillStyle = "#ffead4";
-      } else if (gamemode == "cavern") {
-        ctx.fillStyle = "#141414";
-      } else if (gamemode == "sanctuary") {
-        ctx.fillStyle = "#595959";
-      } else if (gamemode == "crossroads") {
-        ctx.fillStyle = "#303030";
-      } else {
-        ctx.fillStyle = "#CDCDCD";
-      }
-      ctx.fillRect(
-        canvas.width / 2 - px / clientFovMultiplier,
-        canvas.height / 2 - py / clientFovMultiplier,
-        MAP_WIDTH / clientFovMultiplier,
-        MAP_WIDTH / clientFovMultiplier
-      ); //drawing area
-
-      if (gamemode == "2 Teams") {//draw team base
-        var baseSize = 1500;
-        let firstColor = teamColors[0];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          MAP_WIDTH / clientFovMultiplier
-        );
-        firstColor = teamColors[1];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          MAP_WIDTH / clientFovMultiplier
-        );
-      }
-      if (gamemode == "4 Teams") {//draw team base
-        var baseSize = 1500;
-        let firstColor = teamColors[0];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";//c7bccf
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier
-        );
-        firstColor = teamColors[1];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier
-        );
-        firstColor = teamColors[2];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier
-        );
-        
-
-        firstColor = teamColors[3];
-        //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-        if (firstColor == "red"){
-          ctx.fillStyle = "#dbbfc0";
-        }
-        else if (firstColor == "green"){
-          ctx.fillStyle = "#acd0bd";
-        }
-        else if (firstColor == "blue"){
-          ctx.fillStyle = "#acc8d0";
-        }
-        else if (firstColor == "purple"){
-          ctx.fillStyle = "#c0b3c9";
-        }
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier,
-          canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier,
-          baseSize / clientFovMultiplier
-        );
-      }
-      if (gamemode == "Tank Editor"){//draw safe zone
-        ctx.fillStyle = safeZoneColor;
-        ctx.fillRect(
-          canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier /2 - safeZone / clientFovMultiplier /2,
-          canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier /2 - safeZone / clientFovMultiplier /2,
-          safeZone / clientFovMultiplier,
-          safeZone / clientFovMultiplier
-        );
-      }
-
-      //drawin grid lines
-      ctx.beginPath();
-      ctx.lineWidth = 1; //thickness of grid
-      var gridHeight = 30 / clientFovMultiplier;
-      if (gamemode == "dune") {
-        ctx.strokeStyle = "#edddc5";
-      } else if (gamemode == "cavern") {
-        ctx.strokeStyle = "#242424";
-        gridHeight = 80 / clientFovMultiplier;
-      } else if (gamemode == "sanctuary") {
-        ctx.strokeStyle = "#363636";
-        ctx.lineWidth = 3 / clientFovMultiplier;
-      } else if (gamemode == "crossroads") {
-        ctx.strokeStyle = "rgba(18, 18, 18, .5)";
-        gridHeight = 80 / clientFovMultiplier;
-        ctx.lineWidth = 3; //thickness of grid
-      } else {
-        ctx.lineWidth = 4; //thickness of grid
-        gridHeight = 24 / clientFovMultiplier;
-        ctx.strokeStyle = "rgba(180, 180, 180, .2)";
-      }
-
-      //How does drawing the grid lines work: the equation below is to calculate the negative of the closest number to drawAreaX that is divisible by gridHeight, with drawAreaX referring to the distance from left side of screen to arena, and gridHeight is distance between lines drawn. By calculating this, we can find out the position to start drawing the first line on the left side of the screen, producing the effect of the grid moving in the opposite direction of the user. Need to be opposite, that's why negative in equation. Because the lines are drawn relative to the left and top of arena, that's why the lines are always drawn exactly on the left and top of arena on screen, unless people disconnect or connect, resulting in change og arena size.
-      //for x: -gridHeight-(-drawAreaX%gridHeight)
-      //for y: -gridHeight-(-drawAreaY%gridHeight)
-      //edit: instead of using drawAreaX, use (canvas.width/2 - player.x/fov) for accurate grid drawing
-      if (player.fovMultiplier < 10) {
-        //dont draw grid lines if field of vision is high, to prevent lag from drawing too many grid lines
-        for (
-          let x =
-            -gridHeight -
-            (-(canvas.width / 2 - px / clientFovMultiplier) %
-              gridHeight);
-          x < canvas.width;
-          x += gridHeight
-        ) {
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, canvas.height);
-        }
-        for (
-          let y =
-            -gridHeight -
-            (-(canvas.height / 2 - py / clientFovMultiplier) %
-              gridHeight);
-          y < canvas.height;
-          y += gridHeight
-        ) {
-          ctx.moveTo(0, y);
-          ctx.lineTo(canvas.width, y);
-        }
-        ctx.stroke();
-      }
-      
-      
-      //drawing the objects that are sent from the server, order of drawings are already changed by the server, so if you want something to be below another thing, change the order of adding to the object list in the server code, not the client code
-      //Object.keys(portalparticles).forEach((id) => {
-      for (const id in portalparticles) {
-        //potral particle list first, so that it is drawn at the bottom
-        let thisobject = portalparticles[id];
-        thisobject.x += Math.cos(thisobject.angle) * thisobject.speed*deltaTime;
-        thisobject.y += Math.sin(thisobject.angle) * thisobject.speed*deltaTime;
-        drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
-        thisobject.timer-=1*deltaTime;
-        if (thisobject.timer < 0) {
-          delete portalparticles[id];
-        }
-      };
-      shakeYN = "no"; //reset portal screen shake
-      shakeIntensity = 1;
-      Object.keys(portals).forEach((id) => {
-        //draw portals. portals not inside object list because all need to be sent for the minimap anyways
-        if (!portalwidths.hasOwnProperty(id)) {
-          portalwidths[id] = portals[id].width; //this is used for keeping track the sizes of portal that changes when player enter and exit a portal
-        } else {
-          //if this portal already existed
-          if (
-            portalwidths[id] <
-            portals[id].width + portals[id].peopleTouch * 45
-          ) {
-            //45px portal size growth per person
-            portalwidths[id] += 3;
-          } else if (
-            portalwidths[id] >
-            portals[id].width + portals[id].peopleTouch * 45
-          ) {
-            portalwidths[id] -= 3;
-          }
-        }
-        var thisobject = portals[id];
-        thisobject.type = "portal";
-        let oldtimer = thisobject.timer;
-        if (oldportals[id]){
-          thisobject.timer = lerpProperty(thisobject,oldportals[id],'timer')
-        }
-        drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
-        thisobject.timer = oldtimer;//reset timer to original (not lerped)
-
-        //check for collision with portal to check if shake canvas or not
-        var DistanceBetween = Math.sqrt(
-          (player.x - thisobject.x) * (player.x - thisobject.x) +
-            (player.y - thisobject.y) * (player.y - thisobject.y)
-        ); //calculate distance between center of portal and player
-        if (DistanceBetween <= player.width + thisobject.width * 3) {
-          //portal width times 3 so that shake will be felt from a distance
-          shakeYN = "yes";
-          if (
-            DistanceBetween / (player.width + thisobject.width * 3) <
-            shakeIntensity
-          ) {
-            //if new shake intensity higher than shake intensity from anither portal
-            shakeIntensity =
-              DistanceBetween / (player.width + thisobject.width * 3); //ranges from 1 to 0, 0 meaning player is at center of portal
-          }
-        }
-      });
-      
-      //smoothly change player's fov
-      if (player.fovMultiplier){
-        if (clientFovMultiplier != player.fovMultiplier){
-          clientFovMultiplier += (player.fovMultiplier - clientFovMultiplier)/5;
-          if (Math.abs(clientFovMultiplier - player.fovMultiplier)<0.001){
-            clientFovMultiplier = player.fovMultiplier;
-          }
-        }
-      }
-      
-      
-      for (const type in objects) {
-        for (const id in objects[type]) {
-          var thisobject = JSON.parse(JSON.stringify(objects[type][id]));
-          if (!interpolatedobjects[type]){
-            interpolatedobjects[type] = {};
-          }
-          interpolatedobjects[type][id] = JSON.parse(JSON.stringify(objects[type][id]));
-          if (oldobjects[type]){
-            if (oldobjects[type][id]){
-              //do lerping if not new object
-              if (id != playerstring){//not the player
-                if (type != "bullet" || thisobject.bulletType != "bullet"){
-                  lerpDrawnX = thisobject.x;
-                  lerpDrawnY = thisobject.y;
-                  simpleLerpPos(thisobject,oldobjects[type][id])
-                  thisobject.x = lerpDrawnX;
-                  thisobject.y = lerpDrawnY;
-                  if (type == "player" || type == "shape" || type == "def"){//lerp angle
-                    thisobject.angle = simpleLerpAngle(thisobject,oldobjects[type][id])
-                    if (type == "shape"){
-                      thisobject.health = lerpProperty(thisobject,oldobjects[type][id],'health')
+                auraRotate += (80)/30*deltaTime;
+                if(auraRotate < 0) {auraRotate = 360}
+                if(auraRotate > 360) {auraRotate = 0}
+                auraWidth = (Math.sin((auraRotate * Math.PI / 180))/20)+0.125;
+                //for radiant shape spike
+                extraSpikeRotate++;
+                if (extraSpikeRotate >= 360) {
+                  extraSpikeRotate -= 360;
+                }
+                extraSpikeRotate1 += 2;
+                if (extraSpikeRotate1 >= 360) {
+                  extraSpikeRotate1 -= 360;
+                }
+                extraSpikeRotate2--;
+                if (extraSpikeRotate2 <= 0) {
+                  extraSpikeRotate2 += 360;
+                }
+                //for radiant colors
+                for (const id in radiantShapes) {
+                  let animationSpeed = 3;
+                  let thisShape = radiantShapes[id];
+                  let radtype = thisShape.radtype;
+                  if (radtype == 1) {
+                    //red yellow blue
+                    if (thisShape.rgbstate == 0) {
+                      thisShape.rgbstate = 1;
+                    } else if (thisShape.rgbstate == 1) {
+                      if (thisShape.red > 200) {
+                        thisShape.red -= animationSpeed;
+                      }
+                      thisShape.green += animationSpeed;
+                      if (thisShape.green >= 150) {
+                        thisShape.rgbstate = 2; //change to next state
+                      }
+                    } else if (thisShape.rgbstate == 2) {
+                      thisShape.blue += animationSpeed;
+                      if (thisShape.green > 0) {
+                        thisShape.green -= animationSpeed;
+                      }
+                      if (thisShape.red > 0) {
+                        thisShape.red -= animationSpeed;
+                      }
+                      if (thisShape.blue >= 200) {
+                        thisShape.rgbstate = 3; //change state
+                      }
+                    } else if (thisShape.rgbstate == 3) {
+                      thisShape.blue -= animationSpeed;
+                      thisShape.red += animationSpeed;
+                      if (thisShape.blue <= 0 && thisShape.red >= 255) {
+                        thisShape.rgbstate = 1; //change state
+                        thisShape.red = 255;
+                        thisShape.blue = 0;
+                      }
+                    }
+                  } else {
+                    //greyish-green white yellow 118, 168, 151 -> 209, 230, 222 -> 234, 240, 180
+                    if (thisShape.rgbstate == 0) {
+                      thisShape.rgbstate = 1;
+                    } else if (thisShape.rgbstate == 1) {
+                      if (thisShape.red >= 118 && thisShape.red < 209) {
+                        thisShape.red += animationSpeed;
+                        thisShape.blue += animationSpeed;
+                        thisShape.green += animationSpeed;
+                      } else {
+                        thisShape.rgbstate = 2; //change to next state
+                      }
+                    } else if (thisShape.rgbstate == 2) {
+                      thisShape.blue -= animationSpeed;
+                      if (thisShape.green < 240) {
+                        thisShape.green += animationSpeed;
+                      }
+                      if (thisShape.red < 234) {
+                        thisShape.red += animationSpeed;
+                      }
+                      if (thisShape.blue <= 180) {
+                        thisShape.rgbstate = 3; //change state
+                      }
+                    } else if (thisShape.rgbstate == 3) {
+                      thisShape.red -= animationSpeed;
+                      if (thisShape.green > 168) {
+                        thisShape.green -= animationSpeed;
+                      }
+                      if (thisShape.blue > 151) {
+                        thisShape.blue -= animationSpeed;
+                      }
+                      if (thisShape.red <= 118) {
+                        thisShape.rgbstate = 1; //change state
+                        thisShape.red = 118;
+                        thisShape.blue = 168;
+                        thisShape.green = 151;
+                      }
                     }
                   }
                 }
-              }
-              else{
-                //camera is lerped
-                simpleLerpPos(thisobject,oldobjects[type][id])
-                thisobject.x = px;
-                thisobject.y = py;
-                thisobject.angle = simpleLerpAngle(thisobject,oldobjects[type][id])
-              }
-            }
-          }
-          thisobject.type = type;
-          interpolatedobjects[type][id].x = thisobject.x;
-          interpolatedobjects[type][id].y = thisobject.y;
-          if (type == "bullet" && thisobject.bulletType == "bullet"){
-            //server wont send bullet updates all the time if the bullet is a bullet and not a trap or drone or minion etc.
-            //client move bullet yourself
-            //console.log(id + ',' + objects[type][id].x + ',1')
-            objects[type][id].y += Math.sin(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
-            objects[type][id].x += Math.cos(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
-            //console.log(id + ',' + objects[type][id].x + ',2')
-          }
-          drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
-        }
-      }
-      
-        for (const id in objects.player) {
-          var thisobject = JSON.parse(JSON.stringify(objects.player[id]));
-          if (oldobjects.player){
-            if (oldobjects.player[id]){
-              //do lerping if not new object
-              if (id != playerstring){//not the player
-                lerpDrawnX = thisobject.x;
-                lerpDrawnY = thisobject.y;
-                simpleLerpPos(thisobject,oldobjects.player[id])
-                thisobject.x = lerpDrawnX;
-                thisobject.y = lerpDrawnY;
-                thisobject.angle = simpleLerpAngle(thisobject,oldobjects.player[id])
-              }
-              else{
-                simpleLerpPos(thisobject,oldobjects.player[id])
-                thisobject.x = px;
-                thisobject.y = py;
-              }
-            }
-          }
-          thisobject.type = "player";
-          interpolatedobjects.player[id].x = thisobject.x;
-          interpolatedobjects.player[id].y = thisobject.y;
-          drawplayerdata(thisobject, id, playerstring, auraWidth); //draw the obcjects on the canvas
-        }
-      
-      listofdeadobjects.forEach((object) => {
-        //dead object array
-        if (object.bulletType != "aura") {
-          if (object.type == "bullet") {
-            //check if bullet belongs to player. usually server does this, but not for dead objects
-            if (object.ownerId == playerstring) {
-              object.ownsIt = "yes";
-            }
-          }
-          else if (object.type == "shape"){
-            if (shapeHealthBar.hasOwnProperty(object.id)){//for health bar width animation when die
-              if (shapeHealthBar[object.id] > 0){
-                shapeHealthBar[object.id]-=5*deltaTime;
-              }
-              if (shapeHealthBar[object.id] < 0){
-                shapeHealthBar[object.id] = 0;
-              }
-            }
-          }
-          if (object.hasOwnProperty("deadanimation")) {
-            object.deadanimation--; //animate object
-            //object.width += 5;
-            object.width *= 1.1;
-            if (object.deadOpacity > 0) {
-              object.deadOpacity -= 0.2;
-            }
-            if (object.deadOpacity < 0) {
-              object.deadOpacity = 0;
-            }
-            if (object.deadanimation < 0) {
-              //remove object from array
-              var index = listofdeadobjects.indexOf(object);
-              if (index > -1) {
-                // only splice array when item is found
-                listofdeadobjects.splice(index, 1); // 2nd parameter means remove one item only
-              }
-            }
-          } else {
-            object.deadanimation = 5; //duration of dead animation
-            object.deadOpacity = 1;
-          }
-          drawobjects(object, object.id, playerstring, auraWidth); //draw the objects on the canvas
-        }
-      });
-      Object.keys(radparticles).forEach((id) => {
-        //radiant particle list last so that it is drawn at the top
-        var thisobject = radparticles[id];
-        drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
-        thisobject.x += Math.cos(thisobject.angle) * thisobject.speed*deltaTime;
-        thisobject.y += Math.sin(thisobject.angle) * thisobject.speed*deltaTime;
-        thisobject.timer-=1*deltaTime;
-        if(thisobject.source == "dune") {
-           thisobject.angle = (((-90 * Math.PI) / 180) + (thisobject.angle * 199)) / 200;
-        }
+                //for gates
+                gateTimer += 0.1 * deltaTime;
+                if (gateTimer >= endGate){
+                  gateTimer = startGate;
+                }
 
-        if (thisobject.timer < 0) {
-          delete radparticles[id];
-        }
-      });
-      //update fps
-      fpsvaluenow++;
+                ctx.clearRect(0, 0, canvas.width, canvas.height); //clear screen so can redraw
+                hctx.clearRect(0, 0, hcanvas.width, hcanvas.height); //clear screen so can redraw
+                //shake canvas if touch portal
+                let prevShakeYN = shakeYN;//this one doesnt change later on
+                if (shakeYN == "yes") {
+                  ctx.save();
+                  let dx = Math.random() * 20 * (1 - shakeIntensity) - 10 * (1 - shakeIntensity);
+                  let dy = Math.random() * 20 * (1 - shakeIntensity) - 10 * (1 - shakeIntensity);
+                  //-10 at the end so that the chosen number has a range of between -10 and 10
+                  //shake intensity 0 means that players is at center of portal
+                  ctx.translate(dx, dy);
+                }
+                else if (slightshake == "yes"){
+                  if (slightshakeIntensity<0){
+                    slightshake = "no";
+                  }
+                  else{
+                    ctx.save();
+                    let dx = Math.random() * 10 * slightshakeIntensity - 5 * slightshakeIntensity;
+                    let dy = Math.random() * 10 * slightshakeIntensity - 5 * slightshakeIntensity;
+                    ctx.translate(dx, dy);
+                    slightshakeIntensity-=0.1;
+                  }
+                }
+     
+                //interpolate the player's position first
+                lerpDrawnX = 0;
+                lerpDrawnY = 0;
+                if (objects.player && oldobjects.player && interpolatedobjects.player){
+                  interpolatedobjects.player[playerstring] = JSON.parse(JSON.stringify(objects.player[playerstring]));
+                  simpleLerpPos(objects.player[playerstring],oldobjects.player[playerstring]);
+                  px = lerpDrawnX;//needed for drawing stuff
+                  py = lerpDrawnY;
+                }
+                else{
+                  px = player.x;
+                  py = player.y;
+                }
 
-      if (gamemode == "dune") {
-        //spawn random particles if in dune
-        if (spawnduneparticle == "yes"){
-          var choosing = Math.floor((Math.random() * 10)/clientFovMultiplier); //choose if particle spawn
-          if (choosing <= 0) {
-            //spawn a particle
-            let angleRadians = (-30+Math.floor(Math.random() * 30) * Math.PI) / 180; //convert to radians
-            var size = 50*(Math.floor(Math.random() * 3) + 1)-25;
-            var randomDistFromCenterX = (Math.floor(Math.random() * canvas.width+size) - (canvas.width+size)/2)*clientFovMultiplier;
-            var randomDistFromCenterY = (Math.floor(Math.random() * canvas.height+size) - (canvas.height+size)/2)*clientFovMultiplier;
-            radparticles[particleID] = {
-              angle: angleRadians,
-              x: player.x + randomDistFromCenterX,// * Math.cos(angleRadians),
-              y: player.y - randomDistFromCenterY,// * Math.sin(angleRadians),
-              width: size,
-              height: size,
-              speed: 5,
-              timer: 200,
-              maxtimer: 200,
-              color: `rgba(222, 152, 22, ${0.3/((size/50)+1)})`,
-              outline: `rgba(0,0,0,${0.1/((size/50)+1)})`,
-              type: "particle",
-              source: "dune",
-            };
-            particleID++;
-          }
-        }
-        //cover whole screen in darkness for dune
-        ctx.fillStyle = "rgba(0,0,0,.2)"; //make background darker
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-      function anglecalc(cx, cy, ex, ey) {
-        var dy = ey - cy ;
-        var dx = cx - ex ;
-        return Math.atan2(dx, dy) * 180 / Math.PI;
-      }
-      if (player.x && player.y){
-        var rangeX = player.x-(MAP_WIDTH/2);
-        var rangeY = player.y-(MAP_WIDTH/2);
-      }
-      else{
-        var rangeX = 0;
-        var rangeY = 0;
-      }
-      crossroadRadians = (crossroadRadians*29 + anglecalc(0, 0, rangeX, rangeY)+90) / 30;   
-      if(isNaN(crossroadRadians)) {
-        crossroadRadians = anglecalc(0, 0, rangeX, rangeY)+90; // not really radians but ok
-      }
+                //now we are drawing the game area
+                if (playerstring != "error") {//checks if server has already sent player's id to client
+                  drawAreaX = canvas.width / 2 - px; //needed for mouse movement
+                  drawAreaY = canvas.height / 2 - py;
+                }
+                //COLOR OF AREA OUTSIDE PLAYABLE AREA
+                if (gamemode == "dune") {
+                  ctx.fillStyle = "#fcdcbb";
+                } else if (gamemode == "cavern") {
+                  ctx.fillStyle = "#010101";
+                } else if (gamemode == "sanctuary") {
+                  ctx.fillStyle = "#404040";
+                } else if (gamemode == "crossroads") {
+                  ctx.fillStyle = "#1f1f1f";
+                } else {
+                  ctx.fillStyle = "#bebebe";
+                }
+                ctx.fillRect(0, 0, canvas.width, canvas.height); //drawing background
+                //COLOR OF PLAYABLE AREA
+                if (gamemode == "dune") {
+                  ctx.fillStyle = "#ffead4";
+                } else if (gamemode == "cavern") {
+                  ctx.fillStyle = "#141414";
+                } else if (gamemode == "sanctuary") {
+                  ctx.fillStyle = "#595959";
+                } else if (gamemode == "crossroads") {
+                  ctx.fillStyle = "#303030";
+                } else {
+                  ctx.fillStyle = "#CDCDCD";
+                }
+                ctx.fillRect(
+                  canvas.width / 2 - px / clientFovMultiplier,
+                  canvas.height / 2 - py / clientFovMultiplier,
+                  MAP_WIDTH / clientFovMultiplier,
+                  MAP_WIDTH / clientFovMultiplier
+                ); //drawing area
 
-      if (gamemode == "crossroads") {
-        //spawn random particles if in crossroads
-        if (spawncrossroadsparticle == "yes"){
-          var choosing = Math.floor((Math.random() * 2)/clientFovMultiplier); //choose if particle spawn
-          if (choosing <= 0) {
-            //spawn a particle
+                if (gamemode == "2 Teams") {//draw team base
+                  var baseSize = 1500;
+                  let firstColor = teamColors[0];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    MAP_WIDTH / clientFovMultiplier
+                  );
+                  firstColor = teamColors[1];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    MAP_WIDTH / clientFovMultiplier
+                  );
+                }
+                if (gamemode == "4 Teams") {//draw team base
+                  var baseSize = 1500;
+                  let firstColor = teamColors[0];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";//c7bccf
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier
+                  );
+                  firstColor = teamColors[1];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier
+                  );
+                  firstColor = teamColors[2];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier
+                  );
+                  
 
-            let angleRadians = crossroadRadians+ ((-30 + Math.floor(Math.random() * 60)));
-            var size = 50*(Math.floor(Math.random() * 3) + 1)-25;
-            var randomDistFromCenterX = (Math.floor(Math.random() * canvas.width+size) - (canvas.width+size)/2)*clientFovMultiplier;
-            var randomDistFromCenterY = (Math.floor(Math.random() * canvas.height+size) - (canvas.height+size)/2)*clientFovMultiplier;
-            radparticles[particleID] = {
-              angle: angleRadians * Math.PI / 180,
-              x: player.x + randomDistFromCenterX,// * Math.cos(angleRadians),
-              y: player.y - randomDistFromCenterY,// * Math.sin(angleRadians),
-              width: size,
-              height: size,
-              speed: 25,
-              timer: 100,
-              maxtimer: 100,
-              color: `rgba(152, 152, 152, ${0.3})`,
-              outline: `rgba(0,0,0,${0.1})`,
-              type: "particle",
-              source: "crossroads",
-            };
-            particleID++;
-          }
-        }
-      }
-      //console.log(crossroadRadians, rangeX, rangeY);//was making my fps die
+                  firstColor = teamColors[3];
+                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+                  if (firstColor == "red"){
+                    ctx.fillStyle = "#dbbfc0";
+                  }
+                  else if (firstColor == "green"){
+                    ctx.fillStyle = "#acd0bd";
+                  }
+                  else if (firstColor == "blue"){
+                    ctx.fillStyle = "#acc8d0";
+                  }
+                  else if (firstColor == "purple"){
+                    ctx.fillStyle = "#c0b3c9";
+                  }
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier,
+                    canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier,
+                    baseSize / clientFovMultiplier
+                  );
+                }
+                if (gamemode == "Tank Editor"){//draw safe zone
+                  ctx.fillStyle = safeZoneColor;
+                  ctx.fillRect(
+                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier /2 - safeZone / clientFovMultiplier /2,
+                    canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier /2 - safeZone / clientFovMultiplier /2,
+                    safeZone / clientFovMultiplier,
+                    safeZone / clientFovMultiplier
+                  );
+                }
 
-      if (prevShakeYN == "yes" || slightshake == "yes") {
-        ctx.restore();
-      }
+                //drawin grid lines
+                ctx.beginPath();
+                ctx.lineWidth = 1; //thickness of grid
+                var gridHeight = 30 / clientFovMultiplier;
+                if (gamemode == "dune") {
+                  ctx.strokeStyle = "#edddc5";
+                } else if (gamemode == "cavern") {
+                  ctx.strokeStyle = "#242424";
+                  gridHeight = 80 / clientFovMultiplier;
+                } else if (gamemode == "sanctuary") {
+                  ctx.strokeStyle = "#363636";
+                  ctx.lineWidth = 3 / clientFovMultiplier;
+                } else if (gamemode == "crossroads") {
+                  ctx.strokeStyle = "rgba(18, 18, 18, .5)";
+                  gridHeight = 80 / clientFovMultiplier;
+                  ctx.lineWidth = 3; //thickness of grid
+                } else {
+                  ctx.lineWidth = 4; //thickness of grid
+                  gridHeight = 24 / clientFovMultiplier;
+                  ctx.strokeStyle = "rgba(180, 180, 180, .2)";
+                }
 
-      if (gamemode == "crossroads") {
-        //draw the darkness for crossroads
-        //the rectangle (entire screen)
-        hctx.fillStyle = "rgba(0,0,0,.7)";
-        hctx.fillRect(0,0,hcanvas.width,hcanvas.height)
-        
-        if (barrelsDarkness.length == 0){//no barrels
-          barrelsDarkness.push(0);//circle tourchlight
-        }
-      
-        hctx.save();
-        hctx.translate(hcanvas.width/2, hcanvas.height/2);//bottom left of screen
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back after scaling
-        hctx.globalCompositeOperation='destination-out';//'erase' the darkness
-        //let circleWidth = player.width * 4 + 50;
-        let circleWidth = player.width * 6;
-        //let barrelCorner = 25;//radius of rounded corner
-        let barrelCorner = player.width;//radius of rounded corner
-        hctx.beginPath();
-        hctx.save();
-        hctx.translate(canvas.width / 2, canvas.height / 2);
-        let playerAngle = clientAngle;
-        if (player.autorotate == "yes" || player.fastautorotate == "yes"){
-          playerAngle = player.angle;
-        }
-        hctx.rotate(playerAngle - (90 * Math.PI) / 180);
-      
-        let holeInArc = 0.15 * Math.PI;//angle towards edge of torchlight, same value as the value used to arc (code above this line)
-        let radius = circleWidth+crDarknessSize;
-        //calculate the endpoint of the arc around the player
-        let torchlightHeightDefault = circleWidth/4*3+crDarknessSize;//size of torchlight
-        let torchlightWidthAngle = 10/180*Math.PI;//angle of torchlight
-        let endx;
-        let endy;
-        let extraamount = player.width/25*4.2;//if there is a spike at the corner of the barrel, change this value
-      
-        function drawBarrelDarkness(angle,prevAngle){
-          if (prevAngle == 0){
-            prevAngle = 2 * Math.PI;
-          }
-          hctx.arc(0, 0, circleWidth+crDarknessSize, prevAngle-holeInArc, angle+holeInArc, true); //draw an incomplete circle (circle around the tank)
-      
-          //the torchlight
-          
-          hctx.save();
-          hctx.rotate(angle);
-          endx = Math.cos(holeInArc) * radius;
-          endy = Math.sin(holeInArc) * radius;
-          endx += Math.cos(torchlightWidthAngle) * torchlightHeightDefault;
-          endy += Math.sin(torchlightWidthAngle) * torchlightHeightDefault;
-          hctx.lineTo(endx, endy);
-          //rounded corner of barrel
-          hctx.arc(endx-barrelCorner, endy-barrelCorner-extraamount, barrelCorner, 0.5 * Math.PI, 0, true); //-2 cuz barrel is slanted line
-          //line furthest from player
-          endx = Math.cos(-holeInArc) * radius;
-          endy = Math.sin(-holeInArc) * radius;
-          endx += Math.cos(-torchlightWidthAngle) * torchlightHeightDefault;
-          endy += Math.sin(-torchlightWidthAngle) * torchlightHeightDefault;
-          hctx.lineTo(endx, endy);
-        //rounded corner of barrel
-          hctx.arc(endx-barrelCorner, endy+barrelCorner+extraamount, barrelCorner, 2 * Math.PI, 1.5 * Math.PI, true); //27 instead of 25 cuz barrel is slanted line
-          //line back player towards
-          endx = Math.cos(-holeInArc) * radius;
-          endy = Math.sin(-holeInArc) * radius;
-          hctx.lineTo(endx, endy);
-          hctx.restore();
-          
-        }
-      
-        for (var i = 0; i < barrelsDarkness.length; i++) {
-            let thisAngle = barrelsDarkness[i];
-            let previousAngle = barrelsDarkness[i-1]
-            if (i == 0){
-              previousAngle = barrelsDarkness[barrelsDarkness.length-1]
-            }
-            let barrelHeight = correspondingBarrelHeight[thisAngle]*player.width
-            torchlightHeightDefault = circleWidth/4*3/45*barrelHeight+crDarknessSize;
-            drawBarrelDarkness(thisAngle*Math.PI/180, previousAngle*Math.PI/180)
-        }
-      
-        hctx.closePath();
-        hctx.restore();
-      
-        hctx.fillStyle = "white";//make a hole in the darkness
-        hctx.fill();
-        hctx.restore();
-        
-        //create the second inner circle
-        circleWidth = player.width * 4;
-        barrelCorner = player.width/2;//radius of rounded corner
-        hctx.globalCompositeOperation='source-over';
-        hctx.fillStyle = "rgba(0,0,0,.4)";
-        hctx.fillRect(0,0,hcanvas.width,hcanvas.height)
-      
-        hctx.save();
-        hctx.translate(hcanvas.width/2, hcanvas.height/2);//bottom left of screen
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back after scaling
-        hctx.globalCompositeOperation='destination-out';//'erase' the darkness
-        hctx.beginPath();
-        hctx.save();
-        hctx.translate(canvas.width / 2, canvas.height / 2);
-        playerAngle = clientAngle;
-        if (player.autorotate == "yes" || player.fastautorotate == "yes"){
-          playerAngle = player.angle;
-        }
-        hctx.rotate(playerAngle - (90 * Math.PI) / 180);
-        
-        //the torchlight
-        holeInArc = 0.1 * Math.PI;
-        radius = circleWidth+crDarknessSize;
-        extraamount /= 2;//if there is a spike at the corner of the barrel, change this value
-      
-        for (var i = 0; i < barrelsDarkness.length; i++) {
-            let thisAngle = barrelsDarkness[i];
-            let previousAngle = barrelsDarkness[i-1]
-            if (i == 0){
-              previousAngle = barrelsDarkness[barrelsDarkness.length-1]
-            }
-            let barrelHeight = correspondingBarrelHeight[thisAngle]*player.width
-            torchlightHeightDefault = (circleWidth + player.width*2)/4*3/45*barrelHeight+crDarknessSize;
-            drawBarrelDarkness(thisAngle*Math.PI/180, previousAngle*Math.PI/180)
-        }
-        
-        hctx.closePath();
-        hctx.restore();
-        hctx.fillStyle = "white";
-        hctx.fill();
-        
-        if (darknessGrowth == "yes"){
-          crDarknessSize+=0.2;
-          if (crDarknessSize >= 50){
-            darknessGrowth = "no";
-          }
-        }
-        else{
-          crDarknessSize-=0.2;
-          if (crDarknessSize <= 0){
-            darknessGrowth = "yes";
-          }
-        }
-      
-        hctx.restore();
-        hctx.globalCompositeOperation='source-over';
-      }
+                //How does drawing the grid lines work: the equation below is to calculate the negative of the closest number to drawAreaX that is divisible by gridHeight, with drawAreaX referring to the distance from left side of screen to arena, and gridHeight is distance between lines drawn. By calculating this, we can find out the position to start drawing the first line on the left side of the screen, producing the effect of the grid moving in the opposite direction of the user. Need to be opposite, that's why negative in equation. Because the lines are drawn relative to the left and top of arena, that's why the lines are always drawn exactly on the left and top of arena on screen, unless people disconnect or connect, resulting in change og arena size.
+                //for x: -gridHeight-(-drawAreaX%gridHeight)
+                //for y: -gridHeight-(-drawAreaY%gridHeight)
+                //edit: instead of using drawAreaX, use (canvas.width/2 - player.x/fov) for accurate grid drawing
+                if (player.fovMultiplier < 10) {
+                  //dont draw grid lines if field of vision is high, to prevent lag from drawing too many grid lines
+                  for (let x = -gridHeight - (-(canvas.width / 2 - px / clientFovMultiplier) % gridHeight); x < canvas.width; x += gridHeight) {
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                  }
+                  for (let y = -gridHeight - (-(canvas.height / 2 - py / clientFovMultiplier) % gridHeight); y < canvas.height; y += gridHeight) {
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                  }
+                  ctx.stroke();
+                }
+                
+                
+                //drawing the objects that are sent from the server, order of drawings are already changed by the server, so if you want something to be below another thing, change the order of adding to the object list in the server code, not the client code
+                for (const id in portalparticles) {
+                  //potral particle list first, so that it is drawn at the bottom
+                  let thisobject = portalparticles[id];
+                  thisobject.x += Math.cos(thisobject.angle) * thisobject.speed*deltaTime;
+                  thisobject.y += Math.sin(thisobject.angle) * thisobject.speed*deltaTime;
+                  drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
+                  thisobject.timer-=1*deltaTime;
+                  if (thisobject.timer < 0) {
+                    delete portalparticles[id];
+                  }
+                };
+                shakeYN = "no"; //reset portal screen shake
+                shakeIntensity = 1;
+                Object.keys(portals).forEach((id) => {
+                  //draw portals. portals not inside object list because all need to be sent for the minimap anyways
+                  if (!portalwidths.hasOwnProperty(id)) {
+                    portalwidths[id] = portals[id].width; //this is used for keeping track the sizes of portal that changes when player enter and exit a portal
+                  } else {
+                    //if this portal already existed
+                    if (portalwidths[id] < portals[id].width + portals[id].peopleTouch * 45) { //45px portal size growth per person
+                      portalwidths[id] += 3;
+                    } else if (portalwidths[id] > portals[id].width + portals[id].peopleTouch * 45) {
+                      portalwidths[id] -= 3;
+                    }
+                  }
+                  var thisobject = portals[id];
+                  thisobject.type = "portal";
+                  let oldtimer = thisobject.timer;
+                  if (oldportals[id]){
+                    thisobject.timer = lerpProperty(thisobject,oldportals[id],'timer')
+                  }
+                  drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
+                  thisobject.timer = oldtimer;//reset timer to original (not lerped)
 
-      if (mobile == "yes") {
-        //mobile joystick controls
-        hctx.fillStyle = "rgba(69,69,69,.5)";
-        let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
-        let resizeDiffY = 1/window.innerHeight*hcanvas.height;
-        hctx.save();
-        hctx.translate(
-          hcanvas.width / 2 + joystick1.xFromCenter,
-          hcanvas.height / 2 + joystick1.yFromCenter
-        );
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        
-        //first joystick
-        hctx.beginPath();
-        hctx.arc(
-          0,
-          0,
-          joystick1.size,
-          0,
-          2 * Math.PI
-        );
-        hctx.fill();
-        
-        hctx.restore();
-        hctx.save();
-        hctx.translate(
-          hcanvas.width / 2 + joystick2.xFromCenter,
-          hcanvas.height / 2 + joystick2.yFromCenter
-        );
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        
-        //second joystick
-        hctx.beginPath();
-        hctx.arc(
-          0,
-          0,
-          joystick2.size,
-          0,
-          2 * Math.PI
-        );
-        hctx.fill();
-        
-        hctx.restore();
-        //circle at thumb when using joystick
-        hctx.fillStyle = "rgba(0,0,0,.5)";
-        if (touches[0].state!="no"){
-          //calculate position on joystick
-          
-          //get angle of touch from joystick
-          //position of touch
-          let ex = touches[0].xpos/window.innerWidth*hcanvas.width;
-          let ey = touches[0].ypos/window.innerHeight*hcanvas.height;
-          //position of joystick
-          let cx;
-          let cy;
-          let radius;
-          if (touches[0].state=="moving"){
-            cx = hcanvas.width / 2 + joystick1.xFromCenter;
-            cy = hcanvas.height / 2 + joystick1.yFromCenter;
-            radius = joystick1.size;
-          }
-          else{
-            cx = hcanvas.width / 2 + joystick2.xFromCenter;
-            cy = hcanvas.height / 2 + joystick2.yFromCenter;
-            radius = joystick2.size;
-          }
-          let dy = ey - cy;
-          let dx = ex - cx;
-          let theta = -Math.atan2(dy, dx) + 90/180*Math.PI;
-          
-          dx = radius * Math.sin(theta) + cx;
-          dy = radius * Math.cos(theta) + cy;
-          
-          hctx.save();
-          hctx.translate(
-            cx,
-            cy
-          );
-          hctx.scale(1,resizeDiffY/resizeDiffX);
-          
-          hctx.beginPath();
-          hctx.arc(
-            dx - cx,
-            dy - cy,
-            joystick2.size/2,
-            0,
-            2 * Math.PI
-          );
-          hctx.fill();
-          
-          hctx.restore();
-        }
-        if (touches[1].state!="no"){
-          //calculate position on joystick
-          
-          //get angle of touch from joystick
-          //position of touch
-          let ex = touches[1].xpos/window.innerWidth*hcanvas.width;
-          let ey = touches[1].ypos/window.innerHeight*hcanvas.height;
-          //position of joystick
-          let cx;
-          let cy;
-          let radius;
-          if (touches[1].state=="moving"){
-            cx = hcanvas.width / 2 + joystick1.xFromCenter;
-            cy = hcanvas.height / 2 + joystick1.yFromCenter;
-            radius = joystick1.size;
-          }
-          else{
-            cx = hcanvas.width / 2 + joystick2.xFromCenter;
-            cy = hcanvas.height / 2 + joystick2.yFromCenter;
-            radius = joystick2.size;
-          }
-          let dy = ey - cy;
-          let dx = ex - cx;
-          let theta = -Math.atan2(dy, dx) + 90/180*Math.PI;
-          
-          dx = radius * Math.sin(theta) + cx;
-          dy = radius * Math.cos(theta) + cy;
-          
-          hctx.save();
-          hctx.translate(
-            cx,
-            cy
-          );
-          hctx.scale(1,resizeDiffY/resizeDiffX);
-          
-          hctx.beginPath();
-          hctx.arc(
-            dx - cx,
-            dy - cy,
-            joystick2.size/2,
-            0,
-            2 * Math.PI
-          );
-          hctx.fill();
-          
-          hctx.restore();
-        }
-      }
+                  //check for collision with portal to check if shake canvas or not
+                  var DistanceBetween = Math.sqrt(
+                    (player.x - thisobject.x) * (player.x - thisobject.x) +
+                      (player.y - thisobject.y) * (player.y - thisobject.y)
+                  ); //calculate distance between center of portal and player
+                  if (DistanceBetween <= player.width + thisobject.width * 3) {
+                    //portal width times 3 so that shake will be felt from a distance
+                    shakeYN = "yes";
+                    if (DistanceBetween / (player.width + thisobject.width * 3) < shakeIntensity) { //if new shake intensity higher than shake intensity from anither portal
+                      shakeIntensity = DistanceBetween / (player.width + thisobject.width * 3); //ranges from 1 to 0, 0 meaning player is at center of portal
+                    }
+                  }
+                });
+      
+                //smoothly change player's fov
+                if (player.fovMultiplier){
+                  if (clientFovMultiplier != player.fovMultiplier){
+                    clientFovMultiplier += (player.fovMultiplier - clientFovMultiplier)/5;
+                    if (Math.abs(clientFovMultiplier - player.fovMultiplier)<0.001){
+                      clientFovMultiplier = player.fovMultiplier;
+                    }
+                  }
+                }
+      
+      
+                for (const type in objects) {
+                  for (const id in objects[type]) {
+                    var thisobject = JSON.parse(JSON.stringify(objects[type][id]));
+                    if (!interpolatedobjects[type]){
+                      interpolatedobjects[type] = {};
+                    }
+                    interpolatedobjects[type][id] = JSON.parse(JSON.stringify(objects[type][id]));
+                    if (oldobjects[type]){
+                      if (oldobjects[type][id]){
+                        //do lerping if not new object
+                        if (id != playerstring){//not the player
+                          if (type != "bullet" || thisobject.bulletType != "bullet"){
+                            lerpDrawnX = thisobject.x;
+                            lerpDrawnY = thisobject.y;
+                            simpleLerpPos(thisobject,oldobjects[type][id])
+                            thisobject.x = lerpDrawnX;
+                            thisobject.y = lerpDrawnY;
+                            if (type == "player" || type == "shape" || type == "def"){//lerp angle
+                              thisobject.angle = simpleLerpAngle(thisobject,oldobjects[type][id])
+                              if (type == "shape"){
+                                thisobject.health = lerpProperty(thisobject,oldobjects[type][id],'health')
+                              }
+                            }
+                          }
+                        }
+                        else{
+                          //camera is lerped
+                          simpleLerpPos(thisobject,oldobjects[type][id])
+                          thisobject.x = px;
+                          thisobject.y = py;
+                          thisobject.angle = simpleLerpAngle(thisobject,oldobjects[type][id])
+                        }
+                      }
+                    }
+                    thisobject.type = type;
+                    interpolatedobjects[type][id].x = thisobject.x;
+                    interpolatedobjects[type][id].y = thisobject.y;
+                    if (type == "bullet" && thisobject.bulletType == "bullet"){
+                      //server wont send bullet updates all the time if the bullet is a bullet and not a trap or drone or minion etc.
+                      //client move bullet yourself
+                      //console.log(id + ',' + objects[type][id].x + ',1')
+                      objects[type][id].y += Math.sin(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
+                      objects[type][id].x += Math.cos(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
+                      //console.log(id + ',' + objects[type][id].x + ',2')
+                    }
+                    drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
+                  }
+                }
+                
+                  for (const id in objects.player) {
+                    var thisobject = JSON.parse(JSON.stringify(objects.player[id]));
+                    if (oldobjects.player){
+                      if (oldobjects.player[id]){
+                        //do lerping if not new object
+                        if (id != playerstring){//not the player
+                          lerpDrawnX = thisobject.x;
+                          lerpDrawnY = thisobject.y;
+                          simpleLerpPos(thisobject,oldobjects.player[id])
+                          thisobject.x = lerpDrawnX;
+                          thisobject.y = lerpDrawnY;
+                          thisobject.angle = simpleLerpAngle(thisobject,oldobjects.player[id])
+                        }
+                        else{
+                          simpleLerpPos(thisobject,oldobjects.player[id])
+                          thisobject.x = px;
+                          thisobject.y = py;
+                        }
+                      }
+                    }
+                    thisobject.type = "player";
+                    interpolatedobjects.player[id].x = thisobject.x;
+                    interpolatedobjects.player[id].y = thisobject.y;
+                    drawplayerdata(thisobject, id, playerstring, auraWidth); //draw the obcjects on the canvas
+                  }
+                
+                listofdeadobjects.forEach((object) => {
+                  //dead object array
+                  if (object.bulletType != "aura") {
+                    if (object.type == "bullet") {
+                      //check if bullet belongs to player. usually server does this, but not for dead objects
+                      if (object.ownerId == playerstring) {
+                        object.ownsIt = "yes";
+                      }
+                    }
+                    else if (object.type == "shape"){
+                      if (shapeHealthBar.hasOwnProperty(object.id)){//for health bar width animation when die
+                        if (shapeHealthBar[object.id] > 0){
+                          shapeHealthBar[object.id]-=5*deltaTime;
+                        }
+                        if (shapeHealthBar[object.id] < 0){
+                          shapeHealthBar[object.id] = 0;
+                        }
+                      }
+                    }
+                    if (object.hasOwnProperty("deadanimation")) {
+                      object.deadanimation--; //animate object
+                      //object.width += 5;
+                      object.width *= 1.1;
+                      if (object.deadOpacity > 0) {
+                        object.deadOpacity -= 0.2;
+                      }
+                      if (object.deadOpacity < 0) {
+                        object.deadOpacity = 0;
+                      }
+                      if (object.deadanimation < 0) {
+                        //remove object from array
+                        var index = listofdeadobjects.indexOf(object);
+                        if (index > -1) {
+                          // only splice array when item is found
+                          listofdeadobjects.splice(index, 1); // 2nd parameter means remove one item only
+                        }
+                      }
+                    } else {
+                      object.deadanimation = 5; //duration of dead animation
+                      object.deadOpacity = 1;
+                    }
+                    drawobjects(object, object.id, playerstring, auraWidth); //draw the objects on the canvas
+                  }
+                });
+                Object.keys(radparticles).forEach((id) => {
+                  //radiant particle list last so that it is drawn at the top
+                  var thisobject = radparticles[id];
+                  drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
+                  thisobject.x += Math.cos(thisobject.angle) * thisobject.speed*deltaTime;
+                  thisobject.y += Math.sin(thisobject.angle) * thisobject.speed*deltaTime;
+                  thisobject.timer-=1*deltaTime;
+                  if(thisobject.source == "dune") {
+                    thisobject.angle = (((-90 * Math.PI) / 180) + (thisobject.angle * 199)) / 200;
+                  }
+
+                  if (thisobject.timer < 0) {
+                    delete radparticles[id];
+                  }
+                });
+
+                // FPS counter update
+                frameCount++;
+                const now = performance.now();
+                if (now >= lastFpsUpdate + 1000) { // Update every second
+                    fps = frameCount;
+                    frameCount = 0;
+                    lastFpsUpdate = now;
+                    fpsCounter.textContent = `FPS: ${fps}`;
+                    fpsCounter.className = 
+                      fps >= 60 ? 'high' : 
+                      fps >= 30 ? 'medium' : 'low';
+                }
+
+                if (gamemode == "dune") {
+                  //spawn random particles if in dune
+                  if (spawnduneparticle == "yes"){
+                    var choosing = Math.floor((Math.random() * 10)/clientFovMultiplier); //choose if particle spawn
+                    if (choosing <= 0) {
+                      //spawn a particle
+                      let angleRadians = (-30+Math.floor(Math.random() * 30) * Math.PI) / 180; //convert to radians
+                      var size = 50*(Math.floor(Math.random() * 3) + 1)-25;
+                      var randomDistFromCenterX = (Math.floor(Math.random() * canvas.width+size) - (canvas.width+size)/2)*clientFovMultiplier;
+                      var randomDistFromCenterY = (Math.floor(Math.random() * canvas.height+size) - (canvas.height+size)/2)*clientFovMultiplier;
+                      radparticles[particleID] = {
+                        angle: angleRadians,
+                        x: player.x + randomDistFromCenterX,// * Math.cos(angleRadians),
+                        y: player.y - randomDistFromCenterY,// * Math.sin(angleRadians),
+                        width: size,
+                        height: size,
+                        speed: 5,
+                        timer: 200,
+                        maxtimer: 200,
+                        color: `rgba(222, 152, 22, ${0.3/((size/50)+1)})`,
+                        outline: `rgba(0,0,0,${0.1/((size/50)+1)})`,
+                        type: "particle",
+                        source: "dune",
+                      };
+                      particleID++;
+                    }
+                  }
+                  //cover whole screen in darkness for dune
+                  ctx.fillStyle = "rgba(0,0,0,.2)"; //make background darker
+                  ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+                function anglecalc(cx, cy, ex, ey) {
+                  var dy = ey - cy ;
+                  var dx = cx - ex ;
+                  return Math.atan2(dx, dy) * 180 / Math.PI;
+                }
+                if (player.x && player.y){
+                  var rangeX = player.x-(MAP_WIDTH/2);
+                  var rangeY = player.y-(MAP_WIDTH/2);
+                }
+                else{
+                  var rangeX = 0;
+                  var rangeY = 0;
+                }
+                crossroadRadians = (crossroadRadians*29 + anglecalc(0, 0, rangeX, rangeY)+90) / 30;   
+                if(isNaN(crossroadRadians)) {
+                  crossroadRadians = anglecalc(0, 0, rangeX, rangeY)+90; // not really radians but ok
+                }
+
+                if (gamemode == "crossroads") {
+                  //spawn random particles if in crossroads
+                  if (spawncrossroadsparticle == "yes"){
+                    var choosing = Math.floor((Math.random() * 2)/clientFovMultiplier); //choose if particle spawn
+                    if (choosing <= 0) {
+                      //spawn a particle
+
+                      let angleRadians = crossroadRadians+ ((-30 + Math.floor(Math.random() * 60)));
+                      var size = 50*(Math.floor(Math.random() * 3) + 1)-25;
+                      var randomDistFromCenterX = (Math.floor(Math.random() * canvas.width+size) - (canvas.width+size)/2)*clientFovMultiplier;
+                      var randomDistFromCenterY = (Math.floor(Math.random() * canvas.height+size) - (canvas.height+size)/2)*clientFovMultiplier;
+                      radparticles[particleID] = {
+                        angle: angleRadians * Math.PI / 180,
+                        x: player.x + randomDistFromCenterX,// * Math.cos(angleRadians),
+                        y: player.y - randomDistFromCenterY,// * Math.sin(angleRadians),
+                        width: size,
+                        height: size,
+                        speed: 25,
+                        timer: 100,
+                        maxtimer: 100,
+                        color: `rgba(152, 152, 152, ${0.3})`,
+                        outline: `rgba(0,0,0,${0.1})`,
+                        type: "particle",
+                        source: "crossroads",
+                      };
+                      particleID++;
+                    }
+                  }
+                }
+
+                if (prevShakeYN == "yes" || slightshake == "yes") {
+                  ctx.restore();
+                }
+
+                if (gamemode == "crossroads") {
+                  //draw the darkness for crossroads
+                  //the rectangle (entire screen)
+                  hctx.fillStyle = "rgba(0,0,0,.7)";
+                  hctx.fillRect(0,0,hcanvas.width,hcanvas.height)
+                  
+                  if (barrelsDarkness.length == 0){//no barrels
+                    barrelsDarkness.push(0);//circle tourchlight
+                  }
+                
+                  hctx.save();
+                  hctx.translate(hcanvas.width/2, hcanvas.height/2);//bottom left of screen
+                  hctx.scale(1,resizeDiffY/resizeDiffX);
+                  hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back after scaling
+                  hctx.globalCompositeOperation='destination-out';//'erase' the darkness
+                  //let circleWidth = player.width * 4 + 50;
+                  let circleWidth = player.width * 6;
+                  //let barrelCorner = 25;//radius of rounded corner
+                  let barrelCorner = player.width;//radius of rounded corner
+                  hctx.beginPath();
+                  hctx.save();
+                  hctx.translate(canvas.width / 2, canvas.height / 2);
+                  let playerAngle = clientAngle;
+                  if (player.autorotate == "yes" || player.fastautorotate == "yes"){
+                    playerAngle = player.angle;
+                  }
+                  hctx.rotate(playerAngle - (90 * Math.PI) / 180);
+                
+                  let holeInArc = 0.15 * Math.PI;//angle towards edge of torchlight, same value as the value used to arc (code above this line)
+                  let radius = circleWidth+crDarknessSize;
+                  //calculate the endpoint of the arc around the player
+                  let torchlightHeightDefault = circleWidth/4*3+crDarknessSize;//size of torchlight
+                  let torchlightWidthAngle = 10/180*Math.PI;//angle of torchlight
+                  let endx;
+                  let endy;
+                  let extraamount = player.width/25*4.2;//if there is a spike at the corner of the barrel, change this value
+                
+                  function drawBarrelDarkness(angle,prevAngle){
+                    if (prevAngle == 0){
+                      prevAngle = 2 * Math.PI;
+                    }
+                    hctx.arc(0, 0, circleWidth+crDarknessSize, prevAngle-holeInArc, angle+holeInArc, true); //draw an incomplete circle (circle around the tank)
+                
+                    //the torchlight
+                    
+                    hctx.save();
+                    hctx.rotate(angle);
+                    endx = Math.cos(holeInArc) * radius;
+                    endy = Math.sin(holeInArc) * radius;
+                    endx += Math.cos(torchlightWidthAngle) * torchlightHeightDefault;
+                    endy += Math.sin(torchlightWidthAngle) * torchlightHeightDefault;
+                    hctx.lineTo(endx, endy);
+                    //rounded corner of barrel
+                    hctx.arc(endx-barrelCorner, endy-barrelCorner-extraamount, barrelCorner, 0.5 * Math.PI, 0, true); //-2 cuz barrel is slanted line
+                    //line furthest from player
+                    endx = Math.cos(-holeInArc) * radius;
+                    endy = Math.sin(-holeInArc) * radius;
+                    endx += Math.cos(-torchlightWidthAngle) * torchlightHeightDefault;
+                    endy += Math.sin(-torchlightWidthAngle) * torchlightHeightDefault;
+                    hctx.lineTo(endx, endy);
+                  //rounded corner of barrel
+                    hctx.arc(endx-barrelCorner, endy+barrelCorner+extraamount, barrelCorner, 2 * Math.PI, 1.5 * Math.PI, true); //27 instead of 25 cuz barrel is slanted line
+                    //line back player towards
+                    endx = Math.cos(-holeInArc) * radius;
+                    endy = Math.sin(-holeInArc) * radius;
+                    hctx.lineTo(endx, endy);
+                    hctx.restore();
+                    
+                  }
+                
+                  for (var i = 0; i < barrelsDarkness.length; i++) {
+                      let thisAngle = barrelsDarkness[i];
+                      let previousAngle = barrelsDarkness[i-1]
+                      if (i == 0){
+                        previousAngle = barrelsDarkness[barrelsDarkness.length-1]
+                      }
+                      let barrelHeight = correspondingBarrelHeight[thisAngle]*player.width
+                      torchlightHeightDefault = circleWidth/4*3/45*barrelHeight+crDarknessSize;
+                      drawBarrelDarkness(thisAngle*Math.PI/180, previousAngle*Math.PI/180)
+                  }
+                
+                  hctx.closePath();
+                  hctx.restore();
+                
+                  hctx.fillStyle = "white";//make a hole in the darkness
+                  hctx.fill();
+                  hctx.restore();
+                  
+                  //create the second inner circle
+                  circleWidth = player.width * 4;
+                  barrelCorner = player.width/2;//radius of rounded corner
+                  hctx.globalCompositeOperation='source-over';
+                  hctx.fillStyle = "rgba(0,0,0,.4)";
+                  hctx.fillRect(0,0,hcanvas.width,hcanvas.height)
+                
+                  hctx.save();
+                  hctx.translate(hcanvas.width/2, hcanvas.height/2);//bottom left of screen
+                  hctx.scale(1,resizeDiffY/resizeDiffX);
+                  hctx.translate(-hcanvas.width/2, -hcanvas.height/2);//translate back after scaling
+                  hctx.globalCompositeOperation='destination-out';//'erase' the darkness
+                  hctx.beginPath();
+                  hctx.save();
+                  hctx.translate(canvas.width / 2, canvas.height / 2);
+                  playerAngle = clientAngle;
+                  if (player.autorotate == "yes" || player.fastautorotate == "yes"){
+                    playerAngle = player.angle;
+                  }
+                  hctx.rotate(playerAngle - (90 * Math.PI) / 180);
+                  
+                  //the torchlight
+                  holeInArc = 0.1 * Math.PI;
+                  radius = circleWidth+crDarknessSize;
+                  extraamount /= 2;//if there is a spike at the corner of the barrel, change this value
+                
+                  for (var i = 0; i < barrelsDarkness.length; i++) {
+                      let thisAngle = barrelsDarkness[i];
+                      let previousAngle = barrelsDarkness[i-1]
+                      if (i == 0){
+                        previousAngle = barrelsDarkness[barrelsDarkness.length-1]
+                      }
+                      let barrelHeight = correspondingBarrelHeight[thisAngle]*player.width
+                      torchlightHeightDefault = (circleWidth + player.width*2)/4*3/45*barrelHeight+crDarknessSize;
+                      drawBarrelDarkness(thisAngle*Math.PI/180, previousAngle*Math.PI/180)
+                  }
+                  
+                  hctx.closePath();
+                  hctx.restore();
+                  hctx.fillStyle = "white";
+                  hctx.fill();
+                  
+                  if (darknessGrowth == "yes"){
+                    crDarknessSize+=0.2;
+                    if (crDarknessSize >= 50){
+                      darknessGrowth = "no";
+                    }
+                  }
+                  else{
+                    crDarknessSize-=0.2;
+                    if (crDarknessSize <= 0){
+                      darknessGrowth = "yes";
+                    }
+                  }
+                
+                  hctx.restore();
+                  hctx.globalCompositeOperation='source-over';
+                }
+
+                if (mobile == "yes") {
+                  //mobile joystick controls
+                  hctx.fillStyle = "rgba(69,69,69,.5)";
+                  let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
+                  let resizeDiffY = 1/window.innerHeight*hcanvas.height;
+                  hctx.save();
+                  hctx.translate(hcanvas.width / 2 + joystick1.xFromCenter,hcanvas.height / 2 + joystick1.yFromCenter);
+                  hctx.scale(1,resizeDiffY/resizeDiffX);
+                  
+                  //first joystick
+                  hctx.beginPath();
+                  hctx.arc(0, 0, joystick1.size, 0, 2 * Math.PI);
+                  hctx.fill();
+                  
+                  hctx.restore();
+                  hctx.save();
+                  hctx.translate(hcanvas.width / 2 + joystick2.xFromCenter,hcanvas.height / 2 + joystick2.yFromCenter);
+                  hctx.scale(1,resizeDiffY/resizeDiffX);
+                  
+                  //second joystick
+                  hctx.beginPath();
+                  hctx.arc(0, 0, joystick2.size, 0, 2 * Math.PI);
+                  hctx.fill();
+                  
+                  hctx.restore();
+                  //circle at thumb when using joystick
+                  hctx.fillStyle = "rgba(0,0,0,.5)";
+                  if (touches[0].state!="no"){
+                    //calculate position on joystick
+                    
+                    //get angle of touch from joystick
+                    //position of touch
+                    let ex = touches[0].xpos/window.innerWidth*hcanvas.width;
+                    let ey = touches[0].ypos/window.innerHeight*hcanvas.height;
+                    //position of joystick
+                    let cx;
+                    let cy;
+                    let radius;
+                    if (touches[0].state=="moving"){
+                      cx = hcanvas.width / 2 + joystick1.xFromCenter;
+                      cy = hcanvas.height / 2 + joystick1.yFromCenter;
+                      radius = joystick1.size;
+                    }
+                    else{
+                      cx = hcanvas.width / 2 + joystick2.xFromCenter;
+                      cy = hcanvas.height / 2 + joystick2.yFromCenter;
+                      radius = joystick2.size;
+                    }
+                    let dy = ey - cy;
+                    let dx = ex - cx;
+                    let theta = -Math.atan2(dy, dx) + 90/180*Math.PI;
+                    
+                    dx = radius * Math.sin(theta) + cx;
+                    dy = radius * Math.cos(theta) + cy;
+                    
+                    hctx.save();
+                    hctx.translate(cx,cy);
+                    hctx.scale(1,resizeDiffY/resizeDiffX);
+                    
+                    hctx.beginPath();
+                    hctx.arc(dx - cx,dy - cy,joystick2.size/2,0,2 * Math.PI);
+                    hctx.fill();
+                    
+                    hctx.restore();
+                  }
+                  if (touches[1].state!="no"){
+                    //calculate position on joystick
+                    
+                    //get angle of touch from joystick
+                    //position of touch
+                    let ex = touches[1].xpos/window.innerWidth*hcanvas.width;
+                    let ey = touches[1].ypos/window.innerHeight*hcanvas.height;
+                    //position of joystick
+                    let cx;
+                    let cy;
+                    let radius;
+                    if (touches[1].state=="moving"){
+                      cx = hcanvas.width / 2 + joystick1.xFromCenter;
+                      cy = hcanvas.height / 2 + joystick1.yFromCenter;
+                      radius = joystick1.size;
+                    }
+                    else{
+                      cx = hcanvas.width / 2 + joystick2.xFromCenter;
+                      cy = hcanvas.height / 2 + joystick2.yFromCenter;
+                      radius = joystick2.size;
+                    }
+                    let dy = ey - cy;
+                    let dx = ex - cx;
+                    let theta = -Math.atan2(dy, dx) + 90/180*Math.PI;
+                    
+                    dx = radius * Math.sin(theta) + cx;
+                    dy = radius * Math.cos(theta) + cy;
+                    
+                    hctx.save();
+                    hctx.translate(cx,cy);
+                    hctx.scale(1,resizeDiffY/resizeDiffX);
+                    
+                    hctx.beginPath();
+                    hctx.arc(dx - cx,dy - cy,joystick2.size/2,0,2 * Math.PI);
+                    hctx.fill();
+                    
+                    hctx.restore();
+                  }
+                }
 
       //note: ctx requires /clientFovMultiplier, but hctx does not because the canvas size does not change
       //drawing upgrade buttons
-      function buttondraw(
-        buttonNumber,
-        one,
-        two,
-        three,
-        four,
-        five,
-        six,
-        seven
-      ) {
+      function buttondraw(buttonNumber,one,two,three,four,five,six,seven) {
         if ((ignorebuttonw.ignore == "no" || buttonNumber>7) && (ignorebuttonb.ignore == "no" || buttonNumber<=7)){//if not ignore
         let thisbutton = upgradeButtons[buttonNumber];
         thisbutton.tankRotate += 1.5*deltaTime; //make tank in upgrade button rotate
@@ -14054,66 +14032,43 @@ console.log(bodyupgrades);
         }
       }
 
-      if (showDebug == "yes" && openedUI=="no") {
-        //draw debug
-        hctx.fillStyle = "white";
-        hctx.font = "900 " + 19.5/resizeDiffX + "px Roboto";
-        hctx.strokeStyle = "black";
-        hctx.lineWidth = 4/resizeDiffX;
-        hctx.textAlign = "left";
-        hctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-        hctx.save();
-        hctx.scale(1,resizeDiffY/resizeDiffX);
-        hctx.translate(20,195);
+      if (debugState == "open" && openedUI=="no") {
+        //update debug
+        let pingdiv = document.getElementById("ping");
         if (latency < 250) {
-          hctx.fillStyle = "white";
+          pingdiv.style.color = "white";
         } else if (latency < 350) {
-          hctx.fillStyle = "orange";
+          pingdiv.style.color = "orange";
         } else if (latency < 600) {
-          hctx.fillStyle = "red";
+          pingdiv.style.color = "red";
         } else {
-          hctx.fillStyle = "#800000";
+          pingdiv.style.color = "#800000";
         }
-        hctx.strokeText("Ping: " + latency + "ms", 0, 0);
-        hctx.fillText("Ping: " + latency + "ms", 0, 0);
-        if (fpsvalue > 25) {
-          hctx.fillStyle = "white";
-        } else if (fpsvalue > 20) {
-          hctx.fillStyle = "orange";
-        } else {
-          hctx.fillStyle = "red";
-        }
-        hctx.strokeText("FPS: " + fpsvalue, 0, 38/resizeDiffX);
-        hctx.fillText("FPS: " + fpsvalue, 0, 38/resizeDiffX);
+        pingdiv.textContent = "Ping: " + latency + "ms";
+        let servertick = document.getElementById("servertick");
         if (serverCodeTime < 40) {
-          hctx.fillStyle = "white";
+          servertick.style.color = "white";
         } else if (serverCodeTime < 50) {
-          hctx.fillStyle = "orange";
+          servertick.style.color = "orange";
         } else {
-          hctx.fillStyle = "red";
+          servertick.style.color = "red";
         }
-        hctx.strokeText("Server Tick Time: " + serverCodeTime + "ms", 0, 76/resizeDiffX);
-        hctx.fillText("Server Tick Time: " + serverCodeTime + "ms", 0, 76/resizeDiffX);
-        if (clientTick < 5) {
-          hctx.fillStyle = "white";
-        } else if (clientTick < 10) {
-          hctx.fillStyle = "orange";
-        } else {
-          hctx.fillStyle = "red";
-        }
-        hctx.strokeText("Client Tick Time: " + clientTick + "ms", 0, 114/resizeDiffX);
-        hctx.fillText("Client Tick Time: " + clientTick + "ms", 0, 114/resizeDiffX);
-        hctx.fillStyle = "white";
-        hctx.strokeText("Player Count: " + playerCount, 0, 152/resizeDiffX);
-        hctx.fillText("Player Count: " + playerCount, 0, 152/resizeDiffX);
-        hctx.strokeText("Global Player Count: " + globalPlayerCount, 0, 190/resizeDiffX);
-        hctx.fillText("Global Player Count: " + globalPlayerCount, 0, 190/resizeDiffX);
-        hctx.strokeText("Dimension: " + gamemode, 0, 228/resizeDiffX);
-        hctx.fillText("Dimension: " + gamemode, 0, 228/resizeDiffX);
-        let region = "Virginia #1";
-        hctx.strokeText("Region: " + region, 0, 266/resizeDiffX);
-        hctx.fillText("Region: " + region, 0, 266/resizeDiffX);
+        servertick.textContent = "Server Tick Time: " + serverCodeTime + "ms";
 
+        if (clientTick > 5){
+          clientTickDiv.style.color = "yellow";
+        }
+        else if (clientTick > 15){
+          clientTickDiv.style.color = "red";
+        }
+        else{
+          clientTickDiv.style.color = "white";
+        }
+        clientTickDiv.textContent = "Client Tick Time: " + Math.round(clientTick * 10) / 10 + "ms";//change to 1 decimal place
+        clientTick = performance.now() - starting;
+        document.getElementById("playercount").textContent = "Player Count: " + playerCount;
+        document.getElementById("globalplayercount").textContent = "Global Player Count: " + globalPlayerCount;
+        document.getElementById("dimension").textContent = "Dimension: " + gamemode;
 
         //shownBandwidth
         if (shownBandwidth < 15000) {
@@ -14130,34 +14085,28 @@ console.log(bodyupgrades);
         }
         var newbandwidth = shownBandwidth / 1000; //__k bytes
         newbandwidth = Math.round(newbandwidth * 100) / 100;//2 decimal place
-        hctx.strokeText("Bandwidth: " + newbandwidth + "kb/s", 0, 304/resizeDiffX);
-        hctx.fillText("Bandwidth: " + newbandwidth + "kb/s", 0, 304/resizeDiffX);
-        hctx.fillStyle = "white";
+        //hctx.strokeText("Bandwidth: " + newbandwidth + "kb/s", 0, 304/resizeDiffX);
+        //hctx.fillText("Bandwidth: " + newbandwidth + "kb/s", 0, 304/resizeDiffX);//re-add next time
         var numberOfObjectsDrawn = 0;
         for (const type in objects) {
           for (const item in objects[type]) {
             numberOfObjectsDrawn++;
           }
         }
-        hctx.strokeText("Drawn Entities: " + numberOfObjectsDrawn, 0, 342/resizeDiffX);
-        hctx.fillText("Drawn Entities: " + numberOfObjectsDrawn, 0, 342/resizeDiffX);
-        hctx.restore();
-        hctx.lineJoin = "miter"; //change it back
+        document.getElementById("drawnEntities").textContent = "Drawn Entities: " + numberOfObjectsDrawn;
       }
     }
   //}, 30); //check every 30ms //dont use setinterval anymore
-
-
-      clientTick = Date.now() - starting; //client code runtime
+        requestAnimationFrame(screenDrawLoop);//chage this to request interval after figuring out how to call it and stop it
   }
 
-requestInterval(screenDrawLoop,10);//number refers to delay between redraws, e.g. 16 = 60fps
+//requestInterval(screenDrawLoop,10);//number refers to delay between redraws, e.g. 16 = 60fps
 
   //auto fill in previous name into text input field
   if (localStorage.prevname) {
     nameInput.value = localStorage.prevname;
   }
-
+/*
   //sandbox
   //listen for enter presses to change tank properties
   var inputfield0 = document.getElementById("tank-name");
@@ -14901,111 +14850,7 @@ $('#bbUI').on('focusout', 'input', function(event) {
     }
   })
 //});
-//weapon upgrade tree
-var showUpgradeTree = "no";
-var upgradetreepos = -750; //current position of upgrade tree
-var upgradetreestart = -750; //start position
-var upgradetreeend = 165; //end position
-//body upgrade tree
-var showBodyUpgradeTree = "no";
-var bupgradetreepos = -750; //current position of upgrade tree
-var bupgradetreestart = -750; //start position
-var bupgradetreeend = 165; //end position
 
-var skillpointspos = -370; //current position of skill points bar
-var skillpointsstart = -370; //start position
-var skillpointsend = 155; //end position
-//skillpoints
-
-var closepopup = document.getElementById("closePopup");
-var changelogpopup = document.getElementById("changelogPopup");
-var changelogbutton = document.getElementById("changelog");
-var settingspopup = document.getElementById("settingsPopup");
-var settingsbutton = document.getElementById("settings");
-var closesettingspopup = document.getElementById("closeSettingsPopup");
-var wrlbpopup = document.getElementById("wrlbPopup");
-var wrlbbutton = document.getElementById("wrlb");
-var closewrlbpopup = document.getElementById("closewrlbPopup");
-var howToPlaybutton = document.getElementById("howToPlay");
-var setclosepopup = document.getElementById("closeAccountsPopup");
-var accountspopup = document.getElementById("accountsPopup");
-var accountsbutton = document.getElementById("accounts");
-var discordbutton = document.getElementById("discord");
-var redditbutton = document.getElementById("reddit");
-var tokeninput = document.getElementById("devtoken");
-//changelog close
-closepopup.onclick = function () {
-  changelogpopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "none";
-  document.getElementById("screenLighten").style.display = "block";
-  setTimeout(function () {
-    document.getElementById("screenLighten").style.display = "none";
-  }, 500); //after animation finish, make buttons below darkness clickable
-};
-//changelog open
-changelogbutton.onclick = function () {
-  changelogpopup.style.display = "block";
-  accountspopup.style.display = "none";
-  settingspopup.style.display = "none";
-  wrlbpopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "block";
-  document.getElementById("screenLighten").style.display = "none";
-};
-//accounts close
-setclosepopup.onclick = function () {
-  accountspopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "none";
-  document.getElementById("screenLighten").style.display = "block";
-  setTimeout(function () {
-    document.getElementById("screenLighten").style.display = "none";
-  }, 500); //after animation finish, make buttons below darkness clickable
-};
-//accounts open
-accountsbutton.onclick = function () {
-  accountspopup.style.display = "block";
-  changelogpopup.style.display = "none";
-  settingspopup.style.display = "none";
-  wrlbpopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "block";
-  document.getElementById("screenLighten").style.display = "none";
-};
-//settings close
-closesettingspopup.onclick = function () {
-  settingspopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "none";
-  document.getElementById("screenLighten").style.display = "block";
-  setTimeout(function () {
-    document.getElementById("screenLighten").style.display = "none";
-  }, 500); //after animation finish, make buttons below darkness clickable
-  updateSettings()
-};
-//settings open
-settingsbutton.onclick = function () {
-  settingspopup.style.display = "block";
-  accountspopup.style.display = "none";
-  changelogpopup.style.display = "none";
-  wrlbpopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "block";
-  document.getElementById("screenLighten").style.display = "none";
-};
-//wr close
-closewrlbpopup.onclick = function () {
-  wrlbpopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "none";
-  document.getElementById("screenLighten").style.display = "block";
-  setTimeout(function () {
-    document.getElementById("screenLighten").style.display = "none";
-  }, 500); //after animation finish, make buttons below darkness clickable
-};
-//wr open
-wrlbbutton.onclick = function () {
-  wrlbpopup.style.display = "block";
-  accountspopup.style.display = "none";
-  changelogpopup.style.display = "none";
-  settingspopup.style.display = "none";
-  document.getElementById("screenDarken").style.display = "block";
-  document.getElementById("screenLighten").style.display = "none";
-};
 //change radiant aura size when move slider in settings
 var slider = document.getElementById("radiantSizeRange");
 var output = document.getElementById("sizevalue");
@@ -15069,11 +14914,6 @@ function providedUsername() {
     accdesc = descGiven;
   }
 }
-
-//update fps
-let fpsvalue = 0;//the value shown
-let fpsvaluenow = 0;//changes
-setInterval(function () {fpsvalue = fpsvaluenow;fpsvaluenow = 0;}, 1000);//update fps every 1 second
 
 //tank editor
 //allowing to swap the object
@@ -16011,12 +15851,11 @@ function getTankCode(){
 function changepfp(weapon){
   alert(weapon)
 }
-
+*/
 window.onbeforeunload = () =>  {
-    if(gameStart >= 1){//in game (show confirmation)
+    if(state == "ingame"){//in game (show confirmation)
        return true
     }else{//dont show
        return null
     }
 }//confirmation dialog when close tab
-        }
