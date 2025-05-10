@@ -1,3 +1,10 @@
+ALPHA 0.0.21 - May 9, 2025
+- Fixed a bug causing upgrade buttons to disappear
+- Gamemode buttons are now working
+
+ALPHA 0.0.20 - May 8, 2025
+- Gamemode buttons now appear when you click on the gamemode name
+
 ALPHA 0.0.19 - May 5, 2025
 - FFA now works, but lots of bugs to fix
 - (note: you cannot access the FFA server unless I open it)

@@ -130,6 +130,29 @@ console.log(bodyupgrades);
           nameInput.style.display = "block";
         }
         const keys = {};
+
+        //add buttons to the list (when you click the gamemode name, the buttons will appear)
+        const gamemodebuttonList = document.getElementById("manualButtonList");
+        for (const i in gamemodeList){
+          let div = document.createElement('div');
+          div.classList.add('manualButtonServers');
+          div.style.backgroundColor = gamemodeColors[i];
+          let divtext = document.createElement('div');
+          divtext.classList.add('manualButtonText');
+          divtext.textContent = gamemodeList[i];
+          let divLighterColor = document.createElement('div');
+          divLighterColor.classList.add('manualButtonLighterColor');
+          divLighterColor.style.backgroundColor = gamemodeColorsLight[i];
+          div.appendChild(divLighterColor);//add the lighter color first! (affects relative positioning)
+          div.appendChild(divtext);
+          gamemodebuttonList.appendChild(div);
+          div.onclick = changeGamemode(i);
+          div.setAttribute("onclick", "changeGamemode("+i+")");
+        }
+        gamemodebuttonList.style.display = "none";//hide the button list
+        document.getElementById('gamemodeTitle').addEventListener("click", () => {
+          gamemodebuttonList.style.display = "flex";
+        });
       
         //function for changing gamemode on home screen
         export function changeGamemode(type) {
@@ -146,6 +169,10 @@ console.log(bodyupgrades);
             if (currentGamemodeID < 0){
               currentGamemodeID = (gamemodeList.length - 1);
             }
+          }
+          else{//using manual button list, directly change to specific gamemode
+            currentGamemodeID = type;
+            gamemodebuttonList.style.display = "none";
           }
           gamemode = gamemodeList[currentGamemodeID];
           document.getElementById('gamemodeSelector').style.backgroundColor = gamemodeColors[currentGamemodeID];
@@ -202,6 +229,9 @@ console.log(bodyupgrades);
           if (oval.classList.contains("right")){//if havent remove
             oval.classList.toggle('right');//remove it
           }
+        });
+        document.getElementById("adminPanelYN").addEventListener("animationend", () => {
+          document.getElementById("adminPanelYN").style.display = "none";
         });
         
         // Map settings
@@ -1417,10 +1447,18 @@ console.log(bodyupgrades);
               hcanvas.height = maxHeight;
             }
         }
-        window.addEventListener('resize', () => {
-          if (gamemode == "PvE arena"){
-            resizeCanvas();
+        function resizeUpgradeButtons() {//upgrade buttons have canvas positions that stays the same even if resize, so need to manually change
+          for (let i = 1; i < 8; i++){//only for first 8 buttons on right side of screen (the left side of screen always same cuz coords 0)
+            let thisbutton = upgradeButtons[i];
+            if (!thisbutton.rawX){console.log("Error occurred: button property rawX not found: " + i)}
+            thisbutton.x = hcanvas.width + thisbutton.rawX;
+            thisbutton.startx = hcanvas.width + thisbutton.rawX;
+            thisbutton.endx = hcanvas.width - thisbutton.rawEndX;
           }
+        }
+        window.addEventListener('resize', () => {
+          resizeCanvas();
+          resizeUpgradeButtons();
         });
         resizeCanvas();
       /*
@@ -2492,12 +2530,12 @@ console.log(bodyupgrades);
         //2tdm colors
         var teamColors = [];
 
-
         var socket = "null";
         // Connect to server
-        if (window.location.href.includes("developer-rocketer")||window.location.href.includes("offline-rocketer")||window.location.href.includes("127.0.0.1")){//this is a testing website, or local host
+        if (window.location.href.includes("developer-rocketer")||window.location.href.includes("rocketer-v2")||window.location.href.includes("127.0.0.1")){//this is a testing website, or local host
           //createNotif("Connected to the developer's testing servers.","rgba(150,0,0)",5000)
           //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)
+          document.getElementById("adminPanelYN").style.display = "block";
           var serverlist = {
             "Free For All": "wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/",
             "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
@@ -3301,6 +3339,8 @@ console.log(bodyupgrades);
                 thisButton.x = canvas.width + x; //poition changes when animating
                 thisButton.startx = canvas.width + x; //start position for animating button movement (start position)
                 thisButton.endx = canvas.width - endx; //end position
+                thisButton.rawX = x;//for resizing purposes (cuz canvas width will change)
+                thisButton.rawEndX = endx;//for resizing purposes
               }
               else{//left side upgrade buttons
                 thisButton.x = 0-x;
@@ -7817,7 +7857,10 @@ console.log(bodyupgrades);
 
               //mouse release listener
               $("html").mouseup(function (e) {
-                if (gamemode == "PvE arena"){
+                if (gamemodebuttonList.style.display != "none" && !gamemodebuttonList.contains(e.target)){//if gamemode button list is open and clicked outside gamemode selector
+                  gamemodebuttonList.style.display = "none";
+                }
+                else if (gamemode == "PvE arena"){
                   mouseDown = false;
                   return;
                 }
@@ -9124,9 +9167,7 @@ console.log(bodyupgrades);
           } else {
             thisbutton.brightness = 0;
           }
-          if (
-            thisbutton.width > thisbutton.defaultwidth
-          ) {
+          if (thisbutton.width > thisbutton.defaultwidth) {
             let amountAdd = thisbutton.width - thisbutton.defaultwidth;
             if (amountAdd >= 0.05){//if not too near to the end width
               amountAdd /= 3;//button enlarges faster before decreasing in speed
@@ -9175,7 +9216,7 @@ console.log(bodyupgrades);
         var r = 7;
           var r2 = r;//radius of bottom part of dark area
         var x = thisbutton.x - thisbutton.width/2;
-        var y = thisbutton.y - thisbutton.width/2
+        var y = thisbutton.y - thisbutton.width/2;
         hctx.beginPath();
         hctx.moveTo(x + r, y);
         hctx.arcTo(x + w, y, x + w, y + h, r);

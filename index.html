@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width, height=device-height, target-densitydpi=device-dpi" />
     <meta name="application-name" content="rocketer.io" />
     <meta name="description" content="Scenexe.io but bad." />
-    <title>Offline Rocketer</title>
+    <title>Rocketer v2</title>
     <link
       rel="icon"
       type="image/x-icon"
-      href="https://cdn.glitch.global/92cf917f-5d16-4251-8140-4f5181b6661b/favicon.png?v=1679492856483"
+      href="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/9e5475f4-0d5c-4b57-9536-1af4d35ab936.image.png?v=1746798366279"
     />
     <style>
         body {
@@ -123,6 +123,51 @@
             border-radius: 0.5vmin;
             white-space: nowrap;
             transition: all .3s ease-out;
+        }
+        #manualButtonList {/*the selection buttons when click on gamemode name*/
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background-color: black;
+            white-space: nowrap;
+            transition: all .3s ease-out;
+            display: none;/*flex, not block*/
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+        .manualButtonServers {
+            position: relative;
+            width: 33%;
+            height: 50%;
+            background-color: blue;
+            border: .5vmin solid black;
+            border-radius: 1vmin;
+            box-sizing: border-box;
+            font-size: 2vmin;
+            text-align: center;
+            cursor: pointer;
+        }
+        .manualButtonServers:hover {
+            border-color: white;
+        }
+        .manualButtonLighterColor {
+            position: relative;
+            top: 0;
+            left: 0;
+            height: 50%;
+            width: 100%;
+            background-color: lightblue;
+            border-radius: 0.5vmin;
+            white-space: nowrap;
+        }
+        .manualButtonText {
+            position: relative;
+            top: 0;/*it's relatively placed (cuz absolute doesn work in flexbox) and the lightercolor div is taking up 50% height, so we'll put 0% from the top to center it at 50%*/
+            left: 50%;
+            transform: translateY(-50%) translateX(-50%);
         }
         #gamemodeTitle {
             position: absolute;
@@ -513,6 +558,25 @@
             font-size: 2vmin;
             transform: translateY(-50%) translateX(-50%);
             display: none;
+        }
+        #adminPanelYN {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            font-size: 2vmin;
+            transform: translateY(-50%) translateX(-50%);
+            display: none;
+            text-align: center;
+            background-color: rgba(0, 224, 108, 0.3);
+            border-radius: 2vmin;
+            padding: 1vmin;
+            animation-name: disappearDown;
+            animation-duration: 5s;
+        }
+        @keyframes disappearDown {
+          0% {bottom: 0;}
+          80% {bottom: 0;}
+          100% {bottom: -10vmin;}
         }
         #connecting {
           position: absolute;
@@ -1192,8 +1256,10 @@
         <div id="regionTitle">???</div>
         <div id="regionArrow1">&lt;</div>
         <div id="regionArrow2">&gt;</div>
+        <div id="manualButtonList"></div>
     </div>
     <div id="respawnInfo">You will respawn at level <span id="respawnLvl">0</span></div>
+    <div id="adminPanelYN">Developer Mode ON<br>you're logged in using an admin account, or accessing developer servers</div>
     <div id="not-signed-in-text"><button id="loginButton" class="otherlinks">Log In</button> - <button id="signupButton" class="otherlinks">Sign Up</button></div>
     <div id="quickchat">
       <div id="quickchattext">Quick Chat</div>
