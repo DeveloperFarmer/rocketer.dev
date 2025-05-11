@@ -1,402 +1,115 @@
-export const bodyupgrades = {//use export so that it is accessible in the main js code
-  //note that export only works for modules, i.e. in the html code, the js scripts must have type="module"
-  //hardcoded for the upgrade tree. Omit unneccessary properties that dont affect visuals. Remove aura barrels.
-  //IF CHANGE STUFF IN THE SERVER, REMEMBER TO CHANGE HERE TOO
-  //this is only used for upgrade tree, NOT buttons and the actual game
-  //tank names with hyphen need inverted commas, e.g. "auto-guard"
+//use export so that it is accessible in the main js code
+//note that export only works for modules, i.e. in the html code, the js scripts must have type="module"
+//hardcoded for the upgrade tree (upgradeTo property is needed to decide which tank to grey out)
+//IF CHANGE STUFF IN THE SERVER, REMEMBER TO CHANGE HERE TOO
+//this is only used for upgrade tree, NOT buttons and the actual game
+//tank names with hyphen need inverted commas, e.g. "auto-guard"
+
+export const bodyUpgradeMap = [//in the order in which it appears on upgrade tree
+  ['base'],
+  ['smasher','wall','sentry','hangar','hearth'],
+  ['fortress','spike','armory','stronghold','citadel','turret','warship','mender','bonfire'],
+  ['castle','palace','thorn','forge','brigade','artillery','triplet','battleship','remedy','flare'],
+  ['ziggurat','bombard','saw','bastion','battalion','foundry','quadruplet','mothership','fabricator','inferno'],
+]
+
+export const weaponUpgradeMap = [
+  ['node'],
+  ['mono','commander','trapper'],
+  ['duo','flank','split','single','alloy','guard','sniper','overseer','director','fusion','gamma','blockade','rubble'],
+  ['trio','quad','arc','gunner','overlord','conglomerate','wake','spread','destroyer','assassin','compound','factory','manager','beta','engineer','barricade','stockade','scrap'],
+  ['quadro','penta','streamliner','industry','octo','horizon','disperse','minigun','emperor','hatcher','amalgam','wave','annihilator','manufacturer','hybrid','marksman','executive','alpha','raider','arsenal','mechanic','riot','palisade','shrapnel'],
+]
+
+export const celestialBodyUpgradeMap = [
+  ['celestial'],
+  ['nebula','chasm','exosphere','corvus','triton'],
+  ['naos','galaxy','pollux','void','meteor','comet','heliosphere','cygnus','hyperion','oberon'],
+]
+
+export const celestialWeaponUpgradeMap = [
+  ['nova'],
+  ['pulsar','satellite','debris'],
+  ['quasar','blazar','moon','synope','asteroid','charon'],
+]
+
+export const bodyupgrades = {
   base: {
-    upgradeTo: ['raider','wall','sentry'],//needed for upgrade tree (decide which tank to grey out)
+    upgradeTo: ['raider','wall','sentry'],
   },
-  smasher: {
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 6,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.25,
-      },
-    },
+  smasher: { assets: { assetOne: { type: "under", sides: 6, color: "#5F676C", outline: "#41494E", size: 1.25, }, },
     upgradeTo: ['spike','armory'],
   },
-  spike: {
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 4,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.5,
-      },
-    },
+  spike: { assets: { assetOne: { type: "under", sides: 4, color: "#5F676C", outline: "#41494E", size: 1.5, }, },
     upgradeTo: ['thorn'],
   },
-  thorn: {
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 5,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.5,
-      },
-    },
+  thorn: { assets: { assetOne: { type: "under", sides: 5, color: "#5F676C", outline: "#41494E", size: 1.5, }, },
     upgradeTo: ['saw','battalion'],
   },
-  saw: {
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 4,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.75,
-      },
-    },
+  saw: { assets: { assetOne: { type: "under", sides: 4, color: "#5F676C", outline: "#41494E", size: 1.75, }, },
     upgradeTo: [],
   },
   armory: {
     turretBaseSize: 0.6,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.6,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 6,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.25,
-      },
-    },
+    bodybarrels: { barrelOne: { barrelWidth: 0.8, barrelHeight: 1.6, additionalAngle: 0, x: 0, barrelType: "bullet", }, },
+    assets: { assetOne: { type: "under", sides: 6, color: "#5F676C", outline: "#41494E", size: 1.25, }, },
     upgradeTo: ['brigade'],
   },
   brigade: {
     turretBaseSize: 0.7,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.6,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 4,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.5,
-      },
-    },
+    bodybarrels: { barrelOne: { barrelWidth: 0.8, barrelHeight: 1.6, additionalAngle: 0, x: 0, barrelType: "bullet", }, },
+    assets: { assetOne: { type: "under", sides: 4, color: "#5F676C", outline: "#41494E", size: 1.5, }, },
     upgradeTo: ['battalion'],
   },
   battalion: {
     turretBaseSize: 0.7,
-    bodybarrels: {
-      barrelOne: {
-        barrelWidth: 0.8,
-        barrelHeight: 1.7,
-        additionalAngle: 0,
-        x: 0,
-        barrelType: "bullet",
-      },
-    },
-    assets: {
-      assetOne: {
-        type: "under",
-        sides: 5,
-        color: "#5F676C",
-        outline: "#41494E",
-        size: 1.5,
-      },
-    },
+    bodybarrels: { barrelOne: { barrelWidth: 0.8, barrelHeight: 1.7, additionalAngle: 0, x: 0, barrelType: "bullet", }, },
+    assets: { assetOne: { type: "under", sides: 5, color: "#5F676C", outline: "#41494E", size: 1.5, }, },
     upgradeTo: [],
   },
-  raider: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.6,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(253,118,118)",
-        outline: "rgb(222,88,88)",
-        size: 0.3,
-      },
-    },
+  raider: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(153,153,151)", outline: "rgb(122,124,123)", size: 0.6, }, assetTwo: { type: "above", sides: 0, color: "rgb(253,118,118)", outline: "rgb(222,88,88)", size: 0.3, }, },
     upgradeTo: ['forge'],
   },
-  forge: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.65,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(253,118,118)",
-        outline: "rgb(222,88,88)",
-        size: 0.35,
-      },
-    },
+  forge: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(153,153,151)", outline: "rgb(122,124,123)", size: 0.65, }, assetTwo: { type: "above", sides: 0, color: "rgb(253,118,118)", outline: "rgb(222,88,88)", size: 0.35, }, },
     upgradeTo: ['foundry','mender','hail'],
   },
-  foundry: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.7,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(253,118,118)",
-        outline: "rgb(222,88,88)",
-        size: 0.35,
-      },
-    },
+  foundry: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(153,153,151)", outline: "rgb(122,124,123)", size: 0.7, }, assetTwo: { type: "above", sides: 0, color: "rgb(253,118,118)", outline: "rgb(222,88,88)", size: 0.35, }, },
     upgradeTo: ['flame'],
   },
-  flame: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.8,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(253,118,118)",
-        outline: "rgb(222,88,88)",
-        size: 0.4,
-      },
-    },
+  flame: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(153,153,151)", outline: "rgb(122,124,123)", size: 0.8, }, assetTwo: { type: "above", sides: 0, color: "rgb(253,118,118)", outline: "rgb(222,88,88)", size: 0.4, }, },
     upgradeTo: ['inferno','juggernaut'],
   },
-  inferno: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.9,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgb(253,118,118)",
-        outline: "rgb(222,88,88)",
-        size: 0.45,
-      },
-    },
+  inferno: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(153,153,151)", outline: "rgb(122,124,123)", size: 0.9, }, assetTwo: { type: "above", sides: 0, color: "rgb(253,118,118)", outline: "rgb(222,88,88)", size: 0.45, }, },
     upgradeTo: [],
   },
-  juggernaut: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.75,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgba(120, 118, 194)",
-        outline: "rgba(90, 88, 164)",
-        size: 0.3,
-      },
-    },
+  juggernaut: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(153,153,151)", outline: "rgb(122,124,123)", size: 0.75, }, assetTwo: { type: "above", sides: 0, color: "rgba(120, 118, 194)", outline: "rgba(90, 88, 164)", size: 0.3, }, },
     upgradeTo: [],
   },
-  mender: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.65,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 8,
-        color: "rgba(56,183,100)",
-        outline: "rgba(26,153,70)",
-        size: 0.3,
-      },
-    },
+  mender: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(153,153,151)", outline: "rgb(122,124,123)", size: 0.65, }, assetTwo: { type: "above", sides: 8, color: "rgba(56,183,100)", outline: "rgba(26,153,70)", size: 0.3, }, },
     upgradeTo: ['remedy'],
   },
-  remedy: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.75,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 8,
-        color: "rgba(56,183,100)",
-        outline: "rgba(26,153,70)",
-        size: 0.4,
-      },
-    },
+  remedy: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(153,153,151)", outline: "rgb(122,124,123)", size: 0.75, }, assetTwo: { type: "above", sides: 8, color: "rgba(56,183,100)", outline: "rgba(26,153,70)", size: 0.4, }, },
     upgradeTo: ['fabricator'],
   },
-  fabricator: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(153,153,151)",
-        outline: "rgb(122,124,123)",
-        size: 0.9,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 8,
-        color: "rgba(56,183,100)",
-        outline: "rgba(26,153,70)",
-        size: 0.45,
-      },
-    },
+  fabricator: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(153,153,151)", outline: "rgb(122,124,123)", size: 0.9, }, assetTwo: { type: "above", sides: 8, color: "rgba(56,183,100)", outline: "rgba(26,153,70)", size: 0.45, }, },
     upgradeTo: [],
   },
-  hail: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        size: 0.65,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgba(150, 208, 227)",
-        outline: "rgba(132, 190, 209)",
-        size: 0.3,
-      },
-    },
+  hail: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(105, 104, 104)", outline: "rgb(79, 78, 78)", size: 0.65, }, assetTwo: { type: "above", sides: 0, color: "rgba(150, 208, 227)", outline: "rgba(132, 190, 209)", size: 0.3, }, },
     upgradeTo: ['blizzard'],
   },
-  blizzard: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        size: 0.65,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgba(150, 208, 227)",
-        outline: "rgba(132, 190, 209)",
-        size: 0.3,
-      },
-    },
+  blizzard: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(105, 104, 104)", outline: "rgb(79, 78, 78)", size: 0.65, }, assetTwo: { type: "above", sides: 0, color: "rgba(150, 208, 227)", outline: "rgba(132, 190, 209)", size: 0.3, }, },
     upgradeTo: ['snowstorm'],
   },
-  snowstorm: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 0,
-        color: "rgb(105, 104, 104)",
-        outline: "rgb(79, 78, 78)",
-        size: 0.65,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 0,
-        color: "rgba(150, 208, 227)",
-        outline: "rgba(132, 190, 209)",
-        size: 0.3,
-      },
-    },
+  snowstorm: { assets: { assetOne: { type: "above", sides: 0, color: "rgb(105, 104, 104)", outline: "rgb(79, 78, 78)", size: 0.65, }, assetTwo: { type: "above", sides: 0, color: "rgba(150, 208, 227)", outline: "rgba(132, 190, 209)", size: 0.3, }, },
     upgradeTo: [],
   },
-  wall: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 6,
-        color: "default",
-        outline: "default",
-        size: 1.15,
-      },
-    },
+  wall: { assets: { assetOne: { type: "above", sides: 6, color: "default", outline: "default", size: 1.15, }, },
     upgradeTo: ['castle','smasher','propeller'],
   },
-  castle: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 6,
-        color: "default",
-        outline: "default",
-        size: 1.2,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 6,
-        color: "default",
-        outline: "default",
-        size: 0.6,
-      },
-    },
+  castle: { assets: { assetOne: { type: "above", sides: 6, color: "default", outline: "default", size: 1.2, }, assetTwo: { type: "above", sides: 6, color: "default", outline: "default", size: 0.6, }, },
     upgradeTo: ['fortress'],
   },
-  fortress: {
-    assets: {
-      assetOne: {
-        type: "above",
-        sides: 7,
-        color: "default",
-        outline: "default",
-        size: 1.2,
-      },
-      assetTwo: {
-        type: "above",
-        sides: 7,
-        color: "default",
-        outline: "default",
-        size: 0.7,
-      },
-    },
+  fortress: { assets: { assetOne: { type: "above", sides: 7, color: "default", outline: "default", size: 1.2, }, assetTwo: { type: "above", sides: 7, color: "default", outline: "default", size: 0.7, }, },
     upgradeTo: ['palace'],
   },
   palace: {

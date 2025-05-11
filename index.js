@@ -1,6 +1,4 @@
-import { bodyupgrades,weaponupgrades,bodyColors } from "./tankUpgrades.js";      
-console.log(bodyupgrades);
-      console.log(weaponupgrades);
+import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeaponUpgradeMap,bodyupgrades,weaponupgrades,bodyColors } from "./tankUpgrades.js";
         // Canvas setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -27,15 +25,17 @@ console.log(bodyupgrades);
         const quickchat = document.getElementById("quickchat");
         const darken = document.getElementById('blackScreen');
         document.getElementById('exit-changelog').addEventListener("click", () => {
-          fullchangelog.style.display = "none";
+          //fullchangelog.style.display = "none";
+          closePopupFunction(fullchangelog,document.getElementById("changelogtextdiv"));
         });
         //add a way to track settings changes later on
         document.getElementById('exit-settings-apply').addEventListener("click", () => {
-          settings.style.display = "none";
+          //settings.style.display = "none";
+          closePopupFunction(settings,document.getElementById("settingstextdiv"));
           applySettings();
         });
         document.getElementById('exit-settings-cancel').addEventListener("click", () => {
-          settings.style.display = "none";
+          closePopupFunction(settings,document.getElementById("settingstextdiv"));
           cancelSettings();
         });
         export function openSettings(){
@@ -254,7 +254,8 @@ console.log(bodyupgrades);
         let debugState = "close";
         let clientTick = "?.?ms";
         let starting = 0;
-        
+        const positionDiv = document.getElementById('position');
+        const bandwidthDiv = document.getElementById('bandwidth');
         //death stuff
         let isGamePaused = false;
         let startPlayTime = 0;
@@ -434,6 +435,14 @@ console.log(bodyupgrades);
                     ctx.fill();
                     ctx.stroke();
 
+                    if (settingsList.showhitboxes === true && debugState == "open"){//show hitbox
+                      ctx.strokeStyle = "white";
+                      ctx.lineWidth = 1.5;
+                      ctx.beginPath();
+                      ctx.arc(screenX, screenY, this.radius, 0, 2 * Math.PI);
+                      ctx.stroke();
+                    }
+
                     // Draw health bar
                     const healthBarWidth = this.radius * 2;
                     const healthBarHeight = 5;
@@ -602,6 +611,13 @@ console.log(bodyupgrades);
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
+                    if (settingsList.showhitboxes === true && debugState == "open"){//show hitbox
+                      ctx.strokeStyle = "white";
+                      ctx.lineWidth = 1.5;
+                      ctx.beginPath();
+                      ctx.arc(screenX, screenY, this.radius, 0, 2 * Math.PI);
+                      ctx.stroke();
+                    }
                     numberOfObjectsDrawn++;
                     if (this.isHit){
                       this.isHit = false;//reset every loop AFTER drawing
@@ -769,6 +785,14 @@ console.log(bodyupgrades);
                     ctx.arc(screenX, screenY, this.radius, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
+
+                    if (settingsList.showhitboxes === true && debugState == "open"){//show hitbox
+                      ctx.strokeStyle = "white";
+                      ctx.lineWidth = 1.5;
+                      ctx.beginPath();
+                      ctx.arc(screenX, screenY, this.radius, 0, 2 * Math.PI);
+                      ctx.stroke();
+                    }
 
                     // Draw health bar
                     const healthBarWidth = this.radius * 2;
@@ -1149,7 +1173,7 @@ console.log(bodyupgrades);
                         ctx.stroke();
                 }
               
-                if (debugState == "open"){//show shape hitbox
+                if (settingsList.showhitboxes === true && debugState == "open"){//show shape hitbox
                   ctx.strokeStyle = "white";
                   ctx.lineWidth = 1.5;
                   ctx.beginPath();
@@ -1331,6 +1355,12 @@ console.log(bodyupgrades);
             ctx.fillRect(-cameraXwithFOV,-cameraYwithFOV,Math.min(0, cameraXwithFOV),MAP_HEIGHT);//only draw if cameraX < 0
             // Right border
             ctx.fillRect(MAP_WIDTH - cameraXwithFOV,-cameraYwithFOV,Math.max(0, cameraXwithFOVopp),MAP_HEIGHT);
+
+            if (settingsList.showhitboxes === true && debugState == "open"){//show hitbox (green box around map)
+              ctx.strokeStyle = "#00ff00";
+              ctx.lineWidth = 1.5;
+              ctx.strokeRect(-cameraXwithFOV,-cameraYwithFOV,MAP_WIDTH,MAP_HEIGHT);
+            }
             ctx.restore();
         }
       
@@ -1461,43 +1491,7 @@ console.log(bodyupgrades);
           resizeUpgradeButtons();
         });
         resizeCanvas();
-      /*
-        function checkForKeybinds(key){//pressed a key, check if the key represents anything (except player movement)
-          if (key == "m" && players.length > 0){//if ingame and press m
-            if (debugState == "open"){//close the debug
-              fpsCounter.style.display = "none";
-              let allOtherDebugDivs = document.querySelectorAll(".debugopen");
-              for(let i = 0; i < allOtherDebugDivs.length; i++){
-                document.getElementById(allOtherDebugDivs[i].id).className = "debug";
-              }
-              debugState = "close";
-            }
-            else {//open the debug
-              fpsCounter.style.display = "block";
-              let allOtherDebugDivs = document.querySelectorAll(".debug");
-              for(let i = 0; i < allOtherDebugDivs.length; i++){
-                document.getElementById(allOtherDebugDivs[i].id).className = "debugopen";
-              }
-              debugState = "open";
-            }
-          }
-          else if (key == "o" && players.length > 0){
-            fov++;
-          }
-          else if (key == "p" && players.length > 0 && fov >= 2){
-            fov--;
-          }
-          else if (key == "t" && players.length > 0){//toggle quick chat
-            if (quickchat.style.display == "block"){
-              quickchat.style.display = "none";
-            }
-            else{//if display is none or " "
-              //js will return display as " " because it cant read the css, unless you set it using js before
-              quickchat.style.display = "block";
-            }
-          }
-        }
-      */
+
         function spawnShape() {
             shapes.push(new Shape(
                 Math.random() * MAP_WIDTH,
@@ -1659,7 +1653,7 @@ console.log(bodyupgrades);
             if (drawnentitiesElement.textContent != newtext){//dont update debug 60 times per second, only update when needed (idk if this will change the performance or not)
               drawnentitiesElement.textContent = newtext;
             }
-          
+            positionDiv.textContent = "Position: " + Math.round(players[0].x * 100) / 100 + "," + Math.round(players[0].y * 100) / 100;//2 decimal places
             // FPS counter update
             frameCount++;
             const now = performance.now();
@@ -1669,8 +1663,8 @@ console.log(bodyupgrades);
                 lastFpsUpdate = now;
                 fpsCounter.textContent = `FPS: ${fps}`;
                 fpsCounter.className = 
-                  fps >= 60 ? 'high' : 
-                  fps >= 30 ? 'medium' : 'low';
+                  fps >= 45 ? 'high' : 
+                  fps >= 15 ? 'medium' : 'low';
             }
             //update tick time
             if (clientTick > 5){
@@ -1912,6 +1906,13 @@ console.log(bodyupgrades);
           if (gamemode == "PvE arena"){
             hcanvas.style.display = "none";
             document.getElementById('score').style.display = "block";
+            botnumberElement.className = "debugopen";
+            shapenumberElement.className = "debugopen";
+          }
+          else{
+            document.getElementById('score').style.display = "none";
+            botnumberElement.className = "debug";
+            shapenumberElement.className = "debug";
           }
           nameInput.style.display = "none";
           document.getElementById('connecting').style.display = "none";
@@ -1925,11 +1926,14 @@ console.log(bodyupgrades);
           document.getElementById('right-buttons').style.display = "none";
           signupdiv.style.display = "none";
           //open debug
+          /*
           fpsCounter.style.display = "block";
           let allOtherDebugDivs = document.querySelectorAll(".debug");
           for(let i = 0; i < allOtherDebugDivs.length; i++){
             document.getElementById(allOtherDebugDivs[i].id).className = "debugopen";
           }
+            */
+          document.getElementById("debugContainer").style.display = "flex";//open debug
           debugState = "open";
           //start the game
           hctx.fillStyle = "#cdcdcd";
@@ -2004,8 +2008,18 @@ console.log(bodyupgrades);
                 var AR = "";
                 var WI = "";
                 for (var AQ = ("CHANGELOG - " + (WI = AP.split("\n\r\n"))[0]).split("\n"), AB = 0; AB < AQ.length; AB++) {
-                  if (!AQ[AB].startsWith("    ")) {
-                    AR += AR == "" ? AQ[AB] : "<br />" + AQ[AB];
+                  if (!AQ[AB].startsWith("    ")) {//no indent
+                    AR += AR == "" ? AQ[AB] : "<br />" + AQ[AB];//add break line br if this isnt the first line (AR is not "")
+                  }
+                  else{//assume that lines with indent are not the first line
+                    //e.g.
+                    //-bug fixes
+                    //(indent)-fixed .....
+                    let PI = "";//replace tab indents with tab characters (tab indents doesnt show in html)
+                    for (let indent = 0; AQ[AB].startsWith("    ", indent * 4); indent++) {//allow 4 indents max
+                      PI += "&emsp;&emsp;";//add paragraph indentation in changelog
+                    }
+                    AR += ("<br />" + PI + AQ[AB]);
                   }
                 }//get the first paragraph (latest version update) (version updates are separated by an empty line in the changelog txt file)
                 let additionaltext = "<br>you can view the full changelog ";//leave a blank space cuz we're adding a word after that
@@ -2059,39 +2073,59 @@ console.log(bodyupgrades);
           document.getElementById('modal2').style.display = "block";
           darken.style.display = "block";
         }
+        function closeModalFunction(modalID){//using modal ID, for modals only e.g. disconnect modal
+          let thisModal = document.getElementById(modalID);
+          thisModal.style.animation = "flyToTop .5s";//0.5 seconds animation fade out
+          darken.style.animation = "opacityFadeOpp .5s";
+          setTimeout(() => {
+            thisModal.style.display = "none";//hide divs
+            darken.style.display = "none";
+            thisModal.style.animation = "dropFromTop .5s";//reset animation to what is stated in html
+            darken.style.animation = "opacityFade .5s";
+          }, 500);//0.5 seconds for animation
+        }
+        function closePopupFunction(popupBackground,popup){//using the popup div variable, for popups only e.g. changelog and settings
+          popup.style.animation = "flyToTop .5s";//0.5 seconds animation fade out
+          popupBackground.style.animation = "opacityFadeOpp .5s";
+          setTimeout(() => {
+            popupBackground.style.display = "none";//hide popup
+            popup.style.animation = "dropFromTop .5s";//reset animation to what is stated in html
+            popupBackground.style.animation = "opacityFade .5s";
+          }, 500);//0.5 seconds for animation
+        }
         export function closeModal(){
-          document.getElementById('modal').style.display = "none";
-          darken.style.display = "none";
+          closeModalFunction('modal')
         }
         export function closeModal2(){
-          document.getElementById('modal2').style.display = "none";
-          darken.style.display = "none";
+          closeModalFunction('modal2')
         }
         export function closeModal3(){//disconnected modal
-          document.getElementById('modal3').style.display = "none";
-          darken.style.display = "none";
+          closeModalFunction('modal3')
           //reconnect
           connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in
           gamemode = joinedWhichGM;
         }
         export function closeModal3a(){//connection error modal
-          document.getElementById('modal3a').style.display = "none";
-          darken.style.display = "none";
+          closeModalFunction('modal3a')
           //reconnect
           connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in
           gamemode = joinedWhichGM;
         }
         export function closeModal5(){
-          document.getElementById("login").style.display = "none";
-          darken.style.display = "none";
+          closeModalFunction('login')
         }
         export function closeModal6(){
-          document.getElementById("signup").style.display = "none";
-          darken.style.display = "none";
+          closeModalFunction('signup')
         }
         export function closeModal7(){
-          document.getElementById('modal7').style.display = "none";
-          darken.style.display = "none";
+          closeModalFunction('modal7')
+        }
+        export function closeModal8(){//ad blocker
+          closeModalFunction('modal8')
+        }
+        if( window.skibidiGyatt === undefined ){//if ad block is turned on (prevents this from being set in prebid-ads.js file)
+          document.getElementById('modal8').style.display = "block";
+          darken.style.display = "block";
         }
         let quickchats = {};
         export function openModalquickchat(){
@@ -2101,14 +2135,12 @@ console.log(bodyupgrades);
         }
         export function closeModalquickchat(){
           quickchat.style.display = "block";
-          document.getElementById("quickchatmsg").style.display = "none";
-          darken.style.display = "none";
+          closeModalFunction('quickchatmsg')
         }
         export function createquickchat(){
           //add quick chat to the next slice, e.g. if first slice is filled, but user click the 3rd slice, still add to the 2nd slice
           quickchat.style.display = "block";
-          document.getElementById("quickchatmsg").style.display = "none";
-          darken.style.display = "none";
+          closeModalFunction('quickchatmsg')
           let newquickchat = document.getElementById('createQuickChat').value;
           if (newquickchat != "" && newquickchat.length < 750){//max length of chats are 750 (if change this, change on server side too)
             if (Object.keys(quickchats).length < 4){//max 4 quick chats for now, cannot increase unless change the html div (need lots of changes though)
@@ -2386,10 +2418,10 @@ console.log(bodyupgrades);
         console.log(settingsList)
         for (const settingProp in settingsList) {//loop through all settings
           if (settingsList[settingProp] === true){
-            document.querySelector('input[settingid="'+settingProp+'"]').setAttribute('checked','true');
+            document.getElementById(settingProp).checked = true;//.setAttribute('checked','true');
           }
           else if (settingsList[settingProp] === false){
-            document.querySelector('input[settingid="'+settingProp+'"]').removeAttribute('checked');
+            document.getElementById(settingProp).checked = false;//.removeAttribute('checked');
           }
           else if (settingProp.startsWith("1")||
           settingProp.startsWith("2")||
@@ -2407,50 +2439,114 @@ console.log(bodyupgrades);
           }
         }
           
-        //export function updateTempSettings(e){//user changed a setting, but DONT change the actual setting until the user clicks the "apply" button
-          //EXPORT IT LATER after merging the code
-        function updateTempSettings(e){//user changed a setting, but DONT change the actual setting until the user clicks the "apply" button
-          let thisSetting = e.target.settingid;
-          if (settingsList.hasOwnProperty(thisSetting)){//if a legit setting
-            if (temporarySettings.hasOwnProperty(thisSetting)){//this user changed this setting before, but havent applied changes
-              if (temporarySettings[thisSetting] === true){
-                temporarySettings[thisSetting] = false;
+        export function updateTempSettings(id){//user changed a setting, but DONT change the actual setting until the user clicks the "apply" button
+          if (settingsList.hasOwnProperty(id)){//if a legit setting
+            if (temporarySettings.hasOwnProperty(id)){//this user changed this setting before, but havent applied changes
+              if (temporarySettings[id] === true){
+                temporarySettings[id] = false;
               }
               else{
-                temporarySettings[thisSetting] = true;
+                temporarySettings[id] = true;
               }
             }
             else{//first time changing this setting (since the last time the user clicked 'apply')
-              if (settingsList[thisSetting] === true){
-                temporarySettings[thisSetting] = false;
+              if (settingsList[id] === true){
+                temporarySettings[id] = false;
               }
               else{
-                temporarySettings[thisSetting] = true;
+                temporarySettings[id] = true;
               }
             }
+            console.log("updated " + id + " to " + temporarySettings[id])
           }
           else{
-            console.log("AN ERROR OCCURRED WHEN UPDATING SETTINGS: INVALID SETTING " + thisSetting)
+            console.log("AN ERROR OCCURRED WHEN UPDATING SETTINGS: INVALID SETTING " + id)
           }
         }
         function applySettings(){//update settings
           for (const settingProp in temporarySettings) {
             settingsList[settingProp] = temporarySettings[settingProp];
+            //only those settings which require change in html divs (other settings such as hitboxes are canvas-based, so those are in the game loop function, not here)
+            switch(settingProp) {
+              case "showticktime":
+                if (settingsList[settingProp] === true){
+                  document.getElementById("servertick").className = "debugopen";
+                  document.getElementById("clienttick").className = "debugopen";
+                }
+                else{
+                  document.getElementById("servertick").className = "debug";
+                  document.getElementById("clienttick").className = "debug";
+                }
+                break;
+              case "showservername":
+                if (settingsList[settingProp] === true){
+                  document.getElementById("dimension").className = "debugopen";
+                }
+                else{
+                  document.getElementById("dimension").className = "debug";
+                }
+                break;
+              case "showplayercount":
+                if (settingsList[settingProp] === true){
+                  document.getElementById("playercount").className = "debugopen";
+                }
+                else{
+                  document.getElementById("playercount").className = "debug";
+                }
+                break;
+              case "showglobalplayercount":
+                if (settingsList[settingProp] === true){
+                  document.getElementById("globalplayercount").className = "debugopen";
+                }
+                else{
+                  document.getElementById("globalplayercount").className = "debug";
+                }
+                break;
+              case "showfps":
+                if (settingsList[settingProp] === true){
+                  document.getElementById("fpsCounter").style.display = "block";
+                }
+                else{
+                  document.getElementById("fpsCounter").style.display = "none";
+                }
+                break;
+              case "showping":
+                if (settingsList[settingProp] === true){
+                  document.getElementById("ping").className = "debugopen";
+                }
+                else{
+                  document.getElementById("ping").className = "debug";
+                }
+                break;
+              case "showposition":
+                if (settingsList[settingProp] === true){
+                  document.getElementById("position").className = "debugopen";
+                }
+                else{
+                  document.getElementById("position").className = "debug";
+                }
+                break;
+            }
           }
           localStorage.settings = JSON.stringify(settingsList);
           temporarySettings = {};
+          console.log(settingsList)
         }
         function cancelSettings(){//cancel settings + undo all switches
           for (const settingProp in temporarySettings) {
             //undo the switches
             if (settingsList[settingProp] === true){//if switch was on before making the changes
-              document.querySelector('input[settingid="'+settingProp+'"]').setAttribute('checked','true');
+              //document.querySelector('input[settingid="'+settingProp+'"]').setAttribute('checked','true');//old code that doesnt work
+              document.getElementById(settingProp).checked = true;
+              console.log("Reverted to true: " + settingProp)
             }
             else{
-              document.querySelector('input[settingid="'+settingProp+'"]').removeAttribute('checked');
+              document.getElementById(settingProp).checked = false;
+              console.log("Reverted to false: " + settingProp)
             }
           }
           temporarySettings = {};
+          console.log(settingsList)
         }
 
 
@@ -2513,7 +2609,7 @@ console.log(bodyupgrades);
             "Press p for passive mode.",
             "Press f for fast rotation.",
             "You can enter the purple portals at lvl 100 only.",
-            "Press h to toggle hitboxes.",
+            "Press m to toggle debug.",
             "Press t to open quick chat.",
             "Juggernaut have purple auras that can suck in players, careful!",
             "Blizzard slows down dune mobs.",
@@ -3436,7 +3532,6 @@ console.log(bodyupgrades);
             var sentStuffBefore = "no";
             var latency = "Checking latency...";
             var start;
-            var showHitBox = "no";
             var shownBandwidth = 0; //bandwidth that is shown, updates every second
             var bandwidth = 0; //size of packet sent from server
             var prevBandwidthUpdate = 0; //previous time that bandwidth was updated
@@ -4658,18 +4753,12 @@ console.log(bodyupgrades);
                   //if this is an animation of a dead object
                   ctx.globalAlpha = 1.0; //reset opacity
                 }
-                if (showHitBox == "yes") {
+                if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "blue";
                   ctx.lineWidth = 3;
                   ctx.beginPath();
-                  ctx.arc(
-                    drawingX,
-                    drawingY,
-                    object.width / clientFovMultiplier,
-                    0,
-                    2 * Math.PI
-                  );
+                  ctx.arc(drawingX,drawingY,object.width / clientFovMultiplier,0,2 * Math.PI);
                   ctx.stroke();
                 }
               } else if (object.type == "bot") {
@@ -5125,7 +5214,7 @@ console.log(bodyupgrades);
                   //if this is an animation of a dead object
                   ctx.globalAlpha = 1.0; //reset opacity
                 }
-                if (showHitBox == "yes") {
+                if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "blue";
                   ctx.lineWidth = 3;
@@ -5747,7 +5836,7 @@ console.log(bodyupgrades);
                   //if this is an animation of a dead object
                   ctx.globalAlpha = 1.0; //reset opacity
                 }
-                if (showHitBox == "yes") {
+                if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "blue";
                   ctx.lineWidth = 3;
@@ -6064,7 +6153,7 @@ console.log(bodyupgrades);
                 ctx.fill();
                 ctx.lineJoin = "miter"; //change back
                 ctx.restore();
-                if (showHitBox == "yes") {
+                if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "blue";
                   ctx.lineWidth = 3;
@@ -6224,7 +6313,7 @@ console.log(bodyupgrades);
                   //if this is an animation of a dead object
                   ctx.globalAlpha = 1.0; //reset opacity
                 }
-                if (showHitBox == "yes") {
+                if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "blue";
                   ctx.lineWidth = 3;
@@ -6538,7 +6627,7 @@ console.log(bodyupgrades);
                   particleID++;
                 }
 
-                if (showHitBox == "yes") {
+                if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "blue";
                   ctx.lineWidth = 3;
@@ -6587,7 +6676,7 @@ console.log(bodyupgrades);
                 );
                 ctx.globalAlpha = 1.0; //reset transparency
                 ctx.restore(); //restore after translating
-                if (showHitBox == "yes") {
+                if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "blue";
                   ctx.lineWidth = 3;
@@ -6640,7 +6729,7 @@ console.log(bodyupgrades);
                   object.w / clientFovMultiplier,
                   object.h / clientFovMultiplier
                 );
-                if (showHitBox == "yes") {
+                if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "blue";
                   ctx.lineWidth = 3;
@@ -6866,7 +6955,7 @@ console.log(bodyupgrades);
                     ctx.translate(-object.height / clientFovMultiplier, -object.width / clientFovMultiplier / 5 * (star-1.5))
                   }
                 }
-                if (showHitBox == "yes") {
+                if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "blue";
                   ctx.lineWidth = 3;
@@ -7128,7 +7217,7 @@ console.log(bodyupgrades);
 
                 ctx.lineJoin = "miter"; //change back
                 ctx.restore();
-                if (showHitBox == "yes") {
+                if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "blue";
                   ctx.lineWidth = 3;
@@ -7520,30 +7609,13 @@ console.log(bodyupgrades);
                 } else if ((e.key == "m" || e.key == "M") && state=="ingame") {
                   //opening and closing debug info box
                   if (debugState == "open") {
-                    fpsCounter.style.display = "none";
-                    let allOtherDebugDivs = document.querySelectorAll(".debugopen");
-                    for(let i = 0; i < allOtherDebugDivs.length; i++){
-                      document.getElementById(allOtherDebugDivs[i].id).className = "debug";
-                    }
+                    document.getElementById("debugContainer").style.display = "none";
                     debugState = "close";
                     createNotif("Debug Mode (M): OFF",defaultNotifColor,3000)
                   } else {
-                    fpsCounter.style.display = "block";
-                    let allOtherDebugDivs = document.querySelectorAll(".debug");
-                    for(let i = 0; i < allOtherDebugDivs.length; i++){
-                      document.getElementById(allOtherDebugDivs[i].id).className = "debugopen";
-                    }
+                    document.getElementById("debugContainer").style.display = "flex";
                     debugState = "open";
                     createNotif("Debug Mode (M): ON",defaultNotifColor,3000)
-                  }
-                } else if ((e.key == "h" || e.key == "H") && state=="ingame") {
-                  //toggle hitbox
-                  if (showHitBox == "no") {
-                    showHitBox = "yes";
-                    createNotif("Hitbox (H): ON",defaultNotifColor,3000)
-                  } else if (showHitBox == "yes") {
-                    showHitBox = "no";
-                    createNotif("Hitbox (H): OFF",defaultNotifColor,3000)
                   }
                 } else if ((e.key == "t" || e.key == "T") && state=="ingame") {
                   if (quickchat.style.display == "block"){
@@ -7613,6 +7685,10 @@ console.log(bodyupgrades);
                   //space bar
                   var packet = JSON.stringify(["mousePressed"]);
                   socket.send(packet)
+                } else if (e.key == "=" && state == "ingame") {//temporary PvE method to change fov for testing purposes only
+                  fov++;
+                } else if (e.key == "-" && state == "ingame") {//temporary PvE method to change fov for testing purposes only
+                  fov--;
                 }
               } else if (
                 document.activeElement === nameInput
@@ -8719,6 +8795,8 @@ console.log(bodyupgrades);
                           simpleLerpPos(thisobject,oldobjects.player[id])
                           thisobject.x = px;
                           thisobject.y = py;
+                          //update debug position
+                          positionDiv.textContent = "Position: " + Math.round(px * 100) / 100 + "," + Math.round(py * 100) / 100;//2 decimal places
                         }
                       }
                     }
@@ -8797,8 +8875,8 @@ console.log(bodyupgrades);
                     lastFpsUpdate = now;
                     fpsCounter.textContent = `FPS: ${fps}`;
                     fpsCounter.className = 
-                      fps >= 60 ? 'high' : 
-                      fps >= 30 ? 'medium' : 'low';
+                      fps >= 45 ? 'high' : 
+                      fps >= 15 ? 'medium' : 'low';
                 }
 
                 if (gamemode == "dune") {
@@ -14154,21 +14232,18 @@ console.log(bodyupgrades);
 
         //shownBandwidth
         if (shownBandwidth < 15000) {
-          //15k
-          hctx.fillStyle = "white";
+          bandwidthDiv.style.color = "white";
         } else if (shownBandwidth < 25000) {
-          //25k
-          hctx.fillStyle = "orange";
+          bandwidthDiv.style.color = "orange";
         } else if (shownBandwidth < 50000) {
-          //50k
-          hctx.fillStyle = "red";
+          bandwidthDiv.style.color = "red";
         } else {
-          hctx.fillStyle = "#800000";
+          bandwidthDiv.style.color = "#800000";
         }
-        var newbandwidth = shownBandwidth / 1000; //__k bytes
+        let newbandwidth = shownBandwidth / 1000; //__k bytes
         newbandwidth = Math.round(newbandwidth * 100) / 100;//2 decimal place
-        //hctx.strokeText("Bandwidth: " + newbandwidth + "kb/s", 0, 304/resizeDiffX);
-        //hctx.fillText("Bandwidth: " + newbandwidth + "kb/s", 0, 304/resizeDiffX);//re-add next time
+        bandwidthDiv.textContent = "Bandwidth: " + newbandwidth + "kb/s";
+
         var numberOfObjectsDrawn = 0;
         for (const type in objects) {
           for (const item in objects[type]) {

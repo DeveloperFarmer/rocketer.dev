@@ -1,3 +1,20 @@
+ALPHA 0.0.23 - May 11, 2025
+- Settings now work for tick time, server name, player count, global player count, fps, ping, position, and hitbox
+- Added closing animations for all modals and popups
+- Removed toggling hitbox using the h key
+- All objects now show their hitbox in debug mode
+- The map's border is shown in debug mode
+- Temporarily re-added = and - keys for changing fov in PvE
+- Bug fixes
+    - Fixed changelog preview indetations
+    - Fixed settings not saving when click apply
+    - Fixed settings not reverting after clicking cancel
+
+ALPHA 0.0.22 - May 10, 2025
+- Added adblocker alert
+- Added position and bandwidth to debug
+- Changed FPS counter's colors
+
 ALPHA 0.0.21 - May 9, 2025
 - Fixed a bug causing upgrade buttons to disappear
 - Gamemode buttons are now working

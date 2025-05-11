@@ -403,14 +403,12 @@
           animation-name: dropFromTop;
           animation-duration: .5s;
         }
-        .debug {/*debug closed by default*/
+        .debug {/*specific debug closed cuz of settings*/
             display: none;
         }
-        .debugopen {/*change to this class to open the debug*/
-            position: absolute;
-            font-size: 2.1vmin;
-            left: 20px;
+        .debugopen {/*change to this class to show specific debug e.g. number of players*/
             display: block;
+            padding-bottom: 1.5vmin;
         }
         #score {
             position: absolute;
@@ -421,47 +419,20 @@
             width: 100%;
             display: none;
         }
-        #mapSize {
-          top: calc(17% + 40vmin);
-        }
-        #botnumber{
-          top: calc(17% + 32vmin);
-        }
-        #shapenumber{
-          top: calc(17% + 36vmin);
-        }
-        #dimension {
-          top: calc(17% + 24vmin);
-        }
-        #drawnEntities {
-          top: calc(17% + 28vmin);
-        }
-        #ping {
+        #debugContainer {
+          position: absolute;
+          font-size: 2vmin;
+          left: 20px;
           top: 17%;
-        }
-        #playercount {
-          top: calc(17% + 16vmin);
-        }
-        #globalplayercount {
-          top: calc(17% + 20vmin);
-        }
-        #servertick {
-          top: calc(17% + 8vmin);
-        }
-        #clienttick {
-          top: calc(17% + 12vmin);
+          display: flex;
+          flex-direction: column;
         }
         #fpsCounter {
-          position: absolute;
-          top: calc(17% + 4vmin);
-          left: 20px;
-          color: #ccc;
-          font-size: 2.1vmin;
-          display: none;
+          padding-bottom: 1.5vmin;
         }
-        #fpsCounter.high { color: #2ecc71; }  /* Green for 60 FPS */
-        #fpsCounter.medium { color: #f39c12; } /* Yellow for 30-59 FPS */
-        #fpsCounter.low { color: #e74c3c; }   /* Red for <30 FPS */
+        #fpsCounter.high { color: white; }
+        #fpsCounter.medium { color: yellow; }
+        #fpsCounter.low { color: red; }
         #deathScreen {
             position: fixed;
             top: 0;
@@ -594,6 +565,10 @@
         @keyframes opacityFade {
           from {opacity: 0;}
           to {opacity: 1;}
+        }
+        @keyframes opacityFadeOpp {
+          from {opacity: 1;}
+          to {opacity: 0;}
         }
         #display-name-input {
             position: absolute;
@@ -787,8 +762,12 @@
         animation-duration: .5s;
       }
       @keyframes dropFromTop {
-          from {top: 0;}
-          to {top: 50%;}
+          from {top: 0;opacity:0;}
+          to {top: 50%;opacity:1;}
+      }
+      @keyframes flyToTop {
+          from {top: 50%;opacity:1;}
+          to {top: 0;opacity:0;}
       }
       .modalButton{
         text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
@@ -1210,17 +1189,21 @@
     />
     <canvas id="gameCanvas"></canvas>
     <div id="score">Score: 0</div>
-    <div id="ping" class="debug">Ping: 0.0ms</div>
-    <div id="servertick" class="debug">Server Tick Time: 0.0ms</div>
-    <div id="clienttick" class="debug">Client Tick Time: ?.?ms</div>
-    <div id="playercount" class="debug">Player Count: 1</div>
-    <div id="globalplayercount" class="debug">Global Player Count: 1</div>
-    <div id="mapSize" class="debug">Map: 4000x4000</div>
-    <div id="fpsCounter">FPS: 0</div>
-    <div id="botnumber" class="debug">Number of enemies: 0</div>
-    <div id="shapenumber" class="debug">Number of shapes: 0</div>
-    <div id="dimension" class="debug">Dimension: PvE</div>
-    <div id="drawnEntities" class="debug">Drawn Entities: xx</div>
+    <div id="debugContainer">
+        <div id="ping" class="debugopen">Ping: 0.0ms</div>
+        <div id="fpsCounter">FPS: 0</div>
+        <div id="servertick" class="debugopen">Server Tick Time: 0.0ms</div>
+        <div id="clienttick" class="debugopen">Client Tick Time: ?.?ms</div>
+        <div id="bandwidth" class="debugopen">Bandwidth: 0.00kb/s</div>
+        <div id="playercount" class="debugopen">Player Count: 1</div>
+        <div id="globalplayercount" class="debugopen">Global Player Count: 1</div>
+        <div id="dimension" class="debugopen">Dimension: PvE</div>
+        <div id="position" class="debug">Position: ??,??</div>
+        <div id="botnumber" class="debug">Number of enemies: 0</div>
+        <div id="shapenumber" class="debug">Number of shapes: 0</div>
+        <div id="drawnEntities" class="debugopen">Drawn Entities: xx</div>
+        <div id="mapSize" class="debug">Map: ????x????</div>
+    </div>
     <input type="text" enterkeyhint="send" autocomplete="off" id="chat" placeholder="Click or press ENTER" onfocus="sendTypingIndicator()" onblur="removeTypingIndicator()" />
     <div id="notifFlex"></div>
     <div id="deathScreen" class="hidden">
@@ -1242,7 +1225,7 @@
     <div id="connecting">Connecting...</div>
     <input enterkeyhint="go" id="display-name-input" placeholder="Display Name" maxlength="50">
     <button id="playButton">PLAY</button>
-    <div id="changelogPreview">ALPHA ?.?.?<br>- Loading changelog...<br>you can view the full changelog here</div>
+    <div id="changelogPreview">CHANGELOG - ALPHA ?.?.?<br>- Loading changelog...<br>you can view the full changelog here</div>
     <div id="hometitle">rocketer 2.0</div>
     <div id="subtitle">ALPHA ?.?.?</div>
     <div id="subsubtitle">Gamemode</div>
@@ -1314,27 +1297,27 @@
           <hr />
           <div style="overflow: auto; height: 73vh; width: 24.5vw; text-align: center; font-size: 2vmin;font-weight: 400;line-height:3;">
             <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Names &amp; Chat</h3><hr>
-            Show Chat&emsp;<label class="switch"><input type="checkbox" settingid="showchat" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Names&emsp;<label class="switch"><input type="checkbox" settingid="showname" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Clickable Chat Links&emsp;<label class="switch"><input type="checkbox" settingid="clickablechatlinks" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Own Name&emsp;<label class="switch"><input type="checkbox" settingid="showownname" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Silent Typing&emsp;<label class="switch"><input type="checkbox" settingid="silenttyping" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Typing Indicators&emsp;<label class="switch"><input type="checkbox" settingid="showtypingindicators" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Chat&emsp;<label class="switch"><input type="checkbox" id="showchat" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Names&emsp;<label class="switch"><input type="checkbox" id="showname" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Clickable Chat Links&emsp;<label class="switch"><input type="checkbox" id="clickablechatlinks" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Own Name&emsp;<label class="switch"><input type="checkbox" id="showownname" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Silent Typing&emsp;<label class="switch"><input type="checkbox" id="silenttyping" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Typing Indicators&emsp;<label class="switch"><input type="checkbox" id="showtypingindicators" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
             <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Debug Mode</h3><hr>
-            Show IDs&emsp;<label class="switch"><input type="checkbox" settingid="showids" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Tick Time&emsp;<label class="switch"><input type="checkbox" settingid="showticktime" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Server Name&emsp;<label class="switch"><input type="checkbox" settingid="showservername" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Player Count&emsp;<label class="switch"><input type="checkbox" settingid="showplayercount" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Global Player Count&emsp;<label class="switch"><input type="checkbox" settingid="showglobalplayercount" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show FPS&emsp;<label class="switch"><input type="checkbox" settingid="showfps" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Ping&emsp;<label class="switch"><input type="checkbox" settingid="showping" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Position&emsp;<label class="switch"><input type="checkbox" settingid="showposition" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Extra Performance Info&emsp;<label class="switch"><input type="checkbox" settingid="showextraperformanceinfo" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Hitboxes&emsp;<label class="switch"><input type="checkbox" settingid="showhitboxes" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show IDs&emsp;<label class="switch"><input type="checkbox" id="showids" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Tick Time&emsp;<label class="switch"><input type="checkbox" id="showticktime" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Server Name&emsp;<label class="switch"><input type="checkbox" id="showservername" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Player Count&emsp;<label class="switch"><input type="checkbox" id="showplayercount" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Global Player Count&emsp;<label class="switch"><input type="checkbox" id="showglobalplayercount" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show FPS&emsp;<label class="switch"><input type="checkbox" id="showfps" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Ping&emsp;<label class="switch"><input type="checkbox" id="showping" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Position&emsp;<label class="switch"><input type="checkbox" id="showposition" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Extra Performance Info&emsp;<label class="switch"><input type="checkbox" id="showextraperformanceinfo" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Hitboxes&emsp;<label class="switch"><input type="checkbox" id="showhitboxes" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
             <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Graphics</h3><hr>
-            Show Minimap&emsp;<label class="switch"><input type="checkbox" settingid="showminimap" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Percentages on Health Bars&emsp;<label class="switch"><input type="checkbox" settingid="showhealthpercentages" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
-            Show Health Bar on HUD&emsp;<label class="switch"><input type="checkbox" settingid="showhealthbarHUD" onclick="updateTempSettings(e)"><span class="slider round"></span></label><br>
+            Show Minimap&emsp;<label class="switch"><input type="checkbox" id="showminimap" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Percentages on Health Bars&emsp;<label class="switch"><input type="checkbox" id="showhealthpercentages" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
+            Show Health Bar on HUD&emsp;<label class="switch"><input type="checkbox" id="showhealthbarHUD" onclick="updateTempSettings(this.id)"><span class="slider round"></span></label><br>
             <hr><h3 style="text-align: left;line-height:1.5;font-size:2vmin;">Keybinds</h3><hr>
             Escape&emsp;<button id="1" class="modalButton">ESCAPE</button><br>
             Enter&emsp;<button id="2" class="modalButton">ENTER</button><br>
@@ -1371,6 +1354,7 @@
     <div id="modal4" class="modal"><h1 class="modalText">Too Many Connections</h1><hr><p class="modalTextSmall">You have too many connections to this server from your IP address. Either close one of your other connections or join another server.</p><hr><button class="modalButton" onclick="closeModal4()">OK</button></div>
     <div id="quickchatmsg" class="modal"><h1 class="modalText">Create Quick Chat Message</h1><hr><input class="translucentInput" placeholder="Message" maxlength="750" id="createQuickChat"></input><hr><button class="modalButton" onclick="createquickchat()">CREATE</button>&emsp;<button class="modalButton" onclick="closeModalquickchat()">CANCEL</button></div>
     <div id="modal7" class="modal"><h1 class="modalText">Mobile support is experimental</h1><hr><p class="modalTextSmall">Some features may not work properly on this device.</p><hr><button class="modalButton" onclick="closeModal7()">OK</button></div>
+    <div id="modal8" class="modal"><h1 class="modalText">Please disable your ad blocker</h1><hr><p class="modalTextSmall">Ads support the game and allow it to keep updating and expanding.</p><hr><button class="modalButton" onclick="closeModal8()">OK</button></div>
     <div id="login" class="modal" style="overflow:hidden;">
       <h1 class="modalText">Log In</h1><hr>
       <input class="translucentInput" placeholder="Username" maxlength="100" id="loginuser"></input><br>
@@ -1399,7 +1383,7 @@
     <script type="module" src="./index.js"></script>
     <script type="module">
       //html file cannot access functions inside a module js file, only a normal js file
-      import { closeModal,closeModal2,closeModal3,closeModal3a,closeModal5,closeModal6,closeModal7,closeModalquickchat,openModalquickchat,createquickchat,openSettings,accounts,bugs,changeGamemode,togglePasswordVisibility,checkPw,login,signup } from "./index.js";//add updateTempSettings and closemodal3 etc. later
+      import { closeModal,closeModal2,closeModal3,closeModal3a,closeModal5,closeModal6,closeModal7,closeModal8,closeModalquickchat,openModalquickchat,createquickchat,openSettings,accounts,bugs,changeGamemode,togglePasswordVisibility,checkPw,login,signup,updateTempSettings } from "./index.js";//add updateTempSettings and closemodal3 etc. later
       window.closeModal = closeModal;
       window.closeModal2 = closeModal2;
       window.closeModal3 = closeModal3;
@@ -1407,10 +1391,11 @@
       window.closeModal5 = closeModal5;
       window.closeModal6 = closeModal6;
       window.closeModal7 = closeModal7;
+      window.closeModal8 = closeModal8;
       window.openSettings = openSettings;
       window.accounts = accounts;
       window.bugs = bugs;
-      //window.updateTempSettings = updateTempSettings;
+      window.updateTempSettings = updateTempSettings;
       //window.sendTypingIndicator = sendTypingIndicator;
       //window.removeTypingIndicator = removeTypingIndicator;
       window.changeGamemode = changeGamemode;
@@ -1422,5 +1407,6 @@
       window.closeModalquickchat = closeModalquickchat;
       window.openModalquickchat = openModalquickchat;
     </script>
+    <script src="/prebid-ads.js"></script>
   </body>
 </html>
