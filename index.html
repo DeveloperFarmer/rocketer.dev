@@ -824,8 +824,8 @@
         height: 100%;
         width: 100%;
         font-size: 10vmin;
-        font-weight: 900;
-        text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+        font-weight: 700;
+        text-shadow: -0.5vmin -0.5vmin 0 #000, 0 -0.5vmin 0 #000, 0.5vmin -0.5vmin 0 #000, 0.5vmin 0 0 #000, 0.5vmin 0.5vmin 0 #000, 0 0.5vmin 0 #000, -0.5vmin 0.5vmin 0 #000, -0.5vmin 0 0 #000;
         line-height: 1.5;
         display: none;
         white-space: nowrap;/*prevent the text from wrapping to the next line*/
@@ -848,6 +848,7 @@
         animation-name: opacityFade;
         animation-duration: 1s;
         display: none;
+        text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
       }
       #loadingWords3 {
         position: fixed;
@@ -858,6 +859,7 @@
           animation-name: opacityFade;
           animation-duration: 1s;
         display: none;
+        text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
       }
       
       /*toggle switch in settings*/
@@ -1031,6 +1033,10 @@
           from {transform: scale(0.1);opacity: 0;}
           to {transform: scale(1);opacity:1;}
       }
+      @keyframes shrinking1 {
+          from {transform: scale(1);opacity:1;}
+          to {transform: scale(0.1);opacity: 0;}
+      }
       #quickchat1:hover:not(:has(.qcmore:hover)) {/*when mouse hover, scale the container UNLESS it is hovering over the three dots*/
         transform: scale(1.1);
       }
@@ -1044,6 +1050,10 @@
       @keyframes growing2 {
           from {transform: scale(-0.1,0.1);opacity: 0;}
           to {transform: scale(-1,1);opacity:1;}
+      }
+      @keyframes shrinking2 {
+          from {transform: scale(-1,1);opacity:1;}
+          to {transform: scale(-0.1,0.1);opacity: 0;}
       }
       #quickchat2:hover:not(:has(.qcmore:hover)) {
         transform: scale(-1.1,1.1);/*because quickchat2 is horizontally flipped*/
@@ -1059,6 +1069,10 @@
           from {transform: scale(0.1,-0.1);opacity: 0;}
           to {transform: scale(1,-1);opacity:1;}
       }
+      @keyframes shrinking3 {
+          from {transform: scale(1,-1);opacity:1;}
+          to {transform: scale(0.1,-0.1);opacity: 0;}
+      }
       #quickchat3:hover:not(:has(.qcmore:hover)) {
         transform: scale(1.1,-1.1);/*because quickchat3 is vertically flipped*/
       }
@@ -1072,6 +1086,10 @@
       @keyframes growing4 {
           from {transform: scale(-0.1);opacity: 0;}
           to {transform: scale(-1);opacity:1;}
+      }
+      @keyframes shrinking4 {
+          from {transform: scale(-1);opacity:1;}
+          to {transform: scale(-0.1);opacity: 0;}
       }
       #quickchat4:hover:not(:has(.qcmore:hover)) {
         transform: scale(-1.1);
@@ -1153,8 +1171,12 @@
         animation-duration: .5s;
       }
       @keyframes falling {
-          from {top: 0;}
+          from {top: -5vmin;}
           to {top: 13vmin;}
+      }
+      @keyframes rising {
+          from {top: 13vmin;}
+          to {top: -5vmin;}
       }
       #quickchat {
         display: none;

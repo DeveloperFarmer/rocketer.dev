@@ -2628,7 +2628,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
         var socket = "null";
         // Connect to server
-        if (window.location.href.includes("developer-rocketer")||window.location.href.includes("rocketer-v2")||window.location.href.includes("127.0.0.1")){//this is a testing website, or local host
+        if (window.location.href.includes("developer-rocketer")
+          ||window.location.href.includes("rocketer-v2")
+          ||window.location.href.includes("rocketer-dev")
+          ||window.location.href.includes("127.0.0.1")){//this is a testing website, or local host
           //createNotif("Connected to the developer's testing servers.","rgba(150,0,0)",5000)
           //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)
           document.getElementById("adminPanelYN").style.display = "block";
@@ -3580,6 +3583,12 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             var bupgradetreepos = -750; //current position of upgrade tree
             var bupgradetreestart = -750; //start position
             var bupgradetreeend = 165; //end position
+            //both upgrade trees:
+            var upgradeTreeBoxPositions = {};//store the positions to draw the connecting lines in upgrade tree (added on the first time drawing the boxes)
+            var xdistMultiplierStart = 0.3;//change in width when opening and closing upgrade tree
+            var xdistMultiplierEnd = 1;
+            var xdistMultiplierw = xdistMultiplierStart;
+            var xdistMultiplierb = xdistMultiplierStart;
             //skillpoints
             var skillpointspos = -370; //current position of skill points bar
             var skillpointsstart = -370; //start position
@@ -7618,8 +7627,25 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     createNotif("Debug Mode (M): ON",defaultNotifColor,3000)
                   }
                 } else if ((e.key == "t" || e.key == "T") && state=="ingame") {
-                  if (quickchat.style.display == "block"){
-                    quickchat.style.display = "none";
+                  if (quickchat.style.display == "block"){//close quick chat (turn on closing animation, then reset animation, then hide div)
+                    let quickchattext = document.getElementById("quickchattext");
+                    let quickchat1 = document.getElementById("quickchat1");
+                    let quickchat2 = document.getElementById("quickchat2");
+                    let quickchat3 = document.getElementById("quickchat3");
+                    let quickchat4 = document.getElementById("quickchat4");
+                    quickchattext.style.animation = "rising .5s";
+                    quickchat1.style.animation = "shrinking1 .5s";
+                    quickchat2.style.animation = "shrinking2 .5s";
+                    quickchat3.style.animation = "shrinking3 .5s";
+                    quickchat4.style.animation = "shrinking4 .5s";
+                    setTimeout(() => {
+                      quickchat.style.display = "none";//hide div
+                      quickchattext.style.animation = "falling .5s";//reset animation to what is stated in html
+                      quickchat1.style.animation = "growing1 .5s";
+                      quickchat2.style.animation = "growing2 .5s";
+                      quickchat3.style.animation = "growing3 .5s";
+                      quickchat4.style.animation = "growing4 .5s";
+                    }, 500);//0.5 seconds for animation
                   }
                   else{//if display is none or " "
                     //js will return display as " " because it cant read the css, unless you set it using js before
@@ -11562,7 +11588,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         hctx.font = "700 " + fontsize + "px Roboto";
         hctx.fillStyle = boxcolor;
         hctx.strokeStyle = "black";
-        hctx.lineWidth = bodysize/5;
+        hctx.lineWidth = bodysize/4;
         if (which == "weapon") {
           var pos = upgradetreepos;
         } else if (which == "body") {
@@ -11585,7 +11611,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         hctx.stroke();
         //draw darker area
         var w2 = w - hctx.lineWidth;
-        var h2 = h/2 - hctx.lineWidth/2;
+        var h2 = h/2 - hctx.lineWidth/4;
         var x2 = x + hctx.lineWidth/2;
         var y2 = y + h2;
         //h *= scale;
@@ -11606,7 +11632,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         );
           hctx.scale(1,scale)
         if (which == "body") {
-          hctx.lineWidth = bodysize/5;
+          hctx.lineWidth = bodysize/4;
           if (bodyupgrades[name].hasOwnProperty("assets")) {
             hctx.lineJoin = "round";
             //draw under assets
@@ -11798,7 +11824,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             hctx.lineJoin = "miter";
           }
         } else if (which == "weapon") {
-          hctx.lineWidth = bodysize/5;
+          hctx.lineWidth = bodysize/4;
           if (weaponupgrades[name].hasOwnProperty("barrels")) {
             hctx.lineJoin = "round";
             Object.keys(weaponupgrades[name].barrels).forEach(
@@ -12005,14 +12031,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         hctx.restore();
         hctx.fillStyle = "white";
         hctx.strokeStyle = "black";
-        hctx.lineWidth = fontsize/2.8;
-          name = name.charAt(0).toUpperCase() + name.slice(1);//make first letter of tank name uppercase
-          hctx.save();
-          hctx.translate(hcanvas.width / 2 - Xadditional, pos + (h - fontsize / 2 * scale + Yadditional));
-          hctx.scale(1,scale);
+        hctx.lineWidth = fontsize/2;
+        name = name.charAt(0).toUpperCase() + name.slice(1);//make first letter of tank name uppercase
+        hctx.save();
+        hctx.translate(hcanvas.width / 2 - Xadditional, pos + h + Yadditional - width/9);
+        hctx.scale(1,scale);
         hctx.strokeText(name, 0, 0);
         hctx.fillText(name, 0, 0);
-          hctx.restore();
+        hctx.restore();
       }
       function drawConnection(
         startX,
@@ -12032,14 +12058,53 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           var pos = bupgradetreepos;
         }
         if(applystyle !== 0)  {
-        hctx.strokeStyle = "rgba(51,51,51)";
+        hctx.strokeStyle = "black";
         }
-        hctx.lineWidth = 3;
+        hctx.lineWidth = topWidth/20;
         hctx.beginPath();
         hctx.moveTo(hcanvas.width / 2 - startX, pos + startY + topWidth);
         hctx.lineTo(hcanvas.width / 2 - endX, pos + endY);
         hctx.stroke();
       }
+
+      //function for drawing each tier in upgrade tree
+      function renderUpgradeTree(type,upgradeTier,xdist,y,fontsize,size){//xdist is horizontal distance between upgrades in upgrade tree
+            let array = [];
+            if (type == "body"){array = bodyUpgradeMap[upgradeTier];}
+            else if (type == "weapon"){array = weaponUpgradeMap[upgradeTier];}
+            else if (type == "cbody"){array = celestialBodyUpgradeMap[upgradeTier];type="body";}
+            else if (type == "cweapon"){array = celestialWeaponUpgradeMap[upgradeTier];type="weapon";}
+            else{console.log("error: unknown upgrade type when rendering upgrade tree: " + type)}
+            let x = (array.length - 1)*xdist/2;//starting position of x (total distance divided by two, note that left side of screen is positive x, right side is negative)
+            for (const tankname of array) {
+              let thisObj;
+              let widthAnimation;
+              if (type == "body"){
+                thisObj = bodyupgrades[tankname];
+                widthAnimation = xdistMultiplierb;
+              }
+              else{
+                thisObj = weaponupgrades[tankname];
+                widthAnimation = xdistMultiplierw;
+              }
+              if (thisObj){//if has this upgrade data
+                drawUpgradetreeBox(tankname,x*widthAnimation,y,fontsize,size,col,darkcol,type);
+                if (!upgradeTreeBoxPositions[tankname]){//first time drawing
+                  upgradeTreeBoxPositions[tankname] = {};
+                  upgradeTreeBoxPositions[tankname].x = x;
+                  upgradeTreeBoxPositions[tankname].y = y;
+                }
+                //draw connecting lines
+                for (const upgradableTank of thisObj.upgradeTo) {//tanks that can upgrade to
+                  if (upgradeTreeBoxPositions[upgradableTank]){//has the coords of box (only added on the first drawing)
+                    let upgradableTankPosition = upgradeTreeBoxPositions[upgradableTank];
+                    drawConnection(x*widthAnimation, y, upgradableTankPosition.x*widthAnimation, upgradableTankPosition.y, size, type);
+                  }
+                }
+              }
+              x -= xdist;
+            }
+          }
       //draw weapon upgrades
       //rotate tanks:
       bodyangle += 0.02*deltaTime;
@@ -12081,429 +12146,41 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           player.bodyTypeLevel < 60 &&
           player.tankType != "eternal"
         ) {
-          //if a normal tank create upgrade tiers
-          
-          var tier1 = {
-              "node": {
-                  "children": {"basic":"", trapper:"", "guard":""}
-              },
-          };
-          var tier2 = {
-              "basic": {"children": {"twin":"", "sniper":"", "cannon":"", "flank":""}},
-              trapper: {"children":{"delta":""}},
-              "guard": {"children":{"commander":"",overseer:""}},
-          };
-          var tier3 = {
-              "twin": {"children":{"gunner":"","quad":"","split":"","stream":"",}},
-              "sniper": {"children":{"targeter":"","marksman":"",}},
-              "cannon": {"children":{"single":""}},
-              "flank": {"children":{"quad":"","tri-angle":"",}},
-              delta: {"children":{"gamma":"","blockade":"",minelayer:"","warden":""}},
-              "commander": {"children":{"director":""}},
-              overseer: {"children":{protector:""}},
-          };
-          var tier4 = {
-              gunner: {"children":{"minesweeper":"","blaster":"","rimfire":""}},
-              quad: {"children":{"octo":""}},
-              split: {"children":{"tower":"",rimfire:""}},
-              stream: {"children":{"jet":""}},
-              targeter: {"children":{"streamliner":""}},
-              marksman: {"children":{"duel":""}},
-              single: {"children":{"destroyer":""}},
-              "tri-angle": {"children":{"booster":"","fighter":""}},
-              "gamma": {"children":{"beta":""}},
-              "minelayer": {"children":{"engineer":""}},
-              warden: {"children":{"defender":""}},
-              blockade: {"children":{barricade:""}},
-              "director": {"children":{"manager":"","spawner":""}},
-              "protector": {"children":{"king":""}},
-          };
-          var tier5 = {
-              minesweeper: {"children":{"battler":"","pinnace":""}},
-              blaster: {"children":{"minigun":"","knockback":""}},
-              rimfire: {"children":{"centrefire":""}},
-              octo: {"children":{"cyclone":"",hex:""}},
-              tower: {"children":{"stronghold":"",centrefire:""}},
-              jet: {"children":{"flamethrower":""}},
-              streamliner: {"children":{"conquerer":""}},
-              duel: {"children":{"hunter":""}},
-              destroyer: {"children":{"hex":"","harbinger":"",hybrid:""}},
-              booster: {"children":{"guardian":"","comet":""}},
-              fighter: {"children":{"wave":"","amalgam":""}},
-              beta: {"children":{"alpha":""}},
-              engineer: {"children":{"machine":"","manufacturer":"","detonator":""}},
-              defender: {"children":{"shrapnel":""}},
-              barricade: {"children":{riot:""}},
-              manager: {"children":{"executive":"",CEO:"",hybrid:""}},
-              spawner: {"children":{"factory":""}},
-              king:{"children":{"master":"","tyrant":""}},
-          }
-          
-          var tier6 = {
-              battler: {},
-              pinnace: {},
-              minigun: {},
-              knockback: {},
-              centrefire: {},
-              cyclone: {},
-              stronghold: {},
-              flamethrower: {},
-              conquerer: {},
-              hunter: {},
-              hex: {},
-              harbinger: {},
-              hybrid: {},
-              guardian: {},
-              comet: {},
-              wave: {},
-              amalgam: {},
-              alpha: {},
-              machine: {},
-              manufacturer: {},
-              detonator: {},
-              shrapnel: {},
-              riot: {},
-              executive: {},
-              CEO: {},
-              factory: {},
-              master: {},
-              tyrant: {},
-          }
-          
-          for(let i = 0; i < Object.keys(tier1).length; ++i) {//tier 1 buttons and lines
-            var tank = Object.keys(tier1).reverse()[i];
-            drawUpgradetreeBox(
-               tank,
-              ((i*240)/2)-((Object.keys(tier1).length-1)*(240/2)/2),
-              -40,
-              15,
-              95,
-              "rgba(" + upgradeButtons[1].color + ")",
-              "rgba(" + upgradeButtons[1].darkcolor + ")",
-              "weapon"
-            );
-            for(let e = 0; e < Object.keys(tier2).length; ++e) {
-              if(tier1[tank].children[Object.keys(tier2).reverse()[e]] !== undefined) {
-              drawConnection(((i*240)/2)-((Object.keys(tier1).length-1)*(240/2)/2), -40, ((e*300)/2)-((Object.keys(tier2).length-1)*(300/2)/2), 135, 95, "weapon");
-              }
-            }
-          }
-          
-          for(let i = 0; i < Object.keys(tier2).length; ++i) {//tier 2 buttons and lines...
-            var tank = Object.keys(tier2).reverse()[i];
-            drawUpgradetreeBox(
-               tank,
-              ((i*300)/2)-((Object.keys(tier2).length-1)*(300/2)/2),
-              135,
-              15,
-              85,
-              "rgba(" + upgradeButtons[2].color + ")",
-              "rgba(" + upgradeButtons[2].darkcolor + ")",
-              "weapon"
-            );
-            if(JSON.stringify(tier2[tank]) == '{}') {
-              tier2[tank].children = {}
-            }
-            for(let e = 0; e < Object.keys(tier2[tank].children).length; ++e) {
-              if(Object.keys(tier2[tank].children)[e] !== undefined) {
-                if(tier3[Object.keys(tier2[tank].children).reverse()[e]] !== undefined) {
-                  var id;
-                  for(let o = 0; o < Object.keys(tier3).length; ++o) {
-                    if(Object.keys(tier3).reverse()[o] == Object.keys(tier2[tank].children)[e]) {id = o};
-                  }
-                  drawConnection(((i*300)/2)-((Object.keys(tier2).length-1)*(300/2)/2), 125, ((id*170)/2)-((Object.keys(tier3).length-1)*(170/2)/2), 310, 95, "weapon");
-                }
-              }
-            }
-          }
 
-          
-          for(let i = 0; i < Object.keys(tier3).length; ++i) {//you know the drill
-            var tank = Object.keys(tier3).reverse()[i];
-            drawUpgradetreeBox(
-               tank,
-              ((i*170)/2)-((Object.keys(tier3).length-1)*(170/2)/2),
-              310,
-              14,
-              75,
-              "rgba(" + upgradeButtons[3].color + ")",
-              "rgba(" + upgradeButtons[3].darkcolor + ")",
-              "weapon"
-            );
-            if(JSON.stringify(tier3[tank]) == '{}') {
-              tier3[tank].children = {}
-            }
-            
-            for(let e = 0; e < Object.keys(tier3[tank].children).length; ++e) {
-              if(Object.keys(tier3[tank].children)[e] !== undefined) {
-                if(tier4[Object.keys(tier3[tank].children).reverse()[e]] !== undefined) {
-                  var id;
-                  for(let o = 0; o < Object.keys(tier4).length; ++o) {
-                    if(Object.keys(tier4).reverse()[o] == Object.keys(tier3[tank].children)[e]) {id = o};
-                  }
-                  drawConnection(((i*170)/2)-((Object.keys(tier3).length-1)*(170/2)/2), 290, ((id*140)/2)-((Object.keys(tier4).length-1)*(140/2)/2), 455, 95, "weapon");
-                }
-              }
-            }
-          }
-          
-          var t4u = 0;
-          for(let i = 0; i < Object.keys(tier4).length; ++i) {
-            var tank = Object.keys(tier4).reverse()[i];
-            drawUpgradetreeBox(
-               tank,
-              ((i*140)/2)-((Object.keys(tier4).length-1)*(140/2)/2),
-              455,
-              12,
-              65,
-              "rgba(" + upgradeButtons[4].color + ")",
-              "rgba(" + upgradeButtons[4].darkcolor + ")",
-              "weapon"
-            );
-            if(JSON.stringify(tier4[tank]) == '{}') {
-              tier4[tank].children = {}
-            }
-            for(let e = 0; e < Object.keys(tier4[tank].children).length; ++e) {
-              if(Object.keys(tier4[tank].children)[e] !== undefined) {
-                if(tier5[Object.keys(tier4[tank].children).reverse()[e]] !== undefined) {
-                  var id;
-                  for(let o = 0; o < Object.keys(tier5).length; ++o) {
-                    if(Object.keys(tier5).reverse()[o] == Object.keys(tier4[tank].children)[e]) {id = o};
-                  }
-                  //console.log(((t4u*40)/2)-((Object.keys(tier5).length-1)*(40/2)/2), yinc)
-
-                  var oldsS = hctx.strokeStyle;
-                  drawConnection(((i*140)/2)-((Object.keys(tier4).length-1)*(140/2)/2), 420, ((id*120)/2)-((Object.keys(tier5).length-1)*(120/2)/2), 570, 95, "weapon");
-                  hctx.strokeStyle = oldsS;
-                }
-              }
-            }
-          }
-          
-          for(let i = 0; i < Object.keys(tier5).length; ++i) {
-            var tank = Object.keys(tier5).reverse()[i];
-              drawUpgradetreeBox(
-                 tank,
-                ((i*120)/2)-((Object.keys(tier5).length-1)*(120/2)/2),
-                570,
-                11,
-                55,
-                "rgba(" + upgradeButtons[5].color + ")",
-                "rgba(" + upgradeButtons[5].darkcolor + ")",
-                "weapon"
-              );
-            if(JSON.stringify(tier5[tank]) == '{}') {
-              tier5[tank].children = {}
-            }
-            for(let e = 0; e < Object.keys(tier5[tank].children).length; ++e) {
-              if(Object.keys(tier5[tank].children)[e] !== undefined) {
-                if(tier6[Object.keys(tier5[tank].children).reverse()[e]] !== undefined) {
-                  var id;
-                  for(let o = 0; o < Object.keys(tier6).length; ++o) {
-                    if(Object.keys(tier6).reverse()[o] == Object.keys(tier5[tank].children)[e]) {id = o};
-                  }
-                  //console.log(((t4u*40)/2)-((Object.keys(tier5).length-1)*(40/2)/2), yinc)
-                  var oldsS = hctx.strokeStyle;
-                  hctx.strokeStyle = "rgba(95,95,95)";
-                  drawConnection(((i*120)/2)-((Object.keys(tier5).length-1)*(120/2)/2), 525, ((id*100)/2)-((Object.keys(tier6).length-1)*(100/2)/2), 660, 95, "weapon");
-                  hctx.strokeStyle = oldsS;
-                }
-              }
-            }
-          }
-          
-          for(let i = 0; i < Object.keys(tier6).length; ++i) {//tier 6 buttons, no lines because theres no tier 7
-            var tank = Object.keys(tier6).reverse()[i];
-              drawUpgradetreeBox(
-                 tank,
-                ((i*100)/2)-((Object.keys(tier6).length-1)*(100/2)/2),
-                660,
-                9,
-                45,
-                "rgba(" + upgradeButtons[6].color + ")",
-                "rgba(" + upgradeButtons[6].darkcolor + ")",
-                "weapon"
-              );
-          }
-          
-          
+          //tier 1 of normal tank weapon upgrade tree
+          var col = "rgba(" + upgradeButtons[1].color + ")";
+          var darkcol = "rgba(" + upgradeButtons[1].darkcolor + ")";//need for inside the renderupgradetree function
+          renderUpgradeTree("weapon",0,0,-40,13,95);//type,upgradeTier,xdist,y,fontsize,size
+          //tier 2
+          col = "rgba(" + upgradeButtons[2].color + ")";
+          darkcol = "rgba(" + upgradeButtons[2].darkcolor + ")";
+          renderUpgradeTree("weapon",1,360,110,13,95);
+          //tier 3
+          col = "rgba(" + upgradeButtons[3].color + ")";
+          darkcol = "rgba(" + upgradeButtons[3].darkcolor + ")";
+          renderUpgradeTree("weapon",2,80,260,12,75);
+          //tier 4
+          col = "rgba(" + upgradeButtons[4].color + ")";
+          darkcol = "rgba(" + upgradeButtons[4].darkcolor + ")";
+          renderUpgradeTree("weapon",3,60,440,10,55);
+          //tier 5
+          col = "rgba(" + upgradeButtons[5].color + ")";
+          darkcol = "rgba(" + upgradeButtons[5].darkcolor + ")";
+          renderUpgradeTree("weapon",4,42,580,8,40);
         } else {
-          
-          let col = "rgba(125, 14, 230)";
-          let darkcol = "rgba(95, 0, 200)";
-          //if it is an eternal or above
-          drawUpgradetreeBox(
-            "eternal",
-            0,
-            0,
-            15,
-            95,
-            col,
-            darkcol,
-            "weapon"
-          );
+
+          //eternal upgrade tree
+          var col = "rgba(125, 14, 230)";
+          var darkcol = "rgba(95, 0, 200)";
+          renderUpgradeTree("cweapon",0,0,-40,15,95);//cweapon instead of weapon for celestials
           
           col = "rgba(165, 14, 230)";
           darkcol = "rgba(135, 0, 200)";
+          renderUpgradeTree("cweapon",1,180,245,15,95);
 
-          drawUpgradetreeBox(
-            "hailstorm",
-            300,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "bunker",
-            150,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "chaos",
-            0,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "bombshell",
-            -150,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "warrior",
-            -300,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawConnection(0, 0, 300, 150, 95, "weapon");
-          drawConnection(0, 0, 150, 150, 95, "weapon");
-          drawConnection(0, 0, 0, 150, 95, "weapon");
-          drawConnection(0, 0, -150, 150, 95, "weapon");
-          drawConnection(0, 0, -300, 150, 95, "weapon");
-          
           col = "rgba(204, 2, 245)";
           darkcol = "rgba(174, 0, 215)";
-
-          drawUpgradetreeBox(
-            "thunderstorm",
-            440,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "cosmetic",
-            330,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "vault",
-            220,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "asteroid",
-            110,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "dynamite",
-            0,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "mayhem",
-            -110,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "industry",
-            -220,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "demolisher",
-            -330,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawUpgradetreeBox(
-            "veteran",
-            -440,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "weapon"
-          );
-          drawConnection(300, 150, 440, 300, 85, "weapon");
-          drawConnection(300, 150, 330, 300, 85, "weapon");
-          drawConnection(150, 150, 220, 300, 85, "weapon");
-          drawConnection(150, 150, 110, 300, 85, "weapon");
-          drawConnection(150, 150, 0, 300, 85, "weapon");
-          drawConnection(0, 150, -110, 300, 85, "weapon");
-          drawConnection(0, 150, -220, 300, 85, "weapon");
-          drawConnection(-150, 150, -330, 300, 85, "weapon");
-          drawConnection(-300, 150, -440, 300, 85, "weapon");
+          renderUpgradeTree("cweapon",2,120,530,15,95);
         }
 
         hctx.lineJoin = "miter"; //change it back
@@ -12511,16 +12188,26 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         //animate upgrade tree when opening
         if (showUpgradeTree == "yes" && upgradetreepos < upgradetreeend) {
           upgradetreepos += (upgradetreeend - upgradetreepos) / 5*deltaTime; //speed changes based on amount moved so far. the smaller the number, the faster
-          if (upgradetreeend - upgradetreepos < 1) {
-            //if very near end point
+          if (upgradetreeend - upgradetreepos < 1) { //if very near end point
             upgradetreepos = upgradetreeend;
+          }
+          if (xdistMultiplierw < xdistMultiplierEnd){//width animation
+            xdistMultiplierw+=(xdistMultiplierEnd - xdistMultiplierw)/7*deltaTime;
+          }
+          else if (xdistMultiplierw > xdistMultiplierEnd){
+            xdistMultiplierw = xdistMultiplierEnd;
           }
         } else if (showUpgradeTree == "no") {
           //if upgrade tree is closing
           upgradetreepos -= (upgradetreepos - upgradetreestart) / 5*deltaTime;
-          if (upgradetreepos - upgradetreestart < 1) {
-            //if very near end point
+          if (upgradetreepos - upgradetreestart < 1) { //if very near end point
             upgradetreepos = upgradetreestart;
+          }
+          if (xdistMultiplierw > xdistMultiplierStart){
+            xdistMultiplierw-=(xdistMultiplierw - xdistMultiplierStart)/7*deltaTime;
+          }
+          else if (xdistMultiplierw < xdistMultiplierStart){
+            xdistMultiplierw = xdistMultiplierStart;
           }
         }
       } else {
@@ -12542,648 +12229,39 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           player.tankType != "eternal"
         ) {
           
-          let col = "rgba(" + upgradeButtons[1].color + ")";
-          let darkcol = "rgba(" + upgradeButtons[1].darkcolor + ")";
-          //if a normal tank
-          drawUpgradetreeBox(
-            "base",
-            0,
-            -40,
-            15,
-            95,
-            col,
-            darkcol,
-            "body"
-          );
-          
+          //tier 1 of normal tank body upgrade tree
+          var col = "rgba(" + upgradeButtons[1].color + ")";
+          var darkcol = "rgba(" + upgradeButtons[1].darkcolor + ")";//need for inside the renderupgradetree function
+          renderUpgradeTree("body",0,0,-40,13,95);//type,upgradeTier,xdist,y,fontsize,size
+          //tier 2
           col = "rgba(" + upgradeButtons[2].color + ")";
           darkcol = "rgba(" + upgradeButtons[2].darkcolor + ")";
-
-          drawUpgradetreeBox(
-            "raider",
-            150,
-            110,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "wall",
-            0,
-            110,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "sentry",
-            -150,
-            110,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawConnection(0, -40, 150, 110, 95, "body");
-          drawConnection(0, -40, 0, 110, 95, "body");
-          drawConnection(0, -40, -150, 110, 95, "body");
-          
+          renderUpgradeTree("body",1,190,110,13,95);
+          //tier 3
           col = "rgba(" + upgradeButtons[3].color + ")";
           darkcol = "rgba(" + upgradeButtons[3].darkcolor + ")";
-
-          drawUpgradetreeBox(
-            "forge",
-            275,
-            260,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "castle",
-            165,
-            260,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "smasher",
-            55,
-            260,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "propeller",
-            -55,
-            260,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "mono",
-            -165,
-            260,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "hangar",
-            -275,
-            260,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawConnection(150, 110, 275, 260, 85, "body");
-          drawConnection(0, 110, 165, 260, 85, "body");
-          drawConnection(0, 110, 55, 260, 85, "body");
-          drawConnection(0, 110, -55, 260, 85, "body");
-          drawConnection(-150, 110, -165, 260, 85, "body");
-          drawConnection(-150, 110, -275, 260, 85, "body");
-          
+          renderUpgradeTree("body",2,110,260,13,95);
+          //tier 4
           col = "rgba(" + upgradeButtons[4].color + ")";
           darkcol = "rgba(" + upgradeButtons[4].darkcolor + ")";
-
-          drawUpgradetreeBox(
-            "foundry",
-            427.5,
-            410,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "mender",
-            332.5,
-            410,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "hail",
-            237.5,
-            410,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "fortress",
-            142.5,
-            410,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "spike",
-            47.5,
-            410,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "armory",
-            -47.5,
-            410,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "thruster",
-            -142.5,
-            410,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "bastion",
-            -237.5,
-            410,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "turret",
-            -332.5,
-            410,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "warship",
-            -427.5,
-            410,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawConnection(275, 260, 427.5, 410, 85, "body");
-          drawConnection(275, 260, 332.5, 410, 85, "body");
-          drawConnection(275, 260, 237.5, 410, 85, "body");
-          drawConnection(165, 260, 142.5, 410, 85, "body");
-          drawConnection(55, 260, 47.5, 410, 85, "body");
-          drawConnection(55, 260, -47.5, 410, 85, "body");
-          drawConnection(-55, 260, -142.5, 410, 85, "body");
-          drawConnection(-165, 260, -237.5, 410, 85, "body");
-          drawConnection(-165, 260, -332.5, 410, 85, "body");
-          drawConnection(-165, 260, -47.5, 410, 85, "body");
-          drawConnection(-275, 260, -427.5, 410, 85, "body");
-          
+          renderUpgradeTree("body",3,100,410,13,90);
+          //tier 5
           col = "rgba(" + upgradeButtons[5].color + ")";
           darkcol = "rgba(" + upgradeButtons[5].darkcolor + ")";
-
-          drawUpgradetreeBox(
-            "flame",
-            427.5,
-            540,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "remedy",
-            332.5,
-            540,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "blizzard",
-            237.5,
-            540,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "palace",
-            142.5,
-            540,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "thorn",
-            47.5,
-            540,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "brigade",
-            -47.5,
-            540,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "launcher",
-            -142.5,
-            540,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "artillery",
-            -237.5,
-            540,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "triplet",
-            -332.5,
-            540,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "battleship",
-            -427.5,
-            540,
-            13,
-            80,
-            col,
-            darkcol,
-            "body"
-          );
-          drawConnection(427.5, 410, 427.5, 540, 80, "body");
-          drawConnection(332.5, 410, 332.5, 540, 80, "body");
-          drawConnection(237.5, 410, 237.5, 540, 80, "body");
-          drawConnection(142.5, 410, 142.5, 540, 80, "body");
-          drawConnection(47.5, 410, 47.5, 540, 80, "body");
-          drawConnection(-47.5, 410, -47.5, 540, 80, "body");
-          drawConnection(-142.5, 410, -142.5, 540, 80, "body");
-          drawConnection(-237.5, 410, -237.5, 540, 80, "body");
-          drawConnection(-332.5, 410, -332.5, 540, 80, "body");
-          drawConnection(-427.5, 410, -427.5, 540, 80, "body");
-          
-          col = "rgba(" + upgradeButtons[6].color + ")";
-          darkcol = "rgba(" + upgradeButtons[6].darkcolor + ")";
-
-          drawUpgradetreeBox(
-            "inferno",
-            425,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "juggernaut",
-            340,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "fabricator",
-            255,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "snowstorm",
-            170,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "ziggurat",
-            85,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "saw",
-            0,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "battalion",
-            -85,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "rocketer",
-            -170,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "bombard",
-            -255,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "quadruplet",
-            -340,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "mothership",
-            -425,
-            660,
-            12,
-            75,
-            col,
-            darkcol,
-            "body"
-          );
-          drawConnection(427.5, 540, 425, 660, 80, "body");
-          drawConnection(427.5, 540, 340, 660, 80, "body");
-          drawConnection(332.5, 540, 255, 660, 80, "body");
-          drawConnection(237.5, 540, 170, 660, 80, "body");
-          drawConnection(142.5, 540, 85, 660, 80, "body");
-          drawConnection(47.5, 540, 0, 660, 80, "body");
-          drawConnection(47.5, 540, -85, 660, 80, "body");
-          drawConnection(-47.5, 540, -85, 660, 80, "body");
-          drawConnection(-237.5, 540, -85, 660, 80, "body");
-          drawConnection(-142.5, 540, -170, 660, 80, "body");
-          drawConnection(-237.5, 540, -255, 660, 80, "body");
-          drawConnection(-332.5, 540, -340, 660, 80, "body");
-          drawConnection(-427.5, 540, -425, 660, 80, "body");
+          renderUpgradeTree("body",4,95,540,13,85);
         } else {
-          
-          let col = "rgba(125, 14, 230)";
-          let darkcol = "rgba(95, 0, 200)";
-          //if it is an eternal or above
-          drawUpgradetreeBox(
-            "primordial",
-            0,
-            0,
-            15,
-            95,
-            col,
-            darkcol,
-            "body"
-          );
+          //eternal upgrade tree
+          var col = "rgba(125, 14, 230)";
+          var darkcol = "rgba(95, 0, 200)";
+          renderUpgradeTree("cbody",0,0,-40,15,95);//cbody instead of body for celestials
           
           col = "rgba(165, 14, 230)";
           darkcol = "rgba(135, 0, 200)";
+          renderUpgradeTree("cbody",1,180,245,15,95);
 
-          drawUpgradetreeBox(
-            "oven",
-            375,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "pounder",
-            225,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "chainsaw",
-            75,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "lightning",
-            -75,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "meteor",
-            -225,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "satellite",
-            -375,
-            150,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawConnection(0, 0, 375, 150, 95, "body");
-          drawConnection(0, 0, 225, 150, 95, "body");
-          drawConnection(0, 0, 75, 150, 95, "body");
-          drawConnection(0, 0, -75, 150, 95, "body");
-          drawConnection(0, 0, -225, 150, 95, "body");
-          drawConnection(0, 0, -375, 150, 95, "body");
-          
           col = "rgba(204, 2, 245)";
           darkcol = "rgba(174, 0, 215)";
-
-          drawUpgradetreeBox(
-            "heliosphere",
-            450,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "corvus",
-            300,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "chasm",
-            150,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "blade",
-            0,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "firebolt",
-            -150,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "nebula",
-            -300,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawUpgradetreeBox(
-            "triton",
-            -450,
-            300,
-            15,
-            85,
-            col,
-            darkcol,
-            "body"
-          );
-          drawConnection(375, 150, 450, 300, 85, "body");
-          drawConnection(375, 150, 300, 300, 85, "body");
-          drawConnection(225, 150, 150, 300, 85, "body");
-          drawConnection(75, 150, 0, 300, 85, "body");
-          drawConnection(-75, 150, -150, 300, 85, "body");
-          drawConnection(-225, 150, -300, 300, 85, "body");
-          drawConnection(-375, 150, -450, 300, 85, "body");
+          renderUpgradeTree("cbody",2,155,530,15,95);
         }
 
         hctx.lineJoin = "miter"; //change it back
@@ -13193,17 +12271,27 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           showBodyUpgradeTree == "yes" &&
           bupgradetreepos < bupgradetreeend
         ) {
-          bupgradetreepos += (bupgradetreeend - bupgradetreepos) / 5*deltaTime; //speed changes based on amount moved so far. the smaller the number, the faster
-          if (bupgradetreeend - bupgradetreepos < 1) {
-            //if very near end point
+          bupgradetreepos += (bupgradetreeend - bupgradetreepos) / 7*deltaTime; //speed changes based on amount moved so far. the smaller the number, the faster
+          if (bupgradetreeend - bupgradetreepos < 1) { //if very near end point
             bupgradetreepos = bupgradetreeend;
+          }
+          if (xdistMultiplierb < xdistMultiplierEnd){//width animation
+            xdistMultiplierb+=(xdistMultiplierEnd - xdistMultiplierb)/7*deltaTime;
+          }
+          else if (xdistMultiplierb > xdistMultiplierEnd){
+            xdistMultiplierb = xdistMultiplierEnd;
           }
         } else if (showBodyUpgradeTree == "no") {
           //if upgrade tree is closing
-          bupgradetreepos -= (bupgradetreepos - bupgradetreestart) / 5*deltaTime;
-          if (bupgradetreepos - bupgradetreestart < 1) {
-            //if very near end point
+          bupgradetreepos -= (bupgradetreepos - bupgradetreestart) / 7*deltaTime;
+          if (bupgradetreepos - bupgradetreestart < 1) { //if very near end point
             bupgradetreepos = bupgradetreestart;
+          }
+          if (xdistMultiplierb > xdistMultiplierStart){
+            xdistMultiplierb-=(xdistMultiplierb - xdistMultiplierStart)/7*deltaTime;
+          }
+          else if (xdistMultiplierb < xdistMultiplierStart){
+            xdistMultiplierb = xdistMultiplierStart;
           }
         }
       } else {
@@ -14234,7 +13322,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         if (shownBandwidth < 15000) {
           bandwidthDiv.style.color = "white";
         } else if (shownBandwidth < 25000) {
-          bandwidthDiv.style.color = "orange";
+          bandwidthDiv.style.color = "yellow";
         } else if (shownBandwidth < 50000) {
           bandwidthDiv.style.color = "red";
         } else {

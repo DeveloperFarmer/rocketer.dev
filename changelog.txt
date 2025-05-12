@@ -1,3 +1,15 @@
+ALPHA 0.0.24 - May 12, 2025
+- Huge update to the upgrade tree
+    - Tank ugprades are more similar to scenexe's upgrade paths
+    - Added width animation when opening and closing the upgrade trees
+    - Some tanks are rendered wrongly and will be fixed in the next update
+    - Tweaked the layout of the eternals' upgrade tree
+    - Rewrote the entire upgrade tree code
+    - Upgrade tree will be added to PvE in a future update
+    - Renamed industry to tarvos
+- Added closing animation for quick chat
+- Minor changes to the debug and connection div
+
 ALPHA 0.0.23 - May 11, 2025
 - Settings now work for tick time, server name, player count, global player count, fps, ping, position, and hitbox
 - Added closing animations for all modals and popups

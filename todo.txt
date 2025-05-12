@@ -26,7 +26,9 @@ add quickchat functionality (when you open quick chat and press 1, 2, 3 or 4, th
 quickchat fix flipped text (both the quick chat and the number)
 fix holding down 'm' key
 
-add map border green when debug mode
+make upgrade buttons use tankUpgrades
+move weapon upgrade buttons to the left side instead of right
+bandiwdth dont use orange, use yellow instead
 add settings
 add quickchat mobile button
 change all bullet flash to the psbc
