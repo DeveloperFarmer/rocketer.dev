@@ -325,6 +325,13 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 this.bulletSpeed = 4;
                 this.bodyDamage = 3;
                 this.bulletPenetration = 10.5;
+                this.tankType = "mono";
+                this.bodyType = "base";
+                this.tankTypeLevel = 0;
+                this.bodyTypeLevel = 0;
+                this.barrels = {};//ADD NEXT TIME
+                playerBodyCol = '#00B0E1';
+                playerBodyOutline = '#0092C3';
             }
 
             update() {
@@ -1430,6 +1437,534 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             }
         }
 
+        //UPGRADE TREE
+      function drawUpgradetreeBox(
+        name,
+        Xadditional,
+        Yadditional,
+        fontsize,
+        width,
+        boxcolor,
+        boxdarkcolor,
+        which
+      ) {
+        bodysize = width / 5; //size of tank in upgrade tree
+        let resizeDiffX = 1/window.innerWidth*hcanvas.width;
+        let resizeDiffY = 1/window.innerHeight*hcanvas.height;
+        let scale = resizeDiffY/resizeDiffX;//make upgrade tree not squashed
+        let greyedOut = "no";
+        if (which == "body" && !bodyCanUpgradeTo.includes(name)){//cannot upgrade to this tank
+          boxcolor = "#999999";//greyed out
+          boxdarkcolor = "#7b7b7b";
+          greyedOut = "yes";
+        }
+        else if (which == "weapon" && !weaponCanUpgradeTo.includes(name)){
+          boxcolor = "#999999";//greyed out
+          boxdarkcolor = "#7b7b7b";
+          greyedOut = "yes";
+        }
+        hctx.font = "700 " + fontsize + "px Roboto";
+        hctx.fillStyle = boxcolor;
+        hctx.strokeStyle = "black";
+        hctx.lineWidth = bodysize/4;
+        if (which == "weapon") {
+          var pos = upgradetreepos;
+        } else if (which == "body") {
+          var pos = bupgradetreepos;
+        }
+        var w = width;
+        var h = width;
+        var r = 5; //radius is one third of height
+        var x = hcanvas.width / 2 - (width / 2 + Xadditional);
+        var y = pos + Yadditional;
+        h *= scale;
+        hctx.beginPath();
+        hctx.moveTo(x + r, y);
+        hctx.arcTo(x + w, y, x + w, y + h, r);
+        hctx.arcTo(x + w, y + h, x, y + h, r);
+        hctx.arcTo(x, y + h, x, y, r);
+        hctx.arcTo(x, y, x + w, y, r);
+        hctx.closePath();
+        hctx.fill();
+        hctx.stroke();
+        //draw darker area
+        var w2 = w - hctx.lineWidth;
+        var h2 = h/2 - hctx.lineWidth/4;
+        var x2 = x + hctx.lineWidth/2;
+        var y2 = y + h2;
+        //h *= scale;
+        hctx.fillStyle = boxdarkcolor;
+        hctx.beginPath();
+        hctx.moveTo(x2 + r, y2);
+        hctx.arcTo(x2 + w2, y2, x2 + w2, y2 + h2, r);
+        hctx.arcTo(x2 + w2, y2 + h2, x2, y2 + h2, r);
+        hctx.arcTo(x2, y2 + h2, x2, y2, r);
+        hctx.arcTo(x2, y2, x2 + w2, y2, r);
+        hctx.closePath();
+        hctx.fill();
+        //now draw hard-coded tank on upgrade tree
+        hctx.save();
+        hctx.translate(
+          hcanvas.width / 2 - Xadditional,
+          pos + Yadditional + h / 2
+        );
+          hctx.scale(1,scale)
+        if (which == "body") {
+          hctx.lineWidth = bodysize/4;
+          if (bodyupgrades[name].hasOwnProperty("assets")) {
+            hctx.lineJoin = "round";
+            //draw under assets
+            Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
+              var asset = bodyupgrades[name].assets[assetID];
+              if (asset.type == "under") {
+                hctx.rotate(-bodyangle);
+                let assetcolor = asset.color;
+                let assetoutline = asset.outline;
+                if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
+                  assetcolor = playerBodyCol;
+                  if (bodyupgrades[name].eternal){
+                    assetcolor = "#934c93";
+                  }
+                  if (greyedOut == "yes"){
+                    assetcolor = "#c0c0c0";
+                  }
+                }
+                if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
+                  assetoutline = playerBodyOutline;
+                  if (bodyupgrades[name].eternal){
+                    assetoutline = "#660066";
+                  }
+                  if (greyedOut == "yes"){
+                    assetoutline = "#a2a2a2";
+                  }
+                }
+                drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
+                hctx.rotate(bodyangle);
+              }
+            });
+            hctx.lineJoin = "miter";
+          }
+          //FOR BODY UPGRADES BODY
+          if (!bodyupgrades[name].eternal){
+            //hctx.fillStyle = "#00B0E1";
+            //hctx.strokeStyle = "#0092C3";
+            hctx.fillStyle = playerBodyCol;
+            hctx.strokeStyle = playerBodyOutline;
+            if (greyedOut == "yes"){
+              hctx.fillStyle = "#c0c0c0";
+              hctx.strokeStyle = "#a2a2a2";
+            }
+            hctx.beginPath();
+            hctx.arc(0, 0, bodysize, 0, 2 * Math.PI);
+            hctx.fill();
+            hctx.stroke();
+          }
+          else{
+            //if a tier 6 tank
+            hctx.fillStyle = "#934c93";
+            hctx.strokeStyle = "#660066";
+            if (greyedOut == "yes"){
+              hctx.fillStyle = "#c0c0c0";
+              hctx.strokeStyle = "#a2a2a2";
+            }
+            hctx.rotate(-bodyangle);
+            hctx.beginPath();
+            var baseSides = 6;
+            hctx.moveTo(bodysize * Math.cos(0), bodysize * Math.sin(0));
+            for (var i = 1; i <= baseSides; i += 1) {
+              hctx.lineTo(bodysize * Math.cos((i * 2 * Math.PI) / baseSides), bodysize * Math.sin((i * 2 * Math.PI) / baseSides));
+            }
+            hctx.fill();
+            hctx.stroke();
+            hctx.rotate(bodyangle);
+          }
+          
+          if (bodyupgrades[name].hasOwnProperty("assets")) {
+            hctx.lineJoin = "round";
+            //draw above assets
+            Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
+              var asset = bodyupgrades[name].assets[assetID];
+              if (asset.type == "above") {
+                hctx.rotate(-bodyangle);
+                let assetcolor = asset.color;
+                let assetoutline = asset.outline;
+                if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
+                  assetcolor = playerBodyCol;
+                  if (bodyupgrades[name].eternal){
+                    assetcolor = "#934c93";
+                  }
+                  if (greyedOut == "yes"){
+                    assetcolor = "#c0c0c0";
+                  }
+                }
+                if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
+                  assetoutline = playerBodyOutline;
+                  if (bodyupgrades[name].eternal){
+                    assetoutline = "#660066";
+                  }
+                  if (greyedOut == "yes"){
+                    assetoutline = "#a2a2a2";
+                  }
+                }
+                drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
+                hctx.rotate(bodyangle);
+              }
+            });
+            hctx.lineJoin = "miter";
+          }
+          if (bodyupgrades[name].hasOwnProperty("bodybarrels")) {
+            //draw barrels
+            hctx.lineJoin = "round";
+            Object.keys(bodyupgrades[name].bodybarrels).forEach(
+              (barrel) => {
+                let thisBarrel = bodyupgrades[name].bodybarrels[barrel];
+                hctx.rotate(thisBarrel.additionalAngle - bodyangle);
+                hctx.fillStyle = bodyColors.barrel.col;
+                hctx.strokeStyle = bodyColors.barrel.outline;
+                if (thisBarrel.barrelType == "bullet") {
+                  drawBulletBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                } else if (thisBarrel.barrelType == "drone") {
+                  if (Math.round(thisBarrel.barrelWidth) != Math.round(thisBarrel.barrelHeight)){
+                    drawDroneBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                  }
+                  else{
+                    drawDroneTurret(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,0,1)
+                  }
+                } else if (thisBarrel.barrelType == "trap") {
+                  drawTrapBarrel(hctx, thisBarrel.x*bodysize, thisBarrel.barrelWidth*bodysize, thisBarrel.barrelHeight*bodysize, 0, 1, bodysize)
+                }/* else if (thisBarrel.barrelType == "mine") {
+                  drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                } else if (thisBarrel.barrelType == "minion") {
+                  drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                }*/
+                hctx.rotate(-thisBarrel.additionalAngle + bodyangle); //rotate back
+              }
+            );
+            //draw turret base
+            hctx.beginPath();
+            hctx.arc( 0, 0, bodysize * bodyupgrades[name].turretBaseSize, 0, 2 * Math.PI );
+            hctx.fill();
+            hctx.stroke();
+            hctx.lineJoin = "miter"; //change back
+          }
+        } else if (which == "weapon") {
+          hctx.lineWidth = bodysize/4;
+          if (weaponupgrades[name].hasOwnProperty("barrels")) {
+            hctx.lineJoin = "round";
+            Object.keys(weaponupgrades[name].barrels).forEach(
+              (assetID) => {
+                var thisBarrel = weaponupgrades[name].barrels[assetID];
+                hctx.rotate((thisBarrel.additionalAngle * Math.PI) / 180 - bodyangle); //rotate to barrel angle
+                hctx.fillStyle = bodyColors.barrel.col;
+                hctx.strokeStyle = bodyColors.barrel.outline;
+                if (thisBarrel.barrelType == "bullet") {
+                  drawBulletBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                } else if (thisBarrel.barrelType == "drone") {
+                  drawDroneBarrel(hctx, thisBarrel.x*bodysize, thisBarrel.barrelWidth*bodysize, thisBarrel.barrelHeight*bodysize, 0, 1)
+                } else if (thisBarrel.barrelType == "trap") {
+                  drawTrapBarrel(hctx, thisBarrel.x*bodysize, thisBarrel.barrelWidth*bodysize, thisBarrel.barrelHeight*bodysize, 0, 1, bodysize)
+                } else if (thisBarrel.barrelType == "mine") {
+                  drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                } else if (thisBarrel.barrelType == "minion") {
+                  drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                }
+                hctx.rotate((-thisBarrel.additionalAngle * Math.PI) / 180 + bodyangle); //rotate back
+              }
+            );
+            hctx.lineJoin = "miter"; //change back
+          }
+          //FOR WEAPON BODY
+          if (!weaponupgrades[name].eternal){
+            //hctx.fillStyle = "#00B0E1";
+            //hctx.strokeStyle = "#0092C3";
+            hctx.fillStyle = playerBodyCol;
+            hctx.strokeStyle = playerBodyOutline;
+            if (greyedOut == "yes"){
+              hctx.fillStyle = "#c0c0c0";
+              hctx.strokeStyle = "#a2a2a2";
+            }
+            hctx.beginPath();
+            hctx.arc(0, 0, bodysize, 0, 2 * Math.PI);
+            hctx.fill();
+            hctx.stroke();
+          }
+          else{
+            //if a tier 6 tank
+            hctx.fillStyle = "#934c93";
+            hctx.strokeStyle = "#660066";
+            if (greyedOut == "yes"){
+              hctx.fillStyle = "#c0c0c0";
+              hctx.strokeStyle = "#a2a2a2";
+            }
+            hctx.rotate(-bodyangle);
+            hctx.beginPath();
+            var baseSides = 6;
+            hctx.moveTo(bodysize * Math.cos(0), bodysize * Math.sin(0));
+            for (var i = 1; i <= baseSides; i += 1) {
+              hctx.lineTo(bodysize * Math.cos((i * 2 * Math.PI) / baseSides), bodysize * Math.sin((i * 2 * Math.PI) / baseSides));
+            }
+            hctx.fill();
+            hctx.stroke();
+            hctx.rotate(bodyangle);
+          }
+        }
+        hctx.restore();
+        hctx.fillStyle = "white";
+        hctx.strokeStyle = "black";
+        hctx.lineWidth = fontsize/2;
+        name = name.charAt(0).toUpperCase() + name.slice(1);//make first letter of tank name uppercase
+        hctx.save();
+        hctx.translate(hcanvas.width / 2 - Xadditional, pos + h + Yadditional - width/9);
+        hctx.scale(1,scale);
+        hctx.strokeText(name, 0, 0);
+        hctx.fillText(name, 0, 0);
+        hctx.restore();
+      }
+      function drawConnection(
+        startX,
+        startY,
+        endX,
+        endY,
+        topWidth,
+        which,
+        applystyle
+      ) {
+        let resizeDiffX = 1/window.innerWidth*hcanvas.width;
+        let resizeDiffY = 1/window.innerHeight*hcanvas.height;
+        let scale = resizeDiffY/resizeDiffX;//make upgrade tree not squashed
+        topWidth*=scale;
+        //top width refers to the width of the box where the line starts to draw
+        if (which == "weapon") {
+          var pos = upgradetreepos;
+        } else if (which == "body") {
+          var pos = bupgradetreepos;
+        }
+        if(applystyle !== 0)  {
+        hctx.strokeStyle = "black";
+        }
+        hctx.lineWidth = topWidth/20;
+        hctx.beginPath();
+        hctx.moveTo(hcanvas.width / 2 - startX, pos + startY + topWidth);
+        hctx.lineTo(hcanvas.width / 2 - endX, pos + endY);
+        hctx.stroke();
+      }
+
+      //function for drawing each tier in upgrade tree
+      var col;
+      var darkcol;
+      function renderUpgradeTree(type,upgradeTier,xdist,y,fontsize,size){//xdist is horizontal distance between upgrades in upgrade tree
+            let array = [];
+            if (type == "body"){array = bodyUpgradeMap[upgradeTier];}
+            else if (type == "weapon"){array = weaponUpgradeMap[upgradeTier];}
+            else if (type == "cbody"){array = celestialBodyUpgradeMap[upgradeTier];type="body";}
+            else if (type == "cweapon"){array = celestialWeaponUpgradeMap[upgradeTier];type="weapon";}
+            else{console.log("error: unknown upgrade type when rendering upgrade tree: " + type)}
+            let x = (array.length - 1)*xdist/2;//starting position of x (total distance divided by two, note that left side of screen is positive x, right side is negative)
+            for (const tankname of array) {
+              let thisObj;
+              let widthAnimation;
+              if (type == "body"){
+                thisObj = bodyupgrades[tankname];
+                widthAnimation = xdistMultiplierb;
+              }
+              else{
+                thisObj = weaponupgrades[tankname];
+                widthAnimation = xdistMultiplierw;
+              }
+              if (thisObj){//if has this upgrade data
+                drawUpgradetreeBox(tankname,x*widthAnimation,y,fontsize,size,col,darkcol,type);
+                if (!upgradeTreeBoxPositions[tankname]){//first time drawing
+                  upgradeTreeBoxPositions[tankname] = {};
+                  upgradeTreeBoxPositions[tankname].x = x;
+                  upgradeTreeBoxPositions[tankname].y = y;
+                }
+                //draw connecting lines
+                for (const upgradableTank of thisObj.upgradeTo) {//tanks that can upgrade to
+                  if (upgradeTreeBoxPositions[upgradableTank]){//has the coords of box (only added on the first drawing)
+                    let upgradableTankPosition = upgradeTreeBoxPositions[upgradableTank];
+                    drawConnection(x*widthAnimation, y, upgradableTankPosition.x*widthAnimation, upgradableTankPosition.y, size, type);
+                  }
+                }
+              }
+              x -= xdist;
+            }
+          }
+
+        function updateUpgradeTrees(player){
+          //draw weapon upgrades
+          //rotate tanks:
+          bodyangle += 0.02*deltaTime;
+          
+          if (player.bodyType != previousBody){//upgraded tank
+            bodyCanUpgradeTo = getTanksThatCanUpgradeTo(bodyupgrades,player.bodyType)//get list of upgradable tanks to figure out which ones to grey out on upgrade tree
+            previousBody = player.bodyType;
+          }
+          if (player.tankType != previousWeapon){//upgraded tank
+            weaponCanUpgradeTo = getTanksThatCanUpgradeTo(weaponupgrades,player.tankType)//get list of upgradable tanks to figure out which ones to grey out on upgrade tree
+            previousWeapon = player.tankType;
+            //below code is for crossroads darkness
+            barrelsDarkness = [];
+            correspondingBarrelHeight = {};
+            for (const barrel in player.barrels){
+              let thisBarrel = player.barrels[barrel];
+              if (!barrelsDarkness.includes(thisBarrel.additionalAngle)){//dont allow repeated angles in the array
+                if (thisBarrel.additionalAngle < 0){//prevent negaive angles to break the darkness code
+                  thisBarrel.additionalAngle += 360;
+                }
+                barrelsDarkness.push(thisBarrel.additionalAngle)
+                if (!correspondingBarrelHeight[thisBarrel.additionalAngle]){//add to list of barrel heights
+                  correspondingBarrelHeight[thisBarrel.additionalAngle] = thisBarrel.barrelHeight/player.width - 0.5;//barrel height in terms of player's width
+                }
+                else if (thisBarrel.barrelHeight > correspondingBarrelHeight[thisBarrel.additionalAngle]){//if barrel height more than height of previous barrel with same angle
+                  correspondingBarrelHeight[thisBarrel.additionalAngle] = thisBarrel.barrelHeight/player.width - 0.5;
+                }
+              }
+            }
+            barrelsDarkness.sort((a,b)=>b-a);//sort array in descending order of number
+          }
+          
+          hctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
+          hctx.textAlign = "center";
+          if (showUpgradeTree == "yes" || upgradetreepos > upgradetreestart) {//weapon upgrade tree
+            if ( player.tankTypeLevel < 60 && player.bodyTypeLevel < 60 && player.tankType != "eternal" ) {
+              //tier 1 of normal tank weapon upgrade tree
+              col = "rgba(" + upgradeButtons[1].color + ")";
+              darkcol = "rgba(" + upgradeButtons[1].darkcolor + ")";//need for inside the renderupgradetree function
+              renderUpgradeTree("weapon",0,0,-40,13,95);//type,upgradeTier,xdist,y,fontsize,size
+              //tier 2
+              col = "rgba(" + upgradeButtons[2].color + ")";
+              darkcol = "rgba(" + upgradeButtons[2].darkcolor + ")";
+              renderUpgradeTree("weapon",1,360,110,13,95);
+              //tier 3
+              col = "rgba(" + upgradeButtons[3].color + ")";
+              darkcol = "rgba(" + upgradeButtons[3].darkcolor + ")";
+              renderUpgradeTree("weapon",2,80,260,12,75);
+              //tier 4
+              col = "rgba(" + upgradeButtons[4].color + ")";
+              darkcol = "rgba(" + upgradeButtons[4].darkcolor + ")";
+              renderUpgradeTree("weapon",3,60,440,10,55);
+              //tier 5
+              col = "rgba(" + upgradeButtons[5].color + ")";
+              darkcol = "rgba(" + upgradeButtons[5].darkcolor + ")";
+              renderUpgradeTree("weapon",4,42,580,8,40);
+            } else {
+              //eternal upgrade tree
+              col = "rgba(125, 14, 230)";
+              darkcol = "rgba(95, 0, 200)";
+              renderUpgradeTree("cweapon",0,0,-40,15,95);//cweapon instead of weapon for celestials
+              
+              col = "rgba(165, 14, 230)";
+              darkcol = "rgba(135, 0, 200)";
+              renderUpgradeTree("cweapon",1,180,245,15,95);
+
+              col = "rgba(204, 2, 245)";
+              darkcol = "rgba(174, 0, 215)";
+              renderUpgradeTree("cweapon",2,120,530,15,95);
+            }
+
+            //animate upgrade tree when opening
+            if (showUpgradeTree == "yes" && upgradetreepos < upgradetreeend) {
+              upgradetreepos += (upgradetreeend - upgradetreepos) / 7*deltaTime; //speed changes based on amount moved so far. the smaller the number, the faster
+              if (upgradetreeend - upgradetreepos < 1) { //if very near end point
+                upgradetreepos = upgradetreeend;
+              }
+              if (xdistMultiplierw < xdistMultiplierEnd){//width animation
+                xdistMultiplierw+=(xdistMultiplierEnd - xdistMultiplierw)/7*deltaTime;
+              }
+              else if (xdistMultiplierw > xdistMultiplierEnd){
+                xdistMultiplierw = xdistMultiplierEnd;
+              }
+            } else if (showUpgradeTree == "no") {
+              //if upgrade tree is closing
+              upgradetreepos -= (upgradetreepos - upgradetreestart) / 7*deltaTime;
+              if (upgradetreepos - upgradetreestart < 1) { //if very near end point
+                upgradetreepos = upgradetreestart;
+              }
+              if (xdistMultiplierw > xdistMultiplierStart){
+                xdistMultiplierw-=(xdistMultiplierw - xdistMultiplierStart)/7*deltaTime;
+              }
+              else if (xdistMultiplierw < xdistMultiplierStart){
+                xdistMultiplierw = xdistMultiplierStart;
+              }
+            }
+          } else {
+            //if upgrade tree not drawn
+            upgradetreepos = upgradetreestart; //reset variable
+          }
+
+          if (showBodyUpgradeTree == "yes" || bupgradetreepos > bupgradetreestart) {//body upgrade tree
+            if ( player.tankTypeLevel < 60 && player.bodyTypeLevel < 60 && player.tankType != "eternal" ) {
+              //tier 1 of normal tank body upgrade tree
+              col = "rgba(" + upgradeButtons[1].color + ")";
+              darkcol = "rgba(" + upgradeButtons[1].darkcolor + ")";//need for inside the renderupgradetree function
+              renderUpgradeTree("body",0,0,-40,13,95);//type,upgradeTier,xdist,y,fontsize,size
+              //tier 2
+              col = "rgba(" + upgradeButtons[2].color + ")";
+              darkcol = "rgba(" + upgradeButtons[2].darkcolor + ")";
+              renderUpgradeTree("body",1,190,110,13,95);
+              //tier 3
+              col = "rgba(" + upgradeButtons[3].color + ")";
+              darkcol = "rgba(" + upgradeButtons[3].darkcolor + ")";
+              renderUpgradeTree("body",2,110,260,13,95);
+              //tier 4
+              col = "rgba(" + upgradeButtons[4].color + ")";
+              darkcol = "rgba(" + upgradeButtons[4].darkcolor + ")";
+              renderUpgradeTree("body",3,100,410,13,90);
+              //tier 5
+              col = "rgba(" + upgradeButtons[5].color + ")";
+              darkcol = "rgba(" + upgradeButtons[5].darkcolor + ")";
+              renderUpgradeTree("body",4,95,540,13,85);
+            } else {
+              //eternal upgrade tree
+              col = "rgba(125, 14, 230)";
+              darkcol = "rgba(95, 0, 200)";
+              renderUpgradeTree("cbody",0,0,-40,15,95);//cbody instead of body for celestials
+              
+              col = "rgba(165, 14, 230)";
+              darkcol = "rgba(135, 0, 200)";
+              renderUpgradeTree("cbody",1,180,245,15,95);
+
+              col = "rgba(204, 2, 245)";
+              darkcol = "rgba(174, 0, 215)";
+              renderUpgradeTree("cbody",2,155,530,15,95);
+            }
+
+            hctx.lineJoin = "miter"; //change it back
+
+            //animate upgrade tree when opening
+            if (
+              showBodyUpgradeTree == "yes" &&
+              bupgradetreepos < bupgradetreeend
+            ) {
+              bupgradetreepos += (bupgradetreeend - bupgradetreepos) / 7*deltaTime; //speed changes based on amount moved so far. the smaller the number, the faster
+              if (bupgradetreeend - bupgradetreepos < 1) { //if very near end point
+                bupgradetreepos = bupgradetreeend;
+              }
+              if (xdistMultiplierb < xdistMultiplierEnd){//width animation
+                xdistMultiplierb+=(xdistMultiplierEnd - xdistMultiplierb)/7*deltaTime;
+              }
+              else if (xdistMultiplierb > xdistMultiplierEnd){
+                xdistMultiplierb = xdistMultiplierEnd;
+              }
+            } else if (showBodyUpgradeTree == "no") {
+              //if upgrade tree is closing
+              bupgradetreepos -= (bupgradetreepos - bupgradetreestart) / 7*deltaTime;
+              if (bupgradetreepos - bupgradetreestart < 1) { //if very near end point
+                bupgradetreepos = bupgradetreestart;
+              }
+              if (xdistMultiplierb > xdistMultiplierStart){
+                xdistMultiplierb-=(xdistMultiplierb - xdistMultiplierStart)/7*deltaTime;
+              }
+              else if (xdistMultiplierb < xdistMultiplierStart){
+                xdistMultiplierb = xdistMultiplierStart;
+              }
+            }
+          } else {
+            //if upgrade tree not drawn
+            bupgradetreepos = bupgradetreestart; //reset variable
+          }
+        }
+
         // Mouse tracking (now in screen coordinates)
         let mouseX = 0;
         let mouseY = 0;
@@ -1647,6 +2182,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             ctx.restore();//restore the fov scaling (BEFORE minimap so that it will not be affected by FOV)
             //if debug is open, and if dimension is not crossroads or cavern:
             drawMinimap()
+
+            hctx.clearRect(0, 0, hcanvas.width, hcanvas.height);
+            updateUpgradeTrees(players[0]);//DRAW THE UPGRADE TREES AND UPDATE ANGLES
           
             //update debug
             let newtext = `Drawn Entities: ${numberOfObjectsDrawn}`;
@@ -1732,7 +2270,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
 
         function drawFakePlayer2(team,weapontype,bodytype,x,y,rot,size){//only for home screen background
-          //integrate into drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which)
+          drawFakePlayer(weapontype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"weapon");
+          drawFakePlayer(bodytype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"body");
+          /*
             hctx.save();//add tank type later
             hctx.translate(x-hsCameraX, y-hsCameraY);
             hctx.rotate(rot/180*Math.PI);
@@ -1743,6 +2283,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             hctx.fill();
             hctx.stroke();
             hctx.restore();
+            */
         }
       
         //drawing canvas for homescreen background
@@ -1904,7 +2445,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           //remove home screen divs
           playButton.style.display = "none";
           if (gamemode == "PvE arena"){
-            hcanvas.style.display = "none";
+            //hcanvas.style.display = "none";
             document.getElementById('score').style.display = "block";
             botnumberElement.className = "debugopen";
             shapenumberElement.className = "debugopen";
@@ -2633,9 +3174,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           ||window.location.href.includes("rocketer-dev")
           ||window.location.href.includes("127.0.0.1")){//this is a testing website, or local host
           //createNotif("Connected to the developer's testing servers.","rgba(150,0,0)",5000)
-          //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)
+          //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)//wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/
           document.getElementById("adminPanelYN").style.display = "block";
           var serverlist = {
+            //"Free For All": "ws://83.251.0.175:8080/",
             "Free For All": "wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/",
             "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
             "4 Teams": "wss://devrocketer4tdm.devrocketer.repl.co/",
@@ -3614,20 +4156,23 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               canvas.moveTo((x - width / 2) / fov,0);
               canvas.lineTo((x-width) / fov,h);
               canvas.lineTo((x * 2 + width) / fov,h);
-              canvas.lineTo((x * 2 + width) / fov,0);
+              canvas.lineTo((x * 2 + width/2) / fov,0);
               canvas.fill();
               canvas.stroke();
             }
 
-            function drawTrapBarrel(canvas, x,width,height,shootChange, fov){
-              let h = -(height - shootChange/shootBarrelMax*height) / fov;
-              canvas.fillRect((x - width / 2) / fov,h * 0.67,width / fov,-h * 0.67);
-              canvas.strokeRect((x - width / 2) / fov,h * 0.67,width / fov,-h * 0.67);
+            function drawTrapBarrel(canvas, x,width,height,shootChange, fov, bodysize){
+              let w = width/fov;
+              let h = (height - shootChange/shootBarrelMax*height) / fov;
+              let hJut = h-0.5 * bodysize / fov;//height of tip of trap barrel
+              x = x/fov;
+              canvas.fillRect(-w/2 + x, -hJut, w, hJut);
+              canvas.strokeRect(-w/2 + x, -hJut, w, hJut);
               canvas.beginPath();
-              canvas.moveTo((x - width / 2) / fov,h * 0.67);
-              canvas.lineTo((x - width) / fov,h);
-              canvas.lineTo((x + width) / fov,h);
-              canvas.lineTo((x + width / 2) / fov,h * 0.67);
+              canvas.moveTo(-w/2 + x, -hJut-canvas.lineWidth/2);
+              canvas.lineTo(-w + x, -h);
+              canvas.lineTo(w + x, -h);
+              canvas.lineTo(w/2 + x, -hJut-canvas.lineWidth/2);
               canvas.fill();
               canvas.stroke();
             }
@@ -3797,7 +4342,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   }
                   //trap barrel
                   else if (thisBarrel.barrelType == "trap") {
-                    drawTrapBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                    drawTrapBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov,object.width)
                   }
                   //mine barrel
                   else if (thisBarrel.barrelType == "mine") {
@@ -4303,7 +4848,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   }
                   //trap barrel (doesnt exist atm)
                   else if (thisBarrel.barrelType == "trap") {
-                    drawTrapBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                    drawTrapBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov,object.width)
                   }
                   //mine barrel (doesnt exist atm)
                   else if (thisBarrel.barrelType == "mine") {
@@ -4407,7 +4952,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                           }
                           //trap barrel (doesnt exist atm)
                           else if (thisBarrel.barrelType == "trap") {
-                            drawTrapBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                            drawTrapBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1, bodysize)
                           }
                           //mine barrel (doesnt exist atm)
                           else if (thisBarrel.barrelType == "mine") {
@@ -4460,7 +5005,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                           }
                           //trap barrel (doesnt exist atm)
                           else if (thisBarrel.barrelType == "trap") {
-                            drawTrapBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                            drawTrapBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1, bodysize)
                           }
                           //mine barrel (doesnt exist atm)
                           else if (thisBarrel.barrelType == "mine") {
@@ -4687,7 +5232,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
                       }
                       else if (thisBarrel.barrelType == "trap") {
-                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
                       }
                       else if (thisBarrel.barrelType == "mine") {
                         drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
@@ -4734,7 +5279,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
                       }
                       else if (thisBarrel.barrelType == "trap") {
-                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
                       }
                       else if (thisBarrel.barrelType == "mine") {
                         drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
@@ -4795,7 +5340,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
                       }
                       else if (thisBarrel.barrelType == "trap") {
-                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
                       }
                       else if (thisBarrel.barrelType == "mine") {
                         drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
@@ -11561,743 +12106,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
       hctx.restore();//restore from scaling for different screen sizes
       hctx.textAlign = "center";
 
-      //UPGRADE TREE
-      function drawUpgradetreeBox(
-        name,
-        Xadditional,
-        Yadditional,
-        fontsize,
-        width,
-        boxcolor,
-        boxdarkcolor,
-        which
-      ) {
-        bodysize = width / 5; //size of tank in upgrade tree
-        let scale = resizeDiffY/resizeDiffX;//make upgrade tree not squashed
-        let greyedOut = "no";
-        if (which == "body" && !bodyCanUpgradeTo.includes(name)){//cannot upgrade to this tank
-          boxcolor = "#999999";//greyed out
-          boxdarkcolor = "#7b7b7b";
-          greyedOut = "yes";
-        }
-        else if (which == "weapon" && !weaponCanUpgradeTo.includes(name)){
-          boxcolor = "#999999";//greyed out
-          boxdarkcolor = "#7b7b7b";
-          greyedOut = "yes";
-        }
-        hctx.font = "700 " + fontsize + "px Roboto";
-        hctx.fillStyle = boxcolor;
-        hctx.strokeStyle = "black";
-        hctx.lineWidth = bodysize/4;
-        if (which == "weapon") {
-          var pos = upgradetreepos;
-        } else if (which == "body") {
-          var pos = bupgradetreepos;
-        }
-        var w = width;
-        var h = width;
-        var r = 5; //radius is one third of height
-        var x = hcanvas.width / 2 - (width / 2 + Xadditional);
-        var y = pos + Yadditional;
-        h *= scale;
-        hctx.beginPath();
-        hctx.moveTo(x + r, y);
-        hctx.arcTo(x + w, y, x + w, y + h, r);
-        hctx.arcTo(x + w, y + h, x, y + h, r);
-        hctx.arcTo(x, y + h, x, y, r);
-        hctx.arcTo(x, y, x + w, y, r);
-        hctx.closePath();
-        hctx.fill();
-        hctx.stroke();
-        //draw darker area
-        var w2 = w - hctx.lineWidth;
-        var h2 = h/2 - hctx.lineWidth/4;
-        var x2 = x + hctx.lineWidth/2;
-        var y2 = y + h2;
-        //h *= scale;
-        hctx.fillStyle = boxdarkcolor;
-        hctx.beginPath();
-        hctx.moveTo(x2 + r, y2);
-        hctx.arcTo(x2 + w2, y2, x2 + w2, y2 + h2, r);
-        hctx.arcTo(x2 + w2, y2 + h2, x2, y2 + h2, r);
-        hctx.arcTo(x2, y2 + h2, x2, y2, r);
-        hctx.arcTo(x2, y2, x2 + w2, y2, r);
-        hctx.closePath();
-        hctx.fill();
-        //now draw hard-coded tank on upgrade tree
-        hctx.save();
-        hctx.translate(
-          hcanvas.width / 2 - Xadditional,
-          pos + Yadditional + h / 2
-        );
-          hctx.scale(1,scale)
-        if (which == "body") {
-          hctx.lineWidth = bodysize/4;
-          if (bodyupgrades[name].hasOwnProperty("assets")) {
-            hctx.lineJoin = "round";
-            //draw under assets
-            Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
-              var asset = bodyupgrades[name].assets[assetID];
-              if (asset.type == "under") {
-                hctx.rotate(-bodyangle);
-                let assetcolor = asset.color;
-                let assetoutline = asset.outline;
-                if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
-                  assetcolor = playerBodyCol;
-                  if (bodyupgrades[name].eternal){
-                    assetcolor = "#934c93";
-                  }
-                  if (greyedOut == "yes"){
-                    assetcolor = "#c0c0c0";
-                  }
-                }
-                if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
-                  assetoutline = playerBodyOutline;
-                  if (bodyupgrades[name].eternal){
-                    assetoutline = "#660066";
-                  }
-                  if (greyedOut == "yes"){
-                    assetoutline = "#a2a2a2";
-                  }
-                }
-                drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
-                hctx.rotate(bodyangle);
-              }
-            });
-            hctx.lineJoin = "miter";
-          }
-          //FOR BODY UPGRADES BODY
-          if (!bodyupgrades[name].eternal){
-            //hctx.fillStyle = "#00B0E1";
-            //hctx.strokeStyle = "#0092C3";
-            hctx.fillStyle = playerBodyCol;
-            hctx.strokeStyle = playerBodyOutline;
-            if (greyedOut == "yes"){
-              hctx.fillStyle = "#c0c0c0";
-              hctx.strokeStyle = "#a2a2a2";
-            }
-            hctx.beginPath();
-            hctx.arc(0, 0, bodysize, 0, 2 * Math.PI);
-            hctx.fill();
-            hctx.stroke();
-          }
-          else{
-            //if a tier 6 tank
-            hctx.fillStyle = "#934c93";
-            hctx.strokeStyle = "#660066";
-            if (greyedOut == "yes"){
-              hctx.fillStyle = "#c0c0c0";
-              hctx.strokeStyle = "#a2a2a2";
-            }
-            hctx.rotate(-bodyangle);
-            hctx.beginPath();
-            var baseSides = 6;
-            hctx.moveTo(bodysize * Math.cos(0), bodysize * Math.sin(0));
-            for (var i = 1; i <= baseSides; i += 1) {
-              hctx.lineTo(bodysize * Math.cos((i * 2 * Math.PI) / baseSides), bodysize * Math.sin((i * 2 * Math.PI) / baseSides));
-            }
-            hctx.fill();
-            hctx.stroke();
-            hctx.rotate(bodyangle);
-          }
-          if (bodyupgrades[name].hasOwnProperty("bodybarrels")) {
-            //draw barrels
-            hctx.lineJoin = "round";
-            Object.keys(bodyupgrades[name].bodybarrels).forEach(
-              (barrel) => {
-                let thisBarrel = bodyupgrades[name].bodybarrels[barrel];
-                hctx.rotate(thisBarrel.additionalAngle - bodyangle);
-                hctx.fillStyle = bodyColors.barrel.col;
-                hctx.strokeStyle = bodyColors.barrel.outline;
-                if (thisBarrel.barrelType == "bullet") {
-                  hctx.fillRect(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.strokeRect(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    thisBarrel.barrelHeight * bodysize
-                  );
-                }
-                //drone barrel
-                else if (thisBarrel.barrelType == "drone") {
-                  if (Math.round(thisBarrel.barrelWidth) != Math.round(thisBarrel.barrelHeight)){
-                    drawDroneBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                  }
-                  else{
-                    drawDroneTurret(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,0,1)
-                  }
-                }
-                //trap barrel
-                else if (thisBarrel.barrelType == "trap") {
-                  hctx.fillRect(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    (-thisBarrel.barrelHeight / 3) * 2 * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    (thisBarrel.barrelHeight / 3) * 2 * bodysize
-                  );
-                  hctx.strokeRect(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    (-thisBarrel.barrelHeight / 3) * 2 * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    (thisBarrel.barrelHeight / 3) * 2 * bodysize
-                  );
-                  hctx.beginPath();
-                  hctx.moveTo(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    (-thisBarrel.barrelHeight / 3) * 2 * bodysize
-                  );
-                  hctx.lineTo(
-                    -thisBarrel.barrelWidth * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.lineTo(
-                    thisBarrel.barrelWidth * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.lineTo(
-                    (thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    (-thisBarrel.barrelHeight / 3) * 2 * bodysize
-                  );
-                  hctx.fill();
-                  hctx.stroke();
-                }
-                hctx.rotate(-thisBarrel.additionalAngle + bodyangle); //rotate back
-              }
-            );
-            //draw turret base
-            hctx.beginPath();
-            hctx.arc(
-              0,
-              0,
-              bodysize * bodyupgrades[name].turretBaseSize,
-              0,
-              2 * Math.PI
-            );
-            hctx.fill();
-            hctx.stroke();
-            hctx.lineJoin = "miter"; //change back
-          }
-          if (bodyupgrades[name].hasOwnProperty("assets")) {
-            hctx.lineJoin = "round";
-            //draw above assets
-            Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
-              var asset = bodyupgrades[name].assets[assetID];
-              if (asset.type == "above") {
-                hctx.rotate(-bodyangle);
-                let assetcolor = asset.color;
-                let assetoutline = asset.outline;
-                if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
-                  assetcolor = playerBodyCol;
-                  if (bodyupgrades[name].eternal){
-                    assetcolor = "#934c93";
-                  }
-                  if (greyedOut == "yes"){
-                    assetcolor = "#c0c0c0";
-                  }
-                }
-                if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
-                  assetoutline = playerBodyOutline;
-                  if (bodyupgrades[name].eternal){
-                    assetoutline = "#660066";
-                  }
-                  if (greyedOut == "yes"){
-                    assetoutline = "#a2a2a2";
-                  }
-                }
-                drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
-                hctx.rotate(bodyangle);
-              }
-            });
-            hctx.lineJoin = "miter";
-          }
-        } else if (which == "weapon") {
-          hctx.lineWidth = bodysize/4;
-          if (weaponupgrades[name].hasOwnProperty("barrels")) {
-            hctx.lineJoin = "round";
-            Object.keys(weaponupgrades[name].barrels).forEach(
-              (assetID) => {
-                var thisBarrel = weaponupgrades[name].barrels[assetID];
-                hctx.rotate(
-                  (thisBarrel.additionalAngle * Math.PI) / 180 - bodyangle
-                ); //rotate to barrel angle
-                hctx.fillStyle = bodyColors.barrel.col;
-                hctx.strokeStyle = bodyColors.barrel.outline;
-                if (thisBarrel.barrelType == "bullet") {
-                  hctx.fillRect(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.strokeRect(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    thisBarrel.barrelHeight * bodysize
-                  );
-                } else if (thisBarrel.barrelType == "drone") {
-                  hctx.beginPath();
-                  hctx.moveTo(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    0
-                  );
-                  hctx.lineTo(
-                    -thisBarrel.barrelWidth * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.lineTo(
-                    thisBarrel.barrelWidth * bodysize +
-                      thisBarrel.x * 2 * bodysize,
-                    -thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.lineTo(
-                    (thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * 2 * bodysize,
-                    0
-                  );
-                  hctx.fill();
-                  hctx.stroke();
-                } else if (thisBarrel.barrelType == "trap") {
-                  hctx.fillRect(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    (-thisBarrel.barrelHeight / 3) * 2 * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    (thisBarrel.barrelHeight / 3) * 2 * bodysize
-                  );
-                  hctx.strokeRect(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    (-thisBarrel.barrelHeight / 3) * 2 * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    (thisBarrel.barrelHeight / 3) * 2 * bodysize
-                  );
-                  hctx.beginPath();
-                  hctx.moveTo(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    (-thisBarrel.barrelHeight / 3) * 2 * bodysize
-                  );
-                  hctx.lineTo(
-                    -thisBarrel.barrelWidth * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.lineTo(
-                    thisBarrel.barrelWidth * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.lineTo(
-                    (thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    (-thisBarrel.barrelHeight / 3) * 2 * bodysize
-                  );
-                  hctx.fill();
-                  hctx.stroke();
-                } else if (thisBarrel.barrelType == "mine") {
-                  hctx.fillRect(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.strokeRect(
-                    (-thisBarrel.barrelWidth / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.fillRect(
-                    ((-thisBarrel.barrelWidth * 1.5) / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    (-thisBarrel.barrelHeight / 3) * 2 * bodysize,
-                    thisBarrel.barrelWidth * bodysize * 1.5,
-                    (thisBarrel.barrelHeight / 3) * 2 * bodysize
-                  );
-                  hctx.strokeRect(
-                    ((-thisBarrel.barrelWidth * 1.5) / 2) * bodysize +
-                      thisBarrel.x * bodysize,
-                    (-thisBarrel.barrelHeight / 3) * 2 * bodysize,
-                    thisBarrel.barrelWidth * bodysize * 1.5,
-                    (thisBarrel.barrelHeight / 3) * 2 * bodysize
-                  );
-                } else if (thisBarrel.barrelType == "minion") {
-                  hctx.fillRect(
-                    -thisBarrel.barrelWidth / 2  * bodysize +
-                      thisBarrel.x  * bodysize,
-                    -thisBarrel.barrelHeight * bodysize,
-                    thisBarrel.barrelWidth  * bodysize,
-                    thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.strokeRect(
-                    -thisBarrel.barrelWidth / 2 * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize,
-                    thisBarrel.barrelWidth * bodysize,
-                    thisBarrel.barrelHeight * bodysize
-                  );
-                  hctx.fillRect(
-                    (-thisBarrel.barrelWidth * 1.5) / 2  * bodysize +
-                      thisBarrel.x  * bodysize,
-                    -thisBarrel.barrelHeight / 1.5  * bodysize,
-                    thisBarrel.barrelWidth  * bodysize * 1.5,
-                    thisBarrel.barrelHeight / 1.5  * bodysize
-                  );
-                  hctx.strokeRect(
-                    (-thisBarrel.barrelWidth * 1.5) / 2  * bodysize +
-                      thisBarrel.x  * bodysize,
-                    -thisBarrel.barrelHeight / 1.5  * bodysize,
-                    (thisBarrel.barrelWidth * bodysize) * 1.5,
-                    thisBarrel.barrelHeight / 1.5  * bodysize
-                  );
-                  hctx.fillRect(
-                    (-thisBarrel.barrelWidth * 1.5) / 2  * bodysize +
-                      thisBarrel.x  * bodysize,
-                    -thisBarrel.barrelHeight * bodysize,
-                    (thisBarrel.barrelWidth  * bodysize) * 1.5,
-                    thisBarrel.barrelHeight /5 * bodysize
-                  );
-                  hctx.strokeRect(
-                    (-thisBarrel.barrelWidth * 1.5) / 2 * bodysize +
-                      thisBarrel.x * bodysize,
-                    -thisBarrel.barrelHeight * bodysize,
-                    (thisBarrel.barrelWidth * bodysize) * 1.5,
-                    thisBarrel.barrelHeight /5  * bodysize
-                  );
-                }
-                hctx.rotate(
-                  (-thisBarrel.additionalAngle * Math.PI) / 180 +
-                    bodyangle
-                ); //rotate back
-              }
-            );
-            hctx.lineJoin = "miter"; //change back
-          }
-          //FOR WEAPON BODY
-          if (!weaponupgrades[name].eternal){
-            //hctx.fillStyle = "#00B0E1";
-            //hctx.strokeStyle = "#0092C3";
-            hctx.fillStyle = playerBodyCol;
-            hctx.strokeStyle = playerBodyOutline;
-            if (greyedOut == "yes"){
-              hctx.fillStyle = "#c0c0c0";
-              hctx.strokeStyle = "#a2a2a2";
-            }
-            hctx.beginPath();
-            hctx.arc(0, 0, bodysize, 0, 2 * Math.PI);
-            hctx.fill();
-            hctx.stroke();
-          }
-          else{
-            //if a tier 6 tank
-            hctx.fillStyle = "#934c93";
-            hctx.strokeStyle = "#660066";
-            if (greyedOut == "yes"){
-              hctx.fillStyle = "#c0c0c0";
-              hctx.strokeStyle = "#a2a2a2";
-            }
-            hctx.rotate(-bodyangle);
-            hctx.beginPath();
-            var baseSides = 6;
-            hctx.moveTo(bodysize * Math.cos(0), bodysize * Math.sin(0));
-            for (var i = 1; i <= baseSides; i += 1) {
-              hctx.lineTo(bodysize * Math.cos((i * 2 * Math.PI) / baseSides), bodysize * Math.sin((i * 2 * Math.PI) / baseSides));
-            }
-            hctx.fill();
-            hctx.stroke();
-            hctx.rotate(bodyangle);
-          }
-        }
-        hctx.restore();
-        hctx.fillStyle = "white";
-        hctx.strokeStyle = "black";
-        hctx.lineWidth = fontsize/2;
-        name = name.charAt(0).toUpperCase() + name.slice(1);//make first letter of tank name uppercase
-        hctx.save();
-        hctx.translate(hcanvas.width / 2 - Xadditional, pos + h + Yadditional - width/9);
-        hctx.scale(1,scale);
-        hctx.strokeText(name, 0, 0);
-        hctx.fillText(name, 0, 0);
-        hctx.restore();
-      }
-      function drawConnection(
-        startX,
-        startY,
-        endX,
-        endY,
-        topWidth,
-        which,
-        applystyle
-      ) {
-        let scale = resizeDiffY/resizeDiffX;//make upgrade tree not squashed
-        topWidth*=scale;
-        //top width refers to the width of the box where the line starts to draw
-        if (which == "weapon") {
-          var pos = upgradetreepos;
-        } else if (which == "body") {
-          var pos = bupgradetreepos;
-        }
-        if(applystyle !== 0)  {
-        hctx.strokeStyle = "black";
-        }
-        hctx.lineWidth = topWidth/20;
-        hctx.beginPath();
-        hctx.moveTo(hcanvas.width / 2 - startX, pos + startY + topWidth);
-        hctx.lineTo(hcanvas.width / 2 - endX, pos + endY);
-        hctx.stroke();
-      }
-
-      //function for drawing each tier in upgrade tree
-      function renderUpgradeTree(type,upgradeTier,xdist,y,fontsize,size){//xdist is horizontal distance between upgrades in upgrade tree
-            let array = [];
-            if (type == "body"){array = bodyUpgradeMap[upgradeTier];}
-            else if (type == "weapon"){array = weaponUpgradeMap[upgradeTier];}
-            else if (type == "cbody"){array = celestialBodyUpgradeMap[upgradeTier];type="body";}
-            else if (type == "cweapon"){array = celestialWeaponUpgradeMap[upgradeTier];type="weapon";}
-            else{console.log("error: unknown upgrade type when rendering upgrade tree: " + type)}
-            let x = (array.length - 1)*xdist/2;//starting position of x (total distance divided by two, note that left side of screen is positive x, right side is negative)
-            for (const tankname of array) {
-              let thisObj;
-              let widthAnimation;
-              if (type == "body"){
-                thisObj = bodyupgrades[tankname];
-                widthAnimation = xdistMultiplierb;
-              }
-              else{
-                thisObj = weaponupgrades[tankname];
-                widthAnimation = xdistMultiplierw;
-              }
-              if (thisObj){//if has this upgrade data
-                drawUpgradetreeBox(tankname,x*widthAnimation,y,fontsize,size,col,darkcol,type);
-                if (!upgradeTreeBoxPositions[tankname]){//first time drawing
-                  upgradeTreeBoxPositions[tankname] = {};
-                  upgradeTreeBoxPositions[tankname].x = x;
-                  upgradeTreeBoxPositions[tankname].y = y;
-                }
-                //draw connecting lines
-                for (const upgradableTank of thisObj.upgradeTo) {//tanks that can upgrade to
-                  if (upgradeTreeBoxPositions[upgradableTank]){//has the coords of box (only added on the first drawing)
-                    let upgradableTankPosition = upgradeTreeBoxPositions[upgradableTank];
-                    drawConnection(x*widthAnimation, y, upgradableTankPosition.x*widthAnimation, upgradableTankPosition.y, size, type);
-                  }
-                }
-              }
-              x -= xdist;
-            }
-          }
-      //draw weapon upgrades
-      //rotate tanks:
-      bodyangle += 0.02*deltaTime;
-      
-      if (player.bodyType != previousBody){//upgraded tank
-        bodyCanUpgradeTo = getTanksThatCanUpgradeTo(bodyupgrades,player.bodyType)//get list of upgradable tanks to figure out which ones to grey out on upgrade tree
-        previousBody = player.bodyType;
-      }
-      if (player.tankType != previousWeapon){//upgraded tank
-        weaponCanUpgradeTo = getTanksThatCanUpgradeTo(weaponupgrades,player.tankType)//get list of upgradable tanks to figure out which ones to grey out on upgrade tree
-        previousWeapon = player.tankType;
-        //below code is for crossroads darkness
-        barrelsDarkness = [];
-        correspondingBarrelHeight = {};
-        for (const barrel in player.barrels){
-          let thisBarrel = player.barrels[barrel];
-          if (!barrelsDarkness.includes(thisBarrel.additionalAngle)){//dont allow repeated angles in the array
-            if (thisBarrel.additionalAngle < 0){//prevent negaive angles to break the darkness code
-              thisBarrel.additionalAngle += 360;
-            }
-            barrelsDarkness.push(thisBarrel.additionalAngle)
-            if (!correspondingBarrelHeight[thisBarrel.additionalAngle]){//add to list of barrel heights
-              correspondingBarrelHeight[thisBarrel.additionalAngle] = thisBarrel.barrelHeight/player.width - 0.5;//barrel height in terms of player's width
-            }
-            else if (thisBarrel.barrelHeight > correspondingBarrelHeight[thisBarrel.additionalAngle]){//if barrel height more than height of previous barrel with same angle
-              correspondingBarrelHeight[thisBarrel.additionalAngle] = thisBarrel.barrelHeight/player.width - 0.5;
-            }
-          }
-        }
-        barrelsDarkness.sort((a,b)=>b-a);//sort array in descending order of number
-      }
-      
-      if (showUpgradeTree == "yes" || upgradetreepos > upgradetreestart) {
-        //if upgrade tree is open of upgrade tree is closing
-        hctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-        hctx.textAlign = "center";
-        if (
-          player.tankTypeLevel < 60 &&
-          player.bodyTypeLevel < 60 &&
-          player.tankType != "eternal"
-        ) {
-
-          //tier 1 of normal tank weapon upgrade tree
-          var col = "rgba(" + upgradeButtons[1].color + ")";
-          var darkcol = "rgba(" + upgradeButtons[1].darkcolor + ")";//need for inside the renderupgradetree function
-          renderUpgradeTree("weapon",0,0,-40,13,95);//type,upgradeTier,xdist,y,fontsize,size
-          //tier 2
-          col = "rgba(" + upgradeButtons[2].color + ")";
-          darkcol = "rgba(" + upgradeButtons[2].darkcolor + ")";
-          renderUpgradeTree("weapon",1,360,110,13,95);
-          //tier 3
-          col = "rgba(" + upgradeButtons[3].color + ")";
-          darkcol = "rgba(" + upgradeButtons[3].darkcolor + ")";
-          renderUpgradeTree("weapon",2,80,260,12,75);
-          //tier 4
-          col = "rgba(" + upgradeButtons[4].color + ")";
-          darkcol = "rgba(" + upgradeButtons[4].darkcolor + ")";
-          renderUpgradeTree("weapon",3,60,440,10,55);
-          //tier 5
-          col = "rgba(" + upgradeButtons[5].color + ")";
-          darkcol = "rgba(" + upgradeButtons[5].darkcolor + ")";
-          renderUpgradeTree("weapon",4,42,580,8,40);
-        } else {
-
-          //eternal upgrade tree
-          var col = "rgba(125, 14, 230)";
-          var darkcol = "rgba(95, 0, 200)";
-          renderUpgradeTree("cweapon",0,0,-40,15,95);//cweapon instead of weapon for celestials
-          
-          col = "rgba(165, 14, 230)";
-          darkcol = "rgba(135, 0, 200)";
-          renderUpgradeTree("cweapon",1,180,245,15,95);
-
-          col = "rgba(204, 2, 245)";
-          darkcol = "rgba(174, 0, 215)";
-          renderUpgradeTree("cweapon",2,120,530,15,95);
-        }
-
-        hctx.lineJoin = "miter"; //change it back
-
-        //animate upgrade tree when opening
-        if (showUpgradeTree == "yes" && upgradetreepos < upgradetreeend) {
-          upgradetreepos += (upgradetreeend - upgradetreepos) / 5*deltaTime; //speed changes based on amount moved so far. the smaller the number, the faster
-          if (upgradetreeend - upgradetreepos < 1) { //if very near end point
-            upgradetreepos = upgradetreeend;
-          }
-          if (xdistMultiplierw < xdistMultiplierEnd){//width animation
-            xdistMultiplierw+=(xdistMultiplierEnd - xdistMultiplierw)/7*deltaTime;
-          }
-          else if (xdistMultiplierw > xdistMultiplierEnd){
-            xdistMultiplierw = xdistMultiplierEnd;
-          }
-        } else if (showUpgradeTree == "no") {
-          //if upgrade tree is closing
-          upgradetreepos -= (upgradetreepos - upgradetreestart) / 5*deltaTime;
-          if (upgradetreepos - upgradetreestart < 1) { //if very near end point
-            upgradetreepos = upgradetreestart;
-          }
-          if (xdistMultiplierw > xdistMultiplierStart){
-            xdistMultiplierw-=(xdistMultiplierw - xdistMultiplierStart)/7*deltaTime;
-          }
-          else if (xdistMultiplierw < xdistMultiplierStart){
-            xdistMultiplierw = xdistMultiplierStart;
-          }
-        }
-      } else {
-        //if upgrade tree not drawn
-        upgradetreepos = upgradetreestart; //reset variable
-      }
-
-      //draw body upgrades
-      if (
-        showBodyUpgradeTree == "yes" ||
-        bupgradetreepos > bupgradetreestart
-      ) {
-        //if upgrade tree is open of upgrade tree is closing
-        hctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-        hctx.textAlign = "center";
-        if (
-          player.tankTypeLevel < 60 &&
-          player.bodyTypeLevel < 60 &&
-          player.tankType != "eternal"
-        ) {
-          
-          //tier 1 of normal tank body upgrade tree
-          var col = "rgba(" + upgradeButtons[1].color + ")";
-          var darkcol = "rgba(" + upgradeButtons[1].darkcolor + ")";//need for inside the renderupgradetree function
-          renderUpgradeTree("body",0,0,-40,13,95);//type,upgradeTier,xdist,y,fontsize,size
-          //tier 2
-          col = "rgba(" + upgradeButtons[2].color + ")";
-          darkcol = "rgba(" + upgradeButtons[2].darkcolor + ")";
-          renderUpgradeTree("body",1,190,110,13,95);
-          //tier 3
-          col = "rgba(" + upgradeButtons[3].color + ")";
-          darkcol = "rgba(" + upgradeButtons[3].darkcolor + ")";
-          renderUpgradeTree("body",2,110,260,13,95);
-          //tier 4
-          col = "rgba(" + upgradeButtons[4].color + ")";
-          darkcol = "rgba(" + upgradeButtons[4].darkcolor + ")";
-          renderUpgradeTree("body",3,100,410,13,90);
-          //tier 5
-          col = "rgba(" + upgradeButtons[5].color + ")";
-          darkcol = "rgba(" + upgradeButtons[5].darkcolor + ")";
-          renderUpgradeTree("body",4,95,540,13,85);
-        } else {
-          //eternal upgrade tree
-          var col = "rgba(125, 14, 230)";
-          var darkcol = "rgba(95, 0, 200)";
-          renderUpgradeTree("cbody",0,0,-40,15,95);//cbody instead of body for celestials
-          
-          col = "rgba(165, 14, 230)";
-          darkcol = "rgba(135, 0, 200)";
-          renderUpgradeTree("cbody",1,180,245,15,95);
-
-          col = "rgba(204, 2, 245)";
-          darkcol = "rgba(174, 0, 215)";
-          renderUpgradeTree("cbody",2,155,530,15,95);
-        }
-
-        hctx.lineJoin = "miter"; //change it back
-
-        //animate upgrade tree when opening
-        if (
-          showBodyUpgradeTree == "yes" &&
-          bupgradetreepos < bupgradetreeend
-        ) {
-          bupgradetreepos += (bupgradetreeend - bupgradetreepos) / 7*deltaTime; //speed changes based on amount moved so far. the smaller the number, the faster
-          if (bupgradetreeend - bupgradetreepos < 1) { //if very near end point
-            bupgradetreepos = bupgradetreeend;
-          }
-          if (xdistMultiplierb < xdistMultiplierEnd){//width animation
-            xdistMultiplierb+=(xdistMultiplierEnd - xdistMultiplierb)/7*deltaTime;
-          }
-          else if (xdistMultiplierb > xdistMultiplierEnd){
-            xdistMultiplierb = xdistMultiplierEnd;
-          }
-        } else if (showBodyUpgradeTree == "no") {
-          //if upgrade tree is closing
-          bupgradetreepos -= (bupgradetreepos - bupgradetreestart) / 7*deltaTime;
-          if (bupgradetreepos - bupgradetreestart < 1) { //if very near end point
-            bupgradetreepos = bupgradetreestart;
-          }
-          if (xdistMultiplierb > xdistMultiplierStart){
-            xdistMultiplierb-=(xdistMultiplierb - xdistMultiplierStart)/7*deltaTime;
-          }
-          else if (xdistMultiplierb < xdistMultiplierStart){
-            xdistMultiplierb = xdistMultiplierStart;
-          }
-        }
-      } else {
-        //if upgrade tree not drawn
-        bupgradetreepos = bupgradetreestart; //reset variable
-      }
+      updateUpgradeTrees(player);//DRAW THE UPGRADE TREES AND UPDATE ANGLES
 
       //drawing score progress bar, which is a rounded rectangle
       //instead of using the player's score, it uses the client's own score that increases based on the difference between it and the player's score.

@@ -1,3 +1,12 @@
+ALPHA 0.0.25 - May 14, 2025
+- Fix a animation bug for the weapon upgrade tree
+- Assets now render below the turret instead of above
+- Fixed tank renderings on the upgrade trees
+- Fixed a rendering issue for drone barrels
+- Changed the way trap barrels look
+- Added upgrade trees to PvE
+- Rendered tanks on the home screen backgrounds (bugs will be fixed in the next update)
+
 ALPHA 0.0.24 - May 12, 2025
 - Huge update to the upgrade tree
     - Tank ugprades are more similar to scenexe's upgrade paths

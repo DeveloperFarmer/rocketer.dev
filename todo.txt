@@ -25,6 +25,11 @@ CHANGE PVE requestanimframe to requestInterval
 add quickchat functionality (when you open quick chat and press 1, 2, 3 or 4, then close the quick chat and send the message) + save quick chats to local storage
 quickchat fix flipped text (both the quick chat and the number)
 fix holding down 'm' key
+****"Above" assets should render below turret ALL THE TIME, not just for upgrade tree
+****Fix trap barrel rendering
+***Fix upgrade button y position
+***Change arsenal mines (two turrets i think) (and make sure all minions and mines arethe same as scenexe)
+***Change mothership angle to 45?
 
 make upgrade buttons use tankUpgrades
 move weapon upgrade buttons to the left side instead of right
