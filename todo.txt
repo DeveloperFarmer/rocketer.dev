@@ -29,15 +29,18 @@ fix holding down 'm' key
 ****Fix trap barrel rendering
 ***Fix upgrade button y position
 ***Change arsenal mines (two turrets i think) (and make sure all minions and mines arethe same as scenexe)
-***Change mothership angle to 45?
 
-make upgrade buttons use tankUpgrades
-move weapon upgrade buttons to the left side instead of right
-bandiwdth dont use orange, use yellow instead
+fix all player undefined bugs in client
+fix bugs where things are drawn (can see hitbox) but the things isnt actually drawn e.g. traps
+traps take up a lot of bandwidth
+traps should render below tank e.g. for shrapnel
+remove stars
+barricade tank looks weird
+barrel length slowly returns to normal after shoot e.g. alpha, and delay reduces even when not holding down mouse
+***move weapon upgrade buttons to the left side instead of right
 add settings
 add quickchat mobile button
 change all bullet flash to the psbc
 
-stopped at line 8052
 
 Note: this file is for my reference, isnt used ingame

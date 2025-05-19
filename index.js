@@ -269,7 +269,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
         //settings variables
         let showshapeinfo = "yes";
-        let showstats = "no";
         let spawnradparticle = "yes";
 
         function abbreviateScore(score) {//only done when displaying scores, actual scores are not abbreviated (obviously)
@@ -1633,7 +1632,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 } else if (thisBarrel.barrelType == "trap") {
                   drawTrapBarrel(hctx, thisBarrel.x*bodysize, thisBarrel.barrelWidth*bodysize, thisBarrel.barrelHeight*bodysize, 0, 1, bodysize)
                 }/* else if (thisBarrel.barrelType == "mine") {
-                  drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                  drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1, bodysize)
                 } else if (thisBarrel.barrelType == "minion") {
                   drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
                 }*/
@@ -1664,7 +1663,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 } else if (thisBarrel.barrelType == "trap") {
                   drawTrapBarrel(hctx, thisBarrel.x*bodysize, thisBarrel.barrelWidth*bodysize, thisBarrel.barrelHeight*bodysize, 0, 1, bodysize)
                 } else if (thisBarrel.barrelType == "mine") {
-                  drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                  drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1, bodysize)
                 } else if (thisBarrel.barrelType == "minion") {
                   drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
                 }
@@ -2270,20 +2269,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
 
         function drawFakePlayer2(team,weapontype,bodytype,x,y,rot,size){//only for home screen background
-          drawFakePlayer(weapontype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"weapon");
-          drawFakePlayer(bodytype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"body");
-          /*
-            hctx.save();//add tank type later
-            hctx.translate(x-hsCameraX, y-hsCameraY);
-            hctx.rotate(rot/180*Math.PI);
-            hctx.fillStyle = bodyColors[team].col;
-            hctx.strokeStyle = bodyColors[team].outline;
-            hctx.beginPath();
-            hctx.arc(0, 0, size/2, 0, Math.PI * 2);
-            hctx.fill();
-            hctx.stroke();
-            hctx.restore();
-            */
+          drawFakePlayer(bodytype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"bodyu");//body under
+          drawFakePlayer(weapontype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"weapon");//weapon upgrade
+          drawFakePlayer(bodytype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"bodya");//body above
         }
       
         //drawing canvas for homescreen background
@@ -2346,7 +2334,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               drawFakePlayer2("red","palisade","bombard",2500,2050,45,70)
               drawFakePlayer2("red","riot","inferno",1470,1050,170,70)
               drawFakePlayer2("red","marksman","saw",890,1050,60,70)
-              drawFakePlayer2("celestial","pulsar","chasm",1470,1530,55,90)
+              drawFakePlayer2("eternal","thunderstorm","chasm",1470,1530,55,90)
+              //drawFakePlayer2("celestial","pulsar","chasm",1470,1530,55,90)//use this if change to scenexe celestials
             }
             else if (drawingGamemode == 2){//2tdm
               drawPolygon(9,2100,2200,55)
@@ -2355,30 +2344,30 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               drawPolygon(7,1900,1200,350)
               drawPolygon(5,900,1800,350)
               drawFakePlayer2("red","assassin","artillery",1600,1150,225,60)
-              drawFakePlayer2("red","penta","saw",1680,1400,90,70)
+              drawFakePlayer2("red","penta","saw",1680,1400,270,70)
               drawFakePlayer2("red","alpha","saw",1600,1700,270,70)
               drawFakePlayer2("red","amalgam","bastion",1625,1600,260,70)
               drawFakePlayer2("red","blockade","artillery",1900,1560,45,60)
               drawFakePlayer2("red","palisade","bombard",1830,1650,290,70)
               drawFakePlayer2("red","minigun","ziggurat",1600,1840,280,70)
               drawFakePlayer2("red","trio","artillery",1830,1860,270,60)
-              drawFakePlayer2("red","arc","artillery",1715,1940,60,60)
-              drawFakePlayer2("red","marksman","saw",2250,1250,170,70)
-              drawFakePlayer2("red","riot","inferno",2400,1750,170,70)
+              drawFakePlayer2("red","arc","artillery",1715,1940,300,60)
+              drawFakePlayer2("red","marksman","saw",2250,1250,220,70)
+              drawFakePlayer2("red","riot","inferno",2400,1750,285,70)
               
-              drawFakePlayer2("blue","conglomerate","thorn",1300,1300,45,60)
-              drawFakePlayer2("blue","manager","castle",1300,1400,45,60)
-              drawFakePlayer2("blue","quadro","ziggurat",1350,1500,70,70)
-              drawFakePlayer2("blue","streamliner","saw",1400,1700,20,70)
-              drawFakePlayer2("blue","beta","thorn",1200,1800,20,60)
-              drawFakePlayer2("blue","annihilator","bastion",1370,1850,290,70)
+              drawFakePlayer2("blue","conglomerate","thorn",1300,1300,145,60)//note: 90 degrees is pointing right
+              drawFakePlayer2("blue","manager","castle",1300,1400,135,60)
+              drawFakePlayer2("blue","quadro","ziggurat",1350,1500,110,70)
+              drawFakePlayer2("blue","streamliner","saw",1400,1700,90,70)
+              drawFakePlayer2("blue","beta","thorn",1200,1800,60,60)
+              drawFakePlayer2("blue","annihilator","bastion",1370,1850,60,70)
               drawFakePlayer2("blue","gunner","artillery",1300,1950,45,60)
-              drawFakePlayer2("blue","octo","quadruplet",1000,1650,170,70)
+              drawFakePlayer2("blue","octo","quadruplet",1000,1650,80,70)
               drawFakePlayer2("blue","emperor","mothership",1200,2000,60,70)
-              drawFakePlayer2("blue","executive","ziggurat",1000,1050,60,70)
-              drawFakePlayer2("blue","horizon","fabricator",1000,1970,170,70)
-              drawFakePlayer2("blue","split","wall",800,1900,170,50)
-              drawFakePlayer2("blue","duo","turret",1250,1650,170,50)
+              drawFakePlayer2("blue","executive","ziggurat",1000,1050,105,70)
+              drawFakePlayer2("blue","horizon","fabricator",1000,1970,80,70)
+              drawFakePlayer2("blue","split","wall",800,1900,80,50)
+              drawFakePlayer2("blue","duo","turret",1250,1650,80,50)
             }
             else if (drawingGamemode == 3){//4tdm
               drawPolygon(10,1600,1700,55)
@@ -3298,26 +3287,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       darken.style.display = "block";
                     }
                   }
-                  else if (type=="tankButton"){
-                    let dummyTank = info[1];
-                    let button = info[2];
-                    let realPlayer = info[3];
-                    let buttonList = ["button1","button2","button3","button4","button5","button6","button7","button8","button9","button10","button11","button12","button13","button14"];
-                    if (buttonList.includes(button)){
-                      let num = buttonList.indexOf(button) + 1;//button1 will be 1 instead of 0 (first item in array is 0)
-                      buttonTank[num] = dummyTank;
-                      if (num < 8){
-                        howManyButtonSentToClient = num;
-                        howManyButtonSentToServer = 0;
-                        prevPlayerLvl = realPlayer.tankTypeLevel;
-                      }
-                      else{
-                        howManyButtonSentToClientb = num;
-                        howManyButtonSentToServerb = 0;
-                        prevPlayerLvlb = realPlayer.bodyTypeLevel;
-                      }
-                    }
-                  }
                   else if (type=="receiveWR"){
                     let recordHolder = info[1];//re-add world record leaderboard later on
                     /*
@@ -3994,7 +3963,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               thisButton.brightness = 0;
               thisButton.defaultwidth = 100;
               thisButton.animatedwidth = 120;
-              thisButton.tankRotate = 0;
               thisButton.color = color;
               thisButton.darkcolor = darkcolor;
             }
@@ -4012,6 +3980,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             addUpgradeButton(12,195,325,195,"56,183,100","26,153,70");
             addUpgradeButton(13,75,325,315,"74,102,189","44,72,159");
             addUpgradeButton(14,315,445,75,"93,39,93","63,9,63");
+            var tankRotate = 0;//for tank rotation in uppgrade button
             var ignorebuttonw = {
                 x: -1000,
                 y: -1000,
@@ -4038,15 +4007,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 darkcolor: "225,198,77",
                 ignore: "no",
               };
-            //store tank info from server
-            var buttonTank = {1:{},2:{},3:{},4:{},5:{},6:{},7:{},8:{},9:{},10:{},11:{},12:{},13:{},14:{},};
-            var prevPlayerLvl = -2; //weapon upgrade tier
-            var prevPlayerLvlb = -2; //body upgrade tier
-            var howManyButtonSentToClient = 0;
-            var howManyButtonSentToClientb = 0;
-            var howManyButtonSentToServer = 0; //weapon upgrade
-            var howManyButtonSentToServerb = 0; //body upgrade
-            var didAnyButtonDraw = "no";
+            //other game variables
             var barScore = 0; //for score progress bar
             var auraWidth = 0;
             var auraRotate = 0; //for radiant shape aura size increase
@@ -4164,7 +4125,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             function drawTrapBarrel(canvas, x,width,height,shootChange, fov, bodysize){
               let w = width/fov;
               let h = (height - shootChange/shootBarrelMax*height) / fov;
-              let hJut = h-0.5 * bodysize / fov;//height of tip of trap barrel
+              let hJut = h-0.45 * bodysize / fov;//height of tip of trap barrel
               x = x/fov;
               canvas.fillRect(-w/2 + x, -hJut, w, hJut);
               canvas.strokeRect(-w/2 + x, -hJut, w, hJut);
@@ -4177,12 +4138,24 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               canvas.stroke();
             }
 
-            function drawMineBarrel(canvas, x,width,height,shootChange, fov){
-              let h = -(height - shootChange/shootBarrelMax*height) / fov;
-              canvas.fillRect((x - width / 2) / fov,h,width / fov,-h);
-              canvas.strokeRect((x - width / 2) / fov,h,width / fov,-h);
-              canvas.fillRect((-width * 1.5) / 2 / fov + x / fov,h * 0.67,(width / fov) * 1.5,-h * 0.67);
-              canvas.strokeRect((-width * 1.5) / 2 / fov + x / fov,h * 0.67,(width / fov) * 1.5,-h * 0.67);
+            function drawMineBarrel(canvas, x,width,height,shootChange, fov, bodysize){
+              let w = width/fov;
+              let h = (height - shootChange/shootBarrelMax*height) / fov;
+              let bottomRectPos = 0.5 * bodysize / fov;
+              let trapezoidPos = bottomRectPos/2;
+              let hJut = h-bottomRectPos;//height of tip of trap barrel
+              x = x/fov;
+              canvas.fillRect(-w/2 + x, -hJut, w, hJut);//rectangle base
+              canvas.strokeRect(-w/2 + x, -hJut, w, hJut);
+              canvas.beginPath();
+              canvas.moveTo(-w/2 + x, -hJut-canvas.lineWidth/2);//trapezoid
+              canvas.lineTo(-w + x, -h+trapezoidPos);
+              canvas.lineTo(w + x, -h+trapezoidPos);
+              canvas.lineTo(w/2 + x, -hJut-canvas.lineWidth/2);
+              canvas.fill();
+              canvas.stroke();
+              canvas.fillRect(-w + x, -h, w*2, trapezoidPos);//rectangle tip
+              canvas.strokeRect(-w + x, -h, w*2, trapezoidPos);
             }
 
             function drawMinionBarrel(canvas, x,width,height,shootChange, fov){
@@ -4346,7 +4319,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   }
                   //mine barrel
                   else if (thisBarrel.barrelType == "mine") {
-                    drawMineBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                    drawMineBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov,object.width)
                   }
                   //minion barrel
                   else if (thisBarrel.barrelType == "minion") {
@@ -4794,6 +4767,23 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   canvas.fill();
                   canvas.stroke();
                 }
+                
+                //draw assets above body, e.g. aura assets
+                for (const assetID in object.assets){
+                  var asset = object.assets[assetID];
+                  if (asset.type == "above") {
+                    let assetcolor = asset.color;
+                    let assetoutline = asset.outline;
+                    canvas.lineWidth = asset.outlineThickness / fov;
+                    if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
+                      assetcolor = playercolor;
+                    }
+                    if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
+                      assetoutline = playeroutline;
+                    }
+                    drawAsset(asset,object.width/fov,assetcolor,assetoutline,canvas)
+                  }
+                }
 
                 //barrels in body upgrade
                 for (const barrel in object.bodybarrels){
@@ -4843,7 +4833,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       drawDroneBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
                     }
                     else{
+                      canvas.rotate(objectangle);//rotate to player angle
                       drawDroneTurret(canvas,thisBarrel.x,thisBarrel.barrelWidth,lerpedheight,fov)
+                      canvas.rotate(-objectangle);
                     }
                   }
                   //trap barrel (doesnt exist atm)
@@ -4852,7 +4844,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   }
                   //mine barrel (doesnt exist atm)
                   else if (thisBarrel.barrelType == "mine") {
-                    drawMineBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov)
+                    drawMineBarrel(canvas,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,lerpedheight,fov,object.width)
                   }
                   //minion barrel (doesnt exist atm)
                   else if (thisBarrel.barrelType == "minion") {
@@ -4870,23 +4862,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   canvas.stroke();
                 }
 
-                //draw assets above body, e.g. aura assets
-                for (const assetID in object.assets){
-                  var asset = object.assets[assetID];
-                  if (asset.type == "above") {
-                    let assetcolor = asset.color;
-                    let assetoutline = asset.outline;
-                    canvas.lineWidth = asset.outlineThickness / fov;
-                    if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
-                      assetcolor = playercolor;
-                    }
-                    if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
-                      assetoutline = playeroutline;
-                    }
-                    drawAsset(asset,object.width/fov,assetcolor,assetoutline,canvas)
-                  }
-                }
-
                 canvas.lineJoin = "miter"; //change back
             }
 
@@ -4894,8 +4869,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   hctx.save();
                   hctx.translate(x, y);
                   hctx.rotate(bodyangle);
+
+                  let bodywhich;
+                  let ishomeScreen = false;//if home screen, then turrets turn at an angle
+                  if (which == "bodya"){bodywhich="above";which="body";ishomeScreen=true;}
+                  else if (which == "bodyu"){bodywhich="under";which="body";}//need to specify to render weapon upgrade in between assets that are below and above the body
+
                   if (which == "body" && (name in bodyupgrades)) {
-                    if (bodyupgrades[name].hasOwnProperty("assets")) {
+                    if (bodyupgrades[name].hasOwnProperty("assets") && bodywhich!="above") {//bodywhich is under or neither (render both)
                       //draw under assets
                       for (const assetID in bodyupgrades[name].assets) {
                         var asset = bodyupgrades[name].assets[assetID];
@@ -4930,13 +4911,33 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       hctx.fill();
                       hctx.stroke();
                     }
-                    if (bodyupgrades[name].hasOwnProperty("bodybarrels")) {
+                    if (bodyupgrades[name].hasOwnProperty("assets") && bodywhich!="under") {
+                      //draw above assets
+                      Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
+                        var asset = bodyupgrades[name].assets[assetID];
+                        if (asset.type == "above") {
+                          let assetcolor = asset.color;
+                          let assetoutline = asset.outline;
+                          if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
+                            assetcolor = bodycolor;
+                          }
+                          if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
+                            assetoutline = bodyoutline;
+                          }
+                          drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
+                        }
+                      });
+                    }
+                    if (bodyupgrades[name].hasOwnProperty("bodybarrels") && bodywhich!="under") {
                       //draw barrels
                       hctx.fillStyle = bodyColors.barrel.col;
                       hctx.strokeStyle = bodyColors.barrel.outline;
                       for (const barrel in bodyupgrades[name].bodybarrels) {
                           let thisBarrel = bodyupgrades[name].bodybarrels[barrel];
                           hctx.rotate(thisBarrel.additionalAngle);
+                          if (ishomeScreen === true && thisBarrel.barrelType != "drone"){//rotate turrets at an angle for home screen so that they dont awkwardly point forward
+                            hctx.rotate(45/180*Math.PI);
+                          }
                         //bullet barrel
                           if (thisBarrel.barrelType == "bullet") {
                             drawBulletBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
@@ -4956,36 +4957,22 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                           }
                           //mine barrel (doesnt exist atm)
                           else if (thisBarrel.barrelType == "mine") {
-                            drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                            drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1, bodysize)
                           }
                           //minion barrel (doesnt exist atm)
                           else if (thisBarrel.barrelType == "minion") {
                             drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
                           }
                           hctx.rotate(-thisBarrel.additionalAngle); //rotate back
+                          if (ishomeScreen === true && thisBarrel.barrelType != "drone"){//rotate back
+                            hctx.rotate(-45/180*Math.PI);
+                          }
                         }
                       //draw turret base
                       hctx.beginPath();
                       hctx.arc(0,0,bodysize * bodyupgrades[name].turretBaseSize,0,2 * Math.PI);
                       hctx.fill();
                       hctx.stroke();
-                    }
-                    if (bodyupgrades[name].hasOwnProperty("assets")) {
-                      //draw above assets
-                      Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
-                        var asset = bodyupgrades[name].assets[assetID];
-                        if (asset.type == "above") {
-                          let assetcolor = asset.color;
-                          let assetoutline = asset.outline;
-                          if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
-                            assetcolor = bodycolor;
-                          }
-                          if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
-                            assetoutline = bodyoutline;
-                          }
-                          drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
-                        }
-                      });
                     }
                   } else if (which == "weapon" && (name in weaponupgrades)) {
                     if (weaponupgrades[name].hasOwnProperty("barrels")) {
@@ -5009,7 +4996,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                           }
                           //mine barrel (doesnt exist atm)
                           else if (thisBarrel.barrelType == "mine") {
-                            drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
+                            drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1, bodysize)
                           }
                           //minion barrel (doesnt exist atm)
                           else if (thisBarrel.barrelType == "minion") {
@@ -5146,7 +5133,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
                 ctx.lineWidth = 4 / clientFovMultiplier;
                 if (object.bulletType == "bullet" || object.bulletType == "aura") {
-                  if (!object.color.includes('rgba(56,183,100')){//not a heal aura
+                  if (!object.color.includes('rgba(57,185,102')){//not a heal aura
                     ctx.beginPath();
                     ctx.arc(
                       drawingX,
@@ -5235,7 +5222,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
                       }
                       else if (thisBarrel.barrelType == "mine") {
-                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
                       }
                       else if (thisBarrel.barrelType == "minion") {
                         drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
@@ -5282,7 +5269,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
                       }
                       else if (thisBarrel.barrelType == "mine") {
-                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
                       }
                       else if (thisBarrel.barrelType == "minion") {
                         drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
@@ -5343,7 +5330,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
                       }
                       else if (thisBarrel.barrelType == "mine") {
-                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
+                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
                       }
                       else if (thisBarrel.barrelType == "minion") {
                         drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
@@ -9787,10 +9774,27 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
       //note: ctx requires /clientFovMultiplier, but hctx does not because the canvas size does not change
       //drawing upgrade buttons
-      function buttondraw(buttonNumber,one,two,three,four,five,six,seven) {
+      function buttondraw(buttonNumber,possibleupgrades) {
         if ((ignorebuttonw.ignore == "no" || buttonNumber>7) && (ignorebuttonb.ignore == "no" || buttonNumber<=7)){//if not ignore
         let thisbutton = upgradeButtons[buttonNumber];
-        thisbutton.tankRotate += 1.5*deltaTime; //make tank in upgrade button rotate
+
+        let tankButtonName = "Error";
+          if (buttonNumber == 1 || buttonNumber == 8) {
+            tankButtonName = possibleupgrades[0];
+          } else if (buttonNumber == 2 || buttonNumber == 9) {
+            tankButtonName = possibleupgrades[1];
+          } else if (buttonNumber == 3 || buttonNumber == 10) {
+            tankButtonName = possibleupgrades[2];
+          } else if (buttonNumber == 4 || buttonNumber == 11) {
+            tankButtonName = possibleupgrades[3];
+          } else if (buttonNumber == 5 || buttonNumber == 12) {
+            tankButtonName = possibleupgrades[4];
+          } else if (buttonNumber == 6 || buttonNumber == 13) {
+            tankButtonName = possibleupgrades[5];
+          } else if (buttonNumber == 7 || buttonNumber == 14) {
+            tankButtonName = possibleupgrades[6];
+          }
+
         if (thisbutton.hover == "yes") {
           if (thisbutton.brightness < 50) {
             //increase brightness when hovering over upgrade button
@@ -9898,398 +9902,33 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         hctx.closePath();
         hctx.fill();
         //end of drawing button rectangles
-        if (
-          player.tankTypeLevel != prevPlayerLvl &&
-          howManyButtonSentToServer < buttonNumber &&
-          buttonNumber < 8
-        ) {
-          //if player can upgrade but server havent send the information to draw tank on button, and client havent sent the request before
-          var packet = JSON.stringify(["upgradePlease",
-            "button" + buttonNumber.toString(),
-            "tankButton"]);
-          socket.send(packet)
-          howManyButtonSentToClient = 0;
-          howManyButtonSentToServer = buttonNumber;
-          maxnumberofbuttons = buttonNumber;//this one doesnt change to 0 after receiving info
-        } else if (
-          player.bodyTypeLevel != prevPlayerLvlb &&
-          howManyButtonSentToServerb < buttonNumber &&
-          buttonNumber >= 8
-        ) {
-          //if player can upgrade but server havent send the information to draw tank on button, and client havent sent the request before
-          var packet = JSON.stringify(["upgradePlease",
-            "button" + buttonNumber.toString(),
-            "tankButton"]);
-          socket.send(packet)
-          howManyButtonSentToClientb = 0;
-          howManyButtonSentToServerb = buttonNumber;
-          maxnumberofbuttonsb = buttonNumber;//this one doesnt change to 0 after receiving info
-        } else if (
-          (buttonNumber < 8 &&
-            howManyButtonSentToClient >= buttonNumber) ||
-          (buttonNumber >= 8 &&
-            howManyButtonSentToClientb >= buttonNumber)
-        ) {
-          //draw players on button
-          let thisbuttontank = buttonTank[buttonNumber];
-          didAnyButtonDraw = "yes";
-          let playerSize = thisbuttontank.width; //DONT CHANGE THIS
-          let playerX = thisbutton.x;
-          let playerY = thisbutton.y;
-          hctx.save();
-          hctx.translate(playerX, playerY);
-          hctx.rotate(thisbutton.tankRotate * Math.PI / 180);
-          var widthIncrease = thisbutton.width / thisbutton.defaultwidth;
-          hctx.scale(0.8 * widthIncrease, 0.8 * widthIncrease); //change the size of tanks inside the button, 1 refers to the size of tank when spawning
-          hctx.lineWidth = 5;
+        
+        let playerSize = 25; //DONT CHANGE THIS
+        let playerX = thisbutton.x;
+        let playerY = thisbutton.y;
+        hctx.save();
+        hctx.translate(playerX, playerY);
+        hctx.rotate(tankRotate * Math.PI / 180);
+        var widthIncrease = thisbutton.width / thisbutton.defaultwidth;
+        hctx.scale(0.8 * widthIncrease, 0.8 * widthIncrease); //change the size of tanks inside the button, 1 refers to the size of tank when spawning
+        hctx.lineWidth = 5;
 
-          //draw assets, e.g. rammer body base
-          hctx.lineJoin = "round";
-          if (thisbuttontank.assets) {
-            for (const assetID in thisbuttontank.assets){
-              let asset = thisbuttontank.assets[assetID];
-              if (asset.type == "under") {
-                hctx.lineWidth = asset.outlineThickness;
-                drawAsset(asset,playerSize,asset.color,asset.outline,hctx)
-              }
-            }
-          }
-
-          //draw barrel
-          for (const barrel in thisbuttontank.barrels){
-            //note that you must use [barrel] instead of .barrel, if not there will be an error
-            let thisBarrel = thisbuttontank.barrels[barrel];
-            hctx.rotate((thisBarrel.additionalAngle * Math.PI) / 180); //rotate to barrel angle
-            hctx.fillStyle = bodyColors.barrel.col;
-            hctx.strokeStyle = bodyColors.barrel.outline;
-            //bullt barrel
-            if (thisBarrel.barrelType == "bullet") {
-              hctx.fillRect(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                -thisBarrel.barrelHeight,
-                thisBarrel.barrelWidth,
-                thisBarrel.barrelHeight
-              );
-              hctx.strokeRect(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                -thisBarrel.barrelHeight,
-                thisBarrel.barrelWidth,
-                thisBarrel.barrelHeight
-              );
-            }
-            //drone barrel
-            else if (thisBarrel.barrelType == "drone") {
-              hctx.beginPath();
-              hctx.moveTo(-thisBarrel.barrelWidth / 2 + thisBarrel.x, 0);
-              hctx.lineTo(
-                -thisBarrel.barrelWidth + thisBarrel.x,
-                -thisBarrel.barrelHeight
-              );
-              hctx.lineTo(
-                thisBarrel.barrelWidth + thisBarrel.x * 2,
-                -thisBarrel.barrelHeight
-              );
-              hctx.lineTo(
-                thisBarrel.barrelWidth / 2 + thisBarrel.x * 2,
-                0
-              );
-              hctx.fill();
-              hctx.stroke();
-            }
-            //trap barrel
-            else if (thisBarrel.barrelType == "trap") {
-              hctx.fillRect(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                (-thisBarrel.barrelHeight / 3) * 2,
-                thisBarrel.barrelWidth,
-                (thisBarrel.barrelHeight / 3) * 2
-              );
-              hctx.strokeRect(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                (-thisBarrel.barrelHeight / 3) * 2,
-                thisBarrel.barrelWidth,
-                (thisBarrel.barrelHeight / 3) * 2
-              );
-              hctx.beginPath();
-              hctx.moveTo(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                (-thisBarrel.barrelHeight / 3) * 2
-              );
-              hctx.lineTo(
-                -thisBarrel.barrelWidth + thisBarrel.x,
-                -thisBarrel.barrelHeight
-              );
-              hctx.lineTo(
-                thisBarrel.barrelWidth + thisBarrel.x,
-                -thisBarrel.barrelHeight
-              );
-              hctx.lineTo(
-                thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                (-thisBarrel.barrelHeight / 3) * 2
-              );
-              hctx.fill();
-              hctx.stroke();
-            }
-            //mine barrel
-            else if (thisBarrel.barrelType == "mine") {
-              hctx.fillRect(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                -thisBarrel.barrelHeight,
-                thisBarrel.barrelWidth,
-                thisBarrel.barrelHeight
-              );
-              hctx.strokeRect(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                -thisBarrel.barrelHeight,
-                thisBarrel.barrelWidth,
-                thisBarrel.barrelHeight
-              );
-              hctx.fillRect(
-                (-thisBarrel.barrelWidth * 1.5) / 2 + thisBarrel.x,
-                (-thisBarrel.barrelHeight / 3) * 2,
-                thisBarrel.barrelWidth * 1.5,
-                (thisBarrel.barrelHeight / 3) * 2
-              );
-              hctx.strokeRect(
-                (-thisBarrel.barrelWidth * 1.5) / 2 + thisBarrel.x,
-                (-thisBarrel.barrelHeight / 3) * 2,
-                thisBarrel.barrelWidth * 1.5,
-                (thisBarrel.barrelHeight / 3) * 2
-              );
-            }
-            else if (thisBarrel.barrelType == "minion") {
-                  hctx.fillRect(
-                    -thisBarrel.barrelWidth / 2 +
-                      thisBarrel.x,
-                    -thisBarrel.barrelHeight,
-                    thisBarrel.barrelWidth,
-                    thisBarrel.barrelHeight
-                  );
-                  hctx.strokeRect(
-                    -thisBarrel.barrelWidth / 2 +
-                      thisBarrel.x,
-                    -thisBarrel.barrelHeight,
-                    thisBarrel.barrelWidth,
-                    thisBarrel.barrelHeight
-                  );
-                  hctx.fillRect(
-                    (-thisBarrel.barrelWidth * 1.5) / 2 +
-                      thisBarrel.x,
-                    -thisBarrel.barrelHeight / 1.5,
-                    thisBarrel.barrelWidth * 1.5,
-                    thisBarrel.barrelHeight / 1.5
-                  );
-                  hctx.strokeRect(
-                    (-thisBarrel.barrelWidth * 1.5) / 2 +
-                      thisBarrel.x,
-                    -thisBarrel.barrelHeight / 1.5,
-                    (thisBarrel.barrelWidth) * 1.5,
-                    thisBarrel.barrelHeight / 1.5
-                  );
-                  hctx.fillRect(
-                    (-thisBarrel.barrelWidth * 1.5) / 2 +
-                      thisBarrel.x ,
-                    -thisBarrel.barrelHeight,
-                    (thisBarrel.barrelWidth) * 1.5,
-                    thisBarrel.barrelHeight /5
-                  );
-                  hctx.strokeRect(
-                    (-thisBarrel.barrelWidth * 1.5) / 2 +
-                      thisBarrel.x,
-                    -thisBarrel.barrelHeight,
-                    (thisBarrel.barrelWidth) * 1.5,
-                    thisBarrel.barrelHeight /5
-                  );
-                }
-            hctx.rotate((-thisBarrel.additionalAngle * Math.PI) / 180); //rotate back
-          }
-          hctx.lineJoin = "miter";
-
-          //draw body
-          if (
-            (player.level >= 60 &&
-              player.tankTypeLevel < 60 &&
-              player.tankTypeLevel == 45 &&
-              buttonNumber < 8) ||
-            (player.bodyTypeLevel < 60 &&
-              player.bodyTypeLevel == 45 &&
-              buttonNumber >= 8) ||
-            (player.tankTypeLevel < 70 &&
-              player.tankTypeLevel == 60 &&
-              buttonNumber < 8) ||
-            (player.bodyTypeLevel < 70 &&
-              player.bodyTypeLevel == 60 &&
-              buttonNumber >= 8)
-          ) {
-            //if button is for tier 6 tanks
-            hctx.fillStyle = "#934c93";
-            hctx.strokeStyle = "#660066";
-            hctx.beginPath();
-            var baseSides = 6;
-            hctx.moveTo(
-              0 + playerSize * Math.cos(0),
-              0 + playerSize * Math.sin(0)
-            );
-            for (var i = 1; i <= baseSides; i += 1) {
-              hctx.lineTo(
-                0 + playerSize * Math.cos((i * 2 * Math.PI) / baseSides),
-                0 + playerSize * Math.sin((i * 2 * Math.PI) / baseSides)
-              );
-            }
-            hctx.fill();
-            hctx.stroke();
-          } else {
-            //normal tank
-            //hctx.fillStyle = "#00B0E1";
-            //hctx.strokeStyle = "#0092C3";
-            hctx.fillStyle = playerBodyCol;
-            hctx.strokeStyle = playerBodyOutline;
-            hctx.beginPath();
-            hctx.arc(0, 0, playerSize, 0, 2 * Math.PI);
-            hctx.fill();
-            hctx.stroke();
-          }
-
-          hctx.lineJoin = "round"; //make nice round corners
-          for (const barrel in thisbuttontank.bodybarrels){
-            let thisBarrel = thisbuttontank.bodybarrels[barrel];
-            hctx.rotate(thisBarrel.additionalAngle); //rotate to barrel angle
-            hctx.fillStyle = bodyColors.barrel.col;
-            hctx.strokeStyle = bodyColors.barrel.outline;
-            if (thisBarrel.barrelType == "bullet") {
-              hctx.fillRect(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                -(
-                  thisBarrel.barrelHeight - thisBarrel.barrelHeightChange
-                ),
-                thisBarrel.barrelWidth,
-                thisBarrel.barrelHeight - thisBarrel.barrelHeightChange
-              );
-              hctx.strokeRect(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                -(
-                  thisBarrel.barrelHeight - thisBarrel.barrelHeightChange
-                ),
-                thisBarrel.barrelWidth,
-                thisBarrel.barrelHeight - thisBarrel.barrelHeightChange
-              );
-            }
-            //drone barrel
-            else if (thisBarrel.barrelType == "drone") {
-              if (Math.round(thisBarrel.barrelWidth) != Math.round(thisBarrel.barrelHeight)){
-                drawDroneBarrel(hctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,0,1)
-              }
-              else{
-                drawDroneTurret(hctx,thisBarrel.x,thisBarrel.barrelWidth,0,1)
-              }
-            }
-            //trap barrel
-            else if (thisBarrel.barrelType == "trap") {
-              hctx.fillRect(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                (-(
-                  thisBarrel.barrelHeight - thisBarrel.barrelHeightChange
-                ) /
-                  3) *
-                  2,
-                thisBarrel.barrelWidth,
-                ((thisBarrel.barrelHeight -
-                  thisBarrel.barrelHeightChange) /
-                  3) *
-                  2
-              );
-              hctx.strokeRect(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                (-(
-                  thisBarrel.barrelHeight - thisBarrel.barrelHeightChange
-                ) /
-                  3) *
-                  2,
-                thisBarrel.barrelWidth,
-                ((thisBarrel.barrelHeight -
-                  thisBarrel.barrelHeightChange) /
-                  3) *
-                  2
-              );
-              hctx.beginPath();
-              hctx.moveTo(
-                -thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                (-(
-                  thisBarrel.barrelHeight - thisBarrel.barrelHeightChange
-                ) /
-                  3) *
-                  2
-              );
-              hctx.lineTo(
-                -thisBarrel.barrelWidth + thisBarrel.x,
-                -(thisBarrel.barrelHeight - thisBarrel.barrelHeightChange)
-              );
-              hctx.lineTo(
-                thisBarrel.barrelWidth + thisBarrel.x,
-                -(thisBarrel.barrelHeight - thisBarrel.barrelHeightChange)
-              );
-              hctx.lineTo(
-                thisBarrel.barrelWidth / 2 + thisBarrel.x,
-                (-(
-                  thisBarrel.barrelHeight - thisBarrel.barrelHeightChange
-                ) /
-                  3) *
-                  2
-              );
-              hctx.fill();
-              hctx.stroke();
-            }
-            hctx.rotate(-thisBarrel.additionalAngle); //rotate back
-          }
-          //draw turret base
-          hctx.beginPath();
-          hctx.arc(
-            0,
-            0,
-            playerSize * thisbuttontank.turretBaseSize,
-            0,
-            2 * Math.PI
-          );
-          hctx.fill();
-          hctx.stroke();
-          hctx.lineJoin = "miter"; //change back
-
-          if (thisbuttontank.assets) {
-            for (const assetID in thisbuttontank.assets){
-              let asset = thisbuttontank.assets[assetID];
-              if (asset.type == "above") {
-                hctx.lineWidth = asset.outlineThickness;
-                drawAsset(asset,playerSize,asset.color,asset.outline,hctx)
-              }
-            }
-          }
-
-          hctx.restore(); //restore coordinates to saved
+        if (buttonNumber > 7){
+          drawFakePlayer(tankButtonName,0,0,playerSize,0,playerBodyCol,playerBodyOutline,"body")
         }
+        else{
+          drawFakePlayer(tankButtonName,0,0,playerSize,0,playerBodyCol,playerBodyOutline,"weapon")
+        }
+        
+        hctx.restore(); //restore coordinates to saved
+
         //write names of tanks
         hctx.fillStyle = "white";
         hctx.strokeStyle = "black";
         hctx.lineWidth = 8;
         var widthIncrease = thisbutton.width / thisbutton.defaultwidth;
-        hctx.font = "700 " + 16 * widthIncrease + "px Roboto";
+        hctx.font = "700 " + 15 * widthIncrease + "px Roboto";
         hctx.textAlign = "center";
-        var tankButtonName = "Error";
-        //1 refers to first button of weapon upgrades, 8 refers to first button of body upgrades
-        if (buttonNumber == 1 || buttonNumber == 8) {
-          tankButtonName = one;
-        } else if (buttonNumber == 2 || buttonNumber == 9) {
-          tankButtonName = two;
-        } else if (buttonNumber == 3 || buttonNumber == 10) {
-          tankButtonName = three;
-        } else if (buttonNumber == 4 || buttonNumber == 11) {
-          tankButtonName = four;
-        } else if (buttonNumber == 5 || buttonNumber == 12) {
-          tankButtonName = five;
-        } else if (buttonNumber == 6 || buttonNumber == 13) {
-          tankButtonName = six;
-        } else if (buttonNumber == 7 || buttonNumber == 14) {
-          tankButtonName = seven;
-        }
         tankButtonName = tankButtonName.charAt(0).toUpperCase() + tankButtonName.slice(1);//make first letter of tank name uppercase
           hctx.lineJoin = "miter";
           hctx.miterLimit = 2;
@@ -10422,7 +10061,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         hctx.fill();
         hctx.fillStyle = "white";
         hctx.strokeStyle = "black";
-        hctx.lineWidth = 6;
+        hctx.lineWidth = 9;
         var widthIncrease = ignorebutton.width / ignorebutton.defaultwidth;
         hctx.font = "900 " + 19 * widthIncrease + "px Roboto";
         hctx.miterLimit = 2;
@@ -10444,731 +10083,32 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
       hctx.translate(0, hcanvas.height);//bottom left of screen
       hctx.scale(1,resizeDiffY/resizeDiffX);
       hctx.translate(-0, -hcanvas.height);//translate back after scaling
+      tankRotate += 1.5*deltaTime;
 
       //Weapon upgrades
-
-      //lvl 1 upgrade
-      if (player.level >= 0 && player.tankTypeLevel < 0) {
-        //if player can upgrade but havent
-        //draw 3 buttons
-        for (let i = 1; i < 4; i++) {
-          buttondraw(
-            i,
-            "basic",
-            "trapper",
-            "guard",
-            "empty",
-            "empty",
-            "empty",
-            "empty"
-          );
+      if (player.tankType){//prevent error at the start of the game
+        let upgrades = weaponupgrades[player.tankType].upgradeTo;//array of possible upgrades
+        if ((player.level >= 0 && player.tankTypeLevel < 0)
+        ||(player.level >= 15 && player.tankTypeLevel < 15)
+        ||(player.level >= 30 && player.tankTypeLevel < 30)
+        ||(player.level >= 45 && player.tankTypeLevel < 45)
+        ||(gamemode == "sanctuary" && player.level >= 60 && player.tankTypeLevel < 60)
+        ||(gamemode == "sanctuary" && player.level >= 70 && player.tankTypeLevel < 70)) { //if player can upgrade but havent
+          for (let i = 1; i < 1+upgrades.length; i++) {
+            buttondraw(i, upgrades);
+          }
+          maxnumberofbuttons = upgrades.length;
         }
-      }
-
-      //lvl 5 upgrade
-      else if (player.level >= 5 && player.tankTypeLevel < 5) {
-        if (player.tankType == "basic") {
-          for (let i = 1; i < 5; i++) {
-            buttondraw(
-              i,
-              "twin",
-              "sniper",
-              "cannon",
-              "flank",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "trapper") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "delta",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "guard") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "commander",
-              "overseer",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        }
-      }
-      
-      //lvl 15 upgrade
-      else if (player.level >= 15 && player.tankTypeLevel < 15) {
-        if (player.tankType == "twin") {
-          for (let i = 1; i < 5; i++) {
-            buttondraw(
-              i,
-              "gunner",
-              "quad",
-              "split",
-              "stream",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "sniper") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "targeter",
-              "marksman",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "cannon") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "single",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "flank") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "tri-angle",
-              "quad",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "delta") {
-          for (let i = 1; i < 5; i++) {
-            buttondraw(
-              i,
-              "gamma",
-              "blockade",
-              "warden",
-              "minelayer",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "commander") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "director",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "overseer") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "protector",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
+        else{//cannot upgrade
+          for (let i = 1; i < 8; i++) {
+            upgradeButtons[i].x = upgradeButtons[i].startx; //reset position of all upgrade buttons for the next animation
           }
         }
       }
 
-      //lvl 30 upgrade
-      else if (player.level >= 30 && player.tankTypeLevel < 30) {
-        if (player.tankType == "gunner") {
-          for (let i = 1; i < 4; i++) {
-            buttondraw(
-              i,
-              "blaster",
-              "rimfire",
-              "minesweeper",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "single") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "destroyer",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "targeter") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "streamliner",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "quad") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "octo",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "tri-angle") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "booster",
-              "fighter",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "marksman") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "duel",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "split") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "tower",
-              "rimfire",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "director") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "manager",
-              "spawner",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "blockade") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "barricade",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "warden") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "defender",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "gamma") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "beta",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "minelayer") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "engineer",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "stream") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "jet",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "protector") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "king",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        }
-      }
-
-      //lvl 45 upgrade
-      else if (player.level >= 45 && player.tankTypeLevel < 45) {
-        //IF CHANGE THIS LEVEL, change the level in the code for choosing color of tank in button
-        if (player.tankType == "octo") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "cyclone",
-              "hex",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "blaster") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "minigun",
-              "knockback",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "minesweeper") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "battler",
-              "pinnace",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "spawner") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "factory",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "king") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "master",
-              "tyrant",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "fighter") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "wave",
-              "amalgam",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "streamliner") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "conquerer",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "destroyer") {
-          for (let i = 1; i < 4; i++) {
-            buttondraw(
-              i,
-              "hex",
-              "harbinger",
-              "hybrid",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "booster") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "guardian",
-              "comet",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "duel") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "hunter",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "tower") {
-          for (let i = 1; i < 3; i++) {
-            buttondraw(
-              i,
-              "stronghold",
-              "centrefire",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "manager") {
-          for (let i = 1; i < 4; i++) {
-            buttondraw(
-              i,
-              "hybrid",
-              "executive",
-              "CEO",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "defender") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "shrapnel",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "engineer") {
-          for (let i = 1; i < 4; i++) {
-            buttondraw(
-              i,
-              "machine",
-              "manufacturer",
-              "detonator",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "jet") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "flamethrower",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "rimfire") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "centrefire",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "beta") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "alpha",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "defender") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "shrapnel",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "barricade") {
-          for (let i = 1; i < 2; i++) {
-            buttondraw(
-              i,
-              "riot",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.tankType == "engineer") {
-          for (let i = 1; i < 4; i++) {
-            buttondraw(
-              i,
-              "machine",
-              "manufacturer",
-              "detonator",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        }
-      }
-
-      //lvl 60 upgrade
-      else if (gamemode == "sanctuary" && ((player.level >= 60 && player.tankTypeLevel < 60)||(player.level >= 70 && player.tankTypeLevel < 70))) {
-        //if in sanctuary, then upgrade button appear
-        if (player.level >= 60 && player.tankTypeLevel < 60) {
-          //if player can upgrade but havent
-          if (player.tankType == "eternal") {
-            for (let i = 1; i < 6; i++) {
-              //if add a tank here, remeber to add the tank name to the code above the code for drawing player body
-              buttondraw(
-                i,
-                "hailstorm",
-                "bunker",
-                "chaos",
-                "bombshell",
-                "warrior",
-                "empty",
-                "empty"
-              );
-            }
-          }
-        }
-        //lvl 70 upgrade
-        else if (player.level >= 70 && player.tankTypeLevel < 70) {
-          //if player can upgrade but havent
-          if (player.tankType == "hailstorm") {
-            for (let i = 1; i < 3; i++) {
-              //if add a tank here, remeber to add the tank name to the code above the code for drawing player body
-              buttondraw(
-                i,
-                "thunderstorm",
-                "cosmetic",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          } else if (player.tankType == "bunker") {
-            for (let i = 1; i < 4; i++) {
-              //if add a tank here, remeber to add the tank name to the code above the code for drawing player body
-              buttondraw(
-                i,
-                "vault",
-                "asteroid",
-                "dynamite",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          } else if (player.tankType == "chaos") {
-            for (let i = 1; i < 3; i++) {
-              //if add a tank here, remeber to add the tank name to the code above the code for drawing player body
-              buttondraw(
-                i,
-                "mayhem",
-                "industry",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          } else if (player.tankType == "warrior") {
-            for (let i = 1; i < 2; i++) {
-              //if add a tank here, remeber to add the tank name to the code above the code for drawing player body
-              buttondraw(
-                i,
-                "veteran",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          } else if (player.tankType == "bombshell") {
-            for (let i = 1; i < 2; i++) {
-              //if add a tank here, remeber to add the tank name to the code above the code for drawing player body
-              buttondraw(
-                i,
-                "demolisher",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          }
-        }
-      }
-
-      //if no button is drawn and editor ui is active
-      else {
-        for (let i = 1; i < 8; i++) {
-          upgradeButtons[i].x = upgradeButtons[i].startx; //reset position of all upgrade buttons for the next animation
-        }
-        didAnyButtonDraw = "no";
-      }
       if(openedUI != "yes") {
-
         let textToWrite = "";
-        if (player.tankTypeLevel < 5) {
-          textToWrite = "Next upgrade at lvl 5";
-        } else if (player.tankTypeLevel < 15) {
+        if (player.tankTypeLevel < 15) {
           textToWrite = "Next upgrade at lvl 15";
         } else if (player.tankTypeLevel < 30) {
           textToWrite = "Next upgrade at lvl 30";
@@ -11196,15 +10136,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           var x = hcanvas.width - w - 30 - 180 - (skillpointspos/1.95);
           var y = hcanvas.height - h - 10;
           hctx.save();
-        hctx.translate(x+w/2, y+h/2);
-        x = -w/2;
-        y = -h/2;
+          hctx.translate(x+w/2, y+h/2);
+          x = -w/2;
+          y = -h/2;
           hctxroundRectangleFill(x,y,r,w,h);
-          //write words
           hctx.fillStyle = "white";
           hctx.fillText(textToWrite, 0, 7.5);
           hctx.lineJoin = "miter"; //change it back
-        hctx.restore();
+          hctx.restore();
       }
       
       if (ignorebuttonw.ignore == "no"){//if not ignore
@@ -11226,9 +10165,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
         else if (player.level >= 15){
           maxplayertanklvl = 15;
-        }
-        else if (player.level >= 5){
-          maxplayertanklvl = 5;
         }
         else if (player.level >= 0){
           maxplayertanklvl = 0;
@@ -11257,9 +10193,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         else if (player.level >= 15){
           maxplayertanklvl = 15;
         }
-        else if (player.level >= 5){
-          maxplayertanklvl = 5;
-        }
         else if (player.level >= 0){
           maxplayertanklvl = 0;
         }
@@ -11270,837 +10203,24 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
       //body upgrades
       //note: try not to use the last button
-      if (player.level >= 0 && player.bodyTypeLevel < 0) {
-        //if player can upgrade but havent
-        for (let i = 8; i < 11; i++) {
-          buttondraw(
-            i,
-            "raider",
-            "wall",
-            "sentry",
-            "empty",
-            "empty",
-            "empty",
-            "empty"
-          );
+      if (player.bodyType){//prevent error at the start of the game
+        let upgrades = bodyupgrades[player.bodyType].upgradeTo;//array of possible upgrades
+        if ((player.level >= 0 && player.bodyTypeLevel < 0)
+        ||(player.level >= 15 && player.bodyTypeLevel < 15)
+        ||(player.level >= 30 && player.bodyTypeLevel < 30)
+        ||(player.level >= 45 && player.bodyTypeLevel < 45)
+        ||(gamemode == "sanctuary" && player.level >= 60 && player.bodyTypeLevel < 60)
+        ||(gamemode == "sanctuary" && player.level >= 70 && player.bodyTypeLevel < 70)) { //if player can upgrade but havent
+          for (let i = 8; i < 8+upgrades.length; i++) {
+            buttondraw(i, upgrades);
+          }
+          maxnumberofbuttonsb = 7+upgrades.length;
         }
-      } else if (player.level >= 5 && player.bodyTypeLevel < 5) {
-        if (player.bodyType == "wall") {
-          for (let i = 8; i < 11; i++) {
-            buttondraw(
-              i,
-              "castle",
-              "smasher",
-              "propeller",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "raider") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "forge",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "sentry") {
-          for (let i = 8; i < 10; i++) {
-            buttondraw(
-              i,
-              "mono",
-              "hangar",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
+        else{//cannot upgrade
+          for (let i = 8; i < 15; i++) {
+            upgradeButtons[i].x = upgradeButtons[i].startx; //reset position of all upgrade buttons for the next animation
           }
         }
-      } else if (player.level >= 15 && player.bodyTypeLevel < 15) {
-        if (player.bodyType == "smasher") {
-          for (let i = 8; i < 10; i++) {
-            buttondraw(
-              i,
-              "spike",
-              "armory",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "forge") {
-          for (let i = 8; i < 11; i++) {
-            buttondraw(
-              i,
-              "foundry",
-              "mender",
-              "hail",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "castle") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "fortress",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "mono") {
-          for (let i = 8; i < 11; i++) {
-            buttondraw(
-              i,
-              "armory",
-              "bastion",
-              "turret",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "hangar") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "warship",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "propeller") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "thruster",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        }
-      } else if (player.level >= 30 && player.bodyTypeLevel < 30) {
-        if (player.bodyType == "spike") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "thorn",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "armory") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "brigade",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "foundry") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "flame",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "mender") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "remedy",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "hail") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "blizzard",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "fortress") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "palace",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "bastion") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "artillery",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "turret") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "triplet",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "warship") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "battleship",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "thruster") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "launcher",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        }
-      } else if (player.level >= 45 && player.bodyTypeLevel < 45) {
-        if (player.bodyType == "thorn") {
-          for (let i = 8; i < 10; i++) {
-            buttondraw(
-              i,
-              "saw",
-              "battalion",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "brigade") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "battalion",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "flame") {
-          for (let i = 8; i < 10; i++) {
-            buttondraw(
-              i,
-              "inferno",
-              "juggernaut",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "remedy") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "fabricator",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "blizzard") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "snowstorm",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "palace") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "ziggurat",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "artillery") {
-          for (let i = 8; i < 10; i++) {
-            buttondraw(
-              i,
-              "battalion",
-              "bombard",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "triplet") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "quadruplet",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "battleship") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "mothership",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        } else if (player.bodyType == "launcher") {
-          for (let i = 8; i < 9; i++) {
-            buttondraw(
-              i,
-              "rocketer",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty",
-              "empty"
-            );
-          }
-        }
-      } else if (gamemode == "sanctuary" && ((player.level >= 60 && player.bodyTypeLevel < 60)||(player.level >= 70 && player.bodyTypeLevel < 70))) {
-        if (player.level >= 60 && player.bodyTypeLevel < 60) {
-          //if player can upgrade but havent
-          if (player.bodyType == "primordial") {
-            for (let i = 8; i < 14; i++) {
-              //if add a tank here, remeber to add the tank name to the code above the code for drawing player body
-              buttondraw(
-                i,
-                "oven",
-                "pounder",
-                "lightning",
-                "meteor",
-                "chainsaw",
-                "satellite",
-                "empty"
-              );
-            }
-          }
-        } else if (player.level >= 70 && player.bodyTypeLevel < 70) {
-          if (player.bodyType == "oven") {
-            for (let i = 8; i < 10; i++) {
-              buttondraw(
-                i,
-                "heliosphere",
-                "corvus",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          } else if (player.bodyType == "lightning") {
-            for (let i = 8; i < 9; i++) {
-              buttondraw(
-                i,
-                "firebolt",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          } else if (player.bodyType == "pounder") {
-            for (let i = 8; i < 9; i++) {
-              buttondraw(
-                i,
-                "chasm",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          } else if (player.bodyType == "chainsaw") {
-            for (let i = 8; i < 9; i++) {
-              buttondraw(
-                i,
-                "blade",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          } else if (player.bodyType == "meteor") {
-            for (let i = 8; i < 9; i++) {
-              buttondraw(
-                i,
-                "nebula",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          } else if (player.bodyType == "satellite") {
-            for (let i = 8; i < 9; i++) {
-              buttondraw(
-                i,
-                "triton",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty",
-                "empty"
-              );
-            }
-          }
-        }
-      }
-      else{
-        for (let i = 8; i < 15; i++) {
-          upgradeButtons[i].x = upgradeButtons[i].startx; //reset position of all upgrade buttons for the next animation
-        }
-      }
-
-      //write tank information when hover over button
-      if (showstats == 'yes'){
-      for (let i = 1; i < 15; i++) {
-        let thisbutton = upgradeButtons[i];
-        if (
-          thisbutton.hover == "yes" &&
-          ((i < 8 && howManyButtonSentToClient >= i) ||
-            (i >= 8 && howManyButtonSentToClientb >= i)) &&
-          didAnyButtonDraw == "yes"
-        ) {
-          //if mouse hover over button and there is player information and the button is already drawn, write tank information
-          //draw rectangle
-          hctx.fillStyle = "rgba(0,0,0,0.5)";
-          let opacity = thisbutton.brightness/50;
-          if (opacity<0.3){
-            opacity = 0.3;
-          }
-          hctx.globalAlpha = opacity; //change transparency to same transparency as button
-          var w = thisbutton.defaultwidth * 1.5;
-          var h = thisbutton.defaultwidth * 3.0;
-          var r = 20; //radius is one third of height
-          var x = thisbutton.x - thisbutton.defaultwidth*0.75;
-          var y = thisbutton.y - thisbutton.defaultwidth*3.7;
-          if ((x + w) > hcanvas.width){//outside the screen bruh (right)
-            x = thisbutton.x - thisbutton.defaultwidth*1;
-          }
-          else if ((x - w/2) < 0){//outside the screen bruh (left)
-            x = thisbutton.x - thisbutton.defaultwidth*0.5;//note that x is the left side of the rectangle popup
-          }
-          let thisbuttontank = buttonTank[i];
-          if (!thisbuttontank.maxhealth) {
-            //if this is a weapon upgrade with no body properties
-            h -= 150;
-            y += 150;
-          }
-          if (
-            !Object.keys(thisbuttontank.bodybarrels).length &&
-            !Object.keys(thisbuttontank.barrels).length
-          ) {
-            //if no bullet properties
-            h -= 150;
-            y += 150;
-          }
-          hctxroundRectangleFill(x,y,r,w,h);
-          //write information
-          hctx.strokeStyle = "black";
-          hctx.lineWidth = 3;
-          hctx.font = "700 17px Roboto";
-          hctx.textAlign = "center";
-          //y-axis value of different properties
-          var yproperty1 = 40;
-          var yproperty2 = 65;
-          var yproperty3 = 90;
-          var yproperty4 = 115;
-          var yproperty5 = 140;
-          var yproperty6 = 165;
-          var yproperty7 = 190;
-          var yproperty8 = 215;
-          var yproperty9 = 240;
-          var yproperty10 = 265;
-          var yproperty11 = 290;
-          //var yproperty12 = 190;
-          //now check which properties have, then move the properties so there wont be empty spaces
-          if (
-            !Object.keys(thisbuttontank.bodybarrels).length &&
-            !Object.keys(thisbuttontank.barrels).length
-          ) {
-            yproperty1 += 150;
-            yproperty2 += 150;
-            yproperty3 += 150;
-            yproperty4 += 150;
-            yproperty5 += 150;
-          } else if (!thisbuttontank.fovMultiplier) {
-            yproperty1 += 25;
-            yproperty2 += 25;
-            yproperty3 += 25;
-            yproperty4 += 25;
-            yproperty5 += 25;
-            yproperty6 += 25;
-            yproperty7 += 25;
-            yproperty8 += 25;
-            yproperty9 += 25;
-            yproperty10 += 25;
-            yproperty11 += 25;
-          }
-          if (!thisbuttontank.maxhealth) {
-            yproperty6 += 15;
-            yproperty7 += 15;
-            yproperty8 += 15;
-            yproperty9 += 15;
-            yproperty10 += 15;
-            yproperty11 += 15;
-          }
-
-          //health value
-          if (i >= 8) {
-            //body upgrades
-            hctx.fillStyle = "lightgreen";
-            hctx.strokeText(
-              "Health: " + thisbuttontank.maxhealth,
-              x + w/2,
-              thisbutton.y + yproperty1 - thisbutton.defaultwidth*3.7
-            );
-            hctx.fillText(
-              "Health: " + thisbuttontank.maxhealth,
-              x + w/2,
-              thisbutton.y + yproperty1 - thisbutton.defaultwidth*3.7
-            );
-            //health regen speed value
-            hctx.fillStyle = "lightgreen";
-            hctx.strokeText(
-              "Heal speed: " + thisbuttontank.healthRegenSpeed,
-              x + w/2,
-             thisbutton.y + yproperty2 - thisbutton.defaultwidth*3.7
-            );
-            hctx.fillText(
-              "Heal speed: " + thisbuttontank.healthRegenSpeed,
-              x + w/2,
-              thisbutton.y + yproperty2 - thisbutton.defaultwidth*3.7
-            );
-            //health regen time value
-            hctx.fillStyle = "salmon";
-            hctx.strokeText(
-              "Heal delay: " + thisbuttontank.healthRegenTime,
-              x + w/2,
-              thisbutton.y + yproperty3 - thisbutton.defaultwidth*3.7
-            );
-            hctx.fillText(
-              "Heal delay: " + thisbuttontank.healthRegenTime,
-              x + w/2,
-              thisbutton.y + yproperty3 - thisbutton.defaultwidth*3.7
-            );
-            //damage value
-            hctx.fillStyle = "lightgreen";
-            hctx.strokeText(
-              "Body damage: " + thisbuttontank.damage,
-              x + w/2,
-              thisbutton.y + yproperty4 - thisbutton.defaultwidth*3.7
-            );
-            hctx.fillText(
-              "Body damage: " + thisbuttontank.damage,
-              x + w/2,
-              thisbutton.y + yproperty4 - thisbutton.defaultwidth*3.7
-            );
-            //speed value
-            hctx.fillStyle = "lightgreen";
-            hctx.strokeText(
-              "Speed: " + thisbuttontank.speed,
-              x + w/2,
-              thisbutton.y + yproperty5 - thisbutton.defaultwidth*3.7
-            );
-            hctx.fillText(
-              "Speed: " + thisbuttontank.speed,
-              x + w/2,
-              thisbutton.y + yproperty5 - thisbutton.defaultwidth*3.7
-            );
-          }
-          if (
-            i < 8 ||
-            Object.keys(thisbuttontank.bodybarrels).length
-          ) {
-            //if weapon upgrade or a body upgrade with barrels
-            var range = "";
-            var lowest = "what";
-            var highest = "what";
-            function findRangeValue(propertyName) {
-              //each individual barrel have different stats for certain stats, so we need to find the range
-              range = "";
-              lowest = "what";
-              highest = "what";
-              if (
-                Object.keys(
-                  thisbuttontank.barrels
-                ).length
-              ) {
-                //if have barrels
-                Object.keys(
-                  thisbuttontank.barrels
-                ).forEach((barrel) => {
-                  let prop = thisbuttontank.barrels[barrel][propertyName];
-                  if (lowest == "what") {
-                    //if this is the first barrel
-                    lowest = prop;
-                  } else if (
-                    prop > lowest
-                  ) {
-                    if (highest == "what") {
-                      highest = prop;
-                    } else if (
-                      prop > highest
-                    ) {
-                      highest = prop;
-                    }
-                  } else if (
-                    prop < lowest
-                  ) {
-                    highest = lowest;
-                    lowest = prop;
-                  }
-                });
-              } else if (
-                Object.keys(
-                  thisbuttontank.bodybarrels
-                ).length
-              ) {
-                //if have body barrels
-                Object.keys(
-                  thisbuttontank.bodybarrels
-                ).forEach((barrel) => {
-                  let prop = thisbuttontank.bodybarrels[barrel][propertyName];
-                  if (lowest == "what") {
-                    //if this is the first barrel
-                    lowest = prop
-                  } else if (
-                    prop > lowest
-                  ) {
-                    if (highest == "what") {
-                      highest = prop
-                    } else if (
-                      prop > highest
-                    ) {
-                      highest = prop
-                    }
-                  } else if (
-                    prop < lowest
-                  ) {
-                    highest = lowest;
-                    lowest = prop;
-                  }
-                });
-              }
-              if (lowest == "what") {
-                //no barrels
-                range = "-";
-              } else if (highest == "what") {
-                //1 barrel or all barrels have same value
-                range = lowest;
-              } else {
-                //if there is a range
-                range = lowest + " - " + highest;
-              }
-            }
-            //reload recover value
-            findRangeValue("reloadRecover");
-            hctx.fillStyle = "salmon";
-            hctx.strokeText(
-              "Reload delay: " + range,
-              x + w/2,
-              thisbutton.y + yproperty6 - thisbutton.defaultwidth*3.7
-            );
-            hctx.fillText(
-              "Reload delay: " + range,
-              x + w/2,
-              thisbutton.y + yproperty6 - thisbutton.defaultwidth*3.7
-            );
-            //bullet damage value
-            findRangeValue("bulletDamage");
-            hctx.fillStyle = "lightgreen";
-            hctx.strokeText(
-              "Bullet damage: " + range,
-              x + w/2,
-              thisbutton.y + yproperty7 - thisbutton.defaultwidth*3.7
-            );
-            hctx.fillText(
-              "Bullet damage: " + range,
-              x + w/2,
-              thisbutton.y + yproperty7 - thisbutton.defaultwidth*3.7
-            );
-            //bullet health value
-            findRangeValue("bulletHealth");
-            hctx.fillStyle = "lightgreen";
-            hctx.strokeText(
-              "Bullet health: " + range,
-              x + w/2,
-              thisbutton.y + yproperty8 - thisbutton.defaultwidth*3.7
-            );
-            hctx.fillText(
-              "Bullet health: " + range,
-              x + w/2,
-              thisbutton.y + yproperty8 - thisbutton.defaultwidth*3.7
-            );
-            //bullet timer value
-            findRangeValue("bulletTimer");
-            hctx.fillStyle = "lightgreen";
-            hctx.strokeText(
-              "Bullet lifespan: " + range,
-              x + w/2,
-              thisbutton.y + yproperty9 - thisbutton.defaultwidth*3.7
-            );
-            hctx.fillText(
-              "Bullet lifespan: " + range,
-              x + w/2,
-              thisbutton.y + yproperty9 - thisbutton.defaultwidth*3.7
-            );
-            //bullet speed value
-            findRangeValue("bulletSpeed");
-            hctx.fillStyle = "lightgreen";
-            hctx.strokeText(
-              "Bullet speed: " + range,
-              x + w/2,
-              thisbutton.y + yproperty10 - thisbutton.defaultwidth*3.7
-            );
-            hctx.fillText(
-              "Bullet speed: " + range,
-              x + w/2,
-              thisbutton.y + yproperty10 - thisbutton.defaultwidth*3.7
-            );
-            if (thisbuttontank.fovMultiplier) {
-              //body upgrade may have barrels but no fov property
-              //fov value
-              hctx.fillStyle = "lightgreen";
-              hctx.strokeText(
-                "FoV: " + thisbuttontank.fovMultiplier,
-                x + w/2,
-                thisbutton.y + yproperty11 - thisbutton.defaultwidth*3.7
-              );
-              hctx.fillText(
-                "FoV: " + thisbuttontank.fovMultiplier,
-                x + w/2,
-                thisbutton.y + yproperty11 - thisbutton.defaultwidth*3.7
-              );
-            }
-          }
-          hctx.globalAlpha = 1.0; //reset transparency
-        }
-      }
       }
       
       hctx.restore();//restore from scaling for different screen sizes
