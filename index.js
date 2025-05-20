@@ -2012,7 +2012,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             }
         }
         function resizeUpgradeButtons() {//upgrade buttons have canvas positions that stays the same even if resize, so need to manually change
-          for (let i = 1; i < 8; i++){//only for first 8 buttons on right side of screen (the left side of screen always same cuz coords 0)
+          for (let i = 8; i < 15; i++){//only for first 8 buttons on right side of screen (the left side of screen always same cuz coords 0)
             let thisbutton = upgradeButtons[i];
             if (!thisbutton.rawX){console.log("Error occurred: button property rawX not found: " + i)}
             thisbutton.x = hcanvas.width + thisbutton.rawX;
@@ -3166,8 +3166,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)//wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/
           document.getElementById("adminPanelYN").style.display = "block";
           var serverlist = {
-            //"Free For All": "ws://83.251.0.175:8080/",
-            "Free For All": "wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/",
+            //"Free For All": "wss://ffa.r.mrharryw.dev/",
+            "Free For All": "wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev:8080/",
             "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
             "4 Teams": "wss://devrocketer4tdm.devrocketer.repl.co/",
             "Tank Editor": "wss://devrocketereditor.devrocketer.repl.co/",
@@ -3945,7 +3945,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             function addUpgradeButton(i,x,y,endx,color,darkcolor){
               upgradeButtons[i] = {};
               let thisButton = upgradeButtons[i];
-              if (i < 8){//right side upgrade buttons
+              if (i > 7){//right side upgrade buttons//used to be <8
                 thisButton.x = canvas.width + x; //poition changes when animating
                 thisButton.startx = canvas.width + x; //start position for animating button movement (start position)
                 thisButton.endx = canvas.width - endx; //end position
@@ -7795,8 +7795,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 
                 var timeWhenChatRemove = 100;//when change on server code, remember to change here too
                 
-                if (!(chatlist[id])){//used for animating chat positions
-                  chatlist[id] = JSON.parse(JSON.stringify(object.chats));
+                if (!(chatlist[id]) && typeof object.chats !== 'undefined'){
+                  chatlist[id] = JSON.parse(JSON.stringify(object.chats));//used for animating chat positions
                 }
                 else{
                   let tempArray = [];

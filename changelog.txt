@@ -1,3 +1,7 @@
+ALPHA 0.0.29 - May 20, 2025
+- Fixed a rendering bug that caused the game to not load
+- Balanced body upgrades
+
 ALPHA 0.0.28 - May 19, 2025
 - Rewrote lots of tank-upgrade-related code
 
