@@ -1,6 +1,38 @@
+ALPHA 0.0.32 - May 26, 2025
+- Radiant chances are now the same as scenexe
+- Radiant colors are now more similar to scenexe
+- Changed hitbox rendering for FFA
+- Nerfed all shape sizes in FFA (more similar to scenexe now)
+- FFA now uses PvE's shape rotation speed
+- Nerfed triangle's shape rotation speed (0.01 -> 0.003)
+- Changed shape name rendering in PvE and added it to FFA
+- Tweaked the shape whitening animation when hit
+    - Color changes faster, and no longer looks dull and pale
+    - Color flashes slightly (more noticable over longer periods)
+- Balanced weapon upgrades
+- Cleaned up the shape rendering code
+
+ALPHA 0.0.31 - May 22, 2025
+- Changed the XP leveling system
+- Abbreviation now supports quadrillion (qa), quintillion (qi), and sextillion (sx)
+- Abbreviation now has 1 decimal place if the score has 2 digits
+- Slight visual changes to the xp bar
+- Nerfed health regeneration delay (100 -> 250)
+- Added a new setting: show health bar on HUD
+- Removed big shapes, star, and gem
+
+ALPHA 0.0.30 - May 21, 2025
+- FoV increase per level has been tripled to mimic scenexe
+- More body upgrade balancing
+- Fixed a rendering issue with turret upgrade
+- Reduced jumpiness from interpolation when server is extremely laggy
+- Nerfed inferno slightly, but buffed all other damaging aura tank upgrades
+
 ALPHA 0.0.29 - May 20, 2025
 - Fixed a rendering bug that caused the game to not load
 - Balanced body upgrades
+- Fixed skill points hitbox
+- Fixed upgrade buttons positioning when resizing screen
 
 ALPHA 0.0.28 - May 19, 2025
 - Rewrote lots of tank-upgrade-related code

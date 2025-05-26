@@ -96,7 +96,7 @@ export const bodyupgrades = {
   },
   turret:{
     turretBaseSize:0.5,
-    bodybarrels:{ barrelOne:{ barrelWidth:0.4, barrelHeight:1, additionalAngle:0, x:-0.3, barrelType:"bullet", }, barrelTwo:{ barrelWidth:0.4, barrelHeight:1, additionalAngle:0, x:0.3, barrelType:"bullet", }, },
+    bodybarrels:{ barrelOne:{ barrelWidth:0.4, barrelHeight:1, additionalAngle:0, x:-0.25, barrelType:"bullet", }, barrelTwo:{ barrelWidth:0.4, barrelHeight:1, additionalAngle:0, x:0.25, barrelType:"bullet", }, },
     upgradeTo:['castle','brigade','artillery','triplet'],
   },
   warship:{ bodybarrels:{ barrelOne:{ barrelWidth:0.8, barrelHeight:0.8, additionalAngle:0, x:0.9, barrelType:"drone", }, barrelTwo:{ barrelWidth:0.8, barrelHeight:0.8, additionalAngle:0, x:-0.9, barrelType:"drone", }, },
@@ -130,7 +130,7 @@ export const bodyupgrades = {
   },
   brigade: {
     turretBaseSize: 0.5,
-    bodybarrels: { barrelOne:{ barrelWidth:0.4, barrelHeight:1, additionalAngle:0, x:-0.3, barrelType:"bullet", }, barrelTwo:{ barrelWidth:0.4, barrelHeight:1, additionalAngle:0, x:0.3, barrelType:"bullet", }, },
+    bodybarrels: { barrelOne:{ barrelWidth:0.4, barrelHeight:1, additionalAngle:0, x:-0.25, barrelType:"bullet", }, barrelTwo:{ barrelWidth:0.4, barrelHeight:1, additionalAngle:0, x:0.25, barrelType:"bullet", }, },
     assets: { assetOne: { type: "under", sides: 6, color: "#5F676C", outline: "#41494E", size: 1.4, }, },
     upgradeTo: ['bastion','battalion'],
   },
