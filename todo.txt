@@ -24,7 +24,6 @@ check if can reduce mobile mouse movement setinterval from every 30ms to 60ms
 CHANGE PVE requestanimframe to requestInterval
 add quickchat functionality (when you open quick chat and press 1, 2, 3 or 4, then close the quick chat and send the message) + save quick chats to local storage
 quickchat fix flipped text (both the quick chat and the number)
-fix holding down 'm' key
 ****"Above" assets should render below turret ALL THE TIME, not just for upgrade tree
 ****Fix trap barrel rendering
 ***Fix upgrade button y position
@@ -51,9 +50,14 @@ on the upgrade button, scrap and shrapnel have sharp edges for trap barrels
 add settings
 add quickchat mobile button
 change all bullet flash to the psbc
+add aura particles to home screen
 
 **PVE change square rendering (hitbox is outside square, not inside) and increase square width from 35 to 50
 **apply pve shape collision physics to ffa
+remove unnecessary shape info in server
+disconnect from ffa when change to pve gamemode
+fixed duo reload changing over time (rounding issue, or because reload property doesnt have reload skill points unlike reloadrecover)
+remove barrel.shootingState and do in client instead (client need to know the reload)
 Monday: fix all rendering + add map hitbox border (lime green) + fix player and shape collision + fix traps (render square inside hitbox, and increase trap size, remove space between traps)
 
 

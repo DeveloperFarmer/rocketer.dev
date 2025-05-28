@@ -1,3 +1,28 @@
+ALPHA 0.0.34 - May 28, 2025
+- Shapes are now pushable (depends on shape mass)
+- Reduced player's overlap amount with shape
+- Fixed wave tank upgrade
+- Added auras to the home screen background
+- Bug fixes
+    - Ziggurat no longer has a turret base when upgrading from castle
+    - Upgrading no longer changes health percentage
+        - For example, upgrading from smasher to fortress used to change the health percentage from 100% to 66.7%
+        - Now the health percentage remains the same
+    - Holding down e, c, f, x, m, t, p, o keybinds no longer repeatedly trigger the function
+
+ALPHA 0.0.33 - May 27, 2025
+- Patched a major bug that was causing the server to lag
+- Fixed mine barrel's rendering
+- Mine barrels now have same color as normal barrels
+- Mines are squares instead of triangles
+- Mine turret bases are now relative to barrel size
+- Fixed a bug with mine turret bullets not spawning at correct position
+- Fixed gleaming shapes not having aura
+- Buffed detonator's trap health (4 -> 35)
+- Buffed detonator's trap damage (1.8 -> 3)
+- Buffed detonator's explosion damage (2 -> 5)
+- Halved recoil for all tanks
+
 ALPHA 0.0.32 - May 26, 2025
 - Radiant chances are now the same as scenexe
 - Radiant colors are now more similar to scenexe

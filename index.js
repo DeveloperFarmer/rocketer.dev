@@ -2311,6 +2311,46 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           drawFakePlayer(bodytype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"bodyu");//body under
           drawFakePlayer(weapontype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"weapon");//weapon upgrade
           drawFakePlayer(bodytype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"bodya");//body above
+          let bodyUpgradeData = bodyupgrades[bodytype];
+          if (bodyUpgradeData.hasOwnProperty("auraSpecialty")){//has aura, so need to render aura on home screen
+            let w = bodyUpgradeData.auraSize/2*size;
+            switch(bodyUpgradeData.auraSpecialty) {
+              case "damaging":
+                hctx.fillStyle = "rgba(252,118,118,.3)";
+                hctx.strokeStyle = "rgba(252,118,118,.3)";
+                break;
+              case "heal":
+                hctx.fillStyle = "rgba(57,185,102,.3)";
+                hctx.strokeStyle = "rgba(57,185,102,.3)";
+                break;
+              case "freeze":
+                hctx.fillStyle = "rgba(150, 208, 227,.5)";
+                hctx.strokeStyle = "rgba(150, 208, 227,.5)";
+                break;
+              case "attraction":
+                hctx.fillStyle = "rgba(87, 85, 163, .3)";
+                hctx.strokeStyle = "rgba(87, 85, 163, .3)";
+                break;
+            }
+            if (bodyUpgradeData.auraSpecialty != "heal"){//not a heal aura
+              hctx.beginPath();
+              hctx.arc(x-hsCameraX, y-hsCameraY, w, 0, 2 * Math.PI);
+              hctx.fill();
+              hctx.stroke();
+            }
+            else{//8 sides for healing aura
+              hctx.beginPath();
+              hctx.moveTo(x-hsCameraX + w, y-hsCameraY);
+              for (let i = 1; i <= 9; i++) {
+                hctx.lineTo(
+                  w * Math.cos((i * 2 * Math.PI) / 8) + x-hsCameraX,
+                  w * Math.sin((i * 2 * Math.PI) / 8) + y-hsCameraY
+                );
+              }
+              hctx.fill();
+              hctx.stroke();
+            }
+          }
         }
       
         //drawing canvas for homescreen background
@@ -2425,7 +2465,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               drawFakePlayer2("green","shrapnel","inferno",1850,1450,170,70)
               drawFakePlayer2("green","gunner","artillery",1900,1550,260,60)
               drawFakePlayer2("green","trapper","smasher",1870,1650,260,50)
-              drawFakePlayer2("green","mono","node",2300,1100,45,50)
+              drawFakePlayer2("green","mono","base",2300,1100,45,50)
               drawFakePlayer2("blue","manufacturer","saw",2100,1830,280,70)
               drawFakePlayer2("blue","arsenal","ziggurat",1880,1930,305,70)
               drawFakePlayer2("blue","spread","triplet",1780,1950,325,60)
@@ -3206,7 +3246,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           document.getElementById("adminPanelYN").style.display = "block";
           var serverlist = {
             "Free For All": "wss://ffa-r.mrharryw.dev/",
-            // "Free For All": "wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev:8080/",
+            //"Free For All": "wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev:8080/",
             "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
             "4 Teams": "wss://devrocketer4tdm.devrocketer.repl.co/",
             "Tank Editor": "wss://devrocketereditor.devrocketer.repl.co/",
@@ -4423,7 +4463,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     ctx.rotate(-extraSpikeRotate2 * Math.PI / 180);
                   }
                   //radtier 2 and above have aura
-                  if (object.radtier > 2) {
+                  if (object.radtier > 1) {
                     let shapeaurasize = object.radtier;
                     if (shapeaurasize > 3) {
                       shapeaurasize = 3; //prevent huge auras
@@ -5586,19 +5626,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     ctx.strokeStyle = prevstroke;
                   }
                   ctx.beginPath();
-                  if (object.bulletType == "mine"){//mine
-                    ctx.moveTo(
-                      (object.width / clientFovMultiplier) * Math.cos(0),
-                      (object.width / clientFovMultiplier) * Math.sin(0)
-                    );
-                    for (var i = 1; i <= 3; i += 1) {
-                      ctx.lineTo(
-                        (object.width / clientFovMultiplier) *
-                          Math.cos((i * 2 * Math.PI) / 3),
-                        (object.width / clientFovMultiplier) *
-                          Math.sin((i * 2 * Math.PI) / 3)
-                      );
-                    }
+                  if (object.bulletType == "mine"){//mine trap
+                    let mineWidth = object.width / clientFovMultiplier;
+                    ctx.fillRect(-mineWidth,-mineWidth,mineWidth*2,mineWidth*2);
+                    ctx.strokeRect(-mineWidth,-mineWidth,mineWidth*2,mineWidth*2);
                   }
                   else{//minion
                     ctx.arc(0, 0, object.width / clientFovMultiplier, 0, 2 * Math.PI);
@@ -5609,11 +5640,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   //BARREL FOR THE MINE TRAP
                   if (object.bulletType == "mine"){
                   Object.keys(object.barrels).forEach((barrel) => {
-                    let thisBarrel = object.barrels[barrel];
-                    ctx.rotate(thisBarrel.additionalAngle); //rotate to barrel angle
-                    ctx.fillStyle = "grey";
-                    ctx.strokeStyle = "#5e5e5e";
-                    if (thisBarrel.barrelType == "bullet") {
+                      let thisBarrel = object.barrels[barrel];
+                      ctx.rotate(thisBarrel.additionalAngle); //rotate to barrel angle
+                      ctx.fillStyle = bodyColors.barrel.col;
+                      ctx.strokeStyle = bodyColors.barrel.outline;
+                      if (thisBarrel.barrelType == "bullet") {
                         drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
                       }
                       else if (thisBarrel.barrelType == "drone") {
@@ -5628,17 +5659,15 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       else if (thisBarrel.barrelType == "minion") {
                         drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
                       }
-                    ctx.beginPath();
-                    ctx.arc(
-                      0,
-                      0,
-                      thisBarrel.barrelWidth / clientFovMultiplier,
-                      0,
-                      2 * Math.PI
-                    );
-                    ctx.fill();
-                    ctx.stroke();
-                    ctx.rotate(-thisBarrel.additionalAngle); //rotate back
+                      let turretWidth = thisBarrel.barrelWidth / clientFovMultiplier / 1.3;//add server property in the future so can manually change turret size
+                      if (thisBarrel.x > 0){//for arsenal weapon upgrade
+                        turretWidth *= (5/3);
+                      }
+                      ctx.beginPath();//draw turret base
+                      ctx.arc(0, 0, turretWidth, 0, 2 * Math.PI);
+                      ctx.fill();
+                      ctx.stroke();
+                      ctx.rotate(-thisBarrel.additionalAngle); //rotate back
                   });
                 }
 
@@ -7766,95 +7795,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   var packet = JSON.stringify(["mousePressed", 3]);
                   socket.send(packet)
                   //e.which refers to whether it's lfet or right click. leftclick is 1, rightclick is 3
-                } else if ((e.key == "e" || e.key == "E") && state=="ingame" && gamemode != "PvE arena") {
-                  var packet = JSON.stringify(["auto-fire"]);
-                  socket.send(packet)
-                  if (autofire == "no"){
-                    createNotif("Auto Fire (E): ON",defaultNotifColor,3000)
-                    autofire = "yes";
-                  }
-                  else{
-                    createNotif("Auto Fire (E): OFF",defaultNotifColor,3000)
-                    autofire = "no";
-                  }
-                } else if ((e.key == "c" || e.key == "C") && state=="ingame" && gamemode != "PvE arena") {
-                  var packet = JSON.stringify(["auto-rotate"]);
-                  socket.send(packet)
-                  if (autorotate == "no"){
-                    createNotif("Auto Rotate (C): ON",defaultNotifColor,3000)
-                    autorotate = "yes";
-                  }
-                  else{
-                    createNotif("Auto Rotate (C): OFF",defaultNotifColor,3000)
-                    autorotate = "no";
-                  }
-                } else if ((e.key == "f" || e.key == "F") && state=="ingame" && gamemode != "PvE arena") {
-                  var packet = JSON.stringify(["fast-auto-rotate"]);
-                  socket.send(packet)
-                  if (fastautorotate == "no"){
-                    createNotif("Fast Auto Rotate (F): ON",defaultNotifColor,3000)
-                    fastautorotate = "yes";
-                  }
-                  else{
-                    createNotif("Fast Auto Rotate (F): OFF",defaultNotifColor,3000)
-                    fastautorotate = "no";
-                  }
-                } else if ((e.key == "x" || e.key == "X") && state=="ingame" && gamemode != "PvE arena") {
-                  if (keylock == "yes"){
-                    keylock = "no";
-                    createNotif("Spin Lock (X): OFF",defaultNotifColor,3000)
-                  }
-                  else{
-                    keylock = "yes";
-                    createNotif("Spin Lock (X): ON",defaultNotifColor,3000)
-                  }
-                } else if ((e.key == "m" || e.key == "M") && state=="ingame") {
-                  //opening and closing debug info box
-                  if (debugState == "open") {
-                    document.getElementById("debugContainer").style.display = "none";
-                    debugState = "close";
-                    createNotif("Debug Mode (M): OFF",defaultNotifColor,3000)
-                  } else {
-                    document.getElementById("debugContainer").style.display = "flex";
-                    debugState = "open";
-                    createNotif("Debug Mode (M): ON",defaultNotifColor,3000)
-                  }
-                } else if ((e.key == "t" || e.key == "T") && state=="ingame") {
-                  if (quickchat.style.display == "block"){//close quick chat (turn on closing animation, then reset animation, then hide div)
-                    let quickchattext = document.getElementById("quickchattext");
-                    let quickchat1 = document.getElementById("quickchat1");
-                    let quickchat2 = document.getElementById("quickchat2");
-                    let quickchat3 = document.getElementById("quickchat3");
-                    let quickchat4 = document.getElementById("quickchat4");
-                    quickchattext.style.animation = "rising .5s";
-                    quickchat1.style.animation = "shrinking1 .5s";
-                    quickchat2.style.animation = "shrinking2 .5s";
-                    quickchat3.style.animation = "shrinking3 .5s";
-                    quickchat4.style.animation = "shrinking4 .5s";
-                    setTimeout(() => {
-                      quickchat.style.display = "none";//hide div
-                      quickchattext.style.animation = "falling .5s";//reset animation to what is stated in html
-                      quickchat1.style.animation = "growing1 .5s";
-                      quickchat2.style.animation = "growing2 .5s";
-                      quickchat3.style.animation = "growing3 .5s";
-                      quickchat4.style.animation = "growing4 .5s";
-                    }, 500);//0.5 seconds for animation
-                  }
-                  else{//if display is none or " "
-                    //js will return display as " " because it cant read the css, unless you set it using js before
-                    quickchat.style.display = "block";
-                  }
-                } else if ((e.key == "p" || e.key == "P") && state=="ingame" && gamemode != "PvE arena") {
-                  var packet = JSON.stringify(["passive-mode"]);
-                  socket.send(packet)
-                  if (passivemode == "no"){
-                    createNotif("Passive Mode (P): ON",defaultNotifColor,3000)
-                    passivemode = "yes";
-                  }
-                  else{
-                    createNotif("Passive Mode (P): OFF",defaultNotifColor,3000)
-                    passivemode = "no";
-                  }
                 } else if (e.key == "Enter" && state == "ingame") {
                   //if press enter, add cursor to chat inputbox
                   document.getElementById("chat").focus(); //add cursor to input field
@@ -7878,13 +7818,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     showUpgradeTree = "no";
                   } else {
                     showBodyUpgradeTree = "no";
-                  }
-                } else if (e.key == "o" || e.key == "O") {
-                  //open and close settings
-                  if (settings.style.display == "none" || settings.style.display == "") {//if settings popup hidden or havent opened before
-                    settings.style.display = "block";
-                  } else {
-                    settings.style.display = "none";
                   }
                 } else if (
                   (e.key == "1" ||
@@ -7999,6 +7932,102 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   socket.send(packet)
                   var packet = JSON.stringify(["mouseReleased"]);
                   socket.send(packet)
+                } else if ((e.key == "e" || e.key == "E") && state=="ingame" && gamemode != "PvE arena") {//put in keyup so that doesnt keep sending when key is held down
+                  var packet = JSON.stringify(["auto-fire"]);
+                  socket.send(packet)
+                  if (autofire == "no"){
+                    createNotif("Auto Fire (E): ON",defaultNotifColor,3000)
+                    autofire = "yes";
+                  }
+                  else{
+                    createNotif("Auto Fire (E): OFF",defaultNotifColor,3000)
+                    autofire = "no";
+                  }
+                } else if ((e.key == "c" || e.key == "C") && state=="ingame" && gamemode != "PvE arena") {
+                  var packet = JSON.stringify(["auto-rotate"]);
+                  socket.send(packet)
+                  if (autorotate == "no"){
+                    createNotif("Auto Rotate (C): ON",defaultNotifColor,3000)
+                    autorotate = "yes";
+                  }
+                  else{
+                    createNotif("Auto Rotate (C): OFF",defaultNotifColor,3000)
+                    autorotate = "no";
+                  }
+                } else if ((e.key == "f" || e.key == "F") && state=="ingame" && gamemode != "PvE arena") {
+                  var packet = JSON.stringify(["fast-auto-rotate"]);
+                  socket.send(packet)
+                  if (fastautorotate == "no"){
+                    createNotif("Fast Auto Rotate (F): ON",defaultNotifColor,3000)
+                    fastautorotate = "yes";
+                  }
+                  else{
+                    createNotif("Fast Auto Rotate (F): OFF",defaultNotifColor,3000)
+                    fastautorotate = "no";
+                  }
+                } else if ((e.key == "x" || e.key == "X") && state=="ingame" && gamemode != "PvE arena") {
+                  if (keylock == "yes"){
+                    keylock = "no";
+                    createNotif("Spin Lock (X): OFF",defaultNotifColor,3000)
+                  }
+                  else{
+                    keylock = "yes";
+                    createNotif("Spin Lock (X): ON",defaultNotifColor,3000)
+                  }
+                } else if ((e.key == "m" || e.key == "M") && state=="ingame") {
+                  //opening and closing debug info box
+                  if (debugState == "open") {
+                    document.getElementById("debugContainer").style.display = "none";
+                    debugState = "close";
+                    createNotif("Debug Mode (M): OFF",defaultNotifColor,3000)
+                  } else {
+                    document.getElementById("debugContainer").style.display = "flex";
+                    debugState = "open";
+                    createNotif("Debug Mode (M): ON",defaultNotifColor,3000)
+                  }
+                } else if ((e.key == "t" || e.key == "T") && state=="ingame") {
+                  if (quickchat.style.display == "block"){//close quick chat (turn on closing animation, then reset animation, then hide div)
+                    let quickchattext = document.getElementById("quickchattext");
+                    let quickchat1 = document.getElementById("quickchat1");
+                    let quickchat2 = document.getElementById("quickchat2");
+                    let quickchat3 = document.getElementById("quickchat3");
+                    let quickchat4 = document.getElementById("quickchat4");
+                    quickchattext.style.animation = "rising .5s";
+                    quickchat1.style.animation = "shrinking1 .5s";
+                    quickchat2.style.animation = "shrinking2 .5s";
+                    quickchat3.style.animation = "shrinking3 .5s";
+                    quickchat4.style.animation = "shrinking4 .5s";
+                    setTimeout(() => {
+                      quickchat.style.display = "none";//hide div
+                      quickchattext.style.animation = "falling .5s";//reset animation to what is stated in html
+                      quickchat1.style.animation = "growing1 .5s";
+                      quickchat2.style.animation = "growing2 .5s";
+                      quickchat3.style.animation = "growing3 .5s";
+                      quickchat4.style.animation = "growing4 .5s";
+                    }, 500);//0.5 seconds for animation
+                  }
+                  else{//if display is none or " "
+                    //js will return display as " " because it cant read the css, unless you set it using js before
+                    quickchat.style.display = "block";
+                  }
+                } else if ((e.key == "p" || e.key == "P") && state=="ingame" && gamemode != "PvE arena") {
+                  var packet = JSON.stringify(["passive-mode"]);
+                  socket.send(packet)
+                  if (passivemode == "no"){
+                    createNotif("Passive Mode (P): ON",defaultNotifColor,3000)
+                    passivemode = "yes";
+                  }
+                  else{
+                    createNotif("Passive Mode (P): OFF",defaultNotifColor,3000)
+                    passivemode = "no";
+                  }
+                } else if (e.key == "o" || e.key == "O") {
+                  //open and close settings
+                  if (settings.style.display == "none" || settings.style.display == "") {//if settings popup hidden or havent opened before
+                    settings.style.display = "block";
+                  } else {
+                    settings.style.display = "none";
+                  }
                 }
               }
             });
@@ -9579,6 +9608,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var widthIncrease = thisbutton.width / thisbutton.defaultwidth;
         hctx.scale(0.8 * widthIncrease, 0.8 * widthIncrease); //change the size of tanks inside the button, 1 refers to the size of tank when spawning
         hctx.lineWidth = 5;
+        hctx.lineJoin = "round";
 
         if (buttonNumber > 7){
           drawFakePlayer(tankButtonName,0,0,playerSize,0,playerBodyCol,playerBodyOutline,"body")
