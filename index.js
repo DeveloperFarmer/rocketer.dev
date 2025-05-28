@@ -7877,7 +7877,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               }
             });
             $("html").keyup(function (e) {
-              if (document.activeElement !== nameInput) {
+              //if (document.activeElement !== nameInput) {
+              if(!$("input,textarea").is(":focus")){//if all input and text area do not have focus
                 //if the name input box is not selected (prevents triggering commands when typing name)
                 //console.log(e)
                 if (e.key == "ArrowDown" || e.key == "s" || e.key == "S") {
