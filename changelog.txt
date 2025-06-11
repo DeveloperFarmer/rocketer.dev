@@ -1,3 +1,136 @@
+ALPHA 0.1.0 - June 11, 2025
+- Buffed crossroads radiant shape chance (1 in 4096 -> 1 in 10)
+- Passive mode now only affects auras and auto cannons
+- Re-added accounts
+- Added star road
+- Re-added achievements
+- Re-added accounts leaderboard
+- Added Daily Login streak
+- Visual improvements
+    - Bullets and bots no longer flash on collision (they now have the same hit animation as shapes)
+    - Minimap now scales based on screen height and won't overlap with debug
+    - Fixed leaderboard tank rendering
+    - Tweaked player's name rendering
+    - Chats have a darker background color now
+- Physics improvements
+    - Improved shape collision with map edges
+    - Shapes can no longer spawn outside the map
+    - Improved and optimized player collision with map edges
+    - Improved the collision physics for traps, mines, drones, and minions with shapes and bots
+    - Minions and drones no longer get softlocked after collidng with shapes
+- Server optimizations
+    - Circular entities no longer have height property
+    - Shape rotation is now client-side
+    - Replaced foreach loops with for-of loops
+- Bug patches
+    - Fixed a bug where bot colors did not load
+
+ALPHA 0.0.42 - June 5, 2025
+- Server optimizations
+- Fixed the 'continue' and 'play again' buttons on death screen
+- Unnamed players don't show any name, instead of showing 'unnamed'
+- Removed fast auto rotate
+- Players can now be killed by more than one entity
+- Tweaked the time notification stays on screen
+    - Kill notifications now last 2 times longer than keybind notifications
+- Added tips when you join the game
+- 'O' keybind no longer works on home screen
+- Added 'P' keybind for screenshot mode
+- Improved player collision
+
+ALPHA 0.0.41 - June 4, 2025
+- Added tank rendering to the death screen
+- Gamemodes are now data-based
+- Rewrote the developer commands and added lots of new ones
+- Fixed rendering color bug for health bars and HUD
+
+ALPHA 0.0.40 - June 3, 2025
+- Cleaned up and optimized the server code
+- Turrets and mines no longer attack players of same team
+- Bullets no longer destroy bullets of the same team
+- Fixed turrets not attacking abysslings and abyss guardian
+- Added player collision detection in sanctuary and dune
+- Increased sanctuary's portal spawn rate (3000 -> 500)
+- Added a limit of 5 portals in sanctuary
+- Fixed a bug that sometimes made the home screen rotate faster and faster
+
+ALPHA 0.0.39 - June 2, 2025
+- Radiant player's spikes no longer jerk when it rotates
+- Added radiant player support for all gamemodes
+- Increased amalgam's trap lifetime (75 -> 500)
+- Fixed a bug in aura offset positioning
+
+ALPHA 0.0.38 - June 1, 2025
+- Fixed trap and mine hitboxes
+- Changed passive mode's keybind from P to V
+
+ALPHA 0.0.37 - May 31, 2025
+- Fixed broken UI when disconnecting
+- Fixed client code rendering for radiant players
+- Shifted radiant portal animation from server to client
+- Knockback now pushes shapes based on their mass
+- Players kills now reward 75% xp, instead of 50%
+
+ALPHA 0.0.36 - May 30, 2025
+- Stat upgrade multipliers are now more similar to scenexe's
+    - Nerfed bullet damage stat upgrade multiplier (1.05 -> 1.035)
+    - Nerfed max health stat upgrade multiplier (1.05 -> 1.04)
+    - Nerfed body damage stat upgrade multiplier (1.05 -> 1.04)
+    - Buffed health regeneration stat upgrade multiplier (1.05 -> 1.065)
+    - Buffed movement speed stat upgrade multiplier (1.015 -> 1.05)
+- Each level now gives a 1% bonus to health, bullet damage and body damage
+- Larger tanks are slower now
+- Rearranged the stat upgrade positions on the client HUD, and tweaked the rendering
+- Patched a bug that caused upgrade buttons to not animate when appearing
+
+ALPHA 0.0.35 - May 29, 2025
+- Buffed barricade's trap health (2.25 -> 25)
+- Buffed riot's trap health (1.65 -> 25)
+- Buffed riot's trap launch (10 -> 15)
+- Buffed stockade's trap health (4.5 -> 35)
+- Buffed palisade's trap health (3.5 -> 35)
+- Buffed scrap's trap health (2 -> 20)
+- Buffed shrapnel's trap health (2 -> 20)
+- Buffed amalgam's trap health (3.5 -> 30)
+- Buffed wave's trap health (3 -> 30)
+- Buffed alpha's trap health (1.65 -> 25)
+- Buffed gamma's trap health (2.5 -> 10)
+- Buffed blockade's trap health (5 -> 20)
+- Buffed rubble's trap health (2 -> 20)
+- Buffed wake's trap health (4 -> 8)
+- Buffed beta's trap health (1.8 -> 20)
+- Just like scenexe, bigger shapes now deal less body damage than smaller ones, instead of more (0.9x)
+    - Tridecagon damage nerfed from 0.25 to 0.09
+    - Triangle damage buffed from 0.05 to 0.25
+- Added death particle animation for both normal portals and ruptured portals
+- Fixed incorrect hitbox shown for portals
+- Portals look slightly different now
+- Decreased maximum number of portals in FFA (8 -> 4)
+- Sanctuary portals are now white
+- Portals can no longer spawn near the edge of the map
+- Portals' auras and particles animate outwards, while ruptured wormholes' animate inwards now
+- Ruptured wormholes despawn 3 times faster
+- Added black particle animation when portals are ruptured
+- Added names for portals when debug is open
+- Added screen shake when portal is ruptured or removed
+- Added setting to show health percentage on health bar
+- Fixed mine and minion x offset causing bullets to spawn at wrong positions
+- Minions are now 1.3x larger
+- Fixed industry upgrade being rendered wrongly
+- Buffed industry's minion health (1 -> 15)
+- Buffed industry's minion's bullet damage (0.5 -> 0.75)
+- Buffed manufacturer's minion health (3 -> 30)
+- Buffed manufacturer's minion's bullet damage (4.5 -> 7)
+- Manufacturer's minion body now looks like palace body upgrade
+- Buffed factory's minion health (1 -> 15)
+- Buffed hatcher's minion health (0.5 -> 15)
+- Buffed hatcher's minion's bullet damage (0.5 -> 0.75)
+- Decreased respawn amount (50% -> 25%)
+- Fixed a bug that caused 0 xp to show as undefined
+- Added closing upgrade button animation
+- Fixed a slight calculation issue with the leveling system that caused levels to start at 0 instead of 1
+- Re-added chat typing indicator
+
 ALPHA 0.0.34 - May 28, 2025
 - Shapes are now pushable (depends on shape mass)
 - Reduced player's overlap amount with shape

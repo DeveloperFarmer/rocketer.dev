@@ -9,7 +9,7 @@
     <link
       rel="icon"
       type="image/x-icon"
-      href="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/9e5475f4-0d5c-4b57-9536-1af4d35ab936.image.png?v=1746798366279"
+      href="/Octo-Base.webp"
     />
     <style>
         body {
@@ -377,6 +377,229 @@
           right: 7vmin;
           font-size: 3vmin;
         }
+        #plsSignUp {
+            width: 15vmin;
+            height: 15vmin;
+            padding: 0vmin 2vmin;
+            background-color: white;
+            border-radius: 1vmin;
+            font-size: 1.8vmin;
+        }
+        #signed-in-text {
+          position: fixed;
+          top: 1vmin;
+          right: 7vmin;
+          font-size: 3vmin;
+          text-align: right;
+          display: none;
+        }
+        .accountPage {
+            position: absolute;
+            top: 0%;
+            left: 0%;
+            line-height: 1.5;
+            background-color: rgba(0, 0, 0, .7);
+            height: 100%;
+            width: 100%;
+            font-weight: 900;
+            display: none;
+            animation-name: opacityFade;
+            animation-duration: .5s;
+        }
+        #accButtonFlex {/*top right buttons when open account page*/
+            position: fixed;
+            top: 1vmin;
+            right: 1vmin;
+            height: 5vmin;
+            width: 100%;
+            white-space: nowrap;
+            display: flex;/*flex, not block*/
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: right;
+            gap: 1vmin;
+        }
+        #accInfo {/*account info, e.g. join date*/
+            height: 3vmin;
+            width: 100%;
+            white-space: nowrap;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            column-gap: 7%;
+            text-align: center;
+        }
+        .accInfoBig { font-size: 2.5vmin; }
+        .accInfoSmall { font-size: 2vmin; }
+        .accButton{
+          font-weight: 900;
+          font-family: "Roboto", sans-serif;
+          color: black;
+          font-size: 2.5vmin;
+          border: .5vmin solid black;
+          border-radius: 1vmin;
+          background-color: white;
+          padding: .5vmin 1vmin;
+          /*Hover transition*/
+          -webkit-transition: all 0.3s ease-out;
+          -moz-transition: all 0.3s ease-out;
+          -o-transition: all 0.3s ease-out;
+          transition: all 0.3s ease-out;
+          cursor: pointer;
+        }
+        .accButton:hover {
+            background-color: lightgrey;
+        }
+        
+        .accInput{
+          font-weight: 900;
+          font-family: "Roboto", sans-serif;
+          color: black;
+          font-size: 2.5vmin;
+          border: .5vmin solid black;
+          border-radius: 1vmin;
+          background-color: rgba(0, 0, 0, .5);
+          padding: .5vmin 1vmin;
+          transition: all 0.3s ease-out;
+        }
+        .accInput:hover {
+            background-color: rgba(0, 0, 0, .75);
+        }
+
+        #achievementContainer {
+          width: 100%;
+          white-space: nowrap;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          text-align: center;
+        }
+        .achievementDiv {
+          width: 50vmin;
+          height: 15vmin;
+          border-radius: 1vmin;
+          padding: 1vmin 1.25vmin 0.5vmin 1.25vmin;
+          border: .5vmin solid #000000;
+          margin: 1vmin;
+          font-weight: 700;
+          text-shadow: -0.3vmin -0.3vmin 0 #000, 0 -0.3vmin 0 #000, 0.3vmin -0.3vmin 0 #000, 0.3vmin 0 0 #000, 0.3vmin 0.3vmin 0 #000, 0 0.3vmin 0 #000, -0.3vmin 0.3vmin 0 #000, -0.3vmin 0 0 #000;
+        }
+        .achievementNotif {/*notification at top of screen informing u that u got an achievement*/
+          position: fixed;
+          top: 3vw;
+          left: calc(50% - 10vw + 1.25vw);
+          width: 15vw;
+          height: 7vw;
+          border-radius: 1vw;
+          padding: 1vw 1.25vw 0.5vw 1.25vw;
+          border: 0.2vw solid #000000;
+          text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
+          animation-name: animnotif;
+          animation-duration: 5s;
+          font-size: 1.2vw;
+          font-weight: 700;
+          font-family: "Roboto", sans-serif;
+          color: white;
+        }
+        .achievementText {/*achievement notification text*/
+          position: fixed;
+          top: 1vw;
+          left: 0;
+          width: 100%;
+          height: 7vw;
+          border-radius: 1vw;
+          text-shadow: -0.2vmin -0.2vmin 0 #000, 0 -0.2vmin 0 #000, 0.2vmin -0.2vmin 0 #000, 0.2vmin 0 0 #000, 0.2vmin 0.2vmin 0 #000, 0 0.2vmin 0 #000, -0.2vmin 0.2vmin 0 #000, -0.2vmin 0 0 #000;
+          animation-name: animnotiftxt;
+          animation-duration: 5s;
+          font-size: 1.5vw;
+          font-weight: 700;
+          font-family: "Roboto", sans-serif;
+          color: white;
+          text-align: center;
+        }
+        @keyframes animnotif {
+          0% {top: -7vw;}
+          20% {top: 3vw;}
+          80% {top: 3vw;}
+          100% {top: -10vw;}
+        }
+        @keyframes animnotiftxt {
+          0% {top: -9vw;}
+          20% {top: 1vw;}
+          80% {top: 1vw;}
+          100% {top: -12vw;}
+        }
+
+        .starBars {
+          height: 5vmin;
+          border-radius: 1vmin;
+          position: relative;
+          top: 50%;
+          display: inline-block;
+        }
+        #road {
+          width: 400%;
+          background-color: rgb(100,100,100);
+          transform: translate(0, -50%);
+        }
+        #progress {
+          width: 10%;/*relative to entire bar*/
+          background-color: goldenrod;
+          top: 0;
+        }
+        #numberContainer {/*numbers on star road*/
+            position: absolute;
+            top: 100%;
+            height: 3vmin;
+            width: 100%;
+            white-space: nowrap;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            text-align: center;
+        }
+        .numbers {width: 3vmin;}
+        .milestone {
+            width: 15vmin;
+            padding: 2vmin;
+            background-color: white;
+            position: relative;
+            top: 3vmin;
+            border-radius: 1vmin;
+            overflow-wrap: anywhere;
+        }
+        .arrow-up {
+            position: relative;
+            top: -2.9vmin;
+            width: 0;
+            height: 0;
+            border-left: 1vmin solid transparent;
+            border-right: 1vmin solid transparent;
+            border-bottom: 1vmin solid white;
+        }
+
+        .starroadText {
+          position: fixed;
+          left: 50%;
+          transform: translate(-50%, -50%);
+        }
+
+        .lbBox {
+          background-color: rgba(255, 255, 255, .5);
+          border-radius: 1vmin;
+          width: 40vmin;
+          height: 6%;
+          position: absolute;
+          left: calc(50% - 40vmin/2);
+          font-size: 3.5vmin;
+          line-height: 5.5vmin;
+          padding-left: 2vmin;
+          padding-right: 2vmin;
+        }
+
         .popUpBackground {
             position: absolute;
             top: 0%;
@@ -454,7 +677,7 @@
         .death-content-top {
             position: fixed;
             left: 0;
-            bottom: 60%;
+            top: 10%;
             width: 100%;
             height: 30%;
             line-height: 1;
@@ -462,8 +685,8 @@
             animation-duration: .7s;
         }
         @keyframes deathScreenDropDown {
-          from {bottom: 160%;}
-          to {bottom: 60%;}
+          from {top: -90%;}
+          to {top: 10%;}
         }
         .death-content-bottom {
             position: fixed;
@@ -477,6 +700,22 @@
         @keyframes deathScreenDropDown2 {
           from {top: -50%;}
           to {top: 50%;}
+        }
+        #deathScreenCanvas {
+            position: fixed;
+            left: calc((100% - 15vw / 1080 * 1920)/2);/*(100-width)/2*/
+            top: 21%;
+            width: calc(15vw / 1080 * 1920);
+            height: 15vw;
+            animation: deathScreenDropDown3 .7s, rotating 5s linear infinite;
+        }
+        @keyframes deathScreenDropDown3 {
+          from {top: -79%;}
+          to {top: 21%;}
+        }
+        @keyframes rotating {
+          from {transform: rotate(0deg);}
+          to {transform: rotate(360deg);}
         }
 
         #deathScreen.hidden {
@@ -638,6 +877,12 @@
       }
       #star:hover {
         background-color: #ffec80;
+      }
+      #lb {
+        background-color: #32a852;
+      }
+      #lb:hover {
+        background-color: #2bc454;
       }
       #person {
         background-color: #0092c3;
@@ -1195,6 +1440,7 @@
         border: 0.23vw solid #000000;
         border-radius: 1vmin;
         color: white;
+        display: none;
       }
     </style>
 </head>
@@ -1226,13 +1472,13 @@
         <div id="drawnEntities" class="debugopen">Drawn Entities: xx</div>
         <div id="mapSize" class="debug">Map: ????x????</div>
     </div>
-    <input type="text" enterkeyhint="send" autocomplete="off" id="chat" placeholder="Click or press ENTER" onfocus="sendTypingIndicator()" onblur="removeTypingIndicator()" />
     <div id="notifFlex"></div>
     <div id="deathScreen" class="hidden">
         <div class="death-content-top">
             <h1 style="font-size: 5vmin;">You died!</h1>
             <p style="font-size: 2.5vmin;">you were killed by <span id="killer">???</span></p>
         </div>
+        <canvas id="deathScreenCanvas"></canvas>
         <div class="death-content-bottom">
             <p style="font-size: 2.5vmin;">Level <span id="finalLvl">???</span> <span id="playerUpgrade">???-???</span></p>
             <br><p style="font-size: 2.5vmin;">Time Played: <span id="totalTime">??:??:??</span></p>
@@ -1265,7 +1511,15 @@
     </div>
     <div id="respawnInfo">You will respawn at level <span id="respawnLvl">0</span></div>
     <div id="adminPanelYN">Developer Mode ON<br>you're logged in using an admin account, or accessing developer servers</div>
-    <div id="not-signed-in-text"><button id="loginButton" class="otherlinks">Log In</button> - <button id="signupButton" class="otherlinks">Sign Up</button></div>
+    <div id="not-signed-in-text">
+      <button id="loginButton" class="otherlinks">Log In</button> - <button id="signupButton" class="otherlinks">Sign Up</button>
+      <br><br><div id="plsSignUp"><div class="arrow-up" style="left: 12vmin;top: -0.8vmin;"></div>Create an account to unlock achievements, daily streaks, leaderboards, and the star road!</div>
+    </div>
+    <div id="signed-in-text">
+      <div id="accName">Loading...</div>
+      <img src="/scenexeIconStarSmall.png" alt="Account Stars" class="hsImage" style="width: 4vmin; height: 4vmin;">
+      <span id="starAmt" style="position: relative; bottom: .8vmin;">Loading...</span>
+    </div>
     <div id="quickchat">
       <div id="quickchattext">Quick Chat</div>
       <div id="quickchat1" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc"></span><div class="qcmore">...</div><span class="qcnumber">1</span></div>
@@ -1273,17 +1527,14 @@
       <div id="quickchat3" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc three"></span><div class="qcmore">...</div><span class="qcnumber three">3</span></div>
       <div id="quickchat4" class="quickchatsectors" onclick="openModalquickchat()"><span class="thecross">+</span><span class="actualqc four"></span><div class="qcmore">...</div><span class="qcnumber four">4</span></div>
     </div>
+    <input type="text" enterkeyhint="send" autocomplete="off" id="chat" placeholder="Click or press ENTER" onfocus="sendTypingIndicator()" onblur="removeTypingIndicator()" />
     <div id="left-buttons" class="hsFlexbox">
       <button id="reddit" class="hsButtons">
-        <span class="material-icons hsIcons" onclick="window.open('https://www.reddit.com/r/rocketer/')">
-        reddit
-        </span>
+        <img src="/scenexeIconReddit.png" alt="Reddit" class="hsImage" onclick="window.open('https://www.reddit.com/r/rocketer/')">
         <span class="tooltiptext2">Subreddit</span>
       </button>
       <button id="discord" class="hsButtons">
-        <span class="material-icons hsIcons" onclick="window.open('https://discord.com/invite/R83VfCXDFN')">
-        discord
-        </span>
+        <img src="/scenexeIconDiscord.png" alt="Discord" class="hsImage" onclick="window.open('https://discord.com/invite/R83VfCXDFN')">
         <span class="tooltiptext2">Discord Server</span>
       </button>
     </div>
@@ -1293,15 +1544,19 @@
     </div>
     <div id="top-buttons" class="hsFlexbox">
       <button id="star" class="hsButtons">
-        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconStar.png?v=1745762544465" alt="Achievements" class="hsImage" onclick="accounts()">
-        <span class="tooltiptext">Achievements</span>
+        <img src="/scenexeIconStar.png" alt="Achievements" class="hsImage">
+        <span class="tooltiptext">Star Road</span>
+      </button>
+      <button id="lb" class="hsButtons">
+        <img src="/scenexeIconLeaderboard.png" alt="Leaderboard" class="hsImage">
+        <span class="tooltiptext">Leaderboard</span>
       </button>
       <button id="person" class="hsButtons">
-        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconProfile.png?v=1745762589212" alt="Profile" class="hsImage" onclick="accounts()">
+        <img src="/scenexeIconProfile.png" alt="Profile" class="hsImage">
         <span class="tooltiptext">Account</span>
       </button>
       <button id="settings" class="hsButtons">
-        <img src="https://cdn.glitch.global/c7f7498f-0478-437e-99ed-f282a7aeec18/scenexeIconSettings.png?v=1745762626908" alt="Settings" class="hsImage" onclick="openSettings()">
+        <img src="/scenexeIconSettings.png" alt="Settings" class="hsImage" onclick="openSettings()">
         <span class="tooltiptext">Settings</span>
       </button>
     </div>
@@ -1363,13 +1618,83 @@
             Open Weapon Upgrade Tree&emsp;<button id="20" class="modalButton">Y</button><br>
             Open Body Upgrade Tree&emsp;<button id="21" class="modalButton">U</button><br>
             Open Settings (In-Game)&emsp;<button id="22" class="modalButton">O</button><br>
+            Toggle Screenshot Mode&emsp;<button id="23" class="modalButton">P</button><br>
             <hr>
           </div>
           <hr /><button id="exit-settings-apply" class="modalButton">APPLY</button>&emsp;<button id="exit-settings-cancel" class="modalButton">CANCEL</button>
         </div>
     </div>
+    <div id="acc" class="accountPage">
+      <div id="accButtonFlex">
+        <div id="searchBar" style="width: 18%;">
+          <input class="accInput" style="width: 90%;" placeholder="Search Users">
+          <button class="accButton" style="width: 5vmin; height: 5vmin; position: relative; right: 5vmin; top: 0.5vmin; cursor: not-allowed;">
+            <img src="/scenexeIconSearch.png" alt="Search" class="hsImage" onclick="" style="text-align: center;width: 3vmin; height: 3vmin; margin-left: -0.5vmin;">
+          </button>
+        </div>
+        <button class="accButton" style="cursor: not-allowed;">Edit Profile</button>
+        <button class="accButton" style="cursor: not-allowed;">Log Out</button>
+        <button class="accButton" id="closeAcc">Back to Game</button>
+      </div>
+      <div id="account" style="position: fixed; left: 3vmin; top: 5vmin; font-size: 3vmin; width: calc(100% - 6vmin); height: calc(100% - 5vmin); overflow: scroll;">
+        <canvas id="accPfp" style="position: relative; float:left; width: 15vmin; height: 15vmin; padding-right: 1vmin;"></canvas>
+        <span id="accName2" style="font-size: 5vmin;">Loading...</span><br>
+        <img src="/scenexeIconStarSmall.png" alt="Account Stars" class="hsImage" style="width: 4vmin; height: 4vmin;">
+        <span id="starAmt2" style="position: relative; bottom: .8vmin;">Loading...</span>
+        <br><br><div id="accDesc" style="float: left; font-size: 2.3vmin;">Description: testing testing testing blah blah blah i dont know what to type here and i dont know why im spending my time typing this</div>
+        <br><hr>
+        <div id="accInfo">
+          <div><div class="accInfoBig">Joined</div><div class="accInfoSmall" id="joindate">Loading...</div></div>
+          <div><div class="accInfoBig">Last Online</div><div class="accInfoSmall" id="lastseen">Loading...</div></div>
+          <div><div class="accInfoBig">Achievements</div><div class="accInfoSmall" id="achCount">??/??</div></div>
+          <div><div class="accInfoBig">High Score</div><div class="accInfoSmall" id="bestScore">???</div></div>
+          <div><div class="accInfoBig">Current Streak</div><div class="accInfoSmall" id="streak">???</div></div>
+          <div><div class="accInfoBig">Highest Streak</div><div class="accInfoSmall" id="highstreak">???</div></div>
+        </div>
+        <br><hr>
+        <div id="achTitle" style="font-size: 3.5vmin;">
+          Achievements
+          <button class="accButton" style="position: relative; font-size: 2vmin; margin-left: 2vmin; padding: .2vmin 1vmin; bottom: .5vmin;" onclick="">+</button>
+        </div>
+        <div id="achievementContainer"></div>
+      </div>
+    </div>
+    <div id="starroad" class="accountPage" style="overflow-x: scroll; overflow-y: hidden; padding-left: 5vmin; padding-right: 5vmin; width: calc(100% - 10vmin);">
+      <div class="starroadText" style="top: 5vmin; font-size: 5vmin;">Star Road</div>
+      <div class="starroadText" style="top: 10vmin; font-size: 3vmin;">Gain stars to unlock special rewards!</div>
+      <div id="road" class="starBars">
+        <div id="progress" class="starBars"></div>
+        <div id="numberContainer">
+          <div class="numbers">0<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">250<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">500<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">1000<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">1500<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">2000<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">3000<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">4000<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">5000<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">10000<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">15000<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">20000<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+          <div class="numbers">25000<div class="milestone"><div class="arrow-up"></div>Coming soon...</div></div>
+        </div>
+      </div>
+      <button class="accButton" id="closeRoad" style="position: fixed; right: 5vmin; top: 2vmin;">Back to Game</button>
+    </div>
+    <div id="accLeaderboard" class="accountPage">
+      <div class="starroadText" style="top: 5vmin; font-size: 5vmin;">Accounts Leaderboard</div>
+      <div class="starroadText" style="top: 10vmin; font-size: 3vmin;" id="lbSubtitle">Star Champions</div>
+      <select name="lbType" id="lbType" class="accButton" style="position: fixed; right: 50%; top: 15vmin; transform: translate(50%,0);">
+        <option value="star">Star Amount</option>
+        <option value="score">Highest Score</option>
+        <option value="age">Account Age</option>
+      </select>
+      <button class="accButton" id="closeLB" style="position: fixed; right: 5vmin; top: 2vmin;">Back to Game</button>
+      <div id="lbContainer"></div>
+    </div>
     <div id="blackScreen"></div>
-    <div id="modal" class="modal"><h1 id="message-popup-title" class="modalText">Error</h1><hr><p id="message-popup-text"  class="modalTextSmall">Accounts will be added soon</p><hr><button id="ok-button" class="modalButton" onclick="closeModal()">OK</button></div>
+    <div id="modal" class="modal"><h1 id="message-popup-title" class="modalText">No Account</h1><hr><p id="message-popup-text"  class="modalTextSmall">Please log in or sign up.</p><hr><button id="ok-button" class="modalButton" onclick="closeModal()">OK</button></div>
     <div id="modal2" class="modal"><h1 class="modalText">Feedback/Bugs</h1><hr><p class="modalTextSmall">Please join our Discord server!</p><hr><button class="modalButton" onclick="closeModal2()">OK</button></div>
     <div id="modal3" class="modal"><h1 class="modalText">Disconnected</h1><hr><p class="modalTextSmall">An unexpected error occurred. Try reloading the page.</p><hr><button class="modalButton" onclick="closeModal3()">RECONNECT</button></div>
     <div id="modal3a" class="modal"><h1 class="modalText">Connection Error</h1><hr><p class="modalTextSmall" id="modal3aErr">An unexpected error occurred. Try reloading the page.</p><hr><button class="modalButton" onclick="closeModal3a()">RECONNECT</button></div>
@@ -1379,17 +1704,18 @@
     <div id="modal8" class="modal"><h1 class="modalText">Please disable your ad blocker</h1><hr><p class="modalTextSmall">Ads support the game and allow it to keep updating and expanding.</p><hr><button class="modalButton" onclick="closeModal8()">OK</button></div>
     <div id="login" class="modal" style="overflow:hidden;">
       <h1 class="modalText">Log In</h1><hr>
-      <input class="translucentInput" placeholder="Username" maxlength="100" id="loginuser"></input><br>
-      <input class="translucentInput" placeholder="Password" maxlength="100" id="loginpw" type="password"></input><br>
+      <input class="translucentInput" placeholder="Username" maxlength="15" id="loginuser"></input><br>
+      <input class="translucentInput" placeholder="Password" maxlength="15" id="loginpw" type="password"></input><br>
       <p class="modalTextSmall" style="line-height:1.5;">Show Password&emsp;<label class="switch" style="top:0.2vmin;"><input type="checkbox" onclick="togglePasswordVisibility()"><span class="slider round"></span></label></p><br><hr>
       <button class="modalButton" onclick="login()">LOG IN</button>&emsp;<button class="modalButton" onclick="closeModal5()">CANCEL</button>
       <div class="loader" id="loginLoading"></div>
     </div>
     <div id="signup" class="modal" style="overflow:hidden;">
       <h1 class="modalText">Sign Up</h1><hr>
-      <input class="translucentInput" placeholder="Username" maxlength="100" id="signupuser"></input><br>
-      <input class="translucentInput" placeholder="Password" maxlength="100" id="signuppw" type="password" onblur="checkPw()"></input><br>
-      <input class="translucentInput" placeholder="Confirm Password" maxlength="100" id="confirmpw" type="password" onblur="checkPw()"></input>
+      <input class="translucentInput" placeholder="Username" maxlength="15" id="signupuser"></input><br>
+      <input class="translucentInput" placeholder="Description" maxlength="50" id="signupdesc"></input><br>
+      <input class="translucentInput" placeholder="Password" maxlength="15" id="signuppw" type="password" onblur="checkPw()"></input><br>
+      <input class="translucentInput" placeholder="Confirm Password" maxlength="15" id="confirmpw" type="password" onblur="checkPw()"></input>
       <p class="modalTextSmall" style="line-height:1.5;margin-top:0;padding-top:0;">
         <span id="pwWrong" style="font-size:1.5vmin;display:none;">Passwords do not match.<br></span><br>
         Show Password&emsp;<label class="switch" style="top:0.2vmin;"><input type="checkbox" onclick="togglePasswordVisibility()"><span class="slider round"></span></label>
@@ -1405,7 +1731,7 @@
     <script type="module" src="./index.js"></script>
     <script type="module">
       //html file cannot access functions inside a module js file, only a normal js file
-      import { closeModal,closeModal2,closeModal3,closeModal3a,closeModal5,closeModal6,closeModal7,closeModal8,closeModalquickchat,openModalquickchat,createquickchat,openSettings,accounts,bugs,changeGamemode,togglePasswordVisibility,checkPw,login,signup,updateTempSettings } from "./index.js";//add updateTempSettings and closemodal3 etc. later
+      import { closeModal,closeModal2,closeModal3,closeModal3a,closeModal5,closeModal6,closeModal7,closeModal8,closeModalquickchat,openModalquickchat,createquickchat,openSettings,bugs,changeGamemode,togglePasswordVisibility,checkPw,login,signup,updateTempSettings,sendTypingIndicator,removeTypingIndicator } from "./index.js";//add updateTempSettings and closemodal3 etc. later
       window.closeModal = closeModal;
       window.closeModal2 = closeModal2;
       window.closeModal3 = closeModal3;
@@ -1415,11 +1741,10 @@
       window.closeModal7 = closeModal7;
       window.closeModal8 = closeModal8;
       window.openSettings = openSettings;
-      window.accounts = accounts;
       window.bugs = bugs;
       window.updateTempSettings = updateTempSettings;
-      //window.sendTypingIndicator = sendTypingIndicator;
-      //window.removeTypingIndicator = removeTypingIndicator;
+      window.sendTypingIndicator = sendTypingIndicator;
+      window.removeTypingIndicator = removeTypingIndicator;
       window.changeGamemode = changeGamemode;
       window.togglePasswordVisibility = togglePasswordVisibility;
       window.checkPw = checkPw;

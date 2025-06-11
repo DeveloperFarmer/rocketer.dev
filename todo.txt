@@ -4,17 +4,13 @@ make bigger shapes rarer, and add special shapes, e.g. gem
 add funny mode where shapes rotate super fast
 add a limit of 60fps to prevent good devices from having fast animations (or add delta like rocketer)
 remember to add numberOfObjectsDrawn to all the drawing functions
-
-Next update: add scenexe tanks (keep rocketer tanks for legacy), add body collision, remove and respwn shapes when play again
+add body collision, remove and respwn shapes when play again for PvE
 
 FIX CLCIKING PLAY BUTTON AFTER EXITING DEATH SCREEN
 RE_ENABLE BOT PREVENTION IN SERVER (multiple tabs + req.headers.origin check)
-
-REMOVE STAR SHAPE (both client and server)
 MSGPACKR
 
 In the future: add world record leaderboard and featured youtubers, add accounts (fix the code for the divs) + add ach notif, re-add tank editor divs (and line 2942: editedtank and exportcode) + remove them on death (line 3012)
-Change shape xp to scenexe xp system
 After adding upgrading to PvE, remember to make death screen show correct upgrade tanks, and add a rotating canvas drawing of the tank
 
 Why does client need to disconnect and reconnect if it dies and respawn in same server? (check returntohomescreen function)
@@ -23,30 +19,20 @@ change clientfovmultiplier to fov?
 check if can reduce mobile mouse movement setinterval from every 30ms to 60ms
 CHANGE PVE requestanimframe to requestInterval
 add quickchat functionality (when you open quick chat and press 1, 2, 3 or 4, then close the quick chat and send the message) + save quick chats to local storage
-quickchat fix flipped text (both the quick chat and the number)
 ****"Above" assets should render below turret ALL THE TIME, not just for upgrade tree
-****Fix trap barrel rendering
-***Fix upgrade button y position
 ***make sure all minions and mines arethe same as scenexe
-rework and balance eternals (continue fixing cosmetic)
+rework and balance eternals
 add more settings: showshapeinfo and spawnradparticle
 
 fix all player undefined bugs in client
 fix bugs where things are drawn (can see hitbox) but the things isnt actually drawn e.g. traps
 traps take up a lot of bandwidth
-traps should render below tank e.g. for shrapnel
-remove stars
-barricade tank looks weird
 barrel length slowly returns to normal after shoot e.g. alpha, and delay reduces even when not holding down mouse
 ***balance body upgrades barrel damage (and do same things as body damage)
-** add maximum amt of skill points
 ** fix barrel length when lag
 *****make cavern use shape spawning function same as other gamemodes, rename cavern to abyss, add mishappen shapes, fix for all other gamemodes
 make shape hit color change faster in PvE (make pve use same renderpolygon function as ffa)
 **make health bars, chats, and names render above everything else
-drones should have rounded edges
-on the upgrade button, scrap and shrapnel have sharp edges for trap barrels
-*upgrading max health stats should not change health percentage, and change stats to make it more similar to scenexe (and move fov to the body upgrades side)
 add settings
 add quickchat mobile button
 change all bullet flash to the psbc
@@ -59,6 +45,47 @@ disconnect from ffa when change to pve gamemode
 fixed duo reload changing over time (rounding issue, or because reload property doesnt have reload skill points unlike reloadrecover)
 remove barrel.shootingState and do in client instead (client need to know the reload)
 Monday: fix all rendering + add map hitbox border (lime green) + fix player and shape collision + fix traps (render square inside hitbox, and increase trap size, remove space between traps)
+patch undefined error in server
+collision detection even when have spawn protection, just no damage
 
+yt: scenexe.io AAA's first upload (9:31) to see rupture portal animation, (14:33) for portal disappearing animation
+remove particle width and height, replace with radius
+only shake screen for portal removal if portal is visible (search for skibidi in the client code)
+wormhole particle size and distance from portal should be based on size of portal
+
+add barrel animation for minions and mines + send reload and reloadrecover to client so client can calculate themselves
+make turret shoot more accurately
+knockback tank shouldnt be able to push heavy shapes, but can push lighter shapes a lot
+fix upgrade button open animation
+check if eternal leveling system is correct
+fix eternal stat upgrades: https://scenexeio.fandom.com/wiki/XP_and_the_Leveling_System
+
+change reload method to what deepseek suggested
+it should...
+- maintain reload delay, no matter what
+- shoot immediately after not shooting for a long time, especially for destroyer, while still mainting reload delay
+- added property called reload delay that is equal to reload when adding from data file
+remove developer tanks, e.g. ?u6
+developer have radiance? (need .rad property)
+total drone count instead of drone count per barrel?
+change notifications so tht server dont need to send 'dimgrey', and only have default color
+add tank ingame that has repulsion aura
+fix movebulletbot and checkifspawnbulletbot functions in the future
+fix reconnecting button not working after entering game
+add rad property for player, make developers only can have radiance, or change visual team color (an add more colors including shape color team id, add transparent color)
+bullet and botbullet collision?
+
+
+reduce client requests when connect, instead server should automatically just send the stuff just like how it sends player count
+rewrite the entire wss in server and use switch statements
+add portal and shape collision (use pushplayer away from portal function?)
+improve particle effect in cr and cavern and sanc?
+remove all editor stuff
+mrege flinggate and normal gate functions, and fling gate should fling everything, including bullets, normal gates should stop everything too, just like walls
+split abyss in abyss lobby and main map
+crossroads maze walls should render below grids
+add upgrade tank particles for all players, not just yourself
+update the way bots are rendered
+add leave animation for leaderboard
 
 Note: this file is for my reference, isnt used ingame

@@ -1,9 +1,23 @@
-import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeaponUpgradeMap,bodyupgrades,weaponupgrades,bodyColors } from "./tankUpgrades.js";
+import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeaponUpgradeMap,bodyupgrades,weaponupgrades,bodyColors,botcolors } from "./tankUpgrades.js";
         // Canvas setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
         const hcanvas = document.getElementById('homeScreen');
-        const hctx = hcanvas.getContext('2d');
+        let hctx = hcanvas.getContext('2d');//use let cuz might need to change temporarily sometimes
+
+        const dcanvas = document.getElementById('deathScreenCanvas');
+        dcanvas.width = 1920/5;
+        dcanvas.height = 1080/5;
+        let dctx = dcanvas.getContext('2d');
+
+        const pfpcanvas = document.getElementById("accPfp");
+        //pfpcanvas.width = 1920/5;
+        //pfpcanvas.height = 1080/5;
+        pfpcanvas.width = 300;
+        pfpcanvas.height = 300;
+        let pctx = pfpcanvas.getContext("2d");
+
         const scoreElement = document.getElementById('score');
         const mapSizeElement = document.getElementById('mapSize');
         const botnumberElement = document.getElementById('botnumber');
@@ -20,9 +34,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         const oval = document.getElementById('ovalAnimation');//also for the animation
         const clientTickDiv = document.getElementById('clienttick');
         const signupdiv = document.getElementById('not-signed-in-text');
+        const signedupdiv = document.getElementById('signed-in-text');
         const playButton = document.getElementById("playButton");
         const nameInput = document.getElementById("display-name-input");
         const quickchat = document.getElementById("quickchat");
+        const chatInputBox = document.getElementById("chat");
         const darken = document.getElementById('blackScreen');
         document.getElementById('exit-changelog').addEventListener("click", () => {
           //fullchangelog.style.display = "none";
@@ -77,10 +93,20 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         export function login(){
           document.getElementById("loginLoading").style.display = "block";
           //send log in request to server
+          accusername = document.getElementById("loginuser").value;
+          accpassword = document.getElementById("loginpw").value;
+          canLogIn = "yes";
         }
         export function signup(){
-          document.getElementById("signupLoading").style.display = "block";
-          //send sign up request to server
+          //document.getElementById("signupdesc").value
+          if (document.getElementById("confirmpw").value == document.getElementById("signuppw").value) {
+            document.getElementById("signupLoading").style.display = "block";
+            //send sign up request to server
+            accusername = document.getElementById("signupuser").value;
+            accpassword = document.getElementById("signuppw").value;
+            accdesc = document.getElementById("signupdesc").value;
+            canLogIn = "yes";
+          }
         }
         document.getElementById('loginButton').addEventListener("click", () => {
           document.getElementById("login").style.display = "block";
@@ -105,6 +131,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         let maxshade = 0.3;//whitening effect when objects get hit
         let spawnprotectionShade = 0.1;
         let players = [];//for pve this will be the actual player obj, for oher multiplayer, this is the leaderboard
+        let leaderboardObj = {};//animation states
         const bullets = [];
         const enemies = [];
         const particles = [];
@@ -241,8 +268,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         let cameraY = 0;
         
         // Map background
-        let GRID_SIZE = 24;
-        let GRID_LINE_COLOR = '#C8C8C8';
+        const gridSizes = {default: 24, sanc: 24, cr: 90, abyss: 90};
+        const gridColors = {default: 'rgba(90,90,90,.05)', sanc: "rgba(20,20,20,.1)", cr: "rgba(20,20,20,.5)", abyss: "rgba(255,255,255,.03)"};
+        //trnaslucent grid so it is slightly darker on both the map and the border (more translucent = more difference between grid color on map and border)
+        const mapColors = {default: '#CDCDCD', sanc: "#595959", cr: "#303030", abyss: "#141414"};
+        const mapOutlines = {default: '#acacac', sanc: "#3d3d3d", cr: "#232323", abyss: "#000000"};
         
         // FPS counter variables
         let fps = 0;
@@ -272,7 +302,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         let spawnradparticle = "yes";
 
         function abbreviateScore(xp){
-          if (!xp){return;}//if undefined
+          if (!xp || xp < 1000){return xp;}//if undefined, or less than 1000
           var exp = xp
               .toExponential()
               .split('e+')
@@ -565,7 +595,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         this.isHit = true;
                         if (player.health <= 0) {
                             // Game over
-                            let lvl = convertXPtoLevel(player.score);
+                            let lvl = convertXPtoLevel(player.score,'tank');
                             showDeathScreen(score,"bot",lvl,"mono","base");
                         }
                         //else{
@@ -1311,7 +1341,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
         
         function drawGrid() {//only for game, not home screen
-            ctx.strokeStyle = GRID_LINE_COLOR;
+            ctx.strokeStyle = gridColors.cr;
+            let GRID_SIZE = gridSizes.cr;
             ctx.lineWidth = 4;
             const cameraXwithFOV = players[0].x - canvas.width/2 * fov;
             const cameraYwithFOV = players[0].y - canvas.height/2 * fov;
@@ -1346,7 +1377,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         function drawMapBoundary() {// Draw area outside the map (where camera can go beyond)
             ctx.save();
             ctx.translate(-canvas.width/2*(fov-1),-canvas.height/2*(fov-1));
-            ctx.fillStyle = 'rgba(95, 103, 108, 0.5)';
+            ctx.fillStyle = mapOutlines.cr;
             const cameraXwithFOV = players[0].x - canvas.width/2 * fov;
             const cameraYwithFOV = players[0].y - canvas.height/2 * fov;
             const cameraXwithFOVopp = players[0].x + canvas.width/2 * fov;
@@ -1405,7 +1436,12 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
       
         function drawGridHomeScreen() {//ONLY FOR HOMSCREEN
-            hctx.strokeStyle = GRID_LINE_COLOR;
+            hctx.strokeStyle = gridColors.default;
+            let GRID_SIZE = gridSizes.default;
+            if (drawingGamemode == 0){//pve
+              hctx.strokeStyle = gridColors.cr;
+              GRID_SIZE = gridSizes.cr;
+            }
             hctx.lineWidth = 4;
             const cameraXwithFOV = hsCameraX - hcanvas.width/2 * zoom;
             const cameraYwithFOV = hsCameraY - hcanvas.height/2 * zoom;
@@ -1475,30 +1511,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var x = hcanvas.width / 2 - (width / 2 + Xadditional);
         var y = pos + Yadditional;
         h *= scale;
-        hctx.beginPath();
-        hctx.moveTo(x + r, y);
-        hctx.arcTo(x + w, y, x + w, y + h, r);
-        hctx.arcTo(x + w, y + h, x, y + h, r);
-        hctx.arcTo(x, y + h, x, y, r);
-        hctx.arcTo(x, y, x + w, y, r);
-        hctx.closePath();
-        hctx.fill();
-        hctx.stroke();
+        hctxroundRectangle(x,y,r,w,h);
         //draw darker area
         var w2 = w - hctx.lineWidth;
         var h2 = h/2 - hctx.lineWidth/4;
         var x2 = x + hctx.lineWidth/2;
         var y2 = y + h2;
-        //h *= scale;
         hctx.fillStyle = boxdarkcolor;
-        hctx.beginPath();
-        hctx.moveTo(x2 + r, y2);
-        hctx.arcTo(x2 + w2, y2, x2 + w2, y2 + h2, r);
-        hctx.arcTo(x2 + w2, y2 + h2, x2, y2 + h2, r);
-        hctx.arcTo(x2, y2 + h2, x2, y2, r);
-        hctx.arcTo(x2, y2, x2 + w2, y2, r);
-        hctx.closePath();
-        hctx.fill();
+        hctxroundRectangleFill(x2,y2,0,w2,h2);
         //now draw hard-coded tank on upgrade tree
         hctx.save();
         hctx.translate(
@@ -2047,6 +2067,21 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             document.getElementById('killer').textContent = killer;
             document.getElementById('finalLvl').textContent = lvl;
             document.getElementById('playerUpgrade').textContent = tank+"-"+body;
+            //draw tank
+            let tempStoreHctx = hctx;
+            hctx = dctx;//change hctx to dctx so that it draws on death screen canvas
+            let team = "none";//fix later
+            let size = dcanvas.width/5;
+            //hctx.fillStyle = "white";
+            //hctx.fillRect(0, 0, dcanvas.width, dcanvas.height);//fill canvas with white for testing purposes
+            hctx.save();
+            hctx.translate(dcanvas.width / 2 + hsCameraX, dcanvas.height / 2 + hsCameraY);//add hscamera to override the camera position (inside the drawfakeplayer2 function)
+            hctx.lineJoin = "round";//to make shape corners round
+            hctx.lineWidth = size/15;
+            drawFakePlayer2(team,tank,body,0,0,90,size,true);
+            //use html div animation to rotate, put rotation as 90 because width is longer, allows tanks with long barrels such as marksman to render properly
+            hctx.restore();
+            hctx = tempStoreHctx;//change back to original hctx
             document.getElementById('deathScreen').classList.remove('hidden');
             quickchat.style.display = "none";
         }
@@ -2055,7 +2090,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         //SAME AS SCENEXE
         function convertXPtoLevel(xp,type){
           if (type == "tank"){
-            return Math.floor(Math.log((xp+1250/3)/500) / Math.log(1.2)) + 1;//same as scenexe
+            return Math.floor(Math.log(xp/500 + 1) / Math.log(1.2)) + 1;//same as scenexe
           }//Math.log is ln
           else if (type == "celestial"){
             return Math.floor(Math.log((xp-23477630.98)/5000000 + 1) / Math.log(1.2)) + 75;
@@ -2093,9 +2128,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
         function restartGame() {
             document.getElementById('deathScreen').classList.add('hidden');
+          if (gamemode == "PvE arena"){
             resetGame();
             isGamePaused = false;
             gameLoop();//restart the screen updates
+          }
+          else{
+            startGame();
+          }
         }
 
         function resetGame() {
@@ -2144,11 +2184,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             botnumberElement.textContent = `Number of enemies: ${MAX_BOTS}`;
             shapenumberElement.textContent = `Number of shapes: ${MAX_SHAPES}`;
             dimensionElement.textContent = `Dimension: ${gamemode}`;
-            document.getElementById('restartButton').addEventListener('click', restartGame);
-            document.getElementById('continueButton').addEventListener('click', returnToHomeScreen);
             connectedToServer();
             startPlayTime = Date.now();
         }
+        document.getElementById('continueButton').addEventListener('click', returnToHomeScreen);
+            document.getElementById('restartButton').addEventListener('click', restartGame);
       
         function connectedToServer(){
           document.getElementById('loadingWords').style.display = "none";
@@ -2163,7 +2203,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             starting = performance.now();//for client tick time
             numberOfObjectsDrawn = 0;
             // Clear canvas by drawing over
-            ctx.fillStyle = '#CDCDCD';
+            ctx.fillStyle = mapColors.cr;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             if (fovAnimation != fov){
               fovAnimation += (fov - fovAnimation)/5;
@@ -2177,10 +2217,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             ctx.scale(fovscale,fovscale);//scale for the ENTIRE GAME LOOP, if fov is 2, then scale by 1/2 so everything is smaller
             //ctx.translate(-canvas.width/2*fov,-canvas.height/2*fov);//CORRECT CODE, but to lazy to change to the correct code cuz lots of other stuff need to change
             ctx.translate(-canvas.width/2,-canvas.height/2);//translate back to normal
+            drawMapBoundary();//draw area outside map (translucent rectangles so that grids also change color)
             if (fov < 5){//dont draw grids if they are barely visible
               drawGrid();
             }
-            drawMapBoundary();//draw area outside map (translucent rectangles so that grids also change color)
           
             // Update and draw shapes first, so that they will be drawn below everything else
             shapes.forEach(shape => {
@@ -2307,12 +2347,23 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             hctx.restore();
         }
 
-        function drawFakePlayer2(team,weapontype,bodytype,x,y,rot,size){//only for home screen background
-          drawFakePlayer(bodytype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"bodyu");//body under
-          drawFakePlayer(weapontype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"weapon");//weapon upgrade
-          drawFakePlayer(bodytype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodyColors[team].col,bodyColors[team].outline,"bodya");//body above
+        function drawFakePlayer2(team,weapontype,bodytype,x,y,rot,size,overrideAura){//overrideAura is optional, if true then dont draw aura (aura only needed in home screen)
+          if (team == "none") team = "blue";
+          let bodycol;
+          let bodyoutline;
+          if (bodyColors.hasOwnProperty(team)){
+            bodycol = bodyColors[team].col;
+            bodyoutline = bodyColors[team].outline;
+          }
+          else{//give array of specific color
+            bodycol = team[0];
+            bodyoutline = team[1];
+          }
+          drawFakePlayer(bodytype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodycol,bodyoutline,"bodyu");//body under
+          drawFakePlayer(weapontype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodycol,bodyoutline,"weapon");//weapon upgrade
+          drawFakePlayer(bodytype,x-hsCameraX, y-hsCameraY,size/2,rot/180*Math.PI,bodycol,bodyoutline,"bodya");//body above
           let bodyUpgradeData = bodyupgrades[bodytype];
-          if (bodyUpgradeData.hasOwnProperty("auraSpecialty")){//has aura, so need to render aura on home screen
+          if (bodyUpgradeData && bodyUpgradeData.hasOwnProperty("auraSpecialty") && !overrideAura){//has aura, so need to render aura on home screen
             let w = bodyUpgradeData.auraSize/2*size;
             switch(bodyUpgradeData.auraSpecialty) {
               case "damaging":
@@ -2361,8 +2412,22 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         let drawingGamemode = currentGamemodeID;//the gamemode that is being drawn on home screen. While gamemode changes immediately when clicking arrow, this value changes after 0.6 seconda (when black oval is half way across the screen)
         function homeScreenLoop() {
             if (state == "ingame") return;//dont do anything if ingame
+            //check if user logging in (only possible at home page)
+            if (canLogIn == "yes") {
+              if (acctype != "edit"){
+                var packet = JSON.stringify(["logInOrSignUp", accusername, accpassword, accdesc, acctype]);
+                socket.send(packet)
+                canLogIn = "no";
+              }
+              else{
+                //var packet = JSON.stringify(["editaccount", accusername, accpassword, accdesc]);
+                //socket.send(packet)
+                canLogIn = "no";
+              }
+            }
             //start drawing the homescreen if not ingame
-            hctx.fillStyle = '#CDCDCD';
+            hctx.fillStyle = mapColors.default;
+            if (drawingGamemode == 0){hctx.fillStyle = mapColors.cr;}//pve
             hctx.fillRect(0, 0, hcanvas.width, hcanvas.height);
             if (zoom > 1){
               //zoom -= 0.005;
@@ -2524,6 +2589,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             shapenumberElement.className = "debug";
           }
           nameInput.style.display = "none";
+          document.getElementById('respawnInfo').style.display = "none";
           document.getElementById('connecting').style.display = "none";
           changelogPreview.style.display = "none";
           document.getElementById('hometitle').style.display = "none";
@@ -2534,14 +2600,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           document.getElementById('top-buttons').style.display = "none";
           document.getElementById('right-buttons').style.display = "none";
           signupdiv.style.display = "none";
-          //open debug
-          /*
-          fpsCounter.style.display = "block";
-          let allOtherDebugDivs = document.querySelectorAll(".debug");
-          for(let i = 0; i < allOtherDebugDivs.length; i++){
-            document.getElementById(allOtherDebugDivs[i].id).className = "debugopen";
-          }
-            */
+          signedupdiv.style.display = "none";
+          chatInputBox.style.display = "block";
           document.getElementById("debugContainer").style.display = "flex";//open debug
           debugState = "open";
           //start the game
@@ -2573,11 +2633,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             let packet = JSON.stringify(["joinGame", yourName]);
             socket.send(packet)
             startPlayTime = Date.now();//needed to get time played
+            randomNotif();
 
-            if (gamemode=="Tank Editor" && shownEditButton=="no"){
-              document.getElementById("openEditor").style.display = "block";
-              shownEditButton = "yes";
-            }
             //clear list of objects
             objects = {
               wall: {},//walls drawn below everything
@@ -2674,10 +2731,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
         loadChangelog();
       
-        export function accounts(){//not ready yet
+        /*export function accounts(){//not ready yet
           document.getElementById('modal').style.display = "block";
           darken.style.display = "block";
-        }
+        }*/
         export function bugs(){//ingame method to report bugs, not ready yet
           document.getElementById('modal2').style.display = "block";
           darken.style.display = "block";
@@ -2717,8 +2774,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         export function closeModal3a(){//connection error modal
           closeModalFunction('modal3a')
           //reconnect
-          connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in
-          gamemode = joinedWhichGM;
+          if (connected == "no"){
+            connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in
+            gamemode = joinedWhichGM;
+          }
         }
         export function closeModal5(){
           closeModalFunction('login')
@@ -2763,14 +2822,12 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             }
           }
         }
-        function returnToHomeScreen(type){//if type does not exist: return from death screen to home screen, or else if type is disconnect
-          state = "homepage";
-          if (!type){
-            //playButton.style.display = "block";
-            //nameInput.style.display = "block";//later gonna connect anyway
+        function returnToHomeScreen(ctype){//if ctype is either disconnect, or pointerEvent (default when no parameter given, e.g. deathscreen)
+          if (state != "homepage"){//ingame or deathscreen
+            state = "homepage";
+            homeScreenLoop();//restart the home page animation
           }
           hcanvas.style.display = "block";
-          //document.getElementById('connecting').style.display = "block";
           changelogPreview.style.display = "block";
           document.getElementById('hometitle').style.display = "block";
           subtitle.style.display = "block";
@@ -2779,34 +2836,24 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           document.getElementById('left-buttons').style.display = "flex";//FLEX, NOT BLOCK (CUZ its a flexbox)
           document.getElementById('top-buttons').style.display = "flex";
           document.getElementById('right-buttons').style.display = "flex";
-          signupdiv.style.display = "block";
+          if (loggedin == "yes") signedupdiv.style.display = "block";
+          else signupdiv.style.display = "block";
           document.getElementById('score').style.display = "none";
-          fpsCounter.style.display = "none";
-          let allOtherDebugDivs = document.querySelectorAll(".debug");
-          for(let i = 0; i < allOtherDebugDivs.length; i++){
-            document.getElementById(allOtherDebugDivs[i].id).className = "debug";
-          }
+          chat.style.display = "none";
+          document.getElementById("debugContainer").style.display = "none";
           debugState = "close";
           document.getElementById('deathScreen').classList.add('hidden');
-          if (!type){
-            document.getElementById('respawnInfo').style.display = "block";
+          if (gamemode != "PvE arena" && ctype == "disconnect"){
+            document.getElementById('connecting').style.display = "block";
           }
-          
-          if (shownEditButton=="yes"){
-            document.getElementById("openEditor").style.display = "none";
-            shownEditButton = "no";
-          }
-
-          if (gamemode != "PvE arena"){
-            if (!type){
-              //if not already disconnected, only died and reconnecting to respawnable gamemode (if disconnect, user will get modal3 popup asking to reconnect)
+          else if (joinedWhichGM != gamemode){//respawning in a different gamemode, e.g. died in crossroads, respawning in FFA
               reconnectToDefault = "yes";//prevent disconnect notification
               socket.close();//disconnect from current server
               connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in. If you spawned in FFA and died in 2tdm, you can only respawn in FFA
               gamemode = joinedWhichGM;
-            }
           }
           else{//PvE singleplayer
+            document.getElementById('respawnInfo').style.display = "block";
             playButton.style.display = "block";
             nameInput.style.display = "block";
           }
@@ -2817,21 +2864,57 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         //BELOW IS MULTIPLAYER CODE (COPIED FROM OLD ROCKETER)
         
         var connected = "no";
-        var mainMenuOpacity = 0;
         var state = "homepage"; //homepage, ingame, or deathscreen
         var officialGameStart = "no";//only becomes yes when receive game info
-        var drawAreaX = 0; //these two variable placed outside so that can access in mousemove event listener
-        var drawAreaY = 0;
         var px = 0;
         var py = 0;
-        var oldcamerax = 0;
-        var oldcameray = 0;
+
+        //accounts
         var canLogIn = 0; //used for account log in and sign ups
         var accusername = 0;
         var accpassword = 0;
         var accdesc = 0;
         var acctype = "error";
         var loggedInAccount = {};
+        var loggedin = "no";
+        const achievementList = [//the order is the order that achievements appear on the account page (based on star awarded)
+          ['Welcome',5,'Create an account.',1],//name, star, description, achievement id
+          ['Explorer',5,'Enter a portal.',7],
+          ['Killer',20,'Kill a player by shooting.',2],
+          ['Ascended',20,'Enter the sanctuary.',13],
+          ['Rainbow',35,'Kill a radiant shape.',3],
+          ['Bomber',50,'Kill a shape with 10 or more sides.',8],
+          ['Giant',50,'Get 10 million xp in one run.',4],
+          ['Monstrous',75,'Get 100 million xp in one run.',5],
+          ['Titan',150,'Get 500 million xp in one run.',6],
+          ['Survivor',150,'Survive for 20 minutes in FFA.<br>(Achievement given after death)',11],//<br> to next line
+          ['Oh Node!',300,'Reach lvl 60 as a node.',9],
+          ['Shiny!',300,'Kill a radiant hendecagon.',10],
+          ['Champion',400,'Reach lvl 85.',14],
+          ['Victor',1500,'Survive for an hour in FFA.<br>(Achievement given after death)',12],
+        ];
+
+        const achcolors = [
+          ['rgb(242,219,120)','rgb(212,189,90)'],
+          ['rgb(126,146,247)','rgb(96,116,217)'],
+          ['rgb(123, 9, 123)','rgb(93, 0, 93)'],
+          ['rgb(194, 63, 63)','rgb(164, 33, 33)'],
+          ['rgb(81, 217, 225)','rgb(51, 187, 195)'],
+          ['rgb(39, 227, 170)','rgb(9, 197, 140)'],
+          ['rgb(184, 123, 181)','rgb(154, 93, 151)'],
+          ['rgb(222, 156, 58)','rgb(192, 126, 28)'],
+        ];//achievements have different colors based on difficulty
+
+        function whichColor(star){//choose color based on number of stars
+            if (star <= 20) return 0;
+            else if (star <= 50) return 1;
+            else if (star <= 100) return 2;
+            else if (star <= 200) return 3;
+            else if (star <= 400) return 4;
+            else if (star <= 1500) return 5;
+            else return 6;
+        }
+
         var clientAngle = 0;
         var mobile = "no";
         var mobileSentMousePress = "no";
@@ -2856,16 +2939,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var extraFontSize = 0;
         var oldskillpointnumber = 0;
 
-        var achievementList;
-        var achcolors;
-
         //keep track of number of upgrade buttons for ignore button to position correctly
         var maxnumberofbuttons = 0;
         var maxnumberofbuttonsb = 0;
-
-        var barrelnumberid = 1;//for tank editor display id. the actual ids for barrels are different
-        var assetnumberid = 1;
-        var gadgetnumberid = 1;
 
         //buttons for skill points
         var skillpointsbutton = [
@@ -2893,6 +2969,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var deltaTime = 1;
 
         const notifications = document.getElementById("notifFlex");
+        const killNotifTimer = 6000;
+        const keybindNotifTimer = 3000;
         function createNotif(text,color,timer){
           const notifone = document.createElement("div");
           notifone.className = "alert";
@@ -2928,8 +3006,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var reconnectToDefault = "no";//when die, reconnect to spawning server, e.g. ffa
 
         //for the tank editor
-        var shownEditButton = "no";
-        var openedUI = "no";
         var safeZone = 2000;
         var safeZoneColor = "rgba(133, 194, 212, .5)";
 
@@ -2946,7 +3022,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var portalwidths = {};
         //keep track of radiant shape colors
         var radiantShapes = {};
+        var radiantPortals = {};
         var crossroadRadians = 0;
+        //client animates shape angles
+        var shapeAngles = {};
           
         //store settings in computer so that always same when open browser
         let settingsList = {//default settings
@@ -2991,6 +3070,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           20: "Y",
           21: "U",
           22: "O",
+          23: "P",
         }
         let temporarySettings = {};//track changes to settings, which only actually change when user clicks the 'apply' button
         
@@ -3158,20 +3238,25 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           console.log(settingsList)
         }
 
-
-        function sendTypingIndicator(){
-          const packet = JSON.stringify(["chat", "typingAnim"]);
-          socket.send(packet)
+        export function sendTypingIndicator(){
+          if (state=="ingame" && gamemode != "PvE arena"){
+            const packet = JSON.stringify(["chat", "typingAnim"]);
+            socket.send(packet)
+          }
         }
-        function removeTypingIndicator(){
-          const packet = JSON.stringify(["removeTyping"]);
-          socket.send(packet)
+        export function removeTypingIndicator(){
+          if (state=="ingame" && gamemode != "PvE arena"){
+            const packet = JSON.stringify(["removeTyping"]);
+            socket.send(packet)
+          }
         }
 
         var keylock = "no";
 
         var shapeHit = {};//animate change in color when shapes get hit, for all gamemodes except PvE (PvE have it stored in the shape object itself)
         var playerHit = {};
+        var bulletHit = {};
+        var botHit = {};
 
         function getTanksThatCanUpgradeTo(list,tankname){//for upgrade tree
           //get an array of tanks that can upgrade to in the future (these tanks wont be greyed out on upgrade tree)
@@ -3226,7 +3311,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             "Detonator shoots traps that explode on death."
           ]
           let rando = randomFunFact[Math.floor(Math.random() * randomFunFact.length)]; //random fun fact
-          createNotif(rando,defaultNotifColor,3000)
+          createNotif(rando,defaultNotifColor,keybindNotifTimer)
         }
 
         //leaderboard player rotation
@@ -3234,6 +3319,28 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
         //2tdm colors
         var teamColors = [];
+
+        function killArrayToString(killerlist) {//needed for death screen and kill notification
+          let killer = "";
+          for (const i of killerlist){
+            if (killer != ""){//not first killer
+              killer += ", ";
+            }
+            if (typeof i == "number") { //killer is a number, which is numer of sides of a shape
+              let shapetype = i - 3;
+              if (i == 4) shapetype = 0;
+              else if (i == 3) shapetype = 1;
+              killer += shapeNames[shapetype];
+            }
+            else{
+              killer += i;
+            }
+          }
+          if (killerlist.length > 1) {//if more than one killer
+            killer = killer.replace(/,(?=[^,]+$)/, ', and');//replace last comma with 'and'
+          }
+          return killer;
+        }
 
         var socket = "null";
         // Connect to server
@@ -3245,8 +3352,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)//wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/
           document.getElementById("adminPanelYN").style.display = "block";
           var serverlist = {
-            "Free For All": "wss://ffa-r.mrharryw.dev/",
-            //"Free For All": "wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev:8080/",
+            //"Free For All": "wss://ffa-r.mrharryw.dev/",
+            "Free For All": "wss://cfaa32e2-5c79-441a-84a3-292ea9aafe5d-00-1o94mkz7bqr58.riker.replit.dev/",
             "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
             "4 Teams": "wss://devrocketer4tdm.devrocketer.repl.co/",
             "Tank Editor": "wss://devrocketereditor.devrocketer.repl.co/",
@@ -3280,9 +3387,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   nameInput.style.display = "block";
                   document.getElementById('connecting').style.display = "none";
                 }
-                //retrieve world record from server
-                var packet = JSON.stringify(["wr"]);
-                socket.send(packet)
                 //check latency
                 var sentBack = "yes";
                 setInterval(function () {
@@ -3300,13 +3404,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   socket.send(packet)
                 }
                 //auto sign into account when open website
-                if (
-                  localStorage.getItem("rocketerAccountp") &&
-                  localStorage.getItem("rocketerAccountu")
-                ) {
+                if ("rocketerAccountp" in localStorage && "rocketerAccountu" in localStorage) {
                   const catss = localStorage.getItem("rocketerAccountp");
                   const dogss = localStorage.getItem("rocketerAccountu");
-                  console.log("logging in...");
+                  console.log("auto logging in...");
                   var packet = JSON.stringify(["logInOrSignUp", dogss, catss, "", "login"]);
                   socket.send(packet)
                 }
@@ -3339,26 +3440,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     let yourID = info[1];
                     playerstring = yourID;
                   }
-                  else if (type=="youtuber"){//re-add featured youtubers to the website in the future
-                    /*
-                    let icon = info[1];
-                    let name = info[2];
-                    let url = info[3];
-                    //featured youtuber
-                    document.getElementById("youtuberimage").src = icon;
-                    document.getElementById("youtubername").innerHTML =
-                      "Featured YouTuber:<br>" + name;
-                    var channelurl = "https://youtube.com/" + url;
-                    document.getElementById("featuredyoutuber").onclick = function () {
-                      window.open(channelurl);
-                    };
-                    */
-                  }
                   else if (type=="newNotification"){//create notification when server sends it
                     let text = info[1];
                     let color = info[2];
+                    if (!color){
+                      color = defaultNotifColor;//if no color specified, use default color
+                    }
                     if (color != "red"){
-                      createNotif(text,color,5000);
+                      createNotif(text,color,killNotifTimer);
                     }
                     else{//server sent an error
                       document.getElementById('modal3a').style.display = "block";
@@ -3366,45 +3455,15 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       darken.style.display = "block";
                     }
                   }
-                  else if (type=="receiveWR"){
-                    let recordHolder = info[1];//re-add world record leaderboard later on
-                    /*
-                    document.getElementById("wrwords").innerHTML =
-                    "<span style='text-align: center;'><h3>World Record Holder</h3><hr></span><table><tr><th>1. " +
-                    recordHolder[0].name +
-                    "</th><th>" +
-                    recordHolder[0].score +
-                    " xp</th><th>" +
-                    recordHolder[0].tank +
-                    "</th></tr><tr><th>2. " +
-                    recordHolder[1].name +
-                    "</th><th>" +
-                    recordHolder[1].score +
-                    " xp</th><th>" +
-                    recordHolder[1].tank +
-                    "</th></tr><tr><th>3. " +
-                    recordHolder[2].name +
-                    "</th><th>" +
-                    recordHolder[2].score +
-                    " xp</th><th>" +
-                    recordHolder[2].tank +
-                    "</th></tr><tr><th>4. " +
-                    recordHolder[3].name +
-                    "</th><th>" +
-                    recordHolder[3].score +
-                    " xp</th><th>" +
-                    recordHolder[3].tank +
-                    "</th></tr><tr><th>5. " +
-                    recordHolder[4].name +
-                    "</th><th>" +
-                    recordHolder[4].score +
-                    " xp</th><th>" +
-                    recordHolder[4].tank +
-                    "</th></tr></table>";
-                    */
+                  else if (type=="killNotification"){//create kill notification
+                    let killerlist = info[1];
+                    let killed = info[2];
+                    let notif = killArrayToString(killerlist) + " killed " + killed + ".";
+                    createNotif(notif,defaultNotifColor,killNotifTimer);
                   }
                   else if (type=="accountView"){
                     let accountObject = info[1];
+                    console.log(accountObject);
                     //if successfully log into an account, show the account
                     //sample account obj:
                     /*
@@ -3412,79 +3471,44 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     desc: description,
                     pw: password,
                     join: dateToday,
-                    achievements: [],
+                    ach: [],//achievements
                     topScore: 0,
                     star: 0,
-                    pfp: "basic",
-                    clr: "blue",
+                    pfp: ["node","base","blue",0,0,45],//tank, body, team, x, y offsets, angle
                     bg: "grey",
-                    lastSeen: Date.now(),*/
+                    lastSeen: Date.now(),
+                    streak: 0,
+                    streakDate: Date.now(),
+                    hstreak: 0,
+                    */
 
+                    loggedin = "yes";
+                    signedupdiv.style.display = "block";
+                    signupdiv.style.display = "none";
+                    if (document.getElementById("signup").style.display != "none" || document.getElementById("login").style.display != "none") {
+                      document.getElementById("signup").style.display = "none";
+                      document.getElementById("login").style.display = "none";
+                      darken.style.display = "none";
+                    }
                     loggedInAccount = accountObject;
                     var achievementsDescription = "";
-                    function addAchievementDiv(color,color2,name,star,starcol,textcol,desc){
-                      achievementsDescription += "<div class='achievementDiv' style='color:"+textcol+";margin:10px;background: linear-gradient(to bottom, "+color+" 50%, "+color2+" 0%);'><span style='font-size:1.5vw;width: 100%;'>"+name+"<span style='float:right;'><span class='material-icons' style='color: "+starcol+";font-size:1.2vw;'> star </span>"+star+"</span></span><br><br>"+desc+"</div>";
+                    function addAchievementDiv(color,color2,name,star,textcol,desc){
+                      achievementsDescription += "<div class='achievementDiv' style='color:"+textcol+";background: linear-gradient(to bottom, "+color+" 50%, "+color2+" 0%);'>";
+                      achievementsDescription += "<span style='font-size:3.5vmin;width: 100%;'>";//text container
+                      achievementsDescription += "<span style='float:left;position: relative; top: -0.7vmin;'>"+name+"</span>";
+                      achievementsDescription += "<span style='float:right;'><img src='/scenexeIconStarYellow.png' class='hsImage' style='width: 4vmin; height: 4vmin;'>"+star+"</span></span>";
+                      achievementsDescription += "<br><br><span style='float:left;font-size:2.5vmin;position: relative; top: -2vmin;'>"+desc+"</span></div>";
                     }
-        
-                    achievementList = [//the order is the order that achievements appear on the account page (based on star awarded)
-                      ['Welcome',5,'Create an account.',1],//name, star, description, achievement id
-                      ['Explorer',5,'Enter a portal.',7],
-                      ['Killer',20,'Kill a player by shooting.',2],
-                      ['Ascended',20,'Enter the sanctuary.',13],
-                      ['Rainbow',35,'Kill a radiant shape.',3],
-                      ['Bomber',50,'Kill a shape with 10 or more sides.',8],
-                      ['Giant',50,'Get 1 million xp in one run.',4],
-                      ['Monstrous',75,'Get 10 million xp in one run.',5],
-                      ['Titan',150,'Get 100 million xp in one run.',6],
-                      ['Survivor',150,'Survive for 20 minutes in FFA. (Achievement given after death)',11],
-                      ['Oh Node!',300,'Reach lvl 60 as a node.',9],
-                      ['Shiny!',300,'Kill a radiant hendecagon.',10],
-                      ['Champion',400,'Reach lvl 85.',14],
-                      ['Victor',1500,'Survive for an hour in FFA. (Achievement given after death)',12],
-                    ];
-        
-                    let thingyy = accountObject.achievements.length + "/" + achievementList.length;
-                    achcolors = [
-                      ['rgb(242,219,120)','rgb(212,189,90)'],
-                      ['rgb(126,146,247)','rgb(96,116,217)'],
-                      ['rgb(123, 9, 123)','rgb(93, 0, 93)'],
-                      ['rgb(194, 63, 63)','rgb(164, 33, 33)'],
-                      ['rgb(81, 217, 225)','rgb(51, 187, 195)'],
-                      ['rgb(39, 227, 170)','rgb(9, 197, 140)'],
-                      ['rgb(184, 123, 181)','rgb(154, 93, 151)'],
-                      ['rgb(222, 156, 58)','rgb(192, 126, 28)'],
-                    ];//achievements have different colors based on difficulty
-        
-                    for (var i = 0; i < achievementList.length; i++) {
+
+                    for (let i = 0; i < achievementList.length; i++) {
                       let thisach = achievementList[i];
-                      if (accountObject.achievements.includes(thisach[3])) {//have this achievement id
+                      if (accountObject.ach.includes(thisach[3])) {//have this achievement id
                         let star = thisach[1];//amount of stars awarded
-                        let whichcolor = 0;
-                        if (star <= 20){//if change this, remember to change below (just search for 'newach' in the code)
-                          whichcolor = 0;
-                        }
-                        else if (star <= 50){
-                          whichcolor = 1;
-                        }
-                        else if (star <= 100){
-                          whichcolor = 2;
-                        }
-                        else if (star <= 200){
-                          whichcolor = 3;
-                        }
-                        else if (star <= 400){
-                          whichcolor = 4;
-                        }
-                        else if (star <= 1500){
-                          whichcolor = 5;
-                        }
-                        else{
-                          whichcolor = 6;
-                        }
-                        addAchievementDiv(achcolors[whichcolor][0],achcolors[whichcolor][1],thisach[0],star,'gold','white',thisach[2])
+                        let whichcolor = whichColor(star);
+                        addAchievementDiv(achcolors[whichcolor][0],achcolors[whichcolor][1],thisach[0],star,'white',thisach[2])
                       }
                       else{
-                        addAchievementDiv('rgb(95,103,108)','rgb(65,73,78)',thisach[0],thisach[1],'rgba(192,192,192)','rgba(192,192,192)',thisach[2])
+                        addAchievementDiv('rgb(95,103,108)','rgb(65,73,78)',thisach[0],thisach[1],'rgba(192,192,192)',thisach[2])
                       }
                     }
                     //NEW ACHIEVEMENTS TO ADD INGAME: 10 and above
@@ -3498,34 +3522,51 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     } catch (e) {
                       console.log("An error occured when storing your password: " + e);
                     }
-                    /*
-                    //RE-ADD THE DIVS, AND FIX THE drawfakeplayer function
-                    document.getElementById("accountName").innerHTML = accountObject.name;
-                    document.getElementById("accountText").style.textAlign = "left";
-                    document.getElementById("accountText").innerHTML =
-                      "<canvas id='pfp' style='float:left; width: 8vw; height: 8vw; padding-right: 1vw; padding-top: 1vw;'></canvas><div id='editoverlay' onclick='openeditpfp()'><br>Edit</div><br><span style='font-weight: 900;font-size: 2vw;'>" +
-                      accountObject.name +
-                      "</span><br><span class='material-icons' style='font-size: 1vw;color: gold;'> star </span>" +
-                      accountObject.star +
-                      "<br><br>" +
-                      accountObject.desc +
-                      "<br><br><hr><div style='width:100%;display:flex;flex-wrap: wrap;text-align: center;font-size:1vw;'><div style='width:25%;'><span style='font-size: 1.3vw;font-weight: 900;'>Joined</span><br>" +
-                      accountObject.join + "</div><div style='width:25%;'>" + "<span style='font-size: 1.3vw;font-weight: 900;'>Last Online</span><br>0 seconds ago" + "</div><div style='width:25%;'>" + "<span style='font-size: 1.3vw;font-weight: 900;'>Achievements</span><br>" + thingyy + "</div><div style='width:25%;'>" + "<span style='font-size: 1.3vw;font-weight: 900;'>High score</span><br>" + accountObject.topScore +
-                      "</div></div><hr><br><span style='width:100%;display:inline-block;font-weight: 900;font-size: 1.5vw;'>Achievements:<br><br></span>" +
-                      "<div style='width:100%;display:flex;flex-wrap: wrap;'>"+
-                      achievementsDescription +
-                      "</div><br>Reload the page to view the latest account information.";
-                    var pfpcanvas = document.getElementById("pfp");
-                    pfpcanvas.width = "300"; //canvas coordinate width and height, not the actual canvas width and height
-                    pfpcanvas.height = "300";
-                    var pctx = pfpcanvas.getContext("2d");
-                    var pfpPlayerX = 125;
-                    var pfpPlayerY = 175;
+
+                    document.getElementById("accName").textContent = accountObject.name;
+                    document.getElementById("accName2").textContent = accountObject.name;
+                    document.getElementById("starAmt").textContent = accountObject.star;
+                    document.getElementById("starAmt2").textContent = accountObject.star;
+                    document.getElementById("bestScore").textContent = accountObject.topScore;
+                    document.getElementById("achCount").textContent = accountObject.ach.length + "/" + achievementList.length;
+                    function findOutHowLongAgo(date){
+                      let diff = Date.now() - date;
+                      let diffInSeconds = Math.round(diff / 1000);
+                      if (diffInSeconds < 60) return diffInSeconds + " seconds ago";
+                      else{
+                        let diffInMinutes = Math.round(diffInSeconds / 60);
+                        if (diffInMinutes < 60) return diffInMinutes + " minutes ago";
+                        else{
+                          let diffInHours = Math.round(diffInMinutes / 60);
+                          if (diffInHours < 24) return diffInHours + " hours ago";
+                          else{
+                            let diffInDays = Math.round(diffInHours / 24);
+                            if (diffInDays < 7) return diffInDays + " days ago";
+                            else{
+                              let diffInWeeks = Math.round(diffInDays / 7);
+                              if (diffInWeeks < 4) return diffInWeeks + " weeks ago";
+                              else{
+                                let diffInMonths = Math.round(diffInWeeks / 4);
+                                return diffInMonths + " months ago";
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    document.getElementById("joindate").textContent = accountObject.join;
+                    document.getElementById("lastseen").textContent = findOutHowLongAgo(accountObject.lastSeen);
+                    document.getElementById("accDesc").textContent = accountObject.desc;
+                    document.getElementById("streak").textContent = accountObject.streak;
+                    let highestStreak = accountObject.hstreak;
+                    if (!highestStreak) highestStreak = 0;
+                    document.getElementById("highstreak").textContent = highestStreak;
+                    document.getElementById("achievementContainer").innerHTML = achievementsDescription;
                     pctx.fillStyle = "#CDCDCD"; //background
                     pctx.strokeStyle = "grey";
                     pctx.lineWidth = 5;
                     pctx.beginPath();
-                    pctx.arc(150, 150, 148, 0, 2 * Math.PI);
+                    pctx.arc(pfpcanvas.width/2, pfpcanvas.height/2, pfpcanvas.width/2 - 2, 0, 2 * Math.PI);
                     pctx.fill();
                     pctx.stroke();
                     //draw grid
@@ -3553,26 +3594,27 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     //crop grid to a circle
                     pctx.globalCompositeOperation = "destination-in";
                     pctx.beginPath();
-                    pctx.arc(150, 150, 148, 0, 2 * Math.PI);
+                    pctx.arc(pfpcanvas.width/2, pfpcanvas.height/2, pfpcanvas.width/2 - 2, 0, 2 * Math.PI);
                     pctx.closePath();
                     pctx.fill();
                     pctx.globalCompositeOperation = "source-over"; //change back to default
                     //draw tank
                     pctx.lineJoin = "round";
-                    let x = 150;
-                    let y = 150;
-                    let bodysize = 60;
-                    let bodycolor = "#00B0E1";
-                    let bodyoutline = "#0092C3";
-                    let which = "weapon";
-                    let name = accountObject.pfp;
-                    let bodyangle = 45/180*Math.PI;
+                    let bodysize = pfpcanvas.width/3;
+                    const pfpInfo = accountObject.pfp;
+                    let tank = pfpInfo[0];
+                    let body = pfpInfo[1];
+                    let team = pfpInfo[2];
+                    let x = pfpcanvas.width/2 + pfpInfo[3];
+                    let y = pfpcanvas.height/2 + pfpInfo[4];
+                    let bodyangle = pfpInfo[5];
                     let temphctx = hctx;
                     hctx = pctx;//temporarily change hctx to pctx for function to work
-                    drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which)
+                    drawFakePlayer2(team,tank,body,x + hsCameraX,y + hsCameraY,bodyangle,bodysize,true);
                     hctx = temphctx;
                     
                     //draw tanks on the UI for editing account pfp
+                    /*
                     let availablepfp = ['node','basic','trapper','guard','twin','sniper','cannon','flank','delta','commander','overseer']
                     for (let i = 0; i < availablepfp.length; i++) {
                       let divid = 'tank' + availablepfp[i];
@@ -3601,8 +3643,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       pctx.textAlign = "center";
                       pctx.strokeText(availablepfp[i], 50, 90);
                       pctx.fillText(availablepfp[i], 50, 90);
-                    }
-                    */
+                    }*/
         
                     //used to get the Last Online string, which currently isnt needed (cuz last seen is literally the time now)
                     //only needed when you can see other people's accounts in search function in future update
@@ -3614,54 +3655,45 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     lastSeenString += day+" "+d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear()+" "+ d.getHours()+":"+d.getMinutes()+":"+d.getSeconds();
                     */
                     //for editing account
-                    accountUsername.value = accountObject.name;
-                    accountPassword.value = accountObject.pw;
-                    accountDesc.value = accountObject.desc;
+                    //accountUsername.value = accountObject.name;
+                    //accountPassword.value = accountObject.pw;
+                    //accountDesc.value = accountObject.desc;
                     //document.getElementById("editAccount").style.display = "block";//RE-ADD
                   }
                   else if (type=="newach"){//got a new achievement
                     let id = info[1];//id of the achievement gained
-                    if (achievementList){//if this variable exists (if logged in)
-                      for (var i = 0; i < achievementList.length; i++) {
-                        let thisach = achievementList[i];
-                        if (thisach[3] == id){//this is the achievement
-                          let star = thisach[1];//amount of stars awarded
-                          let whichcolor = 0;
-                          if (star <= 20){
-                            whichcolor = 0;
-                          }
-                          else if (star <= 50){
-                            whichcolor = 1;
-                          }
-                          else if (star <= 100){
-                            whichcolor = 2;
-                          }
-                          else if (star <= 200){
-                            whichcolor = 3;
-                          }
-                          else if (star <= 400){
-                            whichcolor = 4;
-                          }
-                          let color = achcolors[whichcolor][0];
-                          let color2 = achcolors[whichcolor][1];
-                          let name = thisach[0];
-                          let desc = thisach[2];
-                          let textcol = 'white';
-                          let starcol = 'gold';
-                          let div = document.createElement('div');
-                          div.id = 'achnotifdiv';
-                          div.innerHTML = "<div id='achnotiftext' class='achievementText'>New Achievement!</div><div id='achnotif' class='achievementNotif' style='color:"+textcol+";background: linear-gradient(to bottom, "+color+" 50%, "+color2+" 0%);'><span style='font-size:1.5vw;width: 100%;'>"+name+"<span style='float:right;'><span class='material-icons' style='color: "+starcol+";font-size:1.2vw;'> star </span>"+star+"</span></span><br><br>"+desc+"</div>";
-                          document.body.appendChild(div);
-                          setTimeout(function(){//remove div after some time
-                            let x = document.getElementById("achnotifdiv");
-                            if (x){
-                              x.remove();
-                            }
-                          }, 5000);
-                          break;
-                        }
+                    for (let i = 0; i < achievementList.length; i++) {
+                      let thisach = achievementList[i];
+                      if (thisach[3] == id){//this is the achievement
+                        let star = thisach[1];//amount of stars awarded
+                        let whichcolor = whichColor(star);
+                        let color = achcolors[whichcolor][0];
+                        let color2 = achcolors[whichcolor][1];
+                        let name = thisach[0];
+                        let desc = thisach[2];
+                        let div = document.createElement('div');
+                        div.id = 'achnotifdiv';
+                        div.innerHTML = "<div id='achnotiftext' class='achievementText'>New Achievement!</div><div id='achnotif' class='achievementNotif' style='color: white;background: linear-gradient(to bottom, "+color+" 50%, "+color2+" 0%);'><span style='font-size:1.5vw;width: 100%;'>"+name+"<span style='float:right;'><img src='/scenexeIconStarYellow.png' class='hsImage' style='width: 4vmin; height: 4vmin;'>"+star+"</span></span><br><br>"+desc+"</div>";
+                        document.body.appendChild(div);
+                        setTimeout(function(){//remove div after some time
+                          let x = document.getElementById("achnotifdiv");
+                          if (x) x.remove();
+                        }, 5000);
+                        break;
                       }
                     }
+                  }
+                  else if (type=="newStreak"){//got a new streak
+                    let cstreak = "Current Streak: " + info[1];
+                    let hstreak = "Highest Streak: " + info[2];
+                    let div = document.createElement('div');
+                    div.id = 'achnotifdiv';
+                    div.innerHTML = "<div id='achnotiftext' class='achievementText'>New Daily Streak!</div><div id='achnotif' class='achievementNotif' style='color: white;background: linear-gradient(to bottom, "+achcolors[0][0]+" 50%, "+achcolors[0][1]+" 0%);text-align: center;'><span style='font-size:1.5vw;width: 100%;'>"+cstreak+"</span><br><br>5 stars awarded<br>"+hstreak+"</div>";
+                    document.body.appendChild(div);
+                    setTimeout(function(){//remove div after some time
+                      let x = document.getElementById("achnotifdiv");
+                      if (x) x.remove();
+                    }, 5000);
                   }
                   else if (type=="pong"){
                     //server reply after client ping to check latency
@@ -3688,13 +3720,33 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       if (portalslist[property] == "del") {
                         //server tells client that a portal is not shown on the screen anymore
                         delete portals[property];
+                        let portalWasVisibleOnScreen = "yes";
+                        if (portalWasVisibleOnScreen){//FIX THIS IN THE FUTURE//Skibidi
+                          slightshake = "yes";
+                          slightshakeIntensity = 2;
+                          //portal death partices
+                          if (oldportals[property].ruptured == 1){
+                            for (let i = 0; i < 100; i++) {
+                              let angleRadians = Math.floor(Math.random() * 360) * Math.PI / 180; //random angle convert to radians
+                              let sizeVariation = Math.floor(Math.random() * 50);
+                              spawnPortalParticles(angleRadians,oldportals[property].x,oldportals[property].y,100 + sizeVariation,20,30,15);
+                            }
+                          }
+                          else{
+                            for (let i = 0; i < 100; i++) {
+                              let angleRadians = Math.floor(Math.random() * 360) * Math.PI / 180; //random angle convert to radians
+                              let sizeVariation = Math.floor(Math.random() * 50);
+                              let speedVariation = Math.floor(Math.random() * 10);
+                              spawnPortalParticles(angleRadians,oldportals[property].x,oldportals[property].y,50 + sizeVariation,speedVariation,30,15);
+                            }
+                          }
+                        }
                       } else {
                         if (!portals.hasOwnProperty(property)) {
                           portals[property] = { ...portalslist[property] };
                         } else {
                           for (const propertyy in portalslist[property]) {
-                            portals[property][propertyy] =
-                              portalslist[property][propertyy];
+                            portals[property][propertyy] = portalslist[property][propertyy];
                           }
                         }
                       }
@@ -3747,6 +3799,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                               thisDeadObj.id = property;
                               listofdeadobjects.push(thisDeadObj);
                             }
+                            if (type=="shape") {
+                              if (radiantShapes.hasOwnProperty(property)) delete radiantShapes[property];
+                              if (shapeAngles.hasOwnProperty(property)) delete shapeAngles[property];
+                            }
                             //delete actual object
                             delete objects[type][property];
                           } else {
@@ -3781,20 +3837,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                             oldbody = player.bodyType;
                             slightshake = "yes";
                             slightshakeIntensity = 1;
-                            let object = player;
-                            let playercolor = "";
-                            let playeroutline = "";
-                            if (object.team == "none") {
-                              playercolor = bodyColors.blue.col;
-                              playeroutline = bodyColors.blue.outline;
-                            } else if (bodyColors.hasOwnProperty(object.team)) {
-                                playercolor = bodyColors[object.team].col;
-                                playeroutline = bodyColors[object.team].outline;
-                            }
-                            if (object.developer == "yes") {//if a developer
-                              playercolor = object.color;
-                              playeroutline = object.outline;
-                            }
+                            let playercolor = playerBodyCol;
+                            let playeroutline = playerBodyOutline;
                             for (let i = 0; i < 30; i++) {
                               let angleRadians = (Math.floor(Math.random() * 360) * Math.PI) / 180; //convert to radians
                               var randomDistFromCenter = Math.floor(Math.random() * player.width) - player.width/2;
@@ -3803,7 +3847,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                                 x: player.x + randomDistFromCenter * Math.cos(angleRadians),
                                 y: player.y - randomDistFromCenter * Math.sin(angleRadians),
                                 width: player.width/6 + Math.floor(Math.random() * player.width/4),
-                                height: player.width/6 + Math.floor(Math.random() * player.width/4),
                                 speed: 3 + Math.floor(Math.random() * 3),
                                 timer: 20 + Math.floor(Math.random() * 10),
                                 maxtimer: 200,
@@ -3848,63 +3891,17 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     teamColors.push(info[4]);
                     }
                   }
-                  else if (type == "editedTank"){
-                    //user import scenexe tank code, so server send info for client to update the UI
-                    let player = info[1];
-                    //clear the UI//ADD TANK EDITOR DIVS BEFORE ENABLING THIS PART
-                    /*
-                    $("#assetUI").empty()
-                    $("#bbUI").empty()
-                    $("#barrelUI").empty()
-                    barrelnumberid = 1;
-                    assetnumberid = 1;
-                    gadgetnumberid = 1;
-                    for (const barrelID in player.barrels){
-                      addCustomBarrelDiv(barrelID,player.barrels[barrelID])
-                    }
-                    for (const barrelID in player.bodybarrels){
-                      addCustomGadgetDiv(barrelID,player.bodybarrels[barrelID])
-                    }
-                    for (const barrelID in player.assets){
-                      addCustomAssetDiv(barrelID,player.assets[barrelID])
-                    }
-                    document.getElementById('weapon-fov').value = player.fovMultiplier;
-                    document.getElementById('body-health').value = player.maxhealth;
-                    document.getElementById('weapon-name').value = player.tankType;
-                    document.getElementById('body-name').value = player.bodyType;
-                    document.getElementById('tank-size').value = player.width;
-                    document.getElementById('body-speed').value = player.speed;
-                    document.getElementById('body-damage').value = player.damage;
-                    document.getElementById('body-regen').value = player.healthRegenSpeed;
-                    document.getElementById('body-regen-time').value = player.healthRegenTime;
-                    if (player.turretBaseSize){
-                      document.getElementById('turret-base').value = player.turretBaseSize;
-                    }
-                      */
-                  }
-                else if (type == "exportCode"){//user export tank as scenexe tank code
-                  let code = info[1];
-                  //document.getElementById('import-code').value = code;//SAME THING HERE
-                }
                   else if (type=="youDied"){
-                    let killer = info[1];
+                    let killerlist = info[1];
                     let player = info[2];
                     let respawnDivide = info[3];
                     let respawnLimit = info[4];
                     //when player died, show death screen
                     sentStuffBefore = "no";
                     let endscore = abbreviateScore(player.score);
-                    if (typeof killer == "number") {
-                      //killer is a number, which is numer of sides of a shape
-                      let shapetype = killer - 3;
-                      if (killer == 4){
-                        shapetype = 0;
-                      }
-                      else if (killer == 3){
-                        shapetype = 1;
-                      }
-                      killer = shapeNames[shapetype];
-                    }
+                    //killer is an array of people who killed player
+                    let killer = killArrayToString(killerlist);
+                    
                     showDeathScreen(endscore,killer,player.level,player.tankType,player.bodyType);
                     state = "deathscreen";//ensure that hctx canvas doesnt clear//remove?
                     
@@ -3916,20 +3913,13 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       if (respawningScore > respawnLimit) {
                         respawningScore = respawnLimit;
                       }
-                      respawnlvl = convertXPtoLevel(respawningScore);
+                      const type = player.team != "eternal" ? "tank" : "celestial";
+                      respawnlvl = convertXPtoLevel(respawningScore,type);
                     }
                     document.getElementById("respawnLvl").innerHTML = respawnlvl;
-                    //hide all the editor UI
-                    /*
-                    tankEditor1.style.display = "none";
-                    tankEditor2.style.display = "none";
-                    barrelEditor.style.display = "none";
-                    assetEditor.style.display = "none";
-                    bbEditor.style.display = "none";*/
                     //reset player state values
                     autorotate = "no";
                     autofire = "no";
-                    fastautorotate = "no";
                     passivemode = "no";
                     //reset upgrade ignore
                     ignorebuttonw.ignore = "no";
@@ -3982,9 +3972,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   console.log('Disconnected: ',event);
                   if (reconnectToDefault != "yes"){//if not purposely disconnecting to respawn in ffa
                     if (teleportingTransition != "yes"){
-                      //disconnect notification
-                      //when socket disconnect, this is automatically triggered
-                      //createNotif("Disconnected. Reload the page.","rgb(150,0,0)",10000)
                       if (document.getElementById('modal3a').style.display != "block"){//if connection error modal is not open
                         document.getElementById('modal3').style.display = "block";
                         darken.style.display = "block";
@@ -4001,7 +3988,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 };
                 socket.onerror = function(err) {//connection error
                   console.error('Socket error: ', err.message);
-                  //createNotif("Connection error: "+err.message,"rgb(150,0,0)",10000)
                   document.getElementById('modal3a').style.display = "block";
                   document.getElementById('modal3aErr').textContent = "An unexpected error occurred: "+err.message;
                   darken.style.display = "block";
@@ -4019,6 +4005,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
             var joinedWhichGM = "Free For All";//needed for respawning, cuz some gamemodes like crossroads cannot respawn there, so need to respawn to previous gamemode
 
+            var animatingOverrideWeapon = "no";//upgrade button close animation allows it to reder even if cannot upgrade
+            var animatingOverrideBody = "no";
+            var oldplayerweapon;
+            var oldplayerbody;
             //button 1 to 7 are weapon upgrades, 8 to 14 are body upgrades
             var upgradeButtons = {};
             function addUpgradeButton(i,x,y,endx,color,darkcolor){
@@ -4107,7 +4097,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             var shakeIntensity = 1;
             var slightshake = "no";//spawn/upgrade screen shake
             var slightshakeIntensity = 1;
-            //var players = "error";
             var player = "error";
             var objects = {};
             var oldobjects = {};//for client interpolation
@@ -4121,10 +4110,33 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             var shownBandwidth = 0; //bandwidth that is shown, updates every second
             var bandwidth = 0; //size of packet sent from server
             var prevBandwidthUpdate = 0; //previous time that bandwidth was updated
-            //particles are completely clientside to reduce server lag (cuz cavern would have 300+ particles)
+            //fixed portals such as the one in dune, need this to rotate angle
+            var fixedPortals = {};
+            //particles are completely clientside
             var radparticles = {}; //particle effect for radiants
             var portalparticles = {}; //prticle effect for portals
             var particleID = 0;
+            function spawnPortalParticles(angle,x,y,radius,speed,timer,maxtimer,overrideColor){//overrideColor is optional parameter
+              let color = "white";
+              let outline = "lightgrey";
+              if (overrideColor){
+                color = overrideColor;
+                outline = overrideColor;
+              }
+              portalparticles[particleID] = {
+                angle: angle,//must be radians
+                x: x,
+                y: y,
+                width: radius,
+                speed: speed,
+                timer: timer,
+                maxtimer: maxtimer, //difference between timer and maxtimer is the opacity of the particle. Larger difference means more or less transparent
+                color: color,
+                outline: outline,
+                type: "particle",
+              };
+              particleID++;
+            }
             //for mobile
             var joystick1 = {
               //movement joystick on the left
@@ -4263,28 +4275,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 canvas.fill();
                 canvas.stroke();
               } else if (asset.sides < 0) {//draw a star
-                let numberOfSpikes = -asset.sides;
-                let outerRadius = bodysize * asset.size;
-                let innerRadius = (bodysize * asset.size / 2);
-                let rot = (Math.PI / 2) * 3;
-                let x = 0;
-                let y = 0;
-                canvas.beginPath();
-                canvas.moveTo(0, -outerRadius);
-                for (i = 0; i < numberOfSpikes; i++) {
-                  x = Math.cos(rot) * outerRadius;
-                  y = Math.sin(rot) * outerRadius;
-                  canvas.lineTo(x, y);
-                  rot += Math.PI / numberOfSpikes;
-                  x = Math.cos(rot) * innerRadius;
-                  y = Math.sin(rot) * innerRadius;
-                  canvas.lineTo(x, y);
-                  rot += Math.PI / numberOfSpikes;
-                }
-                canvas.lineTo(0, -outerRadius);
-                canvas.closePath();
-                canvas.fill();
-                canvas.stroke();
+                drawSpikes(0.5, 1, -asset.sides, bodysize*asset.size, canvas, 1);
               } else {
                 canvas.beginPath();
                 var baseSides = asset.sides;
@@ -4320,14 +4311,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           */
               hctx.beginPath();
               hctx.roundRect(x,y,w,h,r);//the roundrect function was newly added in 2023, but most browsers should have it now
-              hctx.stroke();
               hctx.fill();
+              hctx.stroke();
             }
             function ctxroundRectangle(x,y,r,w,h){
               ctx.beginPath();
-              ctx.roundRect(x,y,w,h,r);//the roundrect function was newly added in 2023, but most browsers should have it now
-              ctx.stroke();
+              ctx.roundRect(x,y,w,h,r);
               ctx.fill();
+              ctx.stroke();
             }
             function hctxroundRectangleFill(x,y,r,w,h){//only fill
               hctx.beginPath();
@@ -4340,189 +4331,265 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               ctx.fill();
             }
 
-            function drawSpikes(innerRadius,outerRadius,numberOfSpikes,width){
-              outerRadius *= (width / clientFovMultiplier);
-              innerRadius *= (width / clientFovMultiplier);
+            function drawSpikes(innerRadius,outerRadius,numberOfSpikes,width,canvasYN,fovOverride){
+              let canvas = ctx;
+              if (canvasYN){
+                if (canvasYN === true){
+                  canvas = hctx;
+                }
+                else{
+                  canvas = canvasYN;
+                }
+              }
+              let fov = clientFovMultiplier;
+              if (fovOverride){
+                fov = fovOverride;
+              }
+              outerRadius *= (width / fov);
+              innerRadius *= (width / fov);
               let x = 0;
               let y = 0;
               let rot = Math.PI * 1.5;
-              ctx.beginPath();
-              ctx.moveTo(0, -outerRadius);
+              canvas.beginPath();
+              canvas.moveTo(0, -outerRadius);
               for (let i = 0; i < numberOfSpikes; i++) {
                 x = Math.cos(rot) * outerRadius;
                 y = Math.sin(rot) * outerRadius;
-                ctx.lineTo(x, y);
+                canvas.lineTo(x, y);
                 rot += Math.PI / numberOfSpikes;
                 x = Math.cos(rot) * innerRadius;
                 y = Math.sin(rot) * innerRadius;
-                ctx.lineTo(x, y);
+                canvas.lineTo(x, y);
                 rot += Math.PI / numberOfSpikes;
               }
-              ctx.lineTo(0, -outerRadius);
-              ctx.closePath();
-              ctx.fill();
-              ctx.stroke();
+              canvas.lineTo(0, -outerRadius);
+              canvas.closePath();
+              canvas.fill();
+              canvas.stroke();
             }
-            function renderPolygon(width,sides){//DO NOT confuse with draw polygon, which is only for home screen background
-              ctx.beginPath();
-              ctx.moveTo(width * Math.cos(0), width * Math.sin(0));
-              for (let i = 1; i <= sides + 1; i++) {
-                ctx.lineTo(
-                  width * Math.cos(i * 2 * Math.PI / sides),
-                  width * Math.sin(i * 2 * Math.PI / sides)
-                );
+            function renderPolygon(width,sides,canvasYN){//DO NOT confuse with draw polygon, which is only for home screen background
+              let canvas = canvasYN ? hctx : ctx;
+              canvas.beginPath();
+              canvas.moveTo(width, 0);
+              let angle = 2 * Math.PI / sides;
+              for (let i = 1; i <= sides + 1; i++) {//sides+1 to close the hole nicely with a rounded corner, if dont +1 then there will be a small gap
+                canvas.lineTo(width * Math.cos(i * angle), width * Math.sin(i * angle));
               }
+              canvas.fill();
+              canvas.stroke();
+            }
+
+            function drawCircle(w){
+              ctx.beginPath();
+              ctx.arc(0, 0, w, 0, 2 * Math.PI);
               ctx.fill();
               ctx.stroke();
             }
+
+            function updateRadiantColor(object,id,canvasYN){//canvasYN is optional parameter, if true then use hctx canvas
+              //radiant shape
+              let canvas = canvasYN ? hctx : ctx;
+              if (!radiantShapes.hasOwnProperty(id)) {
+                let randomState = Math.floor(Math.random() * 3);//state changes from 0.0 to 3.0
+                let randomType = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
+                radiantShapes[id] = {
+                  state: randomState,
+                  type: randomType
+                }
+              }
+
+              let r = radiantShapes[id];
+              if (r.type == 1){//red yellow blue animtion
+                let blue = "rgb(35,79,146)";
+                let yellow = "rgb(155,142,88)";
+                let red = "rgb(117,50,33)";
+                if (r.state < 1){//yellow --> red
+                  canvas.fillStyle = pSBC ( r.state, yellow, red );
+                }
+                else if (r.state < 2){//red --> blue
+                  canvas.fillStyle = pSBC ( r.state-1, red, blue );
+                }
+                else if (r.state < 3){//blue --> yellow
+                  canvas.fillStyle = pSBC ( r.state-2, blue, yellow );
+                }
+              }
+              else{//blue green yellow animation
+                let blue = "rgb(22,105,122)";
+                let green = "rgb(93,173,120)";
+                let yellow = "rgb(116,122,47)";
+                if (r.state < 1){//yellow --> green
+                  canvas.fillStyle = pSBC ( r.state, yellow, green );
+                }
+                else if (r.state < 2){//green --> blue
+                  canvas.fillStyle = pSBC ( r.state-1, green, blue );
+                }
+                else if (r.state < 3){//blue --> yellow
+                  canvas.fillStyle = pSBC ( r.state-2, blue, yellow );
+                }
+              }
+              canvas.strokeStyle = pSBC ( -0.4, canvas.fillStyle );//radiant shape outline is 40% darker
+              r.state += 0.015;
+              if (r.state > 3){
+                r.state = 0;
+              }
+              radShapeCol = canvas.fillStyle;//store for health bar
+
+              let originalTransparency = canvas.globalAlpha;//some objects like dead objects already have transparency
+              if (originalTransparency > 0.5){
+                canvas.globalAlpha -= 0.5;//spikes are more transparent
+              }
+              else{
+                canvas.globalAlpha = 0;
+              }
+              canvas.lineWidth = 3 / clientFovMultiplier;
+              //radtier 3 and above have spikes
+              if (object.radtier == 3) {
+                canvas.rotate(extraSpikeRotate * Math.PI / 180);
+                drawSpikes(0.75, radiantAuraSize*3*0.75, 6, object.width,canvasYN);//innerSize,outerSize,number of spikes, object width
+                canvas.rotate(-extraSpikeRotate * Math.PI / 180);
+              }
+              else if (object.radtier == 4) {
+                canvas.rotate(extraSpikeRotate1 * Math.PI / 180);
+                drawSpikes(0.5, radiantAuraSize*3, 3, object.width,canvasYN);
+                canvas.rotate(-extraSpikeRotate1 * Math.PI / 180);
+                canvas.rotate(extraSpikeRotate2 * Math.PI / 180);
+                drawSpikes(0.5, radiantAuraSize*3*0.5, 6, object.width,canvasYN);
+                canvas.rotate(-extraSpikeRotate2 * Math.PI / 180);
+              }
+              else if (object.radtier == 5) {
+                canvas.rotate(extraSpikeRotate1 * Math.PI / 180);
+                drawSpikes(0.5, radiantAuraSize*3*1.5, 3, object.width,canvasYN);
+                canvas.rotate(-extraSpikeRotate1 * Math.PI / 180);
+                canvas.rotate(extraSpikeRotate2 * Math.PI / 180);
+                drawSpikes(0.5, radiantAuraSize*3*0.5, 3, object.width,canvasYN);
+                canvas.rotate(-extraSpikeRotate2 * Math.PI / 180);
+              }
+              //radtier 2 and above have aura
+              if (object.radtier > 1) {
+                let shapeaurasize = object.radtier;
+                if (shapeaurasize > 3) {
+                  shapeaurasize = 3; //prevent huge auras
+                }
+                renderPolygon(object.width*radiantAuraSize*shapeaurasize/clientFovMultiplier, object.sides,canvasYN);
+              }
+              canvas.globalAlpha = originalTransparency;
+
+              //choose whether a particle would spawn
+              //particle spawn chance based on number of sides the shape has, so square has less particles
+              if (spawnradparticle == "yes" && !canvasYN){
+                let spawnChance = 20 - object.sides * 2; //lower the number means more particles spawned
+                if (spawnChance < 5) {//prevent spawn chance from going below 0 after reducing it later
+                  spawnChance = 5;
+                }
+                if (object.radtier == 4){
+                  spawnChance -= 2;
+                }
+                else if (object.radtier == 5){
+                  spawnChance -= 3;
+                }
+                if (Math.floor(Math.random() * spawnChance) == 1) { //spawn a particle
+                  let particleAngle = Math.floor(Math.random() * 360) * Math.PI / 180;
+                  let distanceFromCenter = Math.floor(Math.random() * object.width * 2) - object.width;
+                  radparticles[particleID] = {
+                    angle: particleAngle,
+                    x: object.x + distanceFromCenter * Math.cos(particleAngle),
+                    y: object.y + distanceFromCenter * Math.sin(particleAngle),
+                    width: 5,
+                    speed: 1,
+                    timer: 25,
+                    maxtimer: 25,
+                    color: canvas.fillStyle,
+                    outline: canvas.strokeStyle,
+                    type: "particle",
+                  };
+                  if (object.radtier == 4){
+                    radparticles[particleID].width = Math.floor(Math.random() * 10) + 5;
+                  }
+                  else if (object.radtier == 5){
+                    radparticles[particleID].width = Math.floor(Math.random() * 20) + 5;
+                    radparticles[particleID].speed = 3;
+                    radparticles[particleID].timer = 50;
+                    radparticles[particleID].maxtimer = 50;
+                  }
+                  particleID++;
+                }
+              }
+            }
+
+            function updateRadiantColorPortal(id){//FOR PORTAL, not shape
+              //radiant shape
+              if (!radiantPortals.hasOwnProperty(id)) {
+                let randomState = Math.floor(Math.random() * 3);//state changes from 0.0 to 3.0
+                let randomType = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
+                radiantPortals[id] = {
+                  state: randomState,
+                  type: randomType
+                }
+              }
+
+              let r = radiantPortals[id];
+              r.state += 0.015;
+              if (r.state > 3){
+                r.state = 0;
+              }
+              if (r.type == 1){//red yellow blue animtion
+                let blue = "rgb(35,79,146)";
+                let yellow = "rgb(155,142,88)";
+                let red = "rgb(117,50,33)";
+                if (r.state < 1){//yellow --> red
+                  return pSBC ( r.state, yellow, red );
+                }
+                else if (r.state < 2){//red --> blue
+                  return pSBC ( r.state-1, red, blue );
+                }
+                else if (r.state < 3){//blue --> yellow
+                  return pSBC ( r.state-2, blue, yellow );
+                }
+              }
+              else{//blue green yellow animation
+                let blue = "rgb(22,105,122)";
+                let green = "rgb(93,173,120)";
+                let yellow = "rgb(116,122,47)";
+                if (r.state < 1){//yellow --> green
+                  return pSBC ( r.state, yellow, green );
+                }
+                else if (r.state < 2){//green --> blue
+                  return pSBC ( r.state-1, green, blue );
+                }
+                else if (r.state < 3){//blue --> yellow
+                  return pSBC ( r.state-2, blue, yellow );
+                }
+              }//dont put anything after 'return', cuz 'return' will exit the function
+            }
+
+            var radiantAuraSize = 5 * auraWidth;
+            var radShapeCol;//store radiant shape color for the health bar
 
             function renderShape(object,id,auraWidth,drawingX,drawingY){
                 if (object.hasOwnProperty("deadOpacity")) { //if this is an animation of a dead object
                   ctx.globalAlpha = object.deadOpacity;
                 }
-                let radiantAuraSize = 5 * auraWidth;
-                let radShapeCol;//store radiant shape color for the health bar
+                radiantAuraSize = 5 * auraWidth;
                 ctx.save();
                 ctx.translate(drawingX,drawingY);
-                ctx.rotate((object.angle * Math.PI) / 180);
-                if (object.hasOwnProperty("radtier")) {//change back
-                  //radiant shape
-                  if (!radiantShapes.hasOwnProperty(id)) {
-                    let randomState = Math.floor(Math.random() * 3);//state changes from 0.0 to 3.0
-                    let randomType = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
-                    radiantShapes[id] = {
-                      state: randomState,
-                      type: randomType
-                    }
-                  }
-
-                  let r = radiantShapes[id];
-                  if (r.type == 1){//red yellow blue animtion
-                    let blue = "rgb(35,79,146)";
-                    let yellow = "rgb(155,142,88)";
-                    let red = "rgb(117,50,33)";
-                    if (r.state < 1){//yellow --> red
-                      ctx.fillStyle = pSBC ( r.state, yellow, red );
-                    }
-                    else if (r.state < 2){//red --> blue
-                      ctx.fillStyle = pSBC ( r.state-1, red, blue );
-                    }
-                    else if (r.state < 3){//blue --> yellow
-                      ctx.fillStyle = pSBC ( r.state-2, blue, yellow );
-                    }
-                  }
-                  else{//blue green yellow animation
-                    let blue = "rgb(22,105,122)";
-                    let green = "rgb(93,173,120)";
-                    let yellow = "rgb(116,122,47)";
-                    if (r.state < 1){//yellow --> green
-                      ctx.fillStyle = pSBC ( r.state, yellow, green );
-                    }
-                    else if (r.state < 2){//green --> blue
-                      ctx.fillStyle = pSBC ( r.state-1, green, blue );
-                    }
-                    else if (r.state < 3){//blue --> yellow
-                      ctx.fillStyle = pSBC ( r.state-2, blue, yellow );
-                    }
-                  }
-                  ctx.strokeStyle = pSBC ( -0.4, ctx.fillStyle );//radiant shape outline is 40% darker
-                  r.state += 0.015;
-                  if (r.state > 3){
-                    r.state = 0;
-                  }
-                  radShapeCol = ctx.fillStyle;//store for health bar
-
-                  let originalTransparency = ctx.globalAlpha;//some objects like dead objects already have transparency
-                  if (originalTransparency > 0.5){
-                    ctx.globalAlpha -= 0.5;//spikes are more transparent
-                  }
-                  else{
-                    ctx.globalAlpha = 0;
-                  }
-                  ctx.lineWidth = 3 / clientFovMultiplier;
-                  //radtier 3 and above have spikes
-                  if (object.radtier == 3) {
-                    ctx.rotate(extraSpikeRotate * Math.PI / 180);
-                    drawSpikes(0.75, radiantAuraSize*3*0.75, 6, object.width);//innerSize,outerSize,number of spikes, object width
-                    ctx.rotate(-extraSpikeRotate * Math.PI / 180);
-                  }
-                  else if (object.radtier == 4) {
-                    ctx.rotate(extraSpikeRotate1 * Math.PI / 180);
-                    drawSpikes(0.5, radiantAuraSize*3, 3, object.width);
-                    ctx.rotate(-extraSpikeRotate1 * Math.PI / 180);
-                    ctx.rotate(extraSpikeRotate2 * Math.PI / 180);
-                    drawSpikes(0.5, radiantAuraSize*3*0.5, 6, object.width);
-                    ctx.rotate(-extraSpikeRotate2 * Math.PI / 180);
-                  }
-                  else if (object.radtier == 5) {
-                    ctx.rotate(extraSpikeRotate1 * Math.PI / 180);
-                    drawSpikes(0.5, radiantAuraSize*3*1.5, 3, object.width);
-                    ctx.rotate(-extraSpikeRotate1 * Math.PI / 180);
-                    ctx.rotate(extraSpikeRotate2 * Math.PI / 180);
-                    drawSpikes(0.5, radiantAuraSize*3*0.5, 3, object.width);
-                    ctx.rotate(-extraSpikeRotate2 * Math.PI / 180);
-                  }
-                  //radtier 2 and above have aura
-                  if (object.radtier > 1) {
-                    let shapeaurasize = object.radtier;
-                    if (shapeaurasize > 3) {
-                      shapeaurasize = 3; //prevent huge auras
-                    }
-                    renderPolygon(object.width*radiantAuraSize*shapeaurasize/clientFovMultiplier, object.sides);
-                  }
-                  ctx.globalAlpha = originalTransparency;
-
-                  //choose whether a particle would spawn
-                  //particle spawn chance based on number of sides the shape has, so square has less particles
-                  if (spawnradparticle == "yes"){
-                    let spawnChance = 20 - object.sides * 2; //lower the number means more particles spawned
-                    if (spawnChance < 5) {//prevent spawn chance from going below 0 after reducing it later
-                      spawnChance = 5;
-                    }
-                    if (object.radtier == 4){
-                      spawnChance -= 2;
-                    }
-                    else if (object.radtier == 5){
-                      spawnChance -= 3;
-                    }
-                    if (Math.floor(Math.random() * spawnChance) == 1) { //spawn a particle
-                      let particleAngle = Math.floor(Math.random() * 360) * Math.PI / 180;
-                      let distanceFromCenter = Math.floor(Math.random() * object.width * 2) - object.width;
-                      radparticles[particleID] = {
-                        angle: particleAngle,
-                        x: object.x + distanceFromCenter * Math.cos(particleAngle),
-                        y: object.y + distanceFromCenter * Math.sin(particleAngle),
-                        width: 5,
-                        height: 5,
-                        speed: 1,
-                        timer: 25,
-                        maxtimer: 25,
-                        color: ctx.fillStyle,
-                        outline: ctx.strokeStyle,
-                        type: "particle",
-                      };
-                      if (object.radtier == 4){
-                        radparticles[particleID].width = Math.floor(Math.random() * 10) + 5;
-                      }
-                      else if (object.radtier == 5){
-                        radparticles[particleID].width = Math.floor(Math.random() * 20) + 5;
-                        radparticles[particleID].speed = 3;
-                        radparticles[particleID].timer = 50;
-                        radparticles[particleID].maxtimer = 50;
-                      }
-                      particleID++;
-                    }
-                  }
-                } else {
-                  //if not radiant
-                  //get shape colors in client code based on theme
-                  let shapetype = object.sides - 3;
+                let shapetype = object.sides - 3;
                   if (object.sides == 4){
                     shapetype = 0;
                   }
                   else if (object.sides == 3){
                     shapetype = 1;
                   }
+                if (!shapeAngles.hasOwnProperty(id)) {
+                  shapeAngles[id] = 0;
+                }
+                shapeAngles[id] += shapeRotationSpeed[shapetype] * Math.PI * deltaTime * 2;
+                if (shapeAngles[id] > 2 * Math.PI) shapeAngles[id] -= 2 * Math.PI;
+                ctx.rotate(shapeAngles[id]);
+                if (object.hasOwnProperty("radtier")) {
+                  updateRadiantColor(object,id);
+                } else {
+                  //if not radiant
+                  //get shape colors in client code based on theme
                   ctx.fillStyle = shapecolors[shapetype];
                   ctx.strokeStyle = shapeoutlines[shapetype];
                   
@@ -4585,10 +4652,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.fillStyle = "black";
                   ctx.strokeStyle = "black";
                   ctx.lineWidth = 2.5 / clientFovMultiplier;//determines with of black area
-                  ctx.beginPath();
-                  ctx.roundRect(x,y,w,h,r);
-                  ctx.fill();
-                  ctx.stroke();
+                  ctxroundRectangle(x,y,r,w,h);
                   //draw health bar
                   if (object.health > 0) {
                     //dont draw health bar if negative health
@@ -4613,10 +4677,20 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         ctx.fillStyle = shapecolors[9];//use dodecagon's grey color for health bar
                       }
                     }
-                    ctx.beginPath();
-                    ctx.roundRect(x,y,w,h,r);
-                    ctx.fill();
-                    ctx.stroke();
+                    ctxroundRectangle(x,y,r,w,h);
+                    if (settingsList.showhealthpercentages === true) {
+                      //write health percentage
+                      ctx.fillStyle = "white";
+                      ctx.strokeStyle = "black";
+                      ctx.lineWidth = 5;
+                      ctx.font = "700 8px Roboto";
+                      ctx.textAlign = "center";
+                      ctx.lineJoin = "round";
+                      let percentage = Math.round(object.health / object.maxhealth * 100 * 10)/10 + "%";//*10/10 to round to 1 decimal place
+                      ctx.strokeText(percentage,drawingX, drawingY+(object.width + 3.5) / clientFovMultiplier+10);
+                      ctx.fillText(percentage,drawingX, drawingY+(object.width + 3.5) / clientFovMultiplier+10);
+                      ctx.lineJoin = "miter";
+                    }
                   }
                 }
                 if (object.hasOwnProperty("deadOpacity")) {
@@ -4726,352 +4800,29 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 canvas.strokeStyle = playeroutline;
                 if (object.rad > 0){//rad player
                   if (!radiantShapes.hasOwnProperty(id)) {
-                    var randomstate = Math.floor(Math.random() * 3); //randomly choose a color state for the radiant shape to start (if not when you spawn in cavern, all shapes same color)
-                    var randomtype = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
-                    if (randomtype == 1) {
-                      if (randomstate == 0) {
-                        radiantShapes[id] = {
-                          red: 255,
-                          blue: 0,
-                          green: 0,
-                          rgbstate: 1,
-                          radtype: randomtype,
-                        }; //keep track of radiant shape colors (done in client code)
-                      } else if (randomstate == 1) {
-                        radiantShapes[id] = {
-                          red: 199,
-                          blue: 0,
-                          green: 150,
-                          rgbstate: 2,
-                          radtype: randomtype,
-                        };
-                      } else if (randomstate == 2) {
-                        radiantShapes[id] = {
-                          red: -1,
-                          blue: 200,
-                          green: 0,
-                          rgbstate: 3,
-                          radtype: randomtype,
-                        };
-                      }
-                    } else {
-                      if (randomstate == 0) {
-                        radiantShapes[id] = {
-                          red: 118,
-                          blue: 168,
-                          green: 151,
-                          rgbstate: 1,
-                          radtype: randomtype,
-                        };
-                      } else if (randomstate == 1) {
-                        radiantShapes[id] = {
-                          red: 209,
-                          blue: 230,
-                          green: 222,
-                          rgbstate: 2,
-                          radtype: randomtype,
-                        };
-                      } else if (randomstate == 2) {
-                        radiantShapes[id] = {
-                          red: 234,
-                          blue: 240,
-                          green: 180,
-                          rgbstate: 3,
-                          radtype: randomtype,
-                        };
-                      }
+                    let randomState = Math.floor(Math.random() * 3);//state changes from 0.0 to 3.0
+                    let randomType = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
+                    radiantShapes[id] = {
+                      state: randomState,
+                      type: randomType
                     }
                   }
-                  object.red = radiantShapes[id].red;
-                  object.blue = radiantShapes[id].blue;
-                  object.green = radiantShapes[id].green;
-                  let radiantAuraSize = 5 * auraWidth;
-                  //calculate color of spikes, which would be 20 higher than actual rgb value
-                  if (object.red + 150 <= 255) {
-                    var spikeRed = object.red + 150;
-                  } else {
-                    var spikeRed = 255;
-                  }
-                  if (object.blue + 150 <= 255) {
-                    var spikeBlue = object.blue + 150;
-                  } else {
-                    var spikeBlue = 255;
-                  }
-                  if (object.green + 150 <= 255) {
-                    var spikeGreen = object.green + 150;
-                  } else {
-                    var spikeGreen = 255;
-                  }
-                  if (object.rad == 3) {
-                    //for high rarity radiant shapes, draw spikes
-                    canvas.rotate((extraSpikeRotate * Math.PI) / 180);
-                    canvas.fillStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.7)";
-                    canvas.strokeStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.3)";
-                    var numberOfSpikes = 6;
-                    var outerRadius = ((object.width * radiantAuraSize * 3) / fov) * 0.75;
-                    var innerRadius = (object.width / fov) * 0.75;
-                    var rot = (Math.PI / 2) * 3;
-                    var x = 0;
-                    var y = 0;
+                  object.radtier = object.rad;
+                  object.sides = 40;//looks like a circle, 0 doesnt work
 
-                    canvas.beginPath();
-                    canvas.moveTo(0, 0 - outerRadius);
-                    for (i = 0; i < numberOfSpikes; i++) {
-                      x = 0 + Math.cos(rot) * outerRadius;
-                      y = 0 + Math.sin(rot) * outerRadius;
-                      canvas.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                      x = 0 + Math.cos(rot) * innerRadius;
-                      y = 0 + Math.sin(rot) * innerRadius;
-                      canvas.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
+                  //find out current rotation of canvas to undo it so that radiant spikes are not rotated
+                    const mat = ctx.getTransform();
+                    let ctxRot = Math.atan2(mat.b, mat.a);
+                    if (ctxRot < 0) { // angle is > Math.PI
+                      ctxRot += Math.PI * 2;
                     }
-                    canvas.lineTo(0, 0 - outerRadius);
-                    canvas.closePath();
-                    canvas.lineWidth = 3 / fov;
-                    canvas.fill();
-                    canvas.stroke();
-                    canvas.rotate((-extraSpikeRotate * Math.PI) / 180);
-                  } else if (object.rad == 4) {
-                    //for high rarity radiant shapes, draw spikes
-                    canvas.rotate((extraSpikeRotate1 * Math.PI) / 180);
-                    canvas.fillStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.7)";
-                    canvas.strokeStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.3)";
-                    var numberOfSpikes = 3;
-                    var outerRadius = (object.width * radiantAuraSize * 3) / fov;
-                    var innerRadius = (object.width / fov) * 0.5;
-                    var rot = (Math.PI / 2) * 3;
-                    var x = 0;
-                    var y = 0;
-                    canvas.beginPath();
-                    canvas.moveTo(0, 0 - outerRadius);
-                    for (i = 0; i < numberOfSpikes; i++) {
-                      x = 0 + Math.cos(rot) * outerRadius;
-                      y = 0 + Math.sin(rot) * outerRadius;
-                      canvas.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                      x = 0 + Math.cos(rot) * innerRadius;
-                      y = 0 + Math.sin(rot) * innerRadius;
-                      canvas.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                    }
-                    canvas.lineTo(0, 0 - outerRadius);
-                    canvas.closePath();
-                    canvas.lineWidth = 3 / fov;
-                    canvas.fill();
-                    canvas.stroke();
-                    canvas.rotate((-extraSpikeRotate1 * Math.PI) / 180);
-                    canvas.rotate((extraSpikeRotate2 * Math.PI) / 180);
-                    var numberOfSpikes = 6;
-                    var outerRadius =
-                      ((object.width * radiantAuraSize * 3) / fov) *
-                      0.5;
-                    var innerRadius = (object.width / fov) * 0.5;
-                    var rot = (Math.PI / 2) * 3;
-                    var x = 0;
-                    var y = 0;
-                    canvas.beginPath();
-                    canvas.moveTo(0, 0 - outerRadius);
-                    for (i = 0; i < numberOfSpikes; i++) {
-                      x = 0 + Math.cos(rot) * outerRadius;
-                      y = 0 + Math.sin(rot) * outerRadius;
-                      canvas.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                      x = 0 + Math.cos(rot) * innerRadius;
-                      y = 0 + Math.sin(rot) * innerRadius;
-                      canvas.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                    }
-                    canvas.lineTo(0, 0 - outerRadius);
-                    canvas.closePath();
-                    canvas.lineWidth = 3 / fov;
-                    canvas.fill();
-                    canvas.stroke();
-                    canvas.rotate((-extraSpikeRotate2 * Math.PI) / 180);
-                  } else if (object.rad == 5) {
-                    //for high rarity radiant shapes, draw spikes
-                    canvas.rotate((extraSpikeRotate1 * Math.PI) / 180);
-                    canvas.fillStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.7)";
-                    canvas.strokeStyle = "rgba(" + spikeRed + ", " + spikeGreen + ", " + spikeBlue + ", 0.3)";
-                    var numberOfSpikes = 3;
-                    var outerRadius = ((object.width * radiantAuraSize * 3) / fov) * 1.5;
-                    var innerRadius = (object.width / fov) * 0.5;
-                    var rot = (Math.PI / 2) * 3;
-                    var x = 0;
-                    var y = 0;
-                    canvas.beginPath();
-                    canvas.moveTo(0, 0 - outerRadius);
-                    for (i = 0; i < numberOfSpikes; i++) {
-                      x = 0 + Math.cos(rot) * outerRadius;
-                      y = 0 + Math.sin(rot) * outerRadius;
-                      canvas.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                      x = 0 + Math.cos(rot) * innerRadius;
-                      y = 0 + Math.sin(rot) * innerRadius;
-                      canvas.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                    }
-                    canvas.lineTo(0, 0 - outerRadius);
-                    canvas.closePath();
-                    canvas.lineWidth = 3 / fov;
-                    canvas.fill();
-                    canvas.stroke();
-                    canvas.rotate((-extraSpikeRotate1 * Math.PI) / 180);
-                    canvas.rotate((extraSpikeRotate2 * Math.PI) / 180);
-                    var numberOfSpikes = 3;
-                    var outerRadius =
-                      ((object.width * radiantAuraSize * 3) / fov) *
-                      0.5;
-                    var innerRadius = (object.width / fov) * 0.5;
-                    var rot = (Math.PI / 2) * 3;
-                    var x = 0;
-                    var y = 0;
-                    canvas.beginPath();
-                    canvas.moveTo(0, 0 - outerRadius);
-                    for (i = 0; i < numberOfSpikes; i++) {
-                      x = 0 + Math.cos(rot) * outerRadius;
-                      y = 0 + Math.sin(rot) * outerRadius;
-                      canvas.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                      x = 0 + Math.cos(rot) * innerRadius;
-                      y = 0 + Math.sin(rot) * innerRadius;
-                      canvas.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                    }
-                    canvas.lineTo(0, 0 - outerRadius);
-                    canvas.closePath();
-                    canvas.lineWidth = 3 / fov;
-                    canvas.fill();
-                    canvas.stroke();
-                    canvas.rotate((-extraSpikeRotate2 * Math.PI) / 180);
-                  }
 
-                  //old code where aura have shape
-                  canvas.fillStyle =
-                    "rgba(" +
-                    object.red +
-                    ", " +
-                    object.green +
-                    ", " +
-                    object.blue +
-                    ", 0.3)";
-                  canvas.strokeStyle =
-                    "rgba(" +
-                    object.red +
-                    ", " +
-                    object.green +
-                    ", " +
-                    object.blue +
-                    ", 0.3)";
-                  canvas.lineWidth = 3 / fov;
-                  canvas.beginPath();
-
-                  let shapeaurasize = object.rad;
-                  if (shapeaurasize > 3) {
-                    shapeaurasize = 3; //prevent huge auras
-                  }
-                  canvas.beginPath();
-                  canvas.arc(0, 0, object.width * radiantAuraSize * shapeaurasize / fov, 0, 2 * Math.PI);
-                  canvas.fill();
-                  canvas.stroke();
-                  var shadeFactor = 3 / 4; //smaller the value, darker the shade
-                  canvas.strokeStyle =
-                    "rgb(" +
-                    object.red * shadeFactor +
-                    ", " +
-                    object.green * shadeFactor +
-                    ", " +
-                    object.blue * shadeFactor +
-                    ")";
-                  canvas.fillStyle =
-                    "rgb(" +
-                    object.red +
-                    ", " +
-                    object.green +
-                    ", " +
-                    object.blue +
-                    ")";
-                  if (object.hit > 0) {
-                    //if shape is hit
-                    canvas.strokeStyle =
-                      "rgb(" +
-                      (object.red * shadeFactor + 20) +
-                      ", " +
-                      (object.green * shadeFactor + 20) +
-                      ", " +
-                      (object.blue * shadeFactor + 20) +
-                      ")";
-                    canvas.fillStyle =
-                      "rgb(" +
-                      (object.red + 20) +
-                      ", " +
-                      (object.green + 20) +
-                      ", " +
-                      (object.blue + 20) +
-                      ")";
-                  }
-
-                  //choose whether a particle would spawn
-                  //particle spawn chance based on number of sides the shape has, so square has less particles
-                  if (spawnradparticle == "yes"){
-                    var chooseValue = 20 - object.sides * 2; //lower the number means more particles spawned
-                    if (chooseValue < 5) {
-                      //5 refers to mimimum particle spawn chance
-                      chooseValue = 5;
-                    }
-                    if (object.radtier == 4){
-                      chooseValue -= 2;
-                    }
-                    else if (object.radtier == 5){
-                      chooseValue -= 3;
-                    }
-                    var choosing = Math.floor(Math.random() * chooseValue); //choose if particle spawn
-                    if (choosing == 1) {
-                      //spawn a particle
-                      var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
-                      var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
-                      var randomDistFromCenter =
-                        Math.floor(Math.random() * object.width * 2) - object.width;
-                      radparticles[particleID] = {
-                        angle: angleRadians,
-                        x: object.x + randomDistFromCenter * Math.cos(angleRadians),
-                        y: object.y + randomDistFromCenter * Math.sin(angleRadians),
-                        width: 5,
-                        height: 5,
-                        speed: 1,
-                        timer: 25,
-                        maxtimer: 25,
-                        color:
-                          "rgba(" +
-                          object.red +
-                          "," +
-                          object.green +
-                          "," +
-                          object.blue +
-                          ",.5)",
-                        outline:
-                          "rgba(" +
-                          (object.red* shadeFactor + 20) +
-                          "," +
-                          (object.green* shadeFactor + 20) +
-                          "," +
-                          (object.blue* shadeFactor + 20) +
-                          ",.5)",
-                        type: "particle",
-                      };
-                      if (object.radtier == 4){
-                        radparticles[particleID].width = Math.floor(Math.random() * 10) + 5;
-                      }
-                      else if (object.radtier == 5){
-                        radparticles[particleID].width = Math.floor(Math.random() * 20) + 5;
-                        radparticles[particleID].speed = 3;
-                        radparticles[particleID].timer = 50;
-                        radparticles[particleID].maxtimer = 50;
-                      }
-                      particleID++;
-                    }
-                  }
-                } // end of rad player code
+                  canvas.rotate(-ctxRot);
+                  updateRadiantColor(object,id);//this function uses radtier, not rad
+                  canvas.rotate(ctxRot);
+                  playerBodyCol = canvas.fillStyle;//for upgrade buttons
+                  playerBodyOutline = canvas.strokeStyle;
+                }
                 if (eternal == "no") {
                   //not a tier 6 tank
                   if(object.width >= 0) {
@@ -5123,29 +4874,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                           canvas.rotate(-12 * Math.PI / 180);
                         }
                       }
-                      else{
-                        let numberOfSpikes = -object.sides;
-                        let outerRadius = object.width / fov;
-                        let innerRadius = (object.width / fov / 2);
-                        let rot = (Math.PI / 2) * 3;
-                        let x = 0;
-                        let y = 0;
-                        canvas.beginPath();
-                        canvas.moveTo(0, -outerRadius);
-                        for (i = 0; i < numberOfSpikes; i++) {
-                          x = Math.cos(rot) * outerRadius;
-                          y = Math.sin(rot) * outerRadius;
-                          canvas.lineTo(x, y);
-                          rot += Math.PI / numberOfSpikes;
-                          x = Math.cos(rot) * innerRadius;
-                          y = Math.sin(rot) * innerRadius;
-                          canvas.lineTo(x, y);
-                          rot += Math.PI / numberOfSpikes;
-                        }
-                        canvas.lineTo(0, -outerRadius);
-                        canvas.closePath();
-                        canvas.fill();
-                        canvas.stroke();
+                      else{//negative sides means a star shape
+                        drawSpikes(0.5, 1, -object.sides, object.width, canvas, fov)
                       }
                     }
                   }
@@ -5429,86 +5159,61 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               var drawingY = (object.y - py) / clientFovMultiplier + canvas.height / 2;
               
               if (object.type == "bullet") {
-                //draw bullet
-                if (object.hasOwnProperty("deadOpacity")) {
-                  //if this is an animation of a dead object
+                if (object.hasOwnProperty("deadOpacity")) { //if this is an animation of a dead object
                   ctx.globalAlpha = object.deadOpacity;
                 }
                 ctx.lineJoin = "round";
-                var chooseflash = 3;
-                if (object.hit > 0 && object.bulletType != "aura") {
-                  //if shape is hit AND bullet is not aura, choose whether it's color is white or original color to create flashing effect
-                  chooseflash = Math.floor(Math.random() * 3); //random number 0, 1 or 2
-                }
-                if (chooseflash == 0) {
-                  ctx.fillStyle = "white";
-                } else if (chooseflash == 1) {
-                  ctx.fillStyle = "pink";
-                } else {
-                  if (object.ownsIt == "yes" || object.bulletType == "aura") {
-                    //if it's an aura or client's tank owns the bullet
-                    ctx.fillStyle = object.color;
-                  } else {
-                    ctx.fillStyle = "#f04f54"; //bullet color is red
+                if (object.bulletType == "aura" && Math.floor(Math.random() * 3) == 1) {
+                  //spawn a particle
+                  let angleRadians = Math.floor(Math.random() * 360) * Math.PI / 180; //choose angle in degrees, then convert to radians
+                  let randomDistFromCenter = Math.floor(Math.random() * object.width * 2) - object.width;
+                  let auraoutline = object.outline;
+                  if (auraoutline == "rgba(255,0,0,.15)"){//damaging aura will have particles that look too dark
+                    auraoutline = auraoutline.substring(0, auraoutline.length - 3)+ '05)';//change opacity to 0.05
                   }
-                }
-                if (object.bulletType == "aura") {
-                  var choosing = Math.floor(Math.random() * 3); //choose if particle spawn
-                  if (choosing == 1) {
-                    //spawn a particle
-                    var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
-                    var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
-                    var randomDistFromCenter =
-                      Math.floor(Math.random() * object.width * 2) - object.width;
-                    let auraoutline = object.outline;
-                    if (auraoutline == "rgba(255,0,0,.15)"){//damaging aura will have particles that look too dark
-                      auraoutline = auraoutline.substring(0, auraoutline.length - 3)+ '05)';//change opacity to 0.05
-                    }
-                    radparticles[particleID] = {
-                      angle: angleRadians,
-                      x: object.x + randomDistFromCenter * Math.cos(angleRadians),
-                      y: object.y + randomDistFromCenter * Math.sin(angleRadians),
-                      width: 5,
-                      height: 5,
-                      speed: 1,
-                      timer: 15,
-                      maxtimer: 50,
-                      color: object.color,
-                      outline: auraoutline,
-                      type: "particle",
-                    };
-                    particleID++;
-                  }
+                  radparticles[particleID] = {
+                    angle: angleRadians,
+                    x: object.x + randomDistFromCenter * Math.cos(angleRadians),
+                    y: object.y + randomDistFromCenter * Math.sin(angleRadians),
+                    width: 5,
+                    speed: 1,
+                    timer: 15,
+                    maxtimer: 50,
+                    color: object.color,
+                    outline: auraoutline,
+                    type: "particle",
+                  };
+                  particleID++;
                 }
 
-                if (object.ownsIt == "yes" || object.bulletType == "aura") {
-                  //if it's an aura or client's tank owns the bullet
-                  ctx.strokeStyle = object.outline;
+                if (object.ownsIt == "yes") {
+                  ctx.fillStyle = object.color;
+                    ctx.strokeStyle = object.outline;
                 } else {
                   ctx.strokeStyle = "#b33b3f"; //bullet is red
+                  ctx.fillStyle = "#f04f54";
                 }
-
-
-                //bullet is purple even if bullet belongs to enemy
+                //eternal's bullet is purple even if bullet belongs to enemy
+                /*
                 if (object.color == "#934c93") {
                   ctx.fillStyle = object.color;
                 }
                 if (object.outline == "#660066") {
                   ctx.strokeStyle = object.outline;
-                }
-
+                }*/
                 //team colors
                 if (bodyColors.hasOwnProperty(object.team)) {
                   ctx.fillStyle = bodyColors[object.team].col;
                   ctx.strokeStyle = bodyColors[object.team].outline;
                 }
-
-                if (object.bulletType == "aura"){
-                  //color is aura color, regardless of team
+                if (object.bulletType == "aura"){ //color is aura color no matter what
                   ctx.fillStyle = object.color;
                   ctx.strokeStyle = object.outline;
                 }
-
+                if (object.team=="mob"){ //dune mob's bullets is the color of mob
+                  ctx.fillStyle = botcolors[object.ownerName].color;
+                  ctx.strokeStyle = botcolors[object.ownerName].outline;
+                }
                 if (object.passive == "yes") {
                   if (object.bulletType == "aura") {
                     ctx.strokeStyle = "rgba(128,128,128,.2)";
@@ -5518,85 +5223,55 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     ctx.fillStyle = "grey";
                   }
                 }
-
-                if (object.team=="mob"){
-                  //dune mob's bullets is the colo of mob
-                  ctx.fillStyle = botcolors[object.ownerName].color;
-                  ctx.strokeStyle = botcolors[object.ownerName].outline;
+                else if (object.hit > 0 && object.bulletType != "aura"){//if bullet is hit and not passive and not an aura
+                  if (!bulletHit.hasOwnProperty(id)) bulletHit[id] = 0;
+                  maxshade = 0.3;//bullets turn 30% whiter when hit
+                  bulletHit[id] += (maxshade/5);
+                  if (bulletHit[id] > maxshade) bulletHit[id] = maxshade;
+                }
+                else if (bulletHit[id] > 0){
+                  bulletHit[id] -= (maxshade/5);
+                  if (bulletHit[id] < 0.00001) bulletHit[id] = 0;
+                }
+                if (bulletHit[id]>0){//even if not hit, still need to animate from whitish color to normal shape color
+                  if (bulletHit[id] == maxshade && object.sides <= 8){//slight flash
+                    bulletHit[id]-=(Math.random() * 0.2 + maxshade/5);
+                  }
+                  ctx.fillStyle = pSBC ( bulletHit[id], ctx.fillStyle, false, true );//LINEAR BLENDING (dont use log blending, or else heptagon look too greyish)
+                  ctx.strokeStyle = pSBC ( bulletHit[id], ctx.strokeStyle, false, true );
                 }
 
                 ctx.lineWidth = 4 / clientFovMultiplier;
                 if (object.bulletType == "bullet" || object.bulletType == "aura") {
                   if (!object.color.includes('rgba(57,185,102')){//not a heal aura
                     ctx.beginPath();
-                    ctx.arc(
-                      drawingX,
-                      drawingY,
-                      object.width / clientFovMultiplier,
-                      0,
-                      2 * Math.PI
-                    );
+                    ctx.arc(drawingX, drawingY, object.width / clientFovMultiplier, 0, 2 * Math.PI);
                     ctx.fill();
                     ctx.stroke();
                   }
-                  else{//8 sides for healing aura
-                    ctx.beginPath();
-                    ctx.moveTo((object.width / clientFovMultiplier) + drawingX, drawingY);
-                    for (var i = 1; i <= 8 + 1; i += 1) {
-                      ctx.lineTo(
-                        (object.width / clientFovMultiplier) *
-                            Math.cos((i * 2 * Math.PI) / 8) + drawingX,
-                        (object.width / clientFovMultiplier) *
-                            Math.sin((i * 2 * Math.PI) / 8) + drawingY
-                      );
-                    }
-                    ctx.fill();
-                    ctx.stroke();
+                  else{//healing aura
+                    ctx.save();
+                    ctx.translate(drawingX, drawingY);
+                    renderPolygon(object.width / clientFovMultiplier,8);
+                    ctx.restore();
                   }
                 } else if (object.bulletType == "trap") {
-                  //width is the radius, so need to times two to get total width
-                  //note: x and y of object are the center of object, but when drawing rectangles, the x and y coordinates given need to be the top left corner of the rectangle, so need to minus the width and height
-                  ctx.fillRect(
-                    drawingX - object.width / clientFovMultiplier,
-                    drawingY - object.width / clientFovMultiplier,
-                    (object.width * 2) / clientFovMultiplier,
-                    (object.width * 2) / clientFovMultiplier
-                  );
-                  ctx.strokeRect(
-                    drawingX - object.width / clientFovMultiplier,
-                    drawingY - object.width / clientFovMultiplier,
-                    (object.width * 2) / clientFovMultiplier,
-                    (object.width * 2) / clientFovMultiplier
-                  );
+                  ctx.save();
+                  ctx.translate(drawingX, drawingY);
+                  ctx.rotate(45 * Math.PI / 180);//rotate 45 degrees so its a square, not diamond
+                  renderPolygon(object.width / clientFovMultiplier,4);
+                  ctx.restore();
                 } else if (object.bulletType == "drone") {
                   ctx.save();
                   ctx.translate(drawingX, drawingY);
                   ctx.rotate(object.moveAngle);
-                  //ctx.rotate((object.moveAngle*180/Math.PI - 90) *Math.PI/180);//cannot straightaway use the angle, must add 90 degrees to it, because 0 degrees is pointing right, but we are drawing the triangle upwards
-                  ctx.beginPath();
-                  ctx.moveTo(
-                    (object.width / clientFovMultiplier) * Math.cos(0),
-                    (object.width / clientFovMultiplier) * Math.sin(0)
-                  );
-                  for (var i = 1; i <= 3; i += 1) {
-                    ctx.lineTo(
-                      (object.width / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / 3),
-                      (object.width / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / 3)
-                    );
-                  }
-                  ctx.fill();
-                  ctx.stroke();
+                  renderPolygon(object.width / clientFovMultiplier,3);
                   ctx.restore();
                 } else if (object.bulletType == "mine" || object.bulletType == "minion") {
-                  //console.log(object.moveAngle/Math.PI*180)
-                  //mine is trap with barrel, minion is bullet with barrel
+                  //mine is trap with turret, minion is bullet with barrel
                   ctx.save();
                   ctx.translate(drawingX, drawingY);
                   ctx.rotate(object.moveAngle);
-                  //ctx.rotate((object.moveAngle*180/Math.PI - 90) *Math.PI/180);//cannot straightaway use the angle, must add 90 degrees to it, because 0 degrees is pointing right, but we are drawing the triangle upwards
-
                   if (object.bulletType == "minion"){
                     //draw barrels underneath
                     var prevfill = ctx.fillStyle;
@@ -5621,18 +5296,31 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       else if (thisBarrel.barrelType == "minion") {
                         drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
                       }
+                      ctx.rotate(-thisBarrel.additionalAngle);//rotate back
                     })
                     ctx.fillStyle = prevfill;
                     ctx.strokeStyle = prevstroke;
                   }
                   ctx.beginPath();
                   if (object.bulletType == "mine"){//mine trap
-                    let mineWidth = object.width / clientFovMultiplier;
-                    ctx.fillRect(-mineWidth,-mineWidth,mineWidth*2,mineWidth*2);
-                    ctx.strokeRect(-mineWidth,-mineWidth,mineWidth*2,mineWidth*2);
+                    ctx.rotate(45 * Math.PI / 180);//rotate 45 degrees so its a square, not diamond
+                    renderPolygon(object.width / clientFovMultiplier,4);
+                    ctx.rotate(-45 * Math.PI / 180);
                   }
                   else{//minion
-                    ctx.arc(0, 0, object.width / clientFovMultiplier, 0, 2 * Math.PI);
+                    let firstBarrel = object.barrels[Object.keys(object.barrels)[0]];
+                    let firstBarrelWidth = firstBarrel.barrelWidth;
+                    let minionWidth = object.width * 2;
+                    if (Math.abs(firstBarrelWidth - minionWidth) < 5){//barrel is almost as wide as minion's body, e.g. manufacturer
+                      //render the minion body as a palace
+                      ctx.rotate(firstBarrel.additionalAngle);
+                      renderPolygon(object.width*1.1, 8);
+                      renderPolygon(object.width*0.8, 6);
+                      ctx.rotate(-firstBarrel.additionalAngle);
+                    }
+                    else{
+                      ctx.arc(0, 0, object.width / clientFovMultiplier, 0, 2 * Math.PI);
+                    }
                   }
                   ctx.fill();
                   ctx.stroke();
@@ -5675,7 +5363,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 }
                 ctx.lineJoin = "miter";
                 if (object.hasOwnProperty("deadOpacity")) {
-                  //if this is an animation of a dead object
                   ctx.globalAlpha = 1.0; //reset opacity
                 }
                 if (settingsList.showhitboxes === true && debugState == "open") {
@@ -5701,7 +5388,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 if (object.name!="Pillbox"){//pillbox's barrel is visually a turret
                   Object.keys(object.barrels).forEach((barrel) => {
                     let thisBarrel = object.barrels[barrel];
-                    ctx.rotate(((thisBarrel.additionalAngle + 90) * Math.PI) / 180); //rotate to barrel angle
+                    ctx.rotate((thisBarrel.additionalAngle + 90) * Math.PI / 180); //rotate to barrel angle
                     ctx.fillStyle = bodyColors.barrel.col;
                     ctx.strokeStyle = bodyColors.barrel.outline;
                     if (thisBarrel.barrelType == "bullet") {
@@ -5719,38 +5406,24 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       else if (thisBarrel.barrelType == "minion") {
                         drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
                       }
-                    ctx.rotate((-(thisBarrel.additionalAngle + 90) * Math.PI) / 180); //rotate back
+                    ctx.rotate(-(thisBarrel.additionalAngle + 90) * Math.PI / 180); //rotate back
                   });
                 }
                 if (object.name=="Cluster"){
                   //draw the spawning barrels
-                  let barrelwidth = object.width*0.7;
-                  let barrelheight = object.width*1.2;
+                  let barrelwidth = object.width*0.7 / clientFovMultiplier;
+                  let barrelheight = object.width*1.2 / clientFovMultiplier;
                   ctx.fillStyle = bodyColors.barrel.col;
                   ctx.strokeStyle = bodyColors.barrel.outline;
                   ctx.save();
-                  ctx.rotate(90 * Math.PI / 180);
+                  ctx.rotate(Math.PI / 2);
                   for (let i = 0; i < 5; i++){
-                    if (i!=0){
-                      ctx.rotate(72 * Math.PI / 180); //rotate 72 for each barrel
-                    }
+                    if (i!=0) ctx.rotate(72 * Math.PI / 180); //rotate 72 degrees for each barrel
                     ctx.beginPath();
-                    ctx.moveTo(
-                      -barrelwidth / 5 / clientFovMultiplier,
-                      0
-                    );
-                    ctx.lineTo(
-                      -barrelwidth / clientFovMultiplier,
-                      -barrelheight / clientFovMultiplier
-                    );
-                    ctx.lineTo(
-                      barrelwidth / clientFovMultiplier,
-                      -barrelheight / clientFovMultiplier
-                    );
-                    ctx.lineTo(
-                      barrelwidth / 5 / clientFovMultiplier,
-                      0
-                    );
+                    ctx.moveTo(-barrelwidth / 5, 0);
+                    ctx.lineTo(-barrelwidth, -barrelheight);
+                    ctx.lineTo(barrelwidth, -barrelheight);
+                    ctx.lineTo(barrelwidth / 5, 0);
                     ctx.fill();
                     ctx.stroke();
                   }
@@ -5758,356 +5431,165 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 }
                 else if (object.name=="Infestor"){
                   //draw the spawning barrels
-                  let barrelwidth = object.width*0.7;
-                  let barrelheight = object.width*1.2;
+                  let barrelwidth = object.width*0.7 / clientFovMultiplier;
+                  let barrelheight = object.width*1.2 / clientFovMultiplier;
                   ctx.fillStyle = bodyColors.barrel.col;
                   ctx.strokeStyle = bodyColors.barrel.outline;
                   ctx.save();
                   for (let i = 0; i < 4; i++){//normal barrels
-                    if (i!=0){
-                      ctx.rotate(90 * Math.PI / 180);
-                    }
-                    ctx.fillRect(
-                      -barrelwidth / 2 / clientFovMultiplier,
-                      -barrelheight / clientFovMultiplier,
-                      barrelwidth / clientFovMultiplier,
-                      barrelheight / clientFovMultiplier
-                    );
-                    ctx.strokeRect(
-                      -barrelwidth / 2 / clientFovMultiplier,
-                      -barrelheight / clientFovMultiplier,
-                      barrelwidth / clientFovMultiplier,
-                      barrelheight / clientFovMultiplier
-                    );
+                    if (i!=0) ctx.rotate(Math.PI / 2);
+                    ctx.fillRect(-barrelwidth / 2, -barrelheight, barrelwidth, barrelheight);
+                    ctx.strokeRect(-barrelwidth / 2, -barrelheight, barrelwidth, barrelheight);
                   }
                   ctx.restore();
                   ctx.save();
                   ctx.rotate(45 * Math.PI / 180);
-                  barrelwidth = object.width*0.6;
-                  barrelheight = object.width*2;
+                  barrelwidth = object.width*0.6 / clientFovMultiplier;
+                  barrelheight = object.width*2 / clientFovMultiplier;
                   for (let i = 0; i < 4; i++){//traplike barrels
-                    if (i!=0){
-                      ctx.rotate(90 * Math.PI / 180);
-                    }
-                    ctx.fillRect(
-                      -barrelwidth / 2 / clientFovMultiplier,
-                      -barrelheight * 0.55 / clientFovMultiplier,
-                      barrelwidth / clientFovMultiplier,
-                      barrelheight * 0.5 / clientFovMultiplier
-                    );
-                    ctx.strokeRect(
-                      -barrelwidth / 2 / clientFovMultiplier,
-                      -barrelheight * 0.55 / clientFovMultiplier,
-                      barrelwidth / clientFovMultiplier,
-                      barrelheight * 0.5 / clientFovMultiplier
-                    );
+                    if (i!=0) ctx.rotate(Math.PI / 2);
+                    ctx.fillRect(-barrelwidth / 2, -barrelheight * 0.55, barrelwidth, barrelheight * 0.5);
+                    ctx.strokeRect(-barrelwidth / 2, -barrelheight * 0.55, barrelwidth, barrelheight * 0.5);
                     ctx.beginPath();
-                    ctx.moveTo(
-                      -barrelwidth / 2 / clientFovMultiplier,
-                      -barrelheight * 0.55 / clientFovMultiplier
-                    );
-                    ctx.lineTo(
-                      -barrelwidth/1.7 / clientFovMultiplier,
-                      -barrelheight * 0.65 / clientFovMultiplier
-                    );
-                    ctx.lineTo(
-                      barrelwidth/1.7 / clientFovMultiplier,
-                      -barrelheight * 0.65 / clientFovMultiplier
-                    );
-                    ctx.lineTo(
-                      barrelwidth / 2 / clientFovMultiplier,
-                      -barrelheight * 0.55 / clientFovMultiplier
-                    );
+                    ctx.moveTo(-barrelwidth / 2, -barrelheight * 0.55);
+                    ctx.lineTo(-barrelwidth/1.7, -barrelheight * 0.65);
+                    ctx.lineTo(barrelwidth/1.7, -barrelheight * 0.65);
+                    ctx.lineTo(barrelwidth / 2, -barrelheight * 0.55);
                     ctx.fill();
                     ctx.stroke();
                   }
                   ctx.restore();
                 }
                 else if (object.name=="Champion"){
-                  //draw spikes
-                  var numberOfSpikes = 5;
-                  var outerRadius = object.width / clientFovMultiplier * 1.3;
-                  var innerRadius = object.width / clientFovMultiplier /1.3;
-                  var rot = (Math.PI / 2) * 3;//dont change this, or else will have strange extra lines
-                  var x = 0;
-                  var y = 0;
                   ctx.fillStyle = bodyColors.barrel.col;
                   ctx.strokeStyle = bodyColors.barrel.outline;
                   ctx.save();
-                  ctx.rotate(90 * Math.PI / 180);
-                  ctx.beginPath();
-                  ctx.moveTo(0, 0 - outerRadius);
-                  for (i = 0; i < numberOfSpikes; i++) {
-                    x = 0 + Math.cos(rot) * outerRadius;
-                    y = 0 + Math.sin(rot) * outerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                    x = 0 + Math.cos(rot) * innerRadius;
-                    y = 0 + Math.sin(rot) * innerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                  }
-                  ctx.lineTo(0, 0 - outerRadius);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
+                  ctx.rotate(-Math.PI);
+                  drawSpikes(0.77, 1.3, 5, object.width)
                   ctx.restore();
                 }
-                var chooseflash = 3;
-                if (object.hit > 0) {
-                  //if shape is hit, choose whether it's color is white or original color to create flashing effect
-                  chooseflash = Math.floor(Math.random() * 3); //random number 0, 1 or 2
+                if (object.hit > 0){
+                  if (!botHit.hasOwnProperty(id)) botHit[id] = 0;
+                  maxshade = 0.3;//bullets turn 30% whiter when hit
+                  botHit[id] += (maxshade/5);
+                  if (botHit[id] > maxshade) botHit[id] = maxshade;
                 }
-                if (chooseflash == 0) {
-                  ctx.fillStyle = "white";
-                } else if (chooseflash == 1) {
-                  ctx.fillStyle = "pink";
-                } else {
-                  ctx.fillStyle = botcolors[object.name].color;
+                else if (botHit[id] > 0){
+                  botHit[id] -= (maxshade/5);
+                  if (botHit[id] < 0.00001) botHit[id] = 0;
                 }
-                ctx.strokeStyle = botcolors[object.name].outline;
+                if (botHit[id]>0){//even if not hit, still need to animate from whitish color to normal shape color
+                  if (botHit[id] == maxshade && object.sides <= 8){//slight flash
+                    botHit[id]-=(Math.random() * 0.2 + maxshade/5);
+                  }
+                  ctx.fillStyle = pSBC ( botHit[id], botcolors[object.name].color, false, true );//LINEAR BLENDING (dont use log blending, or else heptagon look too greyish)
+                  ctx.strokeStyle = pSBC ( botHit[id], botcolors[object.name].outline, false, true );
+                }
                 //draw body
+                const w = object.width / clientFovMultiplier;
                 if (object.side==0) {
-                  //draw circle
                   ctx.beginPath();
-                  ctx.arc(0, 0, object.width / clientFovMultiplier, 0, 2 * Math.PI);
+                  ctx.arc(0, 0, w, 0, 2 * Math.PI);
                   ctx.fill();
                   ctx.stroke();
                 } else if (object.side>=0) {
-                  if (object.hasOwnProperty('randomPointsArrayX')){
-                    //draw for rock and boulder
-                    //POLYGON WITH IRREGULAR SIDES
+                  if (object.hasOwnProperty('randomPointsArrayX')){ //draw for rock and boulder (POLYGON WITH IRREGULAR SIDES)
                     ctx.rotate(-object.angle); //rotate back so that rock wont rotate to face you
-                    var rockSides = object.side;
+                    let rockSides = object.side;
                     ctx.beginPath();
-                    ctx.moveTo((object.width / clientFovMultiplier) * Math.cos(0), (object.width / clientFovMultiplier) * Math.sin(0));
-                    for (var i = 1; i <= rockSides; i++) {
-                      var XRandom = object.randomPointsArrayX[i - 1] / clientFovMultiplier;
-                      var YRandom = object.randomPointsArrayY[i - 1] / clientFovMultiplier;
-                      ctx.lineTo(XRandom + (object.width / clientFovMultiplier) * Math.cos((i * 2 * Math.PI) / rockSides),
-                        YRandom + (object.width / clientFovMultiplier) * Math.sin((i * 2 * Math.PI) / rockSides)
-                      );
+                    ctx.moveTo(w, 0);
+                    for (let i = 1; i <= rockSides; i++) {
+                      let XRandom = object.randomPointsArrayX[i - 1] / clientFovMultiplier;
+                      let YRandom = object.randomPointsArrayY[i - 1] / clientFovMultiplier;
+                      ctx.lineTo(XRandom + w * Math.cos(i * 2 * Math.PI / rockSides), YRandom + w * Math.sin(i * 2 * Math.PI / rockSides));
                     }
                     ctx.fill();
                     ctx.stroke();
                   }
                   else{//normal spawner
                     if (object.name=="Cluster"||object.name=="Pursuer"||object.name=="Champion"||object.name=="Infestor"||object.name=="Abyssling"){
-                      //need to rotate 72/2 degrees so that pentagon not facing vertex towards player
-                      ctx.rotate(Math.PI/object.side);//2 PI / sides / 2
+                      ctx.rotate(Math.PI/object.side);//tilt so vertex not facing player
                     }
-                    ctx.beginPath();
-                    ctx.moveTo((object.width / clientFovMultiplier), 0);
-                    for (var i = 1; i <= object.side + 1; i += 1) {
-                      ctx.lineTo(
-                        (object.width / clientFovMultiplier) *
-                            Math.cos((i * 2 * Math.PI) / object.side),
-                        (object.width / clientFovMultiplier) *
-                            Math.sin((i * 2 * Math.PI) / object.side)
-                      );
-                    }
-                    ctx.fill();
-                    ctx.stroke();
-                    if (object.name=="Cluster"||object.name=="Pursuer"){
+                    renderPolygon(w, object.side);
+                    //now draw circle on top
+                    if (object.name=="Cluster"||object.name=="Pursuer"||object.name=="Leech"){
                       ctx.rotate(-Math.PI/object.side);//rotate back
-                      //draw circle on top
-                      ctx.fillStyle = bodyColors.barrel.col;//light grey
+                      ctx.fillStyle = bodyColors.barrel.col;
                       ctx.strokeStyle = bodyColors.barrel.outline;
-                      ctx.beginPath();
-                      ctx.arc(0, 0, object.width/2 / clientFovMultiplier, 0, 2 * Math.PI);
-                      ctx.fill();
-                      ctx.stroke();
+                      drawCircle(w/2);
                     }
                     else if (object.name=="Champion"){
-                      ctx.rotate(-Math.PI/object.side);//rotate back
-                      //draw circle on top
+                      ctx.rotate(-Math.PI/object.side);
                       ctx.fillStyle = "grey";//darker grey
                       ctx.strokeStyle = "#5e5e5e";
-                      ctx.beginPath();
-                      ctx.arc(0, 0, object.width/2.5 / clientFovMultiplier, 0, 2 * Math.PI);
-                      ctx.fill();
-                      ctx.stroke();
+                      drawCircle(w/2.5);
                     }
                     else if (object.name=="Infestor"){
-                      ctx.rotate(-Math.PI/object.side);//rotate back
-                      //draw circle on top
-                      ctx.fillStyle = bodyColors.barrel.col;//light grey
+                      ctx.rotate(-Math.PI/object.side);
+                      ctx.fillStyle = bodyColors.barrel.col;
                       ctx.strokeStyle = bodyColors.barrel.outline;
-                      ctx.beginPath();
-                      ctx.arc(0, 0, object.width/5 / clientFovMultiplier, 0, 2 * Math.PI);
-                      ctx.fill();
-                      ctx.stroke();
-                    }
-                    else if (object.name=="Leech"){
-                      //draw circle on top
-                      ctx.fillStyle = bodyColors.barrel.col;//light grey
-                      ctx.strokeStyle = bodyColors.barrel.outline;
-                      ctx.beginPath();
-                      ctx.arc(0, 0, object.width/2 / clientFovMultiplier, 0, 2 * Math.PI);
-                      ctx.fill();
-                      ctx.stroke();
+                      drawCircle(w/5);
                     }
                     else if (object.name=="Pillbox"){//pillbox's barrel is visually a turret
-                      ctx.lineJoin = "round"; //make nice round corners
-                      ctx.rotate(90 * Math.PI / 180);
+                      ctx.rotate(Math.PI / 2);
+                      ctx.fillStyle = bodyColors.barrel.col;
+                      ctx.strokeStyle = bodyColors.barrel.outline;
                       Object.keys(object.barrels).forEach((barrel) => {
-                        //note that you must use [barrel] instead of .barrel, if not there will be an error
                         let thisBarrel = object.barrels[barrel];
-                        ctx.fillStyle = bodyColors.barrel.col;
-                        ctx.strokeStyle = bodyColors.barrel.outline;
-                        ctx.fillRect(
-                          -thisBarrel.barrelWidth / 2 / clientFovMultiplier +
-                            thisBarrel.x,
-                          -(thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
-                            clientFovMultiplier,
-                          thisBarrel.barrelWidth / clientFovMultiplier,
-                          (thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
-                            clientFovMultiplier
-                        );
-                        ctx.strokeRect(
-                          -thisBarrel.barrelWidth / 2 / clientFovMultiplier +
-                            thisBarrel.x,
-                          -(thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
-                            clientFovMultiplier,
-                          thisBarrel.barrelWidth / clientFovMultiplier,
-                          (thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) /
-                            clientFovMultiplier
-                        );
+                        let bw = thisBarrel.barrelWidth / clientFovMultiplier;
+                        let bh = (thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) / clientFovMultiplier;
+                        ctx.fillRect(-bw / 2 + thisBarrel.x, -bh, bw, bh);
+                        ctx.strokeRect(-bw / 2 + thisBarrel.x, -bh, bw, bh);
                       });
-                      ctx.rotate(-90 * Math.PI / 180);
-                      //draw turret base
-                      ctx.beginPath();
-                      ctx.arc(
-                        0,
-                        0,
-                        (object.width / clientFovMultiplier) * 0.6,
-                        0,
-                        2 * Math.PI
-                      );
-                      ctx.fill();
-                      ctx.stroke();
-                      ctx.lineJoin = "miter"; //change back
+                      ctx.rotate(-Math.PI / 2);
+                      drawCircle(w*0.6);//draw turret base
                     } else if (object.name=="Abyssling"){
                       //draw upper layer
                       let oldfill = ctx.fillStyle;
                       let oldstroke = ctx.strokeStyle;
                       ctx.fillStyle = "#5f676c";
                       ctx.strokeStyle = "#41494e";
-                      ctx.beginPath();
-                      ctx.moveTo((object.width*0.75 / clientFovMultiplier), 0);
-                      for (var i = 1; i <= object.side + 1; i += 1) {
-                        ctx.lineTo(
-                          (object.width*0.75 / clientFovMultiplier) *
-                              Math.cos((i * 2 * Math.PI) / object.side),
-                          (object.width*0.75 / clientFovMultiplier) *
-                              Math.sin((i * 2 * Math.PI) / object.side)
-                        );
-                      }
-                      ctx.fill();
-                      ctx.stroke();
+                      renderPolygon(w*0.75, object.side);
                       ctx.fillStyle = oldfill;
                       ctx.strokeStyle = oldstroke;
-                      ctx.beginPath();
-                      ctx.moveTo((object.width*0.7 / clientFovMultiplier), 0);
-                      for (var i = 1; i <= object.side + 1; i += 1) {
-                        ctx.lineTo(
-                          (object.width*0.7 / clientFovMultiplier) *
-                              Math.cos((i * 2 * Math.PI) / object.side),
-                          (object.width*0.7 / clientFovMultiplier) *
-                              Math.sin((i * 2 * Math.PI) / object.side)
-                        );
-                      }
-                      ctx.fill();
-                      ctx.stroke();
+                      renderPolygon(w*0.7, object.side);
                       ctx.rotate(-Math.PI/object.side);//rotate back
                       //draw turret on top (only visual)
                       ctx.fillStyle = bodyColors.barrel.col;//light grey
                       ctx.strokeStyle = bodyColors.barrel.outline;
-                      let barrelwidth = 35;
-                      let barrelheight = 100;
-                      ctx.fillRect(
-                        -barrelwidth / 2 / clientFovMultiplier,
-                        -barrelheight / clientFovMultiplier,
-                        barrelwidth / clientFovMultiplier,
-                        barrelheight / clientFovMultiplier
-                      );
-                      ctx.strokeRect(
-                        -barrelwidth / 2 / clientFovMultiplier,
-                        -barrelheight / clientFovMultiplier,
-                        barrelwidth / clientFovMultiplier,
-                        barrelheight / clientFovMultiplier
-                      );
-                      ctx.beginPath();
-                      ctx.arc(0, 0, object.width*0.45 / clientFovMultiplier, 0, 2 * Math.PI);
-                      ctx.fill();
-                      ctx.stroke();
+                      let bw = 35 / clientFovMultiplier;
+                      let bh = 100 / clientFovMultiplier;
+                      ctx.fillRect(-bw / 2, -bh, bw, bh);
+                      ctx.strokeRect(-bw / 2, -bh, bw, bh);
+                      drawCircle(w*0.45);
                     }
                   }
                 } else{//negative sides, draw a star! (cactus)
-                  var numberOfSpikes = -object.side;
-                  var outerRadius = object.width / clientFovMultiplier * 1.5;
-                  var innerRadius = object.width / clientFovMultiplier;
-
-                  var rot = (Math.PI / 2) * 3;//dont change this, or else will have strange extra lines
-                  var x = 0;
-                  var y = 0;
                   ctx.rotate(-object.angle); //rotate back so that rock wont rotate to face you
-                  ctx.beginPath();
-                  ctx.moveTo(0, 0 - outerRadius);
-                  for (i = 0; i < numberOfSpikes; i++) {
-                    x = 0 + Math.cos(rot) * outerRadius;
-                    y = 0 + Math.sin(rot) * outerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                    x = 0 + Math.cos(rot) * innerRadius;
-                    y = 0 + Math.sin(rot) * innerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                  }
-                  ctx.lineTo(0, 0 - outerRadius);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
+                  drawSpikes(1, 1.5, -object.side, object.width);
                 }
                 ctx.restore();
                 if (object.health < object.maxhealth) {
                   //draw health bar background
-                  var w = (object.width * 2) / clientFovMultiplier;
-                  var h = 7 / clientFovMultiplier;
-                  var r = h / 2;
-                  var x = drawingX - object.width / clientFovMultiplier;
-                  var y = drawingY + object.width / clientFovMultiplier + 10;
+                  let w = w * 2;
+                  let h = 7 / clientFovMultiplier;
+                  let r = h / 2;
+                  let x = drawingX - w;
+                  let y = drawingY + w + 10;
                   ctx.fillStyle = "black";
                   ctx.strokeStyle = "black";
                   ctx.lineWidth = 2.5 / clientFovMultiplier;
-                  ctx.beginPath();
-                  ctx.moveTo(x + r, y);
-                  ctx.arcTo(x + w, y, x + w, y + h, r);
-                  ctx.arcTo(x + w, y + h, x, y + h, r);
-                  ctx.arcTo(x, y + h, x, y, r);
-                  ctx.arcTo(x, y, x + w, y, r);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
+                  ctxroundRectangle(x,y,r,w,h);
                   //draw health bar
                   if (object.health > 0) {
                     w = (w / object.maxhealth) * object.health;
-                    if (r * 2 > w) {
-                      //prevent weird shape when radius more than width
+                    if (r * 2 > w) { //prevent weird shape when radius more than width
                       r = w / 2;
                       y += (h - w) / 2; //move health bar so that it is centered vertically in black bar
                       h = w;
                     }
                     ctx.fillStyle = botcolors[object.name].color;
-                    ctx.beginPath();
-                    ctx.moveTo(x + r, y);
-                    ctx.arcTo(x + w, y, x + w, y + h, r);
-                    ctx.arcTo(x + w, y + h, x, y + h, r);
-                    ctx.arcTo(x, y + h, x, y, r);
-                    ctx.arcTo(x, y, x + w, y, r);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
+                    ctxroundRectangle(x,y,r,w,h);
                   }
                 }
                 ctx.fillStyle = "white";
@@ -6123,20 +5605,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   } else {
                     var specialtyText = "";
                   }
-                  ctx.strokeText(
-                    object.name + specialtyText,
-                    drawingX,
-                    drawingY - object.width / clientFovMultiplier - 10
-                  );
-                  ctx.fillText(
-                    object.name + specialtyText,
-                    drawingX,
-                    drawingY - object.width / clientFovMultiplier - 10
-                  );
+                  ctx.strokeText(object.name + specialtyText, drawingX, drawingY - w - 10);
+                  ctx.fillText(object.name + specialtyText, drawingX, drawingY - w - 10);
                 }
-                ctx.lineJoin = "miter"; //prevent spikes above the capital letter "M"
+                ctx.lineJoin = "miter";
                 if (object.hasOwnProperty("deadOpacity")) {
-                  //if this is an animation of a dead object
                   ctx.globalAlpha = 1.0; //reset opacity
                 }
                 if (settingsList.showhitboxes === true && debugState == "open") {
@@ -6144,7 +5617,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.strokeStyle = "white";
                   ctx.lineWidth = 1.5;
                   ctx.beginPath();
-                  ctx.arc(drawingX, drawingY, object.width/clientFovMultiplier, 0, 2 * Math.PI);
+                  ctx.arc(drawingX, drawingY, w, 0, 2 * Math.PI);
                   ctx.stroke();
                 }
               } else if (object.type == "shape") {
@@ -6161,139 +5634,27 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 //actual body
                 ctx.fillStyle = object.baseColor;
                 ctx.strokeStyle = object.baseOutline;
-                ctx.beginPath();
-                ctx.moveTo(
-                  0 + (object.basewidth6 / clientFovMultiplier) * Math.cos(0),
-                  0 + (object.basewidth6 / clientFovMultiplier) * Math.sin(0)
-                );
-                for (var i = 1; i <= object.sides + 1; i += 1) {
-                  ctx.lineTo(
-                    0 +
-                      (object.basewidth6 / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / object.sides),
-                    0 +
-                      (object.basewidth6 / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / object.sides)
-                  );
-                }
-                ctx.fill();
-                ctx.stroke();
+                renderPolygon(object.basewidth6 / clientFovMultiplier, object.sides);
                 ctx.fillStyle = object.color;
                 ctx.strokeStyle = object.outline;
-                ctx.beginPath();
-                ctx.moveTo(
-                  0 + (object.width / clientFovMultiplier) * Math.cos(0),
-                  0 + (object.width / clientFovMultiplier) * Math.sin(0)
-                );
-                for (var i = 1; i <= object.sides + 1; i += 1) {
-                  ctx.lineTo(
-                    0 +
-                      (object.width / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / object.sides),
-                    0 +
-                      (object.width / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / object.sides)
-                  );
-                }
-                ctx.fill();
-                ctx.stroke();
+                renderPolygon(object.width / clientFovMultiplier, object.sides);
                 ctx.fillStyle = object.baseColor;
                 ctx.strokeStyle = object.baseOutline;
-                ctx.beginPath();
-                ctx.moveTo(
-                  0 + (object.basewidth4 / clientFovMultiplier) * Math.cos(0),
-                  0 + (object.basewidth4 / clientFovMultiplier) * Math.sin(0)
-                );
-                for (var i = 1; i <= object.sides + 1; i += 1) {
-                  ctx.lineTo(
-                    0 +
-                      (object.basewidth4 / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / object.sides),
-                    0 +
-                      (object.basewidth4 / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / object.sides)
-                  );
-                }
-                ctx.fill();
-                ctx.stroke();
+                renderPolygon(object.basewidth4 / clientFovMultiplier, object.sides);
                 ctx.fillStyle = object.color;
                 ctx.strokeStyle = object.outline;
                 ctx.lineWidth = 4 / clientFovMultiplier;
-                ctx.beginPath();
-                ctx.moveTo(
-                  0 + (object.basewidth5 / clientFovMultiplier) * Math.cos(0),
-                  0 + (object.basewidth5 / clientFovMultiplier) * Math.sin(0)
-                );
-                for (var i = 1; i <= object.sides + 1; i += 1) {
-                  ctx.lineTo(
-                    0 +
-                      (object.basewidth5 / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / object.sides),
-                    0 +
-                      (object.basewidth5 / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / object.sides)
-                  );
-                }
-                ctx.fill();
-                ctx.stroke();
+                renderPolygon(object.basewidth5 / clientFovMultiplier, object.sides);
                 ctx.fillStyle = object.baseColor;
                 ctx.strokeStyle = object.baseOutline;
-                ctx.beginPath();
-                ctx.moveTo(
-                  0 + (object.basewidth1 / clientFovMultiplier) * Math.cos(0),
-                  0 + (object.basewidth1 / clientFovMultiplier) * Math.sin(0)
-                );
-                for (var i = 1; i <= object.sides + 1; i += 1) {
-                  ctx.lineTo(
-                    0 +
-                      (object.basewidth1 / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / object.sides),
-                    0 +
-                      (object.basewidth1 / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / object.sides)
-                  );
-                }
-                ctx.fill();
-                ctx.stroke();
+                renderPolygon(object.basewidth1 / clientFovMultiplier, object.sides);
                 ctx.fillStyle = object.barrelColor;
                 ctx.strokeStyle = object.barrelOutline;
-                ctx.beginPath();
-                ctx.moveTo(
-                  0 + (object.basewidth2 / clientFovMultiplier) * Math.cos(0),
-                  0 + (object.basewidth2 / clientFovMultiplier) * Math.sin(0)
-                );
-                for (var i = 1; i <= object.sides + 1; i += 1) {
-                  ctx.lineTo(
-                    0 +
-                      (object.basewidth2 / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / object.sides),
-                    0 +
-                      (object.basewidth2 / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / object.sides)
-                  );
-                }
-                ctx.fill();
-                ctx.stroke();
+                renderPolygon(object.basewidth2 / clientFovMultiplier, object.sides);
                 ctx.fillStyle = object.color;
                 ctx.strokeStyle = object.outline;
                 ctx.lineWidth = 4 / clientFovMultiplier;
-                ctx.beginPath();
-                ctx.moveTo(
-                  0 + (object.basewidth3 / clientFovMultiplier) * Math.cos(0),
-                  0 + (object.basewidth3 / clientFovMultiplier) * Math.sin(0)
-                );
-                for (var i = 1; i <= object.sides + 1; i += 1) {
-                  ctx.lineTo(
-                    0 +
-                      (object.basewidth3 / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / object.sides),
-                    0 +
-                      (object.basewidth3 / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / object.sides)
-                  );
-                }
-                ctx.fill();
-                ctx.stroke();
+                renderPolygon(object.basewidth3 / clientFovMultiplier, object.sides);
                 //draw barrels
                 ctx.fillStyle = object.barrelColor;
                 ctx.strokeStyle = object.barrelOutline;
@@ -6308,80 +5669,52 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 var barrelheight3 = 80;
                 //note that trapezoids and rectangles are drawn differently
 
-                var barrelDistanceFromCenter = (object.width * (Math.cos(Math.PI/object.sides)));//width of middle of polygon (less than width of circle)
+                var barrelDistanceFromCenter = object.width * (Math.cos(Math.PI/object.sides));//width of middle of polygon (less than width of circle)
 
                 function drawSancBarrel(barNum){
-                  var barAngle = 360/object.sides*(barNum+0.5);//half of a side, cuz barrel is in between sides
-                  var barrelX = Math.cos((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter+ barrelheight+ barrelheight2+ barrelheight3);//object.width * 0.9
-                  var barrelY = Math.sin((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter+ barrelheight+ barrelheight2+ barrelheight3);
-                  var barrelX2 = Math.cos((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight2 + barrelheight3); //move rectangle barrel downwards
-                  var barrelY2 = Math.sin((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight2 + barrelheight3);
-                  var barrelX3 = Math.cos((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight3); //move base trapezoid barrel downwards
-                  var barrelY3 = Math.sin((barAngle * Math.PI) / 180) * (barrelDistanceFromCenter + barrelheight3);
+                  var barAngle = 2 * Math.PI/object.sides*(barNum+0.5);//half of a side, cuz barrel is in between sides
+                  var barrelX = Math.cos(barAngle) * (barrelDistanceFromCenter+ barrelheight+ barrelheight2+ barrelheight3);//object.width * 0.9
+                  var barrelY = Math.sin(barAngle) * (barrelDistanceFromCenter+ barrelheight+ barrelheight2+ barrelheight3);
+                  var barrelX2 = Math.cos(barAngle) * (barrelDistanceFromCenter + barrelheight2 + barrelheight3); //move rectangle barrel downwards
+                  var barrelY2 = Math.sin(barAngle) * (barrelDistanceFromCenter + barrelheight2 + barrelheight3);
+                  var barrelX3 = Math.cos(barAngle) * (barrelDistanceFromCenter + barrelheight3); //move base trapezoid barrel downwards
+                  var barrelY3 = Math.sin(barAngle) * (barrelDistanceFromCenter + barrelheight3);
                   //base trapezoid
+                  let w = barrelwidth3 / clientFovMultiplier;
+                  let h = barrelheight3 / clientFovMultiplier;
                   ctx.save();
-                  ctx.translate(
-                    barrelX3 / clientFovMultiplier,
-                    barrelY3 / clientFovMultiplier
-                  );
-                  ctx.rotate(((barAngle - 90) * Math.PI) / 180);
+                  ctx.translate(barrelX3 / clientFovMultiplier, barrelY3 / clientFovMultiplier);
+                  ctx.rotate(barAngle - Math.PI / 2);
                   ctx.beginPath();
-                  ctx.moveTo(
-                    ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
-                    -barrelheight3 / clientFovMultiplier
-                  );
-                  ctx.lineTo(-barrelwidth3 / clientFovMultiplier, 0);
-                  ctx.lineTo(barrelwidth3 / clientFovMultiplier, 0);
-                  ctx.lineTo(
-                    ((barrelwidth3 / 3) * 2) / clientFovMultiplier,
-                    -barrelheight3 / clientFovMultiplier
-                  );
-                  ctx.lineTo(
-                    ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
-                    -barrelheight3 / clientFovMultiplier
-                  );
+                  ctx.moveTo(w/3*2, -h);
+                  ctx.lineTo(-w, 0);
+                  ctx.lineTo(w, 0);
+                  ctx.lineTo(w/3*2, -h);
+                  ctx.lineTo(-w/3*2, -h);
                   ctx.fill();
                   ctx.stroke();
                   ctx.restore();
                   //rectangle
+                  w = barrelwidth2 / clientFovMultiplier;
+                  h = barrelheight2 / clientFovMultiplier;
                   ctx.save();
-                  ctx.translate(
-                    barrelX2 / clientFovMultiplier,
-                    barrelY2 / clientFovMultiplier
-                  );
-                  ctx.rotate(((barAngle - 90) * Math.PI) / 180);
-                  ctx.fillRect(
-                    -barrelwidth2 / 2 / clientFovMultiplier,
-                    -barrelheight2 / clientFovMultiplier,
-                    barrelwidth2 / clientFovMultiplier,
-                    barrelheight2 / clientFovMultiplier
-                  );
-                  ctx.strokeRect(
-                    -barrelwidth2 / 2 / clientFovMultiplier,
-                    -barrelheight2 / clientFovMultiplier,
-                    barrelwidth2 / clientFovMultiplier,
-                    barrelheight2 / clientFovMultiplier
-                  );
+                  ctx.translate(barrelX2 / clientFovMultiplier, barrelY2 / clientFovMultiplier);
+                  ctx.rotate(barAngle - Math.PI / 2);
+                  ctx.fillRect(-w/2,-h,w,h);
+                  ctx.strokeRect(-w/2,-h,w,h);
                   ctx.restore();
                   //trapezium at the tip
+                  w = barrelwidth / clientFovMultiplier;
+                  h = barrelheight / clientFovMultiplier;
                   ctx.save();
-                  ctx.translate(
-                    barrelX / clientFovMultiplier,
-                    barrelY / clientFovMultiplier
-                  );
-                  ctx.rotate(((barAngle - 90) * Math.PI) / 180);
+                  ctx.translate(barrelX / clientFovMultiplier, barrelY / clientFovMultiplier);
+                  ctx.rotate(barAngle - Math.PI / 2);
                   ctx.beginPath();
-                  ctx.moveTo(-barrelwidth / 2 / clientFovMultiplier, 0);
-                  ctx.lineTo(
-                    -barrelwidth / clientFovMultiplier,
-                    -barrelheight / clientFovMultiplier
-                  );
-                  ctx.lineTo(
-                    barrelwidth / clientFovMultiplier,
-                    -barrelheight / clientFovMultiplier
-                  );
-                  ctx.lineTo(barrelwidth / 2 / clientFovMultiplier, 0);
-                  ctx.lineTo(-barrelwidth / 2 / clientFovMultiplier, 0);
+                  ctx.moveTo(-w/2, 0);
+                  ctx.lineTo(-w, -h);
+                  ctx.lineTo(w, -h);
+                  ctx.lineTo(w/2, 0);
+                  ctx.lineTo(-w/2, 0);
                   ctx.fill();
                   ctx.stroke();
                   ctx.restore();
@@ -6392,23 +5725,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 }
                 //draw aura
                 ctx.fillStyle = object.auraColor;
+                ctx.lineWidth = 0;
+                renderPolygon(object.auraWidth / clientFovMultiplier, object.sides);
                 ctx.lineWidth = 4 / clientFovMultiplier;
-                ctx.beginPath();
-                ctx.moveTo(
-                  0 + (object.auraWidth / clientFovMultiplier) * Math.cos(0),
-                  0 + (object.auraWidth / clientFovMultiplier) * Math.sin(0)
-                );
-                for (var i = 1; i <= object.sides + 1; i += 1) {
-                  ctx.lineTo(
-                    0 +
-                      (object.auraWidth / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / object.sides),
-                    0 +
-                      (object.auraWidth / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / object.sides)
-                  );
-                }
-                ctx.fill();
                 ctx.lineJoin = "miter"; //change back
                 ctx.restore();
                 if (settingsList.showhitboxes === true && debugState == "open") {
@@ -6431,12 +5750,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 ctx.translate(drawingX, drawingY);
 
                 let objectangle = object.angle;
-                if (
-                  id == playerstring &&
-                  object.autorotate != "yes" &&
-                  object.fastautorotate != "yes"
-                ) {
-                  //if this player is the tank that the client is controlling
+                if (id == playerstring && object.autorotate != "yes") {
                   objectangle = clientAngle;
                   ctx.rotate(clientAngle); //instead of using client's actual tank angle, use the angle to the mouse. this reduces lag effect
                 } else {
@@ -6491,8 +5805,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   playercolor = pSBC ( playerHit[id], playercolor );
                   playeroutline = pSBC ( playerHit[id], playeroutline );
                 }
-                if (object.developer == "yes") {
-                  //if a developer
+                if (object.developer == "yes" && object.color != bodyColors.blue.col) {
+                  //if a developer and have special color, not default dev color
                   playercolor = object.color;
                   playeroutline = object.outline;
                 }
@@ -6519,45 +5833,21 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.fillStyle = "black";
                   ctx.strokeStyle = "black";
                   ctx.lineWidth = 2.5 / clientFovMultiplier;
-                  ctx.beginPath();
-                  ctx.moveTo(x + r, y);
-                  ctx.arcTo(x + w, y, x + w, y + h, r);
-                  ctx.arcTo(x + w, y + h, x, y + h, r);
-                  ctx.arcTo(x, y + h, x, y, r);
-                  ctx.arcTo(x, y, x + w, y, r);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
+                  ctxroundRectangle(x,y,r,w,h);
                   //draw health bar
                   if (object.health > 0) {
                     w = (w / object.maxhealth) * object.health;
-                    //if (id == playerstring) {
-                      //if this player is the tank that the client is controlling
-                      if (object.team == "none") {
-                        if (id == playerstring) {
-                          ctx.fillStyle = bodyColors.blue.col;
-                        }
-                        else{
-                          ctx.fillStyle = bodyColors.red.col;
-                        }
-                      } else if (bodyColors.hasOwnProperty(object.team)) {
-                        ctx.fillStyle = bodyColors[object.team].col;
-                      }
+                    ctx.fillStyle = playercolor;
+                    if (object.rad > 0){
+                      ctx.fillStyle = radShapeCol;
+                    }
                     if (r * 2 > w) {
                       //prevent weird shape when radius more than width
                       r = w / 2;
                       y += (h - w) / 2; //move health bar so that it is centered vertically in black bar
                       h = w;
                     }
-                    ctx.beginPath();
-                    ctx.moveTo(x + r, y);
-                    ctx.arcTo(x + w, y, x + w, y + h, r);
-                    ctx.arcTo(x + w, y + h, x, y + h, r);
-                    ctx.arcTo(x, y + h, x, y, r);
-                    ctx.arcTo(x, y, x + w, y, r);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
+                    ctxroundRectangle(x,y,r,w,h);
                   }
                 }
 
@@ -6577,79 +5867,63 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 //draw the aura below the portal
                 var auraSpeed = 75; //higher number means slower speed
                 var auraWidth = 4; //reative to portal size
-                var portalAuraSize = object.timer % auraSpeed;
+                var portalAuraSize = (object.maxtimer - object.timer) % auraSpeed;
+                if (object.ruptured == 1){//ruptured portal auras go inwards instead of outwards
+                  portalAuraSize = object.timer % auraSpeed;
+                  if (oldportals.hasOwnProperty(id)){
+                    if (oldportals[id].ruptured != 1){//recently ruptured!
+                      for (let i = 0; i < 50; i++) {//spawn black particles
+                        let angleRadians = Math.floor(Math.random() * 360) * Math.PI / 180; //random angle convert to radians
+                        let sizeVariation = Math.floor(Math.random() * 50);
+                        let timerVariation = Math.floor(Math.random() * 40);
+                        let speedVariation = Math.floor(Math.random() * 10);
+                        spawnPortalParticles(angleRadians,oldportals[id].x,oldportals[id].y,100 + sizeVariation,20+speedVariation,timerVariation,0,"black");
+                        slightshake = "yes";
+                        slightshakeIntensity = 2;
+                      }
+                    }
+                  }
+                }
                 var portalwidth = portalwidths[id]; //use this for portal width. it keeps track size changes when players touch portal
                 var portalsizeincrease = portalwidths[id] / object.width; //increase in width when someone touch it (needed for the spikes)
                 //first aura
-                var opacityCalculation =
-                  1 - ((auraWidth / auraSpeed) * portalAuraSize) / auraWidth; //goes from 0 to 0.3
-                if (opacityCalculation > 0.3) {
-                  //max opacity for portal aura
+                var opacityCalculation = 1 - portalAuraSize / auraSpeed; //goes from 0 to 0.3
+                if (opacityCalculation > 0.3) { //max opacity for portal aura
                   opacityCalculation = 0.3;
                 }
-                if (object.hasOwnProperty("red")) {
-                  //if portal is radiant
-                  ctx.fillStyle =
-                    "rgba(" +
-                    object.red +
-                    ", " +
-                    object.green +
-                    ", " +
-                    object.blue +
-                    "," +
-                    opacityCalculation +
-                    ")";
+                if (object.rad > 0) { //if portal is radiant
+                  let c = updateRadiantColorPortal(id);
+                  c = c.replace("rgb", "rgba").replace(")", "," + opacityCalculation + ")");//change to rgba
+                  ctx.fillStyle = c;
                 } else {
-                  ctx.fillStyle =
-                    "rgba(" + object.color + "," + opacityCalculation + ")";
+                  ctx.fillStyle = "rgba(" + object.color + "," + opacityCalculation + ")";
                 }
-                if ((portalwidth * ((auraWidth / auraSpeed) * portalAuraSize)) /
-                    clientFovMultiplier > 0){
+                let w = portalwidth * auraWidth / auraSpeed * portalAuraSize / clientFovMultiplier;
+                if (w > 0){
                   ctx.beginPath();
-                  ctx.arc(
-                    drawingX,
-                    drawingY,
-                    (portalwidth * ((auraWidth / auraSpeed) * portalAuraSize)) /
-                      clientFovMultiplier,
-                    0,
-                    2 * Math.PI
-                  );
+                  ctx.arc(drawingX, drawingY, w, 0, 2 * Math.PI);
                   ctx.fill();
                 }
                 //second smaller aura
-                portalAuraSize = (object.timer - auraSpeed / 2) % auraSpeed;
+                portalAuraSize = (object.maxtimer - object.timer - auraSpeed / 2) % auraSpeed;
+                if (object.ruptured == 1){//ruptured portal auras go inwards instead of outwards
+                  portalAuraSize = (object.timer - auraSpeed / 2) % auraSpeed;
+                }
                 if (portalAuraSize > 0) {
-                  var opacityCalculation =
-                    1 - ((auraWidth / auraSpeed) * portalAuraSize) / auraWidth;
-                  if (opacityCalculation > 0.3) {
-                    //max opacity for portal aura
+                  w = portalwidth * auraWidth / auraSpeed * portalAuraSize / clientFovMultiplier;
+                  opacityCalculation = 1 - portalAuraSize / auraSpeed;
+                  if (opacityCalculation > 0.3) {//max opacity for portal aura
                     opacityCalculation = 0.3;
                   }
-                  if (object.hasOwnProperty("red")) {
-                    //if portal is radiant
-                    ctx.fillStyle =
-                      "rgba(" +
-                      object.red +
-                      ", " +
-                      object.green +
-                      ", " +
-                      object.blue +
-                      "," +
-                      opacityCalculation +
-                      ")";
+                  if (object.rad > 0) {
+                    let c = updateRadiantColorPortal(id);
+                    c = c.replace("rgb", "rgba").replace(")", "," + opacityCalculation + ")");//change to rgba
+                    ctx.fillStyle = c;
                   } else {
-                    ctx.fillStyle =
-                      "rgba(" + object.color + "," + opacityCalculation + ")";
+                    ctx.fillStyle = "rgba(" + object.color + "," + opacityCalculation + ")";
                   }
                   ctx.beginPath();
-                  ctx.arc(
-                    drawingX,
-                    drawingY,
-                    (portalwidth * ((auraWidth / auraSpeed) * portalAuraSize)) /
-                      clientFovMultiplier,
-                    0,
-                    2 * Math.PI
-                  );
+                  ctx.arc(drawingX, drawingY, w, 0, 2 * Math.PI);
                   ctx.fill();
                 }
 
@@ -6658,179 +5932,46 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.globalAlpha = object.deadOpacity;
                 }
                 //drawing portals
-                //create gradient
-                //const gradient = ctx.createRadialGradient(drawingX, drawingY, object.width/3/clientFovMultiplier, drawingX, drawingY, object.width/clientFovMultiplier);
-
-                // Add two color stops
                 //caluclate color of outline of portal based on time until it die
                 var portalColorCalc = object.timer / object.maxtimer;
                 var portalColor = 255 - portalColorCalc * 255;
-                var portalRGB =
-                  "rgb(" +
-                  portalColor +
-                  "," +
-                  portalColor +
-                  "," +
-                  portalColor +
-                  ")";
-                var portalRGBoutline =
-                  "rgb(" +
-                  (portalColor - 20) +
-                  "," +
-                  (portalColor - 20) +
-                  "," +
-                  (portalColor - 20) +
-                  ")";
+                var portalRGB = "rgb(" + portalColor + "," + portalColor + "," + portalColor + ")";
+                var portalRGBoutline = "rgb(" + (portalColor - 20) + "," + (portalColor - 20) + "," + (portalColor - 20) + ")";
                 if (object.ruptured == 1) {
                   //portal is ruptured!
                   //draw the stars
-                  ctx.save(); //save so later can restore
+                  ctx.save();
                   ctx.translate(drawingX, drawingY);
                   ctx.fillStyle = "white";
                   ctx.strokeStyle = "lightgrey";
                   ctx.lineWidth = 3 / clientFovMultiplier;
                   ctx.lineJoin = "round";
-                  //first star: 3 spikes
-                  ctx.rotate((extraSpikeRotate * Math.PI) / 180);
-                  var numberOfSpikes = 3;
-                  var outerRadius =
-                    ((object.width * 3) / clientFovMultiplier) * portalsizeincrease;
-                  var innerRadius =
-                    (object.width / 3 / clientFovMultiplier) * portalsizeincrease;
-                  var rot = (Math.PI / 2) * 3;
-                  var x = 0;
-                  var y = 0;
-                  ctx.beginPath();
-                  ctx.moveTo(0, 0 - outerRadius);
-                  for (i = 0; i < numberOfSpikes; i++) {
-                    x = 0 + Math.cos(rot) * outerRadius;
-                    y = 0 + Math.sin(rot) * outerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                    x = 0 + Math.cos(rot) * innerRadius;
-                    y = 0 + Math.sin(rot) * innerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                  }
-                  ctx.lineTo(0, 0 - outerRadius);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
-                  ctx.rotate((-extraSpikeRotate * Math.PI) / 180);
+                  let rot = extraSpikeRotate * Math.PI / 180;
+                  let oppositeRot = (360 - extraSpikeRotate) * Math.PI / 180;
+                  //first star: 3 giant spikes
+                  ctx.rotate(rot);
+                  drawSpikes(portalsizeincrease/3, portalsizeincrease*4, 3, object.width);
+                  ctx.rotate(-rot);
                   //second star: 6 spikes in opposite direction
-                  ctx.rotate(((360 - extraSpikeRotate) * 2 * Math.PI) / 180);
-                  var numberOfSpikes = 6;
-                  var outerRadius =
-                    ((object.width * 1.5) / clientFovMultiplier) *
-                    portalsizeincrease;
-                  var innerRadius =
-                    (object.width / 1.2 / clientFovMultiplier) * portalsizeincrease;
-                  var rot = (Math.PI / 2) * 3;
-                  var x = 0;
-                  var y = 0;
-                  ctx.beginPath();
-                  ctx.moveTo(0, 0 - outerRadius);
-                  for (i = 0; i < numberOfSpikes; i++) {
-                    x = 0 + Math.cos(rot) * outerRadius;
-                    y = 0 + Math.sin(rot) * outerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                    x = 0 + Math.cos(rot) * innerRadius;
-                    y = 0 + Math.sin(rot) * innerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                  }
-                  ctx.lineTo(0, 0 - outerRadius);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
-                  ctx.rotate((-(360 - extraSpikeRotate) * 2 * Math.PI) / 180);
+                  let outerWidth1 = Math.sin(rot * 2) * 0.75 + 1.5;//width is a sin graph (-1 to 1), *0.75+1.5 to make it (1.5 to 3)
+                  let outerWidth2 = Math.sin(oppositeRot * 2) * 0.75 + 1.5;
+                  ctx.rotate(oppositeRot * 2);//360 so its opposite
+                  drawSpikes(portalsizeincrease/1.2, portalsizeincrease*outerWidth2, 6, object.width);
+                  ctx.rotate(-oppositeRot * 2);
                   //third star: 6 spikes
-                  ctx.rotate((extraSpikeRotate * 2 * Math.PI) / 180);
-                  var numberOfSpikes = 6;
-                  var outerRadius =
-                    ((object.width * 1.5) / clientFovMultiplier) *
-                    portalsizeincrease;
-                  var innerRadius =
-                    (object.width / 1.2 / clientFovMultiplier) * portalsizeincrease;
-                  var rot = (Math.PI / 2) * 3;
-                  var x = 0;
-                  var y = 0;
-                  ctx.beginPath();
-                  ctx.moveTo(0, 0 - outerRadius);
-                  for (i = 0; i < numberOfSpikes; i++) {
-                    x = 0 + Math.cos(rot) * outerRadius;
-                    y = 0 + Math.sin(rot) * outerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                    x = 0 + Math.cos(rot) * innerRadius;
-                    y = 0 + Math.sin(rot) * innerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                  }
-                  ctx.lineTo(0, 0 - outerRadius);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
-                  ctx.rotate((-extraSpikeRotate * 2 * Math.PI) / 180);
+                  ctx.rotate(rot * 2);//times 2 to make it faster
+                  drawSpikes(portalsizeincrease/1.2, portalsizeincrease*outerWidth1, 6, object.width);
+                  ctx.rotate(-rot * 2);
                   //fourth star: 6 dark spikes in opposite direction
                   ctx.fillStyle = portalRGB;
                   ctx.strokeStyle = portalRGBoutline;
-                  ctx.rotate(((360 - extraSpikeRotate) * 3 * Math.PI) / 180); //times 2 to make it faster
-                  var numberOfSpikes = 6;
-                  var outerRadius =
-                    ((object.width * 1.5) / clientFovMultiplier) *
-                    portalsizeincrease;
-                  var innerRadius =
-                    (object.width / 2 / clientFovMultiplier) * portalsizeincrease;
-                  var rot = (Math.PI / 2) * 3;
-                  var x = 0;
-                  var y = 0;
-                  ctx.beginPath();
-                  ctx.moveTo(0, 0 - outerRadius);
-                  for (i = 0; i < numberOfSpikes; i++) {
-                    x = 0 + Math.cos(rot) * outerRadius;
-                    y = 0 + Math.sin(rot) * outerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                    x = 0 + Math.cos(rot) * innerRadius;
-                    y = 0 + Math.sin(rot) * innerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                  }
-                  ctx.lineTo(0, 0 - outerRadius);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
-                  ctx.rotate((-(360 - extraSpikeRotate) * 3 * Math.PI) / 180);
+                  ctx.rotate(oppositeRot * 3);
+                  drawSpikes(portalsizeincrease/2, portalsizeincrease*1.5, 6, object.width);
+                  ctx.rotate(-oppositeRot * 3);
                   //fifth star: tiny black spikes
-                  ctx.rotate((extraSpikeRotate * 3 * Math.PI) / 180); //times 2 to make it faster
-                  var numberOfSpikes = 6;
-                  var outerRadius =
-                    ((object.width * 1.25) / clientFovMultiplier) *
-                    portalsizeincrease;
-                  var innerRadius =
-                    (object.width / 4 / clientFovMultiplier) * portalsizeincrease;
-                  var rot = (Math.PI / 2) * 3;
-                  var x = 0;
-                  var y = 0;
-                  ctx.beginPath();
-                  ctx.moveTo(0, 0 - outerRadius);
-                  for (i = 0; i < numberOfSpikes; i++) {
-                    x = 0 + Math.cos(rot) * outerRadius;
-                    y = 0 + Math.sin(rot) * outerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                    x = 0 + Math.cos(rot) * innerRadius;
-                    y = 0 + Math.sin(rot) * innerRadius;
-                    ctx.lineTo(x, y);
-                    rot += Math.PI / numberOfSpikes;
-                  }
-                  ctx.lineTo(0, 0 - outerRadius);
-                  ctx.closePath();
-                  ctx.fill();
-                  ctx.stroke();
-                  ctx.rotate((-extraSpikeRotate * 3 * Math.PI) / 180);
+                  ctx.rotate(rot * 3);
+                  drawSpikes(portalsizeincrease/2, portalsizeincrease*1.25, 6, object.width);
+                  ctx.rotate(-rot * 3);
                   ctx.restore();
                   ctx.lineJoin = "miter";
                 }
@@ -6838,39 +5979,26 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 ctx.strokeStyle = portalRGBoutline;
                 ctx.lineWidth = 3 / clientFovMultiplier;
                 ctx.beginPath();
-                ctx.arc(
-                  drawingX,
-                  drawingY,
-                  portalwidth / clientFovMultiplier,
-                  0,
-                  2 * Math.PI
-                );
+                ctx.arc(drawingX, drawingY, portalwidth / clientFovMultiplier, 0, 2 * Math.PI);
                 ctx.fill();
                 ctx.stroke();
-                if (object.hasOwnProperty("deadOpacity")) {
-                  //if this is an animation of a dead object
+                if (object.hasOwnProperty("deadOpacity")) { //if this is an animation of a dead object
                   ctx.globalAlpha = 1.0; //reset opacity
                 }
 
                 //spawn particles
-                var choosing = Math.floor(Math.random() * 3); //choose if particle spawn. Lower number means more particles
-                if (choosing == 1) {
-                  var angleDegrees = Math.floor(Math.random() * 360); //choose angle in degrees
-                  var angleRadians = (angleDegrees * Math.PI) / 180; //convert to radians
-                  portalparticles[particleID] = {
-                    angle: angleRadians,
-                    x: object.x,
-                    y: object.y,
-                    width: 50,
-                    height: 50,
-                    speed: 10,
-                    timer: 30,
-                    maxtimer: 15, //difference between timer and maxtimer is the opacity change of the particle. Larger difference means more or less transparent
-                    color: "white",
-                    outline: "lightgrey",
-                    type: "particle",
-                  };
-                  particleID++;
+                if (Math.floor(Math.random()*3) == 1) {
+                  let angleRadians = Math.floor(Math.random() * 360) * Math.PI / 180; //random angle convert to radians
+                  if (object.ruptured != 1){//portal not ruptured, particles move outwards
+                    spawnPortalParticles(angleRadians,object.x,object.y,50,10,30,15);
+                  }
+                  else{//ruptured portal, particles move inwards
+                    let speed = 15;
+                    let timer = 30;
+                    let particleX = object.x + (speed * timer * Math.cos(angleRadians));//dist = speed * time
+                    let particleY = object.y + (speed * timer * Math.sin(angleRadians));
+                    spawnPortalParticles(angleRadians,particleX,particleY,75,-speed,timer,15);//negative speed so it moves inwards
+                  }
                 }
 
                 if (settingsList.showhitboxes === true && debugState == "open") {
@@ -6878,42 +6006,38 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.strokeStyle = "white";
                   ctx.lineWidth = 1.5;
                   ctx.beginPath();
-                  ctx.arc(drawingX, drawingY, object.width/clientFovMultiplier, 0, 2 * Math.PI);
+                  ctx.arc(drawingX, drawingY, portalwidth/clientFovMultiplier, 0, 2 * Math.PI);
                   ctx.stroke();
+                  //write portal name
+                  ctx.fillStyle = "white";
+                  ctx.strokeStyle = "black";
+                  ctx.lineWidth = 9;
+                  ctx.font = "700 15px Roboto";
+                  ctx.textAlign = "center";
+                  ctx.lineJoin = "round";
+                  let name = "Wormhole Portal";
+                  if (object.ruptured == 1){name = "Ruptured Wormhole"};
+                  if (object.rad > 0){name = "Abyssal Wormhole"};
+                  ctx.strokeText(name,drawingX, drawingY-(portalwidth+20) / clientFovMultiplier);
+                  ctx.fillText(name,drawingX, drawingY-(portalwidth+20) / clientFovMultiplier);
+                  ctx.lineJoin = "miter";
                 }
               } else if (object.type == "Fixedportal") {
                 //drawing rectangular fixed portals, e.g. the portal at top left corner of dune
+                if (!fixedPortals.hasOwnProperty(id)) fixedPortals[id] = 0;
+                fixedPortals[id] += 1*deltaTime;//rotate the portal
+                if (fixedPortals[id] >= 360) fixedPortals[id] -= 360;
                 ctx.save(); //save so later can restore
                 ctx.translate(drawingX, drawingY); //translate so white portal is at 0,0 coordinates so can rotate around center of portal
-                ctx.rotate((object.angleDegrees * Math.PI) / 180); //rotate portal
+                ctx.rotate(fixedPortals[id] * Math.PI / 180); //rotate portal
                 ctx.fillStyle = object.color;
                 ctx.strokeStyle = object.outline;
-                ctx.fillRect(
-                  -object.width / 2 / clientFovMultiplier,
-                  -object.height / 2 / clientFovMultiplier,
-                  object.width / clientFovMultiplier,
-                  object.height / clientFovMultiplier
-                );
-                ctx.strokeRect(
-                  -object.width / 2 / clientFovMultiplier,
-                  -object.height / 2 / clientFovMultiplier,
-                  object.width / clientFovMultiplier,
-                  object.height / clientFovMultiplier
-                );
+                let w = object.width / clientFovMultiplier;
+                ctx.fillRect(-w/2, -w/2, w, w);
+                ctx.strokeRect(-w/2, -w/2, w, w);
                 ctx.globalAlpha = 0.7; //transparency
-                ctx.fillStyle = object.color2;
-                ctx.fillRect(
-                  -object.width / clientFovMultiplier,
-                  -object.height / clientFovMultiplier,
-                  (object.width * 2) / clientFovMultiplier,
-                  (object.height * 2) / clientFovMultiplier
-                );
-                ctx.strokeRect(
-                  -object.width / clientFovMultiplier,
-                  -object.height / clientFovMultiplier,
-                  (object.width * 2) / clientFovMultiplier,
-                  (object.height * 2) / clientFovMultiplier
-                );
+                ctx.fillRect(-w, -w, w*2, w*2);
+                ctx.strokeRect(-w, -w, w*2, w*2);
                 ctx.globalAlpha = 1.0; //reset transparency
                 ctx.restore(); //restore after translating
                 if (settingsList.showhitboxes === true && debugState == "open") {
@@ -6921,7 +6045,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.strokeStyle = "white";
                   ctx.lineWidth = 1.5;
                   ctx.beginPath();
-                  ctx.arc(drawingX, drawingY, object.width/2/clientFovMultiplier, 0, 2 * Math.PI);
+                  ctx.arc(drawingX, drawingY, w/2, 0, 2 * Math.PI);
                   ctx.stroke();
                 }
               } else if (object.type == "particle") {
@@ -6930,347 +6054,142 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.globalAlpha = object.timer / 10;
                 }
                 else if (object.timer >= object.maxtimer-10 && (object.source == "dune" || object.source == "crossroads")) {
-                  ctx.globalAlpha = ((((object.timer - object.maxtimer) + 10) - 10) * -1) / 10;
+                  ctx.globalAlpha = (object.maxtimer - object.timer) / 10;
                 }
-                //ctx.globalAlpha = object.timer / object.maxtimer;
                 ctx.fillStyle = object.color;
                 ctx.strokeStyle = object.outline;
-
                 ctx.lineWidth = 3 / clientFovMultiplier;
                 ctx.beginPath();
-                ctx.arc(
-                  drawingX,
-                  drawingY,
-                  object.width / clientFovMultiplier,
-                  0,
-                  2 * Math.PI
-                );
+                ctx.arc(drawingX, drawingY, object.width / clientFovMultiplier, 0, 2 * Math.PI);
                 ctx.fill();
                 ctx.stroke();
                 ctx.globalAlpha = 1.0;
               } else if (object.type == "wall") {
-                //ctx.fillStyle = "#232323";
-                ctx.fillStyle = "rgba(15, 15, 15, .5)";//crossroads wall color
-                if (gamemode == "sanctuary"){
-                  ctx.fillStyle = "rgba(40,40,40, .5)";//sanctuary wall color
-                }
-                else if (gamemode == "cavern"){
-                  ctx.fillStyle = "black";//cavern wall color
-                }
-                ctx.fillRect(
-                  drawingX,
-                  drawingY,
-                  object.w / clientFovMultiplier,
-                  object.h / clientFovMultiplier
-                );
+                //same color as map borders
+                ctx.fillStyle = mapOutlines.cr;
+                if (gamemode == "sanctuary") ctx.fillStyle = mapOutlines.sanc;
+                else if (gamemode == "cavern") ctx.fillStyle = mapOutlines.abyss;
+                ctx.fillRect(drawingX, drawingY, object.w / clientFovMultiplier, object.h / clientFovMultiplier);
                 if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "#00ff00";//green hitbox for walls
                   ctx.lineWidth = 1.5;
-                  ctx.strokeRect(
-                    drawingX,
-                    drawingY,
-                    object.w / clientFovMultiplier,
-                    object.h / clientFovMultiplier
-                  );
+                  ctx.strokeRect(drawingX, drawingY, object.w / clientFovMultiplier, object.h / clientFovMultiplier);
                 }
               } else if (object.type == "gate") {
-                if (gamemode == "cavern"){//cavern
-                  ctx.save();
-                  ctx.translate(drawingX, drawingY);
-                  ctx.rotate(object.angle/180*Math.PI);
-                  //draw white rectangle below
-                  ctx.fillStyle = "rgba(255,255,255,.7)";
-                  ctx.strokeStyle = "white";
-                  //FIRST WHITE RECTANGLE
-                  ctx.globalAlpha = 1.0 * (endGate - gateTimer) / (endGate - 1 - startGate);//gateTimer increases from 0.5 to 9, this equation makes the opacity decrease from 1 to 0
-                  ctx.fillRect(
-                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.strokeRect(
-                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.globalAlpha = 1.0;
-                  //SECOND WHITE RECTANGLE
-                  let gateTimer2 = gateTimer - endGate/2;
-                  if (gateTimer2 < startGate){
-                    gateTimer2 = endGate - (startGate - gateTimer2)
-                  }
-                  ctx.globalAlpha = 1.0 * (endGate - gateTimer2) / (endGate - 1 - startGate);//gateTimer increases from 1 to 7, this equation makes the opacity decrease from 1 to 0
-                  ctx.fillRect(
-                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer2,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.strokeRect(
-                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer2,
-                    object.width / clientFovMultiplier
-                  );
-                  //draw arrows
-                  for (var i = 0; i < gatearrow.length; i++) {
-                    let y = ((object.height / clientFovMultiplier * 9)/2 + object.height / clientFovMultiplier/2)/45*(gatearrow[i]-45);
-                    let arrowwidth = 25/clientFovMultiplier;//half of entire width
-                    let arrowheight = 25/clientFovMultiplier;
-                    //draw 3 arrows in a row
-                    if (gatearrow[i] < 20){
-                      ctx.globalAlpha = gatearrow[i]/20;
-                    }
-                    else if (gatearrow[i] > 70){
-                      ctx.globalAlpha = (90-gatearrow[i])/20;
-                    }
-                    else{
-                      ctx.globalAlpha = 1;
-                    }
-                    ctx.lineWidth = 3/clientFovMultiplier;
-                    ctx.fillStyle = "white";
-                    ctx.beginPath();
-                    ctx.moveTo(y-arrowheight, 0-arrowwidth);
-                    ctx.lineTo(y, 0);
-                    ctx.lineTo(y-arrowheight, 0+arrowwidth);
-                    ctx.moveTo(y-arrowheight, object.width/clientFovMultiplier/3-arrowwidth);
-                    ctx.lineTo(y, object.width/clientFovMultiplier/3);
-                    ctx.lineTo(y-arrowheight, object.width/clientFovMultiplier/3+arrowwidth);
-                    ctx.moveTo(y-arrowheight, -object.width/clientFovMultiplier/3-arrowwidth);
-                    ctx.lineTo(y, -object.width/clientFovMultiplier/3);
-                    ctx.lineTo(y-arrowheight, -object.width/clientFovMultiplier/3+arrowwidth);
-                    ctx.stroke();
-                    //move arrow
-                    gatearrow[i]+=0.1;
-                    if (gatearrow[i]>45 && gatearrow[i]<65){//move faster when arrow in the middle
-                      gatearrow[i]+=0.4;
-                    }
-                    else if (gatearrow[i]>90){
-                      gatearrow[i] = 0;
-                    }
-                  }
-                  ctx.globalAlpha = 1.0;
-                  //draw actual black gate
-                  ctx.fillStyle = "black";
-                  ctx.fillRect(0,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier,
-                    object.width / clientFovMultiplier
-                  );
-                }
-                else if (gamemode != "sanctuary"){//cross (default)
-                  ctx.save();
-                  ctx.translate(drawingX, drawingY);
-                  ctx.rotate(object.angle/180*Math.PI);
-                  //draw white rectangle below
-                  ctx.fillStyle = "rgba(255,255,255,.7)";
-                  ctx.strokeStyle = "white";
-                  //FIRST WHITE RECTANGLE
-                  ctx.globalAlpha = 1.0 * (endGate - gateTimer) / (endGate - 1 - startGate);//gateTimer increases from 0.5 to 9, this equation makes the opacity decrease from 1 to 0
-                  ctx.fillRect(
-                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.strokeRect(
-                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.globalAlpha = 1.0;
-                  //SECOND WHITE RECTANGLE
-                  let gateTimer2 = gateTimer - endGate/2;
-                  if (gateTimer2 < startGate){
-                    gateTimer2 = endGate - (startGate - gateTimer2)
-                  }
-                  ctx.globalAlpha = 1.0 * (endGate - gateTimer2) / (endGate - 1 - startGate);//gateTimer increases from 1 to 7, this equation makes the opacity decrease from 1 to 0
-                  ctx.fillRect(
-                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer2,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.strokeRect(
-                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer2,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.globalAlpha = 1.0;
-                  //draw actual black gate
-                  ctx.fillStyle = "black";
-                  ctx.fillRect(0,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier,
-                    object.width / clientFovMultiplier
-                  );
-                }
-                else{//sanc
-                  ctx.save();
-                  ctx.translate(drawingX, drawingY);
-                  ctx.rotate(object.angle/180*Math.PI);
-                  //draw white rectangle below
-                  ctx.fillStyle = "rgba(0,0,0,.2)";
-                  ctx.strokeStyle = "rgba(0,0,0,.5)";
-                  //FIRST WHITE RECTANGLE
-                  ctx.globalAlpha = 1.0 * (endGate - gateTimer) / (endGate - 1 - startGate);//gateTimer increases from 0.5 to 9, this equation makes the opacity decrease from 1 to 0
-                  ctx.fillRect(
-                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.strokeRect(
-                    -(object.height / clientFovMultiplier * gateTimer)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.globalAlpha = 1.0;
-                  //SECOND WHITE RECTANGLE
-                  let gateTimer2 = gateTimer - endGate/2;
-                  if (gateTimer2 < startGate){
-                    gateTimer2 = endGate - (startGate - gateTimer2)
-                  }
-                  ctx.globalAlpha = 1.0 * (endGate - gateTimer2) / (endGate - 1 - startGate);//gateTimer increases from 1 to 7, this equation makes the opacity decrease from 1 to 0
-                  ctx.fillRect(
-                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer2,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.strokeRect(
-                    -(object.height / clientFovMultiplier * gateTimer2)/2 + object.height / clientFovMultiplier/2,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier * gateTimer2,
-                    object.width / clientFovMultiplier
-                  );
-                  ctx.globalAlpha = 1.0;
-                  //draw actual black gate
-                  ctx.fillStyle = "black";
-                  ctx.fillRect(0,
-                    -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier,
-                    object.width / clientFovMultiplier
-                  );
-                  let numberOfSpikes = 6;
-                  let outerRadius = object.width / clientFovMultiplier /8;
-                  let innerRadius = object.width / clientFovMultiplier /25;
-                  let rot = (Math.PI / 2) * 3;
-                  let x = 0;
-                  let y = 0;
-                  for (let star = 0; star < 4; star++) {
-                    x = 0;
-                    y = 0;
+                let w = object.width / clientFovMultiplier;
+                let h = object.height / clientFovMultiplier;
+                let gatetype = "normal";
+                if (gamemode == "cavern") gatetype = "fling";
+                else if (gamemode == "sanc") gatetype = "spiky";
 
-                    ctx.translate(object.height / clientFovMultiplier, object.width / clientFovMultiplier / 5 * (star-1.5))
-                    ctx.rotate(Math.PI * (endGate - gateTimer) / (endGate - 1 - startGate) /204 *360)
-                    ctx.beginPath();
-                    ctx.moveTo(0, 0 - outerRadius);
-                    for (i = 0; i < numberOfSpikes; i++) {
-                      x = 0 + Math.cos(rot) * outerRadius;
-                      y = 0 + Math.sin(rot) * outerRadius;
-                      ctx.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                      x = 0 + Math.cos(rot) * innerRadius;
-                      y = 0 + Math.sin(rot) * innerRadius;
-                      ctx.lineTo(x, y);
-                      rot += Math.PI / numberOfSpikes;
-                    }
-                    ctx.lineTo(0,0 - outerRadius);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.rotate(-Math.PI * (endGate - gateTimer) / (endGate - 1 - startGate) /204 *360)
-                    ctx.translate(-object.height / clientFovMultiplier, -object.width / clientFovMultiplier / 5 * (star-1.5))
+                  ctx.save();
+                  ctx.translate(drawingX, drawingY);
+                  ctx.rotate(object.angle/180*Math.PI);
+                  //draw white rectangle below
+                  ctx.fillStyle = "rgba(255,255,255,.7)";
+                  ctx.strokeStyle = "white";
+                  if (gatetype == "spiky") {
+                    ctx.fillStyle = "rgba(0,0,0,.2)";
+                    ctx.strokeStyle = "rgba(0,0,0,.5)";
                   }
-                }
+                  //FIRST WHITE RECTANGLE
+                  ctx.globalAlpha = 1.0 * (endGate - gateTimer) / (endGate - 1 - startGate);//gateTimer increases from 0.5 to 9, this equation makes the opacity decrease from 1 to 0
+                  ctx.fillRect(-(h * gateTimer)/2 + h/2, -w/2, h * gateTimer, w);
+                  ctx.strokeRect(-(h * gateTimer)/2 + h/2, -w/2, h * gateTimer, w);
+                  ctx.globalAlpha = 1.0;
+                  //SECOND WHITE RECTANGLE
+                  let gateTimer2 = gateTimer - endGate/2;
+                  if (gateTimer2 < startGate){
+                    gateTimer2 = endGate - (startGate - gateTimer2)
+                  }
+                  ctx.globalAlpha = 1.0 * (endGate - gateTimer2) / (endGate - 1 - startGate);//gateTimer increases from 1 to 7, this equation makes the opacity decrease from 1 to 0
+                  ctx.fillRect(-(h * gateTimer2)/2 + h/2, -w/2, h * gateTimer2, w);
+                  ctx.strokeRect(-(h * gateTimer2)/2 + h/2, -w/2, h * gateTimer2, w);
+                  //draw arrows
+                  if (gatetype == "fling") {
+                    for (var i = 0; i < gatearrow.length; i++) {
+                      let y = h/9*(gatearrow[i]-45);
+                      let arrowwidth = 25/clientFovMultiplier;//half of entire width
+                      let arrowheight = 25/clientFovMultiplier;
+                      //draw 3 arrows in a row
+                      if (gatearrow[i] < 20) ctx.globalAlpha = gatearrow[i]/20;
+                      else if (gatearrow[i] > 70) ctx.globalAlpha = (90-gatearrow[i])/20;
+                      else ctx.globalAlpha = 1;
+                      ctx.lineWidth = 3/clientFovMultiplier;
+                      ctx.fillStyle = "white";
+                      ctx.beginPath();
+                      ctx.moveTo(y-arrowheight, 0-arrowwidth);
+                      ctx.lineTo(y, 0);
+                      ctx.lineTo(y-arrowheight, 0+arrowwidth);
+                      ctx.moveTo(y-arrowheight, w/3-arrowwidth);
+                      ctx.lineTo(y, w/3);
+                      ctx.lineTo(y-arrowheight, w/3+arrowwidth);
+                      ctx.moveTo(y-arrowheight, -w/3-arrowwidth);
+                      ctx.lineTo(y, -w/3);
+                      ctx.lineTo(y-arrowheight, -w/3+arrowwidth);
+                      ctx.stroke();
+                      //move arrow
+                      gatearrow[i]+=0.1;
+                      if (gatearrow[i]>45 && gatearrow[i]<65) gatearrow[i]+=0.4;//move faster when arrow in the middle
+                      else if (gatearrow[i]>90) gatearrow[i] = 0;
+                    }
+                  }
+                  ctx.globalAlpha = 1.0;
+                  //draw actual black gate
+                  ctx.fillStyle = "black";
+                  ctx.fillRect(0, -w/2, h, w);
+
+                  if (gatetype == "spiky") {
+                    ctx.lineWidth = 0;
+                    for (let star = 0; star < 4; star++) {
+                      ctx.save();
+                      ctx.translate(h, w / 5 * (star-1.5));
+                      ctx.rotate(Math.PI * (endGate - gateTimer) / (endGate - 1 - startGate) /204 *360);
+                      drawSpikes(1/8, 1/25, 6, object.width);
+                      ctx.restore();
+                    }
+                  }
                 if (settingsList.showhitboxes === true && debugState == "open") {
                   //draw hitbox
                   ctx.strokeStyle = "white";
                   ctx.lineWidth = 1.5;
-                  ctx.strokeRect(0,
-                  -object.width/2/clientFovMultiplier,
-                    object.height / clientFovMultiplier,
-                    object.width / clientFovMultiplier
-                  );
+                  ctx.strokeRect(0, -w/2, h, w);
                 }
                 ctx.restore();
                 //spawn particles
-                if (gamemode != "sanctuary" && gamemode != "cavern"){
-                  var choosing = Math.floor(Math.random() * 3); //choose if particle spawn. Lower number means more particles
-                  if (choosing == 1) {
-                      var dir = Math.floor(Math.random() * 2); //choose angle in degrees
-                      if (dir == 0){
-                        var angleRadians = (object.angle) * Math.PI / 180; //convert to radians
-                      }
-                      else{
-                        var angleRadians = (object.angle - 180) * Math.PI / 180;
-                      }
+                if (gatetype == "normal") {
+                  if (Math.floor(Math.random() * 3) == 1) {
+                      const dir = Math.floor(Math.random() * 2); //choose angle in degrees
+                      let angleRadians = object.angle * Math.PI / 180;
+                      if (dir != 0) angleRadians -= Math.PI;
                       let randX = 0;
                       let randY = 0;
                       //code currently does not support particles for gates that are tilted
-                      //i dont see a need to add that in the near future
                       if (object.angle == 0 || object.angle == 180 || object.angle == 360){
                         randY = Math.floor(Math.random() * object.width) - object.width/2;
                       }
                       else if (object.angle == 90 || object.angle == 270){
                         randX = Math.floor(Math.random() * object.width) - object.width/2;
                       }
-                      portalparticles[particleID] = {
-                        angle: angleRadians,
-                        x: object.x + randX,
-                        y: object.y + randY,
-                        width: 50,
-                        height: 50,
-                        speed: 10,
-                        timer: 30,
-                        maxtimer: 15, //difference between timer and maxtimer is the opacity change of the particle. Larger difference means more or less transparent
-                        color: "white",
-                        outline: "lightgrey",
-                        type: "particle",
-                      };
-                      particleID++;
+                      spawnPortalParticles(angleRadians,object.x + randX,object.y + randY,50,10,30,15);
                   }
                 }
-                else if (gamemode != "cavern"){
-                  var choosing = Math.floor(Math.random() * 7); //choose if particle spawn. Lower number means more particles
-                  if (choosing == 1) {
-                    var dir = Math.floor(Math.random() * 2); //choose angle in degrees
-                    if (dir == 0){
-                      var angleRadians = (object.angle) * Math.PI / 180; //convert to radians
-                    }
-                    else{
-                      var angleRadians = (object.angle - 180) * Math.PI / 180;
-                    }
+                else if (gatetype == "spiky") {
+                  if (Math.floor(Math.random() * 7) == 1) {
+                    const dir = Math.floor(Math.random() * 2); //choose angle in degrees
+                    let angleRadians = object.angle * Math.PI / 180;
+                    if (dir != 0) angleRadians -= Math.PI;
                     let randX = 0;
                     let randY = 0;
                     //code currently does not support particles for gates that are tilted
-                    //i dont see a need to add that in the near future
                     if (object.angle == 0 || object.angle == 180 || object.angle == 360){
                       randY = Math.floor(Math.random() * object.width) - object.width/2;
                     }
                     else if (object.angle == 90 || object.angle == 270){
                       randX = Math.floor(Math.random() * object.width) - object.width/2;
                     }
-                    portalparticles[particleID] = {
-                      angle: angleRadians,
-                      x: object.x + randX,
-                      y: object.y + randY,
-                      width: 15,
-                      height: 15,
-                      speed: 5,
-                      timer: 20,
-                      maxtimer: 20, //difference between timer and maxtimer is the opacity change of the particle. Larger difference means more or less transparent
-                      color: "black",
-                      outline: "black",
-                      type: "particle",
-                    };
-                    particleID++;
+                    spawnPortalParticles(angleRadians,object.x + randX,object.y + randY,15,5,20,20);
                   }
                 }
               } else if (object.type == "def") {
@@ -7282,27 +6201,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 ctx.lineWidth = 4 / clientFovMultiplier;
 
                 //draw octagon base
-                var octagonWidth = object.width/5*6;
                 ctx.fillStyle = bodyColors.asset.col;
                 ctx.strokeStyle = bodyColors.asset.outline;
-                ctx.beginPath();
-                ctx.moveTo(
-                  0 + (octagonWidth / clientFovMultiplier) * Math.cos(0),
-                  0 + (octagonWidth / clientFovMultiplier) * Math.sin(0)
-                );
-                for (var i = 1; i <= 8 + 1; i += 1) {
-                  ctx.lineTo(
-                    0 +
-                      (octagonWidth / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / 8),
-                    0 +
-                      (octagonWidth / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / 8)
-                  );
-                }
-                ctx.fill();
-                ctx.stroke();
-
+                renderPolygon(object.width/5*6 / clientFovMultiplier, 8);
 
                 //draw barrels
                 ctx.fillStyle = bodyColors.barrel.col;
@@ -7319,133 +6220,70 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 //note that trapezoids and rectangles are drawn differently
 
                 for (let i = 0; i < 4; i++) {//draw 4 barrels
-                  var barrelAngle = 360/4*i;
-                  var barrelX = Math.cos((barrelAngle * Math.PI) / 180) * object.width * 1.4;
-                  var barrelY = Math.sin((barrelAngle * Math.PI) / 180) * object.width * 1.4;
-                  var barrelX2 =
-                    Math.cos((barrelAngle * Math.PI) / 180) *
-                    (object.width * 1.4 - barrelheight); //move rectangle barrel downwards
-                  var barrelY2 =
-                    Math.sin((barrelAngle * Math.PI) / 180) *
-                    (object.width * 1.4 - barrelheight);
-                  var barrelX3 =
-                    Math.cos((barrelAngle * Math.PI) / 180) *
-                    (object.width * 1.4 - barrelheight - barrelheight2); //move base trapezoid barrel downwards
-                  var barrelY3 =
-                    Math.sin((barrelAngle * Math.PI) / 180) *
-                    (object.width * 1.4 - barrelheight - barrelheight2);
+                  var barrelAngle = Math.PI/2*i;
+                  var barrelX = Math.cos(barrelAngle) * object.width * 1.4;
+                  var barrelY = Math.sin(barrelAngle) * object.width * 1.4;
+                  var barrelX2 = Math.cos(barrelAngle) * (object.width * 1.4 - barrelheight); //move rectangle barrel downwards
+                  var barrelY2 = Math.sin(barrelAngle) * (object.width * 1.4 - barrelheight);
+                  var barrelX3 = Math.cos(barrelAngle) * (object.width * 1.4 - barrelheight - barrelheight2); //move base trapezoid barrel downwards
+                  var barrelY3 = Math.sin(barrelAngle) * (object.width * 1.4 - barrelheight - barrelheight2);
                   //base trapezoid
                   ctx.save();
-                  ctx.translate(
-                    barrelX3 / clientFovMultiplier,
-                    barrelY3 / clientFovMultiplier
-                  );
-                  ctx.rotate(((barrelAngle - 90) * Math.PI) / 180);
+                  ctx.translate(barrelX3 / clientFovMultiplier, barrelY3 / clientFovMultiplier);
+                  ctx.rotate(barrelAngle - Math.PI / 2);
+                  let w = barrelwidth3 / clientFovMultiplier;
+                  let h = barrelheight3 / clientFovMultiplier;
                   ctx.beginPath();
-                  ctx.moveTo(
-                    ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
-                    -barrelheight3 / clientFovMultiplier
-                  );
-                  ctx.lineTo(-barrelwidth3 / clientFovMultiplier, 0);
-                  ctx.lineTo(barrelwidth3 / clientFovMultiplier, 0);
-                  ctx.lineTo(
-                    ((barrelwidth3 / 3) * 2) / clientFovMultiplier,
-                    -barrelheight3 / clientFovMultiplier
-                  );
-                  ctx.lineTo(
-                    ((-barrelwidth3 / 3) * 2) / clientFovMultiplier,
-                    -barrelheight3 / clientFovMultiplier
-                  );
+                  ctx.moveTo(-w/3*2, -h);
+                  ctx.lineTo(-w, 0);
+                  ctx.lineTo(w, 0);
+                  ctx.lineTo(w/3*2, -h);
+                  ctx.lineTo(-w/3*2, -h);
                   ctx.fill();
                   ctx.stroke();
                   ctx.restore();
                   //rectangle
                   ctx.save();
-                  ctx.translate(
-                    barrelX2 / clientFovMultiplier,
-                    barrelY2 / clientFovMultiplier
-                  );
-                  ctx.rotate(((barrelAngle - 90) * Math.PI) / 180);
-                  ctx.fillRect(
-                    -barrelwidth2 / 2 / clientFovMultiplier,
-                    -barrelheight2 / clientFovMultiplier,
-                    barrelwidth2 / clientFovMultiplier,
-                    barrelheight2 / clientFovMultiplier
-                  );
-                  ctx.strokeRect(
-                    -barrelwidth2 / 2 / clientFovMultiplier,
-                    -barrelheight2 / clientFovMultiplier,
-                    barrelwidth2 / clientFovMultiplier,
-                    barrelheight2 / clientFovMultiplier
-                  );
+                  ctx.translate(barrelX2 / clientFovMultiplier, barrelY2 / clientFovMultiplier);
+                  ctx.rotate(barrelAngle - Math.PI / 2);
+                  w = barrelwidth2 / clientFovMultiplier;
+                  h = barrelheight2 / clientFovMultiplier;
+                  ctx.fillRect(-w/2, -h/2, w, h);
+                  ctx.strokeRect(-w/2, -h/2, w, h);
                   ctx.restore();
                   //trapezium at the tip
                   ctx.save();
-                  ctx.translate(
-                    barrelX / clientFovMultiplier,
-                    barrelY / clientFovMultiplier
-                  );
-                  ctx.rotate(((barrelAngle - 90) * Math.PI) / 180);
+                  ctx.translate(barrelX / clientFovMultiplier, barrelY / clientFovMultiplier);
+                  ctx.rotate(barrelAngle - Math.PI / 2);
+                  w = barrelwidth / clientFovMultiplier;
+                  h = barrelheight / clientFovMultiplier;
                   ctx.beginPath();
-                  ctx.moveTo(-barrelwidth / 2 / clientFovMultiplier, 0);
-                  ctx.lineTo(
-                    -barrelwidth / clientFovMultiplier,
-                    -barrelheight / clientFovMultiplier
-                  );
-                  ctx.lineTo(
-                    barrelwidth / clientFovMultiplier,
-                    -barrelheight / clientFovMultiplier
-                  );
-                  ctx.lineTo(barrelwidth / 2 / clientFovMultiplier, 0);
-                  ctx.lineTo(-barrelwidth / 2 / clientFovMultiplier, 0);
+                  ctx.moveTo(-w/2, 0);
+                  ctx.lineTo(-w, -h);
+                  ctx.lineTo(w, -h);
+                  ctx.lineTo(w/2, 0);
+                  ctx.lineTo(-w/2, 0);
                   ctx.fill();
                   ctx.stroke();
                   ctx.restore();
                 }
 
                 //draw body
-                ctx.fillStyle = object.color;
-                ctx.strokeStyle = object.outline;
+                ctx.fillStyle = bodyColors[object.team].col;
+                ctx.strokeStyle = bodyColors[object.team].outline;
                 ctx.beginPath();
-                ctx.arc(
-                  0,
-                  0,
-                  object.width / clientFovMultiplier,
-                  0,
-                  2 * Math.PI
-                );
+                ctx.arc(0, 0, object.width / clientFovMultiplier, 0, 2 * Math.PI);
                 ctx.fill();
                 ctx.stroke();
-                var octagonWidth = object.width/5*4;
+
                 ctx.fillStyle = bodyColors.asset.col;
                 ctx.strokeStyle = bodyColors.asset.outline;
+                renderPolygon(object.width/5*4 / clientFovMultiplier, 8);
+
+                ctx.fillStyle = bodyColors[object.team].col;
+                ctx.strokeStyle = bodyColors[object.team].outline;
                 ctx.beginPath();
-                ctx.moveTo(
-                  0 + (octagonWidth / clientFovMultiplier) * Math.cos(0),
-                  0 + (octagonWidth / clientFovMultiplier) * Math.sin(0)
-                );
-                for (var i = 1; i <= 8 + 1; i += 1) {
-                  ctx.lineTo(
-                    0 +
-                      (octagonWidth / clientFovMultiplier) *
-                        Math.cos((i * 2 * Math.PI) / 8),
-                    0 +
-                      (octagonWidth / clientFovMultiplier) *
-                        Math.sin((i * 2 * Math.PI) / 8)
-                  );
-                }
-                ctx.fill();
-                ctx.stroke();
-                ctx.fillStyle = object.color;
-                ctx.strokeStyle = object.outline;
-                ctx.beginPath();
-                ctx.arc(
-                  0,
-                  0,
-                  object.width/2 / clientFovMultiplier,
-                  0,
-                  2 * Math.PI
-                );
+                ctx.arc(0, 0, object.width/2 / clientFovMultiplier, 0, 2 * Math.PI);
                 ctx.fill();
                 ctx.stroke();
 
@@ -7529,7 +6367,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 }
 
                 object.chats.slice().reverse().forEach((chatObj, index) => {//slice and reverse to loop though array backwards (so older messages are above)
-                  ctx.fillStyle = "rgba(69,69,69,.7)";
+                  ctx.fillStyle = "rgba(45,45,45,.75)";
 
                   var longestLine = 0;
 
@@ -7625,14 +6463,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     thischat.opacity+=0.1;
                   }
                   ctx.globalAlpha = thischat.opacity;
-                  ctx.beginPath();
-                  ctx.moveTo(x + r, y);
-                  ctx.arcTo(x + w, y, x + w, y + h, r);
-                  ctx.arcTo(x + w, y + h, x, y + h, r);
-                  ctx.arcTo(x, y + h, x, y, r);
-                  ctx.arcTo(x, y, x + w, y, r);
-                  ctx.closePath();
-                  ctx.fill();
+                  ctxroundRectangleFill(x,y,r,w,h);
                   if (index == 0){
                     //if this is first chat message, draw triangle
                     let trianglewidth = 20;
@@ -7682,42 +6513,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   //ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
                   //note: if you stroke then fill, the words will be thicker and nicer. If you fill then stroke, the words are thinner.
                   if (object.name == "unnamed"){
-                    //this guy is unnamed, add a 3 digit identifier
-                    let thisID = id.substr(id.length - 3);//last 3 digits of ID
-                    object.name += (" #" + thisID);
+                    object.name = "";
                   }
-                  ctx.strokeText(
-                    object.name,
-                    drawingX,
-                    drawingY - (object.width + 40) / clientFovMultiplier
-                  );
-                  ctx.fillText(
-                    object.name,
-                    drawingX,
-                    drawingY - (object.width + 40) / clientFovMultiplier
-                  );
+                  ctx.strokeText(object.name, drawingX, drawingY - (object.width + 35) / clientFovMultiplier);
+                  ctx.fillText(object.name, drawingX, drawingY - (object.width + 35) / clientFovMultiplier);
                   //write player level
-                  ctx.font = "700 " + 18 / clientFovMultiplier + "px Roboto";
-                  ctx.strokeText(
-                    "Lvl " +
-                      object.level +
-                      " " +
-                      object.tankType +
-                      "-" +
-                      object.bodyType,
-                    drawingX,
-                    drawingY - (object.width + 10) / clientFovMultiplier
-                  );
-                  ctx.fillText(
-                    "Lvl " +
-                      object.level +
-                      " " +
-                      object.tankType +
-                      "-" +
-                      object.bodyType,
-                    drawingX,
-                    drawingY - (object.width + 10) / clientFovMultiplier
-                  );
+                  ctx.font = "700 " + 15 / clientFovMultiplier + "px Roboto";
+                  ctx.strokeText("lv." + object.level, drawingX, drawingY - (object.width + 10) / clientFovMultiplier);
+                  ctx.fillText("lv." + object.level, drawingX, drawingY - (object.width + 10) / clientFovMultiplier);
                   ctx.lineJoin = "miter"; //change it back
                 }
               }
@@ -7729,7 +6532,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             //client send stuff to server
             var autorotate = "no";//keep track of state to create notification
             var autofire = "no";
-            var fastautorotate = "no";
             var passivemode = "no";
             //keep track of whether key is pressed down or not to prevent packet sent multiple times when holding down key
             var downpressed = "no";
@@ -7937,54 +6739,43 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   var packet = JSON.stringify(["auto-fire"]);
                   socket.send(packet)
                   if (autofire == "no"){
-                    createNotif("Auto Fire (E): ON",defaultNotifColor,3000)
+                    createNotif("Auto Fire (E): ON",defaultNotifColor,keybindNotifTimer)
                     autofire = "yes";
                   }
                   else{
-                    createNotif("Auto Fire (E): OFF",defaultNotifColor,3000)
+                    createNotif("Auto Fire (E): OFF",defaultNotifColor,keybindNotifTimer)
                     autofire = "no";
                   }
                 } else if ((e.key == "c" || e.key == "C") && state=="ingame" && gamemode != "PvE arena") {
                   var packet = JSON.stringify(["auto-rotate"]);
                   socket.send(packet)
                   if (autorotate == "no"){
-                    createNotif("Auto Rotate (C): ON",defaultNotifColor,3000)
+                    createNotif("Auto Rotate (C): ON",defaultNotifColor,keybindNotifTimer)
                     autorotate = "yes";
                   }
                   else{
-                    createNotif("Auto Rotate (C): OFF",defaultNotifColor,3000)
+                    createNotif("Auto Rotate (C): OFF",defaultNotifColor,keybindNotifTimer)
                     autorotate = "no";
-                  }
-                } else if ((e.key == "f" || e.key == "F") && state=="ingame" && gamemode != "PvE arena") {
-                  var packet = JSON.stringify(["fast-auto-rotate"]);
-                  socket.send(packet)
-                  if (fastautorotate == "no"){
-                    createNotif("Fast Auto Rotate (F): ON",defaultNotifColor,3000)
-                    fastautorotate = "yes";
-                  }
-                  else{
-                    createNotif("Fast Auto Rotate (F): OFF",defaultNotifColor,3000)
-                    fastautorotate = "no";
                   }
                 } else if ((e.key == "x" || e.key == "X") && state=="ingame" && gamemode != "PvE arena") {
                   if (keylock == "yes"){
                     keylock = "no";
-                    createNotif("Spin Lock (X): OFF",defaultNotifColor,3000)
+                    createNotif("Spin Lock (X): OFF",defaultNotifColor,keybindNotifTimer)
                   }
                   else{
                     keylock = "yes";
-                    createNotif("Spin Lock (X): ON",defaultNotifColor,3000)
+                    createNotif("Spin Lock (X): ON",defaultNotifColor,keybindNotifTimer)
                   }
                 } else if ((e.key == "m" || e.key == "M") && state=="ingame") {
                   //opening and closing debug info box
                   if (debugState == "open") {
                     document.getElementById("debugContainer").style.display = "none";
                     debugState = "close";
-                    createNotif("Debug Mode (M): OFF",defaultNotifColor,3000)
+                    createNotif("Debug Mode (M): OFF",defaultNotifColor,keybindNotifTimer)
                   } else {
                     document.getElementById("debugContainer").style.display = "flex";
                     debugState = "open";
-                    createNotif("Debug Mode (M): ON",defaultNotifColor,3000)
+                    createNotif("Debug Mode (M): ON",defaultNotifColor,keybindNotifTimer)
                   }
                 } else if ((e.key == "t" || e.key == "T") && state=="ingame") {
                   if (quickchat.style.display == "block"){//close quick chat (turn on closing animation, then reset animation, then hide div)
@@ -8011,23 +6802,32 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     //js will return display as " " because it cant read the css, unless you set it using js before
                     quickchat.style.display = "block";
                   }
-                } else if ((e.key == "p" || e.key == "P") && state=="ingame" && gamemode != "PvE arena") {
+                } else if ((e.key == "v" || e.key == "V") && state=="ingame" && gamemode != "PvE arena") {
                   var packet = JSON.stringify(["passive-mode"]);
                   socket.send(packet)
                   if (passivemode == "no"){
-                    createNotif("Passive Mode (P): ON",defaultNotifColor,3000)
+                    createNotif("Passive Mode (V): ON",defaultNotifColor,keybindNotifTimer)
                     passivemode = "yes";
                   }
                   else{
-                    createNotif("Passive Mode (P): OFF",defaultNotifColor,3000)
+                    createNotif("Passive Mode (V): OFF",defaultNotifColor,keybindNotifTimer)
                     passivemode = "no";
                   }
-                } else if (e.key == "o" || e.key == "O") {
+                } else if ((e.key == "o" || e.key == "O") && state=="ingame") {
                   //open and close settings
                   if (settings.style.display == "none" || settings.style.display == "") {//if settings popup hidden or havent opened before
                     settings.style.display = "block";
                   } else {
                     settings.style.display = "none";
+                  }
+                } else if ((e.key == "p" || e.key == "P") && state=="ingame") {
+                  //screenshot mode
+                  if (hcanvas.style.display == "none") {
+                    hcanvas.style.display = "block";
+                    createNotif("Screenshot Mode (P): OFF",defaultNotifColor,keybindNotifTimer)
+                  } else {
+                    hcanvas.style.display = "none";
+                    createNotif("Screenshot Mode (P): ON",defaultNotifColor,keybindNotifTimer)
                   }
                 }
               }
@@ -8052,18 +6852,13 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   window.innerHeight / 2 - mousey,
                   window.innerWidth / 2 - mousex
                 );
+                angle = Math.round(angle * 100) / 100; //round to 2 decimal places
                 //below code stores the player's angle (only for the player the client is controlling)
                 //this reduces lag's effect on mouse movement
-                if (keylock == "no"){
-                  clientAngle = (((angle * 180) / Math.PI - 90) * Math.PI) / 180;
-                }
-                //change radians to degree, minus 90 degrees, change back to radians
-                //must add 90 degress because tank is drawn facing upwards, but 0 degrees is facing right, not upwards
+                if (keylock == "no") clientAngle = angle - Math.PI / 2; //must add 90 degress because tank is drawn facing upwards, but 0 degrees is facing right, not upwards
 
                 //for drones
                 //this is the mouse coordinates based on game coordinates instead of screen coordinates
-                //var mouseXBasedOnCanvas =  (mousex/window.innerWidth)*canvas.width-drawAreaX;
-                //var mouseYBasedOnCanvas =  (mousey/window.innerHeight)*canvas.height-drawAreaY;
                 var mouseXBasedOnCanvas = (window.innerWidth / 2 - mousex) * clientFovMultiplier;
                 var mouseYBasedOnCanvas = (window.innerHeight / 2 - mousey) * clientFovMultiplier;
                 //note, the angle is in radians, not degrees
@@ -8075,7 +6870,13 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ) {
                     if ((Date.now() - prevSendMouse)>30){//limit of one packet sent per 30ms
                       //mousemove event triggered every 1px of movement, so use this if statement to only trigger every 10px of movement
-                      var packet = JSON.stringify(["mouseMoved", mouseXBasedOnCanvas/window.innerWidth*canvas.width, mouseYBasedOnCanvas/window.innerHeight*canvas.height, angle]);//mouse positions are in screen coords, need to convert to game cavas coords
+
+                      //mouse positions are in screen coords, need to convert to game cavas coords
+                      let x = mouseXBasedOnCanvas/window.innerWidth*canvas.width;
+                      let y = mouseYBasedOnCanvas/window.innerHeight*canvas.height;
+                      x = Math.round(x);
+                      y = Math.round(y);
+                      var packet = JSON.stringify(["mm", x, y, angle]);//mousemove packet
                       socket.send(packet)
                       oldmousex = mouseXBasedOnCanvas;
                       oldmousey = mouseYBasedOnCanvas;
@@ -8083,7 +6884,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     }
                   }
                   //check if player mouse touching the upgrade button
-                  if (openedUI=="no"){
                     let hoverOne = "no";
                     let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
                     let resizeDiffY = 1/window.innerHeight*hcanvas.height;
@@ -8167,7 +6967,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         hcanvas.style.cursor = "auto";
                       }
                     }
-                  }
+                  
                 }
               });
 
@@ -8192,9 +6992,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   mouseDown = false;
                   return;
                 }
-                var packet = JSON.stringify(["mouseReleased", e.which]);
+                var packet = JSON.stringify(["mouseReleased"]);
                 socket.send(packet);
-                if (openedUI=="no"){
                 let resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
                 let resizeDiffY = 1/window.innerHeight*hcanvas.height;
                 for (let i = 1; i < 15; i++) {
@@ -8207,10 +7006,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ) {
                     //if player release mouse at button
                     if (i <= 7) {
-                      var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "weaponUpgrade"]);
+                      var packet = JSON.stringify(["upgradePlease", i-1, "w"]);
                       socket.send(packet)
                     } else {
-                      var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "bodyUpgrade"]);
+                      var packet = JSON.stringify(["upgradePlease", i-8, "b"]);
                       socket.send(packet)
                     }
                   }
@@ -8229,7 +7028,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 if (ignorebuttonb.hover == "yes"){
                   ignorebuttonb.ignore = "yes";
                   levelwhenignoreb = player.level;
-                }
                 }
               });
             }
@@ -8256,7 +7054,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   socket.send(packet)
                 }
                 if (touches[0].state == "shooting") {
-                  var packet = JSON.stringify(["mouseMoved", touches[0].x, touches[0].y, touches[0].angle]);
+                  var packet = JSON.stringify(["mm", Math.round(touches[0].x), Math.round(touches[0].y), Math.round(touches[0].angle * 100) / 100]);//mousemove packet
                   socket.send(packet)
                   if (mobileSentMousePress=="no"){
                     var packet = JSON.stringify(["mousePressed", 1]);
@@ -8264,7 +7062,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     mobileSentMousePress = "yes";
                   }
                 } else if (touches[1].state == "shooting") {
-                  var packet = JSON.stringify(["mouseMoved", touches[1].x, touches[1].y, touches[1].angle]);
+                  var packet = JSON.stringify(["mm", Math.round(touches[1].x), Math.round(touches[1].y), Math.round(touches[1].angle * 100) / 100]);//mousemove packet
                   socket.send(packet)
                   if (mobileSentMousePress=="no"){
                     var packet = JSON.stringify(["mousePressed", 1]);
@@ -8379,7 +7177,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       socket.send(packet)
                     } else {
                       if (mobileSentMousePress=="yes"){
-                        var packet = JSON.stringify(["mouseReleased", 1]);
+                        var packet = JSON.stringify(["mouseReleased"]);
                         socket.send(packet)
                         mobileSentMousePress = "no";
                       }
@@ -8392,7 +7190,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       socket.send(packet)
                     } else {
                       if (mobileSentMousePress=="yes"){
-                        var packet = JSON.stringify(["mouseReleased", 1]);
+                        var packet = JSON.stringify(["mouseReleased"]);
                         socket.send(packet)
                         mobileSentMousePress = "no";
                       }
@@ -8407,7 +7205,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       socket.send(packet)
                     } else {
                       if (mobileSentMousePress=="yes"){
-                        var packet = JSON.stringify(["mouseReleased", 1]);
+                        var packet = JSON.stringify(["mouseReleased"]);
                         socket.send(packet)
                         mobileSentMousePress = "no";
                       }
@@ -8420,7 +7218,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       socket.send(packet)
                     } else {
                       if (mobileSentMousePress=="yes"){
-                        var packet = JSON.stringify(["mouseReleased", 1]);
+                        var packet = JSON.stringify(["mouseReleased"]);
                         socket.send(packet)
                         mobileSentMousePress = "no";
                       }
@@ -8440,10 +7238,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     let w = button.width/2/canvas.width*window.innerWidth;
                     if (mousex > (x - w) && mousex < (x + w) && mousey < (y + w*resizeDiffY/resizeDiffX) && mousey > (y - w*resizeDiffY/resizeDiffX)) { //if player release mouse at button
                       if (i <= 7) {
-                        var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "weaponUpgrade"]);
+                        var packet = JSON.stringify(["upgradePlease", i-1, "w"]);
                         socket.send(packet)
                       } else {
-                        var packet = JSON.stringify(["upgradePlease", "button" + i.toString(), "bodyUpgrade"]);
+                        var packet = JSON.stringify(["upgradePlease", i-8, "b"]);
                         socket.send(packet)
                       }
                     }
@@ -8542,20 +7340,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               var resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
               var resizeDiffY = 1/window.innerHeight*hcanvas.height;
 
-              //check if player clicked play button and if joined
-              if (canLogIn == "yes") {
-                //if client wants to log into an account
-                if (acctype != "edit"){
-                  var packet = JSON.stringify(["logInOrSignUp", accusername, accpassword, accdesc, acctype]);
-                  socket.send(packet)
-                  canLogIn = "no";
-                }
-                else{
-                  var packet = JSON.stringify(["editaccount", loggedInAccount.name, loggedInAccount.pw, loggedInAccount.desc, accusername, accpassword, accdesc]);
-                  socket.send(packet)
-                  canLogIn = "no";
-                }
-              }
               if (state == "ingame" && sentStuffBefore == "yes") {
                 //DRAW THE GAME STUFF
                 
@@ -8570,10 +7354,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   typingAnimation = 0;
                 }
       
-                auraRotate += (80)/30*deltaTime;
+                auraRotate += 80/30*deltaTime;
                 if(auraRotate < 0) {auraRotate = 360}
                 if(auraRotate > 360) {auraRotate = 0}
-                auraWidth = (Math.sin((auraRotate * Math.PI / 180))/20)+0.125;
+                auraWidth = Math.sin(auraRotate * Math.PI / 180)/20 + 0.125;//width is a sin graph, +0.125 so it doesnt go negative
                 //for radiant shape spike
                 extraSpikeRotate++;
                 if (extraSpikeRotate >= 360) {
@@ -8586,83 +7370,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 extraSpikeRotate2--;
                 if (extraSpikeRotate2 <= 0) {
                   extraSpikeRotate2 += 360;
-                }
-                //for radiant colors
-                for (const id in radiantShapes) {
-                  let animationSpeed = 3;
-                  let thisShape = radiantShapes[id];
-                  let radtype = thisShape.radtype;
-                  if (radtype == 1) {
-                    //red yellow blue
-                    if (thisShape.rgbstate == 0) {
-                      thisShape.rgbstate = 1;
-                    } else if (thisShape.rgbstate == 1) {
-                      if (thisShape.red > 200) {
-                        thisShape.red -= animationSpeed;
-                      }
-                      thisShape.green += animationSpeed;
-                      if (thisShape.green >= 150) {
-                        thisShape.rgbstate = 2; //change to next state
-                      }
-                    } else if (thisShape.rgbstate == 2) {
-                      thisShape.blue += animationSpeed;
-                      if (thisShape.green > 0) {
-                        thisShape.green -= animationSpeed;
-                      }
-                      if (thisShape.red > 0) {
-                        thisShape.red -= animationSpeed;
-                      }
-                      if (thisShape.blue >= 200) {
-                        thisShape.rgbstate = 3; //change state
-                      }
-                    } else if (thisShape.rgbstate == 3) {
-                      thisShape.blue -= animationSpeed;
-                      thisShape.red += animationSpeed;
-                      if (thisShape.blue <= 0 && thisShape.red >= 255) {
-                        thisShape.rgbstate = 1; //change state
-                        thisShape.red = 255;
-                        thisShape.blue = 0;
-                      }
-                    }
-                  } else {
-                    //greyish-green white yellow 118, 168, 151 -> 209, 230, 222 -> 234, 240, 180
-                    if (thisShape.rgbstate == 0) {
-                      thisShape.rgbstate = 1;
-                    } else if (thisShape.rgbstate == 1) {
-                      if (thisShape.red >= 118 && thisShape.red < 209) {
-                        thisShape.red += animationSpeed;
-                        thisShape.blue += animationSpeed;
-                        thisShape.green += animationSpeed;
-                      } else {
-                        thisShape.rgbstate = 2; //change to next state
-                      }
-                    } else if (thisShape.rgbstate == 2) {
-                      thisShape.blue -= animationSpeed;
-                      if (thisShape.green < 240) {
-                        thisShape.green += animationSpeed;
-                      }
-                      if (thisShape.red < 234) {
-                        thisShape.red += animationSpeed;
-                      }
-                      if (thisShape.blue <= 180) {
-                        thisShape.rgbstate = 3; //change state
-                      }
-                    } else if (thisShape.rgbstate == 3) {
-                      thisShape.red -= animationSpeed;
-                      if (thisShape.green > 168) {
-                        thisShape.green -= animationSpeed;
-                      }
-                      if (thisShape.blue > 151) {
-                        thisShape.blue -= animationSpeed;
-                      }
-                      if (thisShape.red <= 118) {
-                        thisShape.rgbstate = 1; //change state
-                        thisShape.red = 118;
-                        thisShape.blue = 168;
-                        thisShape.green = 151;
-                      }
-                    }
-                  }
                 }
                 //for gates
                 gateTimer += 0.1 * deltaTime;
@@ -8708,208 +7415,75 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   px = player.x;
                   py = player.y;
                 }
+                const xx = canvas.width / 2 - px / clientFovMultiplier;
+                const yy = canvas.height / 2 - py / clientFovMultiplier;
+                const mw = MAP_WIDTH / clientFovMultiplier;
 
                 //now we are drawing the game area
-                if (playerstring != "error") {//checks if server has already sent player's id to client
-                  drawAreaX = canvas.width / 2 - px; //needed for mouse movement
-                  drawAreaY = canvas.height / 2 - py;
-                }
                 //COLOR OF AREA OUTSIDE PLAYABLE AREA
-                if (gamemode == "dune") {
-                  ctx.fillStyle = "#fcdcbb";
-                } else if (gamemode == "cavern") {
-                  ctx.fillStyle = "#010101";
-                } else if (gamemode == "sanctuary") {
-                  ctx.fillStyle = "#404040";
-                } else if (gamemode == "crossroads") {
-                  ctx.fillStyle = "#1f1f1f";
-                } else {
-                  ctx.fillStyle = "#bebebe";
-                }
-                ctx.fillRect(0, 0, canvas.width, canvas.height); //drawing background
+                if (gamemode == "dune") ctx.fillStyle = "#fcdcbb";
+                else if (gamemode == "cavern") ctx.fillStyle = mapOutlines.abyss;
+                else if (gamemode == "sanctuary") ctx.fillStyle = mapOutlines.sanc;
+                else if (gamemode == "crossroads") ctx.fillStyle = mapOutlines.cr;
+                else ctx.fillStyle = mapOutlines.default;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
                 //COLOR OF PLAYABLE AREA
-                if (gamemode == "dune") {
-                  ctx.fillStyle = "#ffead4";
-                } else if (gamemode == "cavern") {
-                  ctx.fillStyle = "#141414";
-                } else if (gamemode == "sanctuary") {
-                  ctx.fillStyle = "#595959";
-                } else if (gamemode == "crossroads") {
-                  ctx.fillStyle = "#303030";
-                } else {
-                  ctx.fillStyle = "#CDCDCD";
-                }
-                ctx.fillRect(
-                  canvas.width / 2 - px / clientFovMultiplier,
-                  canvas.height / 2 - py / clientFovMultiplier,
-                  MAP_WIDTH / clientFovMultiplier,
-                  MAP_WIDTH / clientFovMultiplier
-                ); //drawing area
+                if (gamemode == "dune") ctx.fillStyle = "#ffead4";
+                else if (gamemode == "cavern") ctx.fillStyle = mapColors.abyss;
+                else if (gamemode == "sanctuary") ctx.fillStyle = mapColors.sanc;
+                else if (gamemode == "crossroads") ctx.fillStyle = mapColors.cr;
+                else ctx.fillStyle = mapColors.default;
+                ctx.fillRect(xx, yy, mw, mw);
 
+                function minimapBaseColor(team) {//NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS! (but base color is same as minimap)
+                  if (team == "red") ctx.fillStyle = "#dbbfc0";
+                  else if (team == "green") ctx.fillStyle = "#acd0bd";
+                  else if (team == "blue") ctx.fillStyle = "#acc8d0";
+                  else if (team == "purple") ctx.fillStyle = "#c0b3c9";
+                }
                 if (gamemode == "2 Teams") {//draw team base
-                  var baseSize = 1500;
-                  let firstColor = teamColors[0];
-                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-                  if (firstColor == "red"){
-                    ctx.fillStyle = "#dbbfc0";
-                  }
-                  else if (firstColor == "green"){
-                    ctx.fillStyle = "#acd0bd";
-                  }
-                  else if (firstColor == "blue"){
-                    ctx.fillStyle = "#acc8d0";
-                  }
-                  else if (firstColor == "purple"){
-                    ctx.fillStyle = "#c0b3c9";
-                  }
-                  ctx.fillRect(
-                    canvas.width / 2 - px / clientFovMultiplier,
-                    canvas.height / 2 - py / clientFovMultiplier,
-                    baseSize / clientFovMultiplier,
-                    MAP_WIDTH / clientFovMultiplier
-                  );
-                  firstColor = teamColors[1];
-                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-                  if (firstColor == "red"){
-                    ctx.fillStyle = "#dbbfc0";
-                  }
-                  else if (firstColor == "green"){
-                    ctx.fillStyle = "#acd0bd";
-                  }
-                  else if (firstColor == "blue"){
-                    ctx.fillStyle = "#acc8d0";
-                  }
-                  else if (firstColor == "purple"){
-                    ctx.fillStyle = "#c0b3c9";
-                  }
-                  ctx.fillRect(
-                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
-                    canvas.height / 2 - py / clientFovMultiplier,
-                    baseSize / clientFovMultiplier,
-                    MAP_WIDTH / clientFovMultiplier
-                  );
+                  var baseSize = 1500 / clientFovMultiplier;
+                  minimapBaseColor(teamColors[0]);
+                  ctx.fillRect(xx, yy, baseSize, mw);
+                  minimapBaseColor(teamColors[1]);
+                  ctx.fillRect(xx + mw - baseSize, yy, baseSize, mw);
                 }
-                if (gamemode == "4 Teams") {//draw team base
-                  var baseSize = 1500;
-                  let firstColor = teamColors[0];
-                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-                  if (firstColor == "red"){
-                    ctx.fillStyle = "#dbbfc0";
-                  }
-                  else if (firstColor == "green"){
-                    ctx.fillStyle = "#acd0bd";
-                  }
-                  else if (firstColor == "blue"){
-                    ctx.fillStyle = "#acc8d0";
-                  }
-                  else if (firstColor == "purple"){
-                    ctx.fillStyle = "#c0b3c9";//c7bccf
-                  }
-                  ctx.fillRect(
-                    canvas.width / 2 - px / clientFovMultiplier,
-                    canvas.height / 2 - py / clientFovMultiplier,
-                    baseSize / clientFovMultiplier,
-                    baseSize / clientFovMultiplier
-                  );
-                  firstColor = teamColors[1];
-                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-                  if (firstColor == "red"){
-                    ctx.fillStyle = "#dbbfc0";
-                  }
-                  else if (firstColor == "green"){
-                    ctx.fillStyle = "#acd0bd";
-                  }
-                  else if (firstColor == "blue"){
-                    ctx.fillStyle = "#acc8d0";
-                  }
-                  else if (firstColor == "purple"){
-                    ctx.fillStyle = "#c0b3c9";
-                  }
-                  ctx.fillRect(
-                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
-                    canvas.height / 2 - py / clientFovMultiplier,
-                    baseSize / clientFovMultiplier,
-                    baseSize / clientFovMultiplier
-                  );
-                  firstColor = teamColors[2];
-                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-                  if (firstColor == "red"){
-                    ctx.fillStyle = "#dbbfc0";
-                  }
-                  else if (firstColor == "green"){
-                    ctx.fillStyle = "#acd0bd";
-                  }
-                  else if (firstColor == "blue"){
-                    ctx.fillStyle = "#acc8d0";
-                  }
-                  else if (firstColor == "purple"){
-                    ctx.fillStyle = "#c0b3c9";
-                  }
-                  ctx.fillRect(
-                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
-                    canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
-                    baseSize / clientFovMultiplier,
-                    baseSize / clientFovMultiplier
-                  );
-                  
-
-                  firstColor = teamColors[3];
-                  //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-                  if (firstColor == "red"){
-                    ctx.fillStyle = "#dbbfc0";
-                  }
-                  else if (firstColor == "green"){
-                    ctx.fillStyle = "#acd0bd";
-                  }
-                  else if (firstColor == "blue"){
-                    ctx.fillStyle = "#acc8d0";
-                  }
-                  else if (firstColor == "purple"){
-                    ctx.fillStyle = "#c0b3c9";
-                  }
-                  ctx.fillRect(
-                    canvas.width / 2 - px / clientFovMultiplier,
-                    canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier - baseSize / clientFovMultiplier,
-                    baseSize / clientFovMultiplier,
-                    baseSize / clientFovMultiplier
-                  );
+                else if (gamemode == "4 Teams") {//draw team base
+                  var baseSize = 1500 / clientFovMultiplier;
+                  minimapBaseColor(teamColors[0]);
+                  ctx.fillRect(xx, yy, baseSize, baseSize);
+                  minimapBaseColor(teamColors[1]);
+                  ctx.fillRect(xx + mw - baseSize, yy, baseSize, baseSize);
+                  minimapBaseColor(teamColors[2]);
+                  ctx.fillRect(xx + mw - baseSize, yy + mw - baseSize, baseSize, baseSize);
+                  minimapBaseColor(teamColors[3]);
+                  ctx.fillRect(xx, yy + mw - baseSize, baseSize, baseSize);
                 }
-                if (gamemode == "Tank Editor"){//draw safe zone
+                else if (gamemode == "Tank Editor"){//draw safe zone
+                  const s = safeZone / clientFovMultiplier;
                   ctx.fillStyle = safeZoneColor;
-                  ctx.fillRect(
-                    canvas.width / 2 - px / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier /2 - safeZone / clientFovMultiplier /2,
-                    canvas.height / 2 - py / clientFovMultiplier + MAP_WIDTH / clientFovMultiplier /2 - safeZone / clientFovMultiplier /2,
-                    safeZone / clientFovMultiplier,
-                    safeZone / clientFovMultiplier
-                  );
+                  ctx.fillRect(xx + mw /2 - s /2, yy + mw /2 - s /2, s, s);
                 }
 
                 //drawin grid lines
                 ctx.beginPath();
-                ctx.lineWidth = 1; //thickness of grid
-                var gridHeight = 30 / clientFovMultiplier;
+                ctx.lineWidth = 4; //thickness of grid
+                var gridHeight = gridSizes.default / clientFovMultiplier;
+                ctx.strokeStyle = gridColors.default;
                 if (gamemode == "dune") {
                   ctx.strokeStyle = "#edddc5";
                 } else if (gamemode == "cavern") {
-                  ctx.strokeStyle = "#242424";
-                  gridHeight = 80 / clientFovMultiplier;
+                  ctx.strokeStyle = gridColors.abyss;
+                  gridHeight = gridSizes.abyss / clientFovMultiplier;
                 } else if (gamemode == "sanctuary") {
-                  ctx.strokeStyle = "#363636";
-                  ctx.lineWidth = 3 / clientFovMultiplier;
+                  ctx.strokeStyle = gridColors.sanc;
+                  gridHeight = gridSizes.sanc / clientFovMultiplier;
                 } else if (gamemode == "crossroads") {
-                  ctx.strokeStyle = "rgba(18, 18, 18, .5)";
-                  gridHeight = 80 / clientFovMultiplier;
-                  ctx.lineWidth = 3; //thickness of grid
-                } else {
-                  ctx.lineWidth = 4; //thickness of grid
-                  gridHeight = 24 / clientFovMultiplier;
-                  ctx.strokeStyle = "rgba(180, 180, 180, .2)";
+                  ctx.strokeStyle = gridColors.cr;
+                  gridHeight = gridSizes.cr / clientFovMultiplier;
                 }
 
-                //How does drawing the grid lines work: the equation below is to calculate the negative of the closest number to drawAreaX that is divisible by gridHeight, with drawAreaX referring to the distance from left side of screen to arena, and gridHeight is distance between lines drawn. By calculating this, we can find out the position to start drawing the first line on the left side of the screen, producing the effect of the grid moving in the opposite direction of the user. Need to be opposite, that's why negative in equation. Because the lines are drawn relative to the left and top of arena, that's why the lines are always drawn exactly on the left and top of arena on screen, unless people disconnect or connect, resulting in change og arena size.
-                //for x: -gridHeight-(-drawAreaX%gridHeight)
-                //for y: -gridHeight-(-drawAreaY%gridHeight)
-                //edit: instead of using drawAreaX, use (canvas.width/2 - player.x/fov) for accurate grid drawing
                 if (player.fovMultiplier < 10) {
                   //dont draw grid lines if field of vision is high, to prevent lag from drawing too many grid lines
                   for (let x = -gridHeight - (-(canvas.width / 2 - px / clientFovMultiplier) % gridHeight); x < canvas.width; x += gridHeight) {
@@ -9024,10 +7598,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     if (type == "bullet" && thisobject.bulletType == "bullet"){
                       //server wont send bullet updates all the time if the bullet is a bullet and not a trap or drone or minion etc.
                       //client move bullet yourself
-                      //console.log(id + ',' + objects[type][id].x + ',1')
                       objects[type][id].y += Math.sin(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
                       objects[type][id].x += Math.cos(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
-                      //console.log(id + ',' + objects[type][id].x + ',2')
                     }
                     drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
                   }
@@ -9149,7 +7721,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         x: player.x + randomDistFromCenterX,// * Math.cos(angleRadians),
                         y: player.y - randomDistFromCenterY,// * Math.sin(angleRadians),
                         width: size,
-                        height: size,
                         speed: 5,
                         timer: 200,
                         maxtimer: 200,
@@ -9199,7 +7770,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                         x: player.x + randomDistFromCenterX,// * Math.cos(angleRadians),
                         y: player.y - randomDistFromCenterY,// * Math.sin(angleRadians),
                         width: size,
-                        height: size,
                         speed: 25,
                         timer: 100,
                         maxtimer: 100,
@@ -9240,7 +7810,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   hctx.save();
                   hctx.translate(canvas.width / 2, canvas.height / 2);
                   let playerAngle = clientAngle;
-                  if (player.autorotate == "yes" || player.fastautorotate == "yes"){
+                  if (player.autorotate == "yes"){
                     playerAngle = player.angle;
                   }
                   hctx.rotate(playerAngle - (90 * Math.PI) / 180);
@@ -9321,7 +7891,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   hctx.save();
                   hctx.translate(canvas.width / 2, canvas.height / 2);
                   playerAngle = clientAngle;
-                  if (player.autorotate == "yes" || player.fastautorotate == "yes"){
+                  if (player.autorotate == "yes"){
                     playerAngle = player.angle;
                   }
                   hctx.rotate(playerAngle - (90 * Math.PI) / 180);
@@ -9499,9 +8069,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           } else {
             thisbutton.brightness = 50;
           }
-          if (
-            thisbutton.width < thisbutton.animatedwidth
-          ) {
+          if (thisbutton.width < thisbutton.animatedwidth) {
             let amountAdd = thisbutton.animatedwidth - thisbutton.width;
             if (amountAdd >= 0.05){//if not too near to the end width
               amountAdd /= 3;//button enlarges faster before decreasing in speed
@@ -9527,20 +8095,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             thisbutton.width = thisbutton.defaultwidth;
           }
         }
-        //check if button is animating
-        if (buttonNumber <= 7){//upgrade buttons on right side of screen
-          if (thisbutton.x > thisbutton.endx) {
-            thisbutton.x -= (thisbutton.x - thisbutton.endx)/10*deltaTime; //animating the button with a speed of distStillNeedToMove/10
-          }
-          else if ((thisbutton.x-thisbutton.endx)<1) {
-            thisbutton.x = thisbutton.endx; //if distance between current position and actual position is less than 1
-          }
-          else if (thisbutton.x < thisbutton.endx) {
-            thisbutton.x = thisbutton.endx;//might be reason why body upgrade animation isnt working?
-            //thisbutton.x += (thisbutton.endx - thisbutton.x)/10;
-          }
-        }
-        else{//upgrade buttons on left side of screen
+        //check if button is animating open
+        if (buttonNumber <= 7 && animatingOverrideWeapon == "no"){//upgrade buttons on left side of screen
           if (thisbutton.x < thisbutton.endx) {
             thisbutton.x += (thisbutton.endx - thisbutton.x)/10*deltaTime; //animating the button with a speed of distStillNeedToMove/10
           }
@@ -9548,8 +8104,18 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             thisbutton.x = thisbutton.endx; //if distance between current position and actual position is less than 1
           }
           else if (thisbutton.x > thisbutton.endx) {
-            thisbutton.x = thisbutton.endx;//might be reason why body upgrade animation isnt working?
-            //thisbutton.x += (thisbutton.endx - thisbutton.x)/10;
+            thisbutton.x = thisbutton.endx;
+          }
+        }
+        else if (buttonNumber > 7 && animatingOverrideBody == "no"){//upgrade buttons on right side of screen
+          if (thisbutton.x > thisbutton.endx) {
+            thisbutton.x += (thisbutton.endx - thisbutton.x)/10*deltaTime; //animating the button with a speed of distStillNeedToMove/10
+          }
+          else if ((thisbutton.x-thisbutton.endx)<1) {
+            thisbutton.x = thisbutton.endx; //if distance between current position and actual position is less than 1
+          }
+          else if (thisbutton.x < thisbutton.endx) {
+            thisbutton.x = thisbutton.endx;
           }
         }
         hctx.strokeStyle = "black";
@@ -9564,40 +8130,20 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var w = thisbutton.width;
         var h = thisbutton.width;
         var r = 7;
-          var r2 = r;//radius of bottom part of dark area
         var x = thisbutton.x - thisbutton.width/2;
         var y = thisbutton.y - thisbutton.width/2;
-        hctx.beginPath();
-        hctx.moveTo(x + r, y);
-        hctx.arcTo(x + w, y, x + w, y + h, r);
-        hctx.arcTo(x + w, y + h, x, y + h, r);
-        hctx.arcTo(x, y + h, x, y, r);
-        hctx.arcTo(x, y, x + w, y, r);
-        hctx.closePath();
-        hctx.fill();
-        hctx.stroke();
+        hctxroundRectangle(x,y,r,w,h);
           //draw dark area
           splitRGB = thisbutton.darkcolor.split(",");
           red = Number(splitRGB[0]) + thisbutton.brightness;
           blue = Number(splitRGB[1]) + thisbutton.brightness;
           green = Number(splitRGB[2]) + thisbutton.brightness;
           hctx.fillStyle = "rgb(" + red + "," + blue + "," + green + ")";
-
-          var w = thisbutton.width - hctx.lineWidth;
+        var w = thisbutton.width - hctx.lineWidth;
         var h = thisbutton.width/2 - hctx.lineWidth/2;
-        var r = 0;//top of dark area dont have radius
         var x = thisbutton.x - thisbutton.width/2 + hctx.lineWidth/2;
         var y = thisbutton.y;
-        hctx.beginPath();
-        hctx.moveTo(x + r, y);
-        hctx.arcTo(x + w, y, x + w, y + h, r);
-          r = r2;//actual radius
-        hctx.arcTo(x + w, y + h, x, y + h, r);
-        hctx.arcTo(x, y + h, x, y, r);
-          r = 0;//top of dark area dont have radius
-        hctx.arcTo(x, y, x + w, y, r);
-        hctx.closePath();
-        hctx.fill();
+        hctxroundRectangleFill(x,y,0,w,h);
         //end of drawing button rectangles
         
         let playerSize = 25; //DONT CHANGE THIS
@@ -9713,7 +8259,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var h = ignorebutton.height * ignorebutton.width / ignorebutton.defaultwidth;
         var originalh = h;
         var r = 7;
-          var r2 = r;//radius of bottom part of dark area
         var x = thisbutton.x - ignorebutton.width/2;
         var y = thisbutton.y - ignorebutton.width/2 - 55 - (ignorebutton.height - originalh)/2;
         ignorebutton.x = x;
@@ -9726,15 +8271,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           let blue = Number(splitRGB[1]) + ignorebutton.brightness;
           let green = Number(splitRGB[2]) + ignorebutton.brightness;
           hctx.fillStyle = "rgb(" + red + "," + blue + "," + green + ")";
-        hctx.beginPath();
-        hctx.moveTo(x + r, y);
-        hctx.arcTo(x + w, y, x + w, y + h, r);
-        hctx.arcTo(x + w, y + h, x, y + h, r);
-        hctx.arcTo(x, y + h, x, y, r);
-        hctx.arcTo(x, y, x + w, y, r);
-        hctx.closePath();
-        hctx.fill();
-        hctx.stroke();
+        hctxroundRectangle(x,y,r,w,h);
         //draw dark area
           color = "143,143,143";
           splitRGB = color.split(",");
@@ -9742,21 +8279,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           blue = Number(splitRGB[1]) + ignorebutton.brightness;
           green = Number(splitRGB[2]) + ignorebutton.brightness;
           hctx.fillStyle = "rgb(" + red + "," + blue + "," + green + ")";
-        var w = ignorebutton.width - hctx.lineWidth;
-        var h = h/2 - hctx.lineWidth/2;
-        var r = 0;//top of dark area dont have radius
-        var x = thisbutton.x - ignorebutton.width/2 + hctx.lineWidth/2;
-        var y = thisbutton.y - ignorebutton.width/2 + originalh/2 - 55 - (ignorebutton.height - originalh)/2;
-        hctx.beginPath();
-        hctx.moveTo(x + r, y);
-        hctx.arcTo(x + w, y, x + w, y + h, r);
-          r = r2;//actual radius
-        hctx.arcTo(x + w, y + h, x, y + h, r);
-        hctx.arcTo(x, y + h, x, y, r);
-          r = 0;//top of dark area dont have radius
-        hctx.arcTo(x, y, x + w, y, r);
-        hctx.closePath();
-        hctx.fill();
+        w = ignorebutton.width - hctx.lineWidth;
+        h = h/2 - hctx.lineWidth/2;
+        x = thisbutton.x - ignorebutton.width/2 + hctx.lineWidth/2;
+        y = thisbutton.y - ignorebutton.width/2 + originalh/2 - 55 - (ignorebutton.height - originalh)/2;
+        hctxroundRectangleFill(x,y,0,w,h);
         hctx.fillStyle = "white";
         hctx.strokeStyle = "black";
         hctx.lineWidth = 9;
@@ -9784,27 +8311,44 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
       tankRotate += 1.5*deltaTime;
 
       //Weapon upgrades
-      if (player.tankType){//prevent error at the start of the game
+      if (player.tankType && weaponupgrades[player.tankType]){//prevent error at the start of the game
         let upgrades = weaponupgrades[player.tankType].upgradeTo;//array of possible upgrades
         if ((player.level >= 0 && player.tankTypeLevel < 0)
         ||(player.level >= 15 && player.tankTypeLevel < 15)
         ||(player.level >= 30 && player.tankTypeLevel < 30)
         ||(player.level >= 45 && player.tankTypeLevel < 45)
         ||(gamemode == "sanctuary" && player.level >= 60 && player.tankTypeLevel < 60)
-        ||(gamemode == "sanctuary" && player.level >= 70 && player.tankTypeLevel < 70)) { //if player can upgrade but havent
+        ||(gamemode == "sanctuary" && player.level >= 70 && player.tankTypeLevel < 70)
+        ||animatingOverrideWeapon == "yes") { //if player can upgrade but havent, or if closing animation
+          if (upgrades.length == 0 || animatingOverrideWeapon == "yes"){//no upgrades, which means button is animating closing
+            upgrades = weaponupgrades[oldplayerweapon].upgradeTo;
+          }
+          else{
+            oldplayerweapon = player.tankType;
+            animatingOverrideWeapon = "no";//stop the closing animation
+          }
           for (let i = 1; i < 1+upgrades.length; i++) {
             buttondraw(i, upgrades);
           }
           maxnumberofbuttons = upgrades.length;
-        }
-        else{//cannot upgrade
-          for (let i = 1; i < 8; i++) {
-            upgradeButtons[i].x = upgradeButtons[i].startx; //reset position of all upgrade buttons for the next animation
+          if (animatingOverrideWeapon == "yes"){//if closing animation
+            animatingOverrideWeapon = "finished";
+            for (let i = 1; i < 8; i++) {
+              if (Math.abs(upgradeButtons[i].startx - upgradeButtons[i].x)<1){//almost there
+                upgradeButtons[i].x = upgradeButtons[i].startx; //reset position
+              }
+              else{
+                upgradeButtons[i].x += (upgradeButtons[i].startx - upgradeButtons[i].x)/10*deltaTime;//close animation
+                animatingOverrideWeapon = "yes";//continue the animation as long as there is one button still animating
+              }
+            }
           }
+        }
+        else if (animatingOverrideWeapon != "finished"){//cannot upgrade, and closing animation not triggered yet
+          animatingOverrideWeapon = "yes";//turn on closing animation
         }
       }
 
-      if(openedUI != "yes") {
         let textToWrite = "";
         if (player.tankTypeLevel < 15) {
           textToWrite = "Next upgrade at lvl 15";
@@ -9842,7 +8386,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           hctx.fillText(textToWrite, 0, 7.5);
           hctx.lineJoin = "miter"; //change it back
           hctx.restore();
-      }
       
       if (ignorebuttonw.ignore == "no"){//if not ignore
         drawIgnoreButton(maxnumberofbuttons + 1,"weapon")
@@ -9901,23 +8444,41 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
       //body upgrades
       //note: try not to use the last button
-      if (player.bodyType){//prevent error at the start of the game
+      if (player.bodyType && bodyupgrades[player.bodyType]){//prevent error at the start of the game
         let upgrades = bodyupgrades[player.bodyType].upgradeTo;//array of possible upgrades
         if ((player.level >= 0 && player.bodyTypeLevel < 0)
         ||(player.level >= 15 && player.bodyTypeLevel < 15)
         ||(player.level >= 30 && player.bodyTypeLevel < 30)
         ||(player.level >= 45 && player.bodyTypeLevel < 45)
         ||(gamemode == "sanctuary" && player.level >= 60 && player.bodyTypeLevel < 60)
-        ||(gamemode == "sanctuary" && player.level >= 70 && player.bodyTypeLevel < 70)) { //if player can upgrade but havent
+        ||(gamemode == "sanctuary" && player.level >= 70 && player.bodyTypeLevel < 70)
+        ||animatingOverrideBody == "yes") { //if player can upgrade but havent
+          if (upgrades.length == 0 || animatingOverrideBody == "yes"){//no upgrades, which means button is animating closing
+            upgrades = bodyupgrades[oldplayerbody].upgradeTo;
+          }
+          else{
+            oldplayerbody = player.bodyType;
+            animatingOverrideBody = "no";//stop the closing animation
+          }
           for (let i = 8; i < 8+upgrades.length; i++) {
             buttondraw(i, upgrades);
           }
           maxnumberofbuttonsb = 7+upgrades.length;
-        }
-        else{//cannot upgrade
-          for (let i = 8; i < 15; i++) {
-            upgradeButtons[i].x = upgradeButtons[i].startx; //reset position of all upgrade buttons for the next animation
+          if (animatingOverrideBody == "yes"){//if closing animation
+            animatingOverrideBody = "finished";
+            for (let i = 8; i < 15; i++) {
+              if (Math.abs(upgradeButtons[i].startx - upgradeButtons[i].x)<1){//almost there
+                upgradeButtons[i].x = upgradeButtons[i].startx; //reset position
+              }
+              else{
+                upgradeButtons[i].x += (upgradeButtons[i].startx - upgradeButtons[i].x)/10*deltaTime;//close animation
+                animatingOverrideBody = "yes";//continue the animation as long as there is one button still animating
+              }
+            }
           }
+        }
+        else if (animatingOverrideBody != "finished"){//cannot upgrade, and closing animation not triggered yet
+          animatingOverrideBody = "yes";//turn on closing animation
         }
       }
       
@@ -9967,14 +8528,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         hctxroundRectangleFill(newx,newy,r,w,h);
       }
 
-      let teamcolor;
-      if (player.team == "none") {
-        teamcolor = bodyColors.blue.col;
-      } else if (bodyColors.hasOwnProperty(player.team)) {
-        teamcolor = bodyColors[player.team].col;
-      }
       let leader = players[Object.keys(players)[0]].score; //person with most score on leaderboard
-      let w = 298;//total width
+      w = 298;//total width
       let bottomy = 52.5;//dist from bottom
       if (settingsList.showhealthbarHUD === true){//if health bar settings turned on, widths are diff
         w = 250;
@@ -9988,7 +8543,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
       hctx.save();
       hctx.translate(hcanvas.width/2, hcanvas.height);
       hctx.scale(1, resizeDiffY/resizeDiffX);
-      drawBar(w,widthOfBlackBorder,coloredWidth,teamcolor,25,0,bottomy)
+      drawBar(w,widthOfBlackBorder,coloredWidth,playerBodyCol,25,0,bottomy)
 
       let healthPercentage;
       if (settingsList.showhealthbarHUD === true){//draw health bar
@@ -9996,14 +8551,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         bottomy = 52.5;
         healthPercentage = Math.round((player.health / player.maxhealth * 100)*10)/10;//*10 and /10 to round to 1 decimal place
         coloredWidth = ((w - widthOfBlackBorder) / player.maxhealth) * player.health;
-        drawBar(w,widthOfBlackBorder,coloredWidth,teamcolor,25,0,bottomy)
+        drawBar(w,widthOfBlackBorder,coloredWidth,playerBodyCol,25,0,bottomy)
       }
       
       coloredWidth = 0;
       if (barScore > 0) {
         coloredWidth = ((w - widthOfBlackBorder) / totalXPinLvl) * XPinCurrentLvl;
       }
-      drawBar(398,widthOfBlackBorder,coloredWidth,teamcolor,30,0,21)
+      drawBar(398,widthOfBlackBorder,coloredWidth,playerBodyCol,30,0,21)
       
       totalXPinLvl = abbreviateScore(totalXPinLvl);
       XPinCurrentLvl = abbreviateScore(Math.round(XPinCurrentLvl));
@@ -10015,7 +8570,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
       hctx.lineWidth = 5;
       hctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
       hctx.textAlign = "center";
-      let y = -47.5;
+      y = -47.5;
       if (settingsList.showhealthbarHUD === true){
         hctx.strokeText("Health: " + healthPercentage + "%", 0, y);
         hctx.fillText("Health: " + healthPercentage + "%", 0, y);
@@ -10056,120 +8611,42 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
       hctx.restore();
 
       //drawing minimap
-      if (openedUI=="no"){//in tank editor, only draw when editor is closed
         if (gamemode != "crossroads" && gamemode != "cavern") {
           //dont draw anything on minimap for crossroads and cavern
           let mmX = 10;
           let mmY = 10;
-          let mmSize = 150;
+          let mmSize = hcanvas.height/100*15;
           hctx.save();
           hctx.scale(1,resizeDiffY/resizeDiffX);//ensure that minimap is proportional and not squashed
-          //hctx.scale(resizeDiffX,resizeDiffY);
 
-          //draw the map area
-          //hctx.fillStyle = "rgba(128,128,128,.5)";
           hctx.fillStyle = "rgba(189,189,189,.5)";
           hctx.strokeStyle = "rgb(90,90,90)";
           hctx.lineWidth = 5;
+          hctx.fillRect(mmX, mmY, mmSize, mmSize);
 
-          hctx.fillRect(mmX, mmY, mmSize, mmSize);//MINIMAP
-
-          if (gamemode == "2 Teams") {//draw team base
-            var baseSize = 1500;
-            let firstColor = teamColors[0];
-            //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-            if (firstColor == "red"){
-              hctx.fillStyle = "#dbbfc0";
-            }
-            else if (firstColor == "green"){
-              hctx.fillStyle = "#acd0bd";
-            }
-            else if (firstColor == "blue"){
-              hctx.fillStyle = "#acc8d0";
-            }
-            else if (firstColor == "purple"){
-              hctx.fillStyle = "#c0b3c9";
-            }
-            hctx.fillRect(mmX, mmY, baseSize / MAP_WIDTH * mmSize, mmSize);
-            firstColor = teamColors[1];
-            //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-            if (firstColor == "red"){
-              hctx.fillStyle = "#dbbfc0";
-            }
-            else if (firstColor == "green"){
-              hctx.fillStyle = "#acd0bd";
-            }
-            else if (firstColor == "blue"){
-              hctx.fillStyle = "#acc8d0";
-            }
-            else if (firstColor == "purple"){
-              hctx.fillStyle = "#c0b3c9";
-            }
-            hctx.fillRect(mmX + mmSize - baseSize / MAP_WIDTH * mmSize, mmY, baseSize / MAP_WIDTH * mmSize, mmSize);
+          function minimapBaseColor(team) {//NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
+            if (team == "red") hctx.fillStyle = "#dbbfc0";
+            else if (team == "green") hctx.fillStyle = "#acd0bd";
+            else if (team == "blue") hctx.fillStyle = "#acc8d0";
+            else if (team == "purple") hctx.fillStyle = "#c0b3c9";
           }
-
-          if (gamemode == "4 Teams") {//draw team base
-            var baseSize = 1500;
-            let firstColor = teamColors[0];
-            //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-            if (firstColor == "red"){
-              hctx.fillStyle = "#dbbfc0";
-            }
-            else if (firstColor == "green"){
-              hctx.fillStyle = "#acd0bd";
-            }
-            else if (firstColor == "blue"){
-              hctx.fillStyle = "#acc8d0";
-            }
-            else if (firstColor == "purple"){
-              hctx.fillStyle = "#c0b3c9";
-            }
-            hctx.fillRect(mmX, mmY, baseSize / MAP_WIDTH * mmSize,  baseSize / MAP_WIDTH * mmSize);
-            firstColor = teamColors[1];
-            //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-            if (firstColor == "red"){
-              hctx.fillStyle = "#dbbfc0";
-            }
-            else if (firstColor == "green"){
-              hctx.fillStyle = "#acd0bd";
-            }
-            else if (firstColor == "blue"){
-              hctx.fillStyle = "#acc8d0";
-            }
-            else if (firstColor == "purple"){
-              hctx.fillStyle = "#c0b3c9";
-            }
-            hctx.fillRect(mmX + mmSize - baseSize / MAP_WIDTH * mmSize, mmY, baseSize / MAP_WIDTH * mmSize, baseSize / MAP_WIDTH * mmSize);
-            firstColor = teamColors[2];
-            //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-            if (firstColor == "red"){
-              hctx.fillStyle = "#dbbfc0";
-            }
-            else if (firstColor == "green"){
-              hctx.fillStyle = "#acd0bd";
-            }
-            else if (firstColor == "blue"){
-              hctx.fillStyle = "#acc8d0";
-            }
-            else if (firstColor == "purple"){
-              hctx.fillStyle = "#c0b3c9";
-            }
-            hctx.fillRect(mmX + mmSize - baseSize / MAP_WIDTH * mmSize, mmY + mmSize - baseSize / MAP_WIDTH * mmSize, baseSize / MAP_WIDTH * mmSize, baseSize / MAP_WIDTH * mmSize);
-            firstColor = teamColors[3];
-            //NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS!
-            if (firstColor == "red"){
-              hctx.fillStyle = "#dbbfc0";
-            }
-            else if (firstColor == "green"){
-              hctx.fillStyle = "#acd0bd";
-            }
-            else if (firstColor == "blue"){
-              hctx.fillStyle = "#acc8d0";
-            }
-            else if (firstColor == "purple"){
-              hctx.fillStyle = "#c0b3c9";
-            }
-            hctx.fillRect(mmX, mmY + mmSize - baseSize / MAP_WIDTH * mmSize, baseSize / MAP_WIDTH * mmSize, baseSize / MAP_WIDTH * mmSize);
+          if (gamemode == "2 Teams") {//draw team base
+            var baseSize = 1500 / MAP_WIDTH * mmSize;
+            minimapBaseColor(teamColors[0]);
+            hctx.fillRect(mmX, mmY, baseSize, mmSize);
+            minimapBaseColor(teamColors[1]);
+            hctx.fillRect(mmX + mmSize - baseSize, mmY, baseSize, mmSize);
+          }
+          else if (gamemode == "4 Teams") {//draw team base
+            var baseSize = 1500 / MAP_WIDTH * mmSize;
+            minimapBaseColor(teamColors[0]);
+            hctx.fillRect(mmX, mmY, baseSize,  baseSize);
+            minimapBaseColor(teamColors[1]);
+            hctx.fillRect(mmX + mmSize - baseSize, mmY, baseSize, baseSize);
+            minimapBaseColor(teamColors[2]);
+            hctx.fillRect(mmX + mmSize - baseSize, mmY + mmSize - baseSize, baseSize, baseSize);
+            minimapBaseColor(teamColors[3]);
+            hctx.fillRect(mmX, mmY + mmSize - baseSize, baseSize, baseSize);
           }
 
           hctx.strokeRect(mmX, mmY, mmSize, mmSize);//MINIMAP OUTLINE
@@ -10196,17 +8673,13 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           //drawing portals on minimap
           Object.keys(portals).forEach((portalID) => {
             let portal = portals[portalID];
-            if (portal.hasOwnProperty("red")) {
-              //if portal is radiant
-              hctx.fillStyle =
-                "rgb(" +
-                portal.red +
-                ", " +
-                portal.green +
-                ", " +
-                portal.blue +
-                ")";
-            } else {
+            if (portal.rad > 0) { //if portal is radiant
+              hctx.fillStyle = updateRadiantColorPortal(portalID);
+            }
+            else if (portal.color == "255,255,255"){ //normal wormhole
+              hctx.fillStyle = "grey";
+            }
+            else {//dune wormhole
               hctx.fillStyle = "rgb(" + portal.color + ")";
             }
             hctx.beginPath();
@@ -10308,54 +8781,37 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           if (currentpoints >= 4) {
             x -= statw;
           }
-          hctx.beginPath();
-          hctx.moveTo(x + r, y);
-          hctx.arcTo(x + statw, y, x + statw, y + h, r);
-          hctx.arcTo(x + statw, y + h, x, y + h, r);
-          hctx.arcTo(x, y + h, x, y, r);
-          hctx.arcTo(x, y, x + statw, y, r);
-          hctx.closePath();
-          hctx.fill();
+          hctxroundRectangleFill(x,y,r,statw,h);
           //draw the animated bar above
           hctx.fillStyle = statPointColors[currentpoints];
+          
+          if (currentpoints >= 4) {
+            x += statw;//remove old statw
+          }
+          skillpointsanimation[currentpoints] += (statw - skillpointsanimation[currentpoints])/10*deltaTime;
+          statw = skillpointsanimation[currentpoints];
           if (statw<h){
             h = statw;
             r = h/2;
             y += (20 - h)/2;
           }
           if (currentpoints >= 4) {
-            x += statw;//remove old statw
+            x -= statw;
           }
-          skillpointsanimation[currentpoints] += (statw - skillpointsanimation[currentpoints])/10*deltaTime;
-          statw = skillpointsanimation[currentpoints];
-          if (currentpoints >= 4) {
-            x -= statw;//add new statw
-          }
-          hctx.beginPath();
-          hctx.moveTo(x + r, y);
-          hctx.arcTo(x + statw, y, x + statw, y + h, r);
-          hctx.arcTo(x + statw, y + h, x, y + h, r);
-          hctx.arcTo(x, y + h, x, y, r);
-          hctx.arcTo(x, y, x + statw, y, r);
-          hctx.closePath();
-          hctx.fill();
+          hctxroundRectangleFill(x,y,r,statw,h);
         }
         h = 25; //change back to original - 5
         x = -w / 2;
-        hctx.font = "900 20px Roboto";
+        hctx.font = "700 20px Roboto";
         hctx.fillStyle = "white";
         hctx.strokeStyle = "black";
-        hctx.lineWidth = 4;
-        hctx.strokeText(
-          name,
-          x + w / 2 + extraX,
-          distFromTop + h / 2 + 8
-        );
+        hctx.lineWidth = 5;
+        hctx.strokeText(name, x + w / 2 + extraX, distFromTop + h / 2 + 8);
         hctx.fillText(name, x + w / 2 + extraX, distFromTop + h / 2 + 8);
         //draw the number thingy
         if (currentStatPoints[currentpoints] < totalnumberOfPoints) {
           skillpointsbutton[currentpoints].clickable = "yes";//allow the circular button to be clickable
-          hctx.font = "900 16px Roboto";
+          hctx.font = "700 16px Roboto";
           if (currentpoints < 4) {
             hctx.strokeText(
               "[" + (currentpoints + 1) + "]",
@@ -10388,6 +8844,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             if (skillpointsbutton[currentpoints].hover == "yes"){
               extrawidth = 2;
             }
+            let plusFontSize = 25 + extrawidth*4;
           if (currentpoints < 4) {
             if (currentStatPoints[currentpoints] < totalnumberOfPoints) {
               hctx.fillStyle = "white";
@@ -10398,12 +8855,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             hctx.beginPath();
             hctx.arc(17 * totalnumberOfPoints / 2 + extraX + 5, distFromTop + h / 2 + 3, plusbuttonsize/2 + extrawidth, 0, 2 * Math.PI);
             hctx.fill();
-            hctx.font = "900 " + (20 + extrawidth) + "px Roboto";
+            hctx.font = "900 " + plusFontSize + "px Roboto";
             hctx.fillStyle = "black";
-            hctx.fillText(
-              "+",
-              17 * totalnumberOfPoints / 2 + extraX + 5, distFromTop + h / 2 + 10
-            );
+            hctx.fillText("+", 17 * totalnumberOfPoints / 2 + extraX + 5, distFromTop + h / 2 + plusFontSize/4 + 6.75);
           } else {
             if (currentStatPoints[currentpoints] < totalnumberOfPoints) {
               hctx.fillStyle = "white";
@@ -10414,12 +8868,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             hctx.beginPath();
             hctx.arc(-17 * totalnumberOfPoints/2 + extraX - 5, distFromTop + h / 2 + 3, plusbuttonsize/2 + extrawidth, 0, 2 * Math.PI);
             hctx.fill();
-            hctx.font = "900 " + (20 + extrawidth) + "px Roboto";
+            hctx.font = "900 " + plusFontSize + "px Roboto";
             hctx.fillStyle = "black";
-            hctx.fillText(
-              "+",
-              -17 * totalnumberOfPoints/2 + extraX - 5, distFromTop + h / 2 + 10
-            );
+            hctx.fillText("+", -17 * totalnumberOfPoints/2 + extraX - 5, distFromTop + h / 2 + plusFontSize/4 + 6.75);
           }
       }
       if (extraPoints > 0 || mouseToSkillPoints == "yes") {
@@ -10451,19 +8902,19 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
       }
       hctx.scale(1,resizeDiffY/resizeDiffX);
       hctx.translate(-0, -hcanvas.height);//translate back after scaling
-        drawStatPoints("Heal", hcanvas.height - 138, 15, 0, 0);
-        drawStatPoints("Max Health", hcanvas.height - 105, 15, 0, 1);
-        drawStatPoints("Body Damage", hcanvas.height - 72, 15, 0, 2);
-        drawStatPoints("Bullet Speed", hcanvas.height - 40, 15, 0, 3);
+        drawStatPoints("Reload", hcanvas.height - 138, 15, 0, 0);
+        drawStatPoints("Bullet Damage", hcanvas.height - 105, 15, 0, 1);
+        drawStatPoints("Bullet Speed", hcanvas.height - 72, 15, 0, 2);
+        drawStatPoints("Field of Vision", hcanvas.height - 40, 15, 0, 3);
         hctx.restore();
         hctx.save();
       hctx.translate(hcanvas.width, hcanvas.height);//bottom right of screen
       hctx.scale(1,resizeDiffY/resizeDiffX);
       hctx.translate(-hcanvas.width, -hcanvas.height);//translate back after scaling
-        drawStatPoints("Bullet Damage", hcanvas.height - 138, 15, 0, 4);
-        drawStatPoints("Weapon Reload", hcanvas.height - 105, 15, 0, 5);
-        drawStatPoints("Movement Speed", hcanvas.height - 72, 15, 0, 6);
-        drawStatPoints("FoV", hcanvas.height - 40, 15, 0, 7);
+        drawStatPoints("Max Health", hcanvas.height - 138, 15, 0, 4);
+        drawStatPoints("Health Regeneration", hcanvas.height - 105, 15, 0, 5);
+        drawStatPoints("Body Damage", hcanvas.height - 72, 15, 0, 6);
+        drawStatPoints("Movement Speed", hcanvas.height - 40, 15, 0, 7);
         hctx.restore();
         if (extraPoints > 0) {//write the number of extra points
           let width = 20 * 15 /2;//20 is width of each point, 15 is number of skill points
@@ -10536,55 +8987,77 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
       hctx.translate(hcanvas.width, 0);//top right of screen
       hctx.scale(1,resizeDiffY/resizeDiffX);
       hctx.translate(-hcanvas.width, 0);//translate back after scaling
-      var fromTop = 75;
+      var fromTop = 50;
       hctx.fillStyle = "white";
       hctx.strokeStyle = "black";
-      hctx.lineWidth = 8;
+      hctx.lineWidth = 9;
       hctx.font = "900 30px Roboto";
       hctx.textAlign = "center";
       hctx.miterLimit = 2;//prevent text spikes, alternative to linejoin round
-      hctx.strokeText("LEADERBOARD", hcanvas.width - 130, 40);
-      hctx.fillText("LEADERBOARD", hcanvas.width - 130, 40);
+      hctx.strokeText("LEADERBOARD", hcanvas.width - 120, 35);
+      hctx.fillText("LEADERBOARD", hcanvas.width - 120, 35);
       hctx.lineWidth = 3;
       //draw leaderboard on home page canvas so that game canvas redraw in main game loop will not cause leaderboard to flash
       var playerWithMostScore = -1;
       let numberOfPlayersOnLB = Object.keys(players).length;
-      let maxSpaceAvailable = 240;
-      let spaceBetween = 60/numberOfPlayersOnLB;
-      let outlineThickness = 5;
-      let textoutline = 3;
+      let maxSpaceAvailable = 192;//240
+      let spaceBetween = 40/numberOfPlayersOnLB;//is higher number, e.g. 70, then there would be greater gaps between bars
+      let outlineThickness = 7;
+      let textoutline = 4;
       let tankWidth = 8;//the width of tank drawn beside leaderboard bar
-        if (numberOfPlayersOnLB<=5){
-          spaceBetween = 60/4;
-          outlineThickness = 7;
-          textoutline = 5;
-        }
-      let maxPlayers = 8;
+      if (numberOfPlayersOnLB<=5){
+        spaceBetween = 10;
+        outlineThickness = 9;
+        textoutline = 5;
+      }
       for (const id in players) {
         //draw score bar background
-        let w = 240;
+        let w = 230;
         var maxw = w - outlineThickness;
-        let h;
+        let h = maxSpaceAvailable/5 - spaceBetween;
         //maxw is for colored bar
         if (numberOfPlayersOnLB>=5){
           h = maxSpaceAvailable/numberOfPlayersOnLB - spaceBetween;
         }
-        else{
-          h = maxSpaceAvailable/5 - spaceBetween;
-        }
         tankWidth = h/2 * 0.64;
-        //var h = 25;
         let r = h / 2;
-        let x = hcanvas.width - 130 - w / 2; //if change this, remember to change the value of this above the code for drawing colored bar
-        var actualX = x - 15;//doesnt change, 15 refer to distance of displayed tank from leaderboard
-        let y = fromTop - h / 2;
-        var actualY = fromTop;//doesnt change
+        if (!leaderboardObj[id]){
+          leaderboardObj[id] = {
+            x: hcanvas.width + w/2,
+            y: fromTop,
+          }
+        }
+        let x = hcanvas.width - w - 5; //5 is distance from right side of screen
+        let y = fromTop;
+        //animating from old position to actual position
+        if (x != leaderboardObj[id].x){
+          if (deltaTime < 5){//too big deltatime will screw up the animation, e.g. when reopening website after a long time of tabbing out
+            leaderboardObj[id].x += (x - leaderboardObj[id].x) / 15 * deltaTime;
+          }
+          else{
+            leaderboardObj[id].x += (x - leaderboardObj[id].x) / 15;
+          }
+          if (Math.abs(x - leaderboardObj[id].x) < 1) leaderboardObj[id].x = x;
+          x = leaderboardObj[id].x;
+        }
+        if (y != leaderboardObj[id].y){
+          if (deltaTime < 5) leaderboardObj[id].y += (y - leaderboardObj[id].y) / 15 * deltaTime;
+          else leaderboardObj[id].y += (y - leaderboardObj[id].y) / 15;
+          if (Math.abs(y - leaderboardObj[id].y) < 1) leaderboardObj[id].y = y;
+          y = leaderboardObj[id].y;
+        }
+        var tankX = x - 15;//leaderboard tank rendered where (15 dist away from left side of bar)
+        var tankY = y + h / 2;
+        var textX = x + w/2;
+        var textY = y + h / 2;
         hctx.fillStyle = "black";
         hctxroundRectangleFill(x,y,r,w,h);
+        
 
         //draw score bar based on first player on leaderboard, which is always drawn as 200px, IF the player's score is not 0
         //the variable w will be NaN if any of their score is 0, because 0 cannot divide by anything. Note that the code below did not check for the leader being zero if the other player is not zero bcause the leader have a higher or same score than the other players
-        x = hcanvas.width - 130 - w / 2 + outlineThickness/2;
+        x += outlineThickness/2;
+        y += outlineThickness/2;
         if (playerWithMostScore == -1) {
           //if this is the first player in the loop
           w = maxw;
@@ -10592,13 +9065,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         } else {
           w = (players[id].score / playerWithMostScore) * maxw;
         }
-        if (w < 0) {
-          //prevent error
-          w = 0;
-        }
+        if (w < 0) w = 0;
         h -= outlineThickness;
         r = h / 2;
-        y = fromTop - h / 2;
+        //y = fromTop - h / 2;
         if (r * 2 > w) {
           w = h;
         }
@@ -10622,64 +9092,52 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
         else{//a developer
           drawncolor = players[id].color;
-          drawnoutline = players[id].color;
+          drawnoutline = players[id].color;//skibidi wtf why need this
+        }
+        if (players[id].rad > 0){//rad player
+          if (!radiantShapes.hasOwnProperty(id)) {
+            let randomState = Math.floor(Math.random() * 3);//state changes from 0.0 to 3.0
+            let randomType = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
+            radiantShapes[id] = {
+              state: randomState,
+              type: randomType
+            }
+          }
+          players[id].radtier = players[id].rad;
+          players[id].sides = 40;//looks like a circle, 0 doesnt work
+          players[id].width = tankWidth*clientFovMultiplier;//multiply to offset it cuz inside the function it will divide by this
+
+          hctx.save();
+          hctx.translate(tankX,tankY);
+          updateRadiantColor(players[id],id, true);
+          drawncolor = hctx.fillStyle;
+          drawnoutline = hctx.strokeStyle;
+          hctx.restore();
         }
 
         hctx.fillStyle = drawncolor;
         hctxroundRectangleFill(x,y,r,w,h);
-        //ABBREVIATE SCORE, e.g. 6000 -> 6k
-        //player's score is not abbreviated because need to do calculations using the number, and server might get laggy if it need to abbreviate everyone's score, so abbreviating score is done in client side code
-        var newValue = players[id].score;
-        if (players[id].score >= 1000) {
-          var suffixes = ["", "k", "m", "b", "t"];
-          var suffixNum = Math.floor(("" + players[id].score).length / 3);
-          var shortValue = "";
-          for (var precision = 2; precision >= 1; precision--) {
-            shortValue = parseFloat(
-              (suffixNum != 0
-                ? players[id].score / Math.pow(1000, suffixNum)
-                : players[id].score
-              ).toPrecision(precision)
-            );
-            var dotLessShortValue = (shortValue + "").replace(
-              /[^a-zA-Z 0-9]+/g,
-              ""
-            );
-            if (dotLessShortValue.length <= 2) {
-              break;
-            }
-          }
-          if (shortValue % 1 != 0) shortValue = shortValue.toFixed(1);
-          newValue = shortValue + suffixes[suffixNum];
-        }
+
+        var newValue = abbreviateScore(players[id].score);
         //write player name and score
         hctx.fillStyle = "white";
         if (numberOfPlayersOnLB>=5){
-          var textSize = 17 + 1* (8 - numberOfPlayersOnLB);
+          var textSize = 15.5 + 1.5 * (8 - numberOfPlayersOnLB);
         }
         else{
-          var textSize = 17 + 1* (8 - 5);
+          var textSize = 20;
         }
-        hctx.font = "900 "+textSize+"px Roboto";
+        hctx.font = "700 "+textSize+"px Roboto";
         hctx.textAlign = "center";
         hctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
         hctx.lineWidth = textoutline;
-        hctx.strokeText(
-          players[id].name + " - " + newValue,
-          hcanvas.width - 130,
-          fromTop + 6
-        ); //additional 6 to center word properly
-        hctx.fillText(
-          players[id].name + " - " + newValue,
-          hcanvas.width - 130,
-          fromTop + 6
-        );
+        hctx.strokeText(players[id].name + " - " + newValue, textX, textY+textSize/4);
+        hctx.fillText(players[id].name + " - " + newValue, textX, textY+textSize/4);
         //draw player's tank
         if (players[id].tank&&players[id].body){
           if (players[id].tank!="0"){
             hctx.lineWidth = 2;
-            drawFakePlayer(players[id].tank,actualX,actualY,tankWidth,lbAngle*Math.PI/180,drawncolor,drawnoutline,"weapon")
-            drawFakePlayer(players[id].body,actualX,actualY,tankWidth,lbAngle*Math.PI/180,drawncolor,drawnoutline,"body")
+            drawFakePlayer2([drawncolor,drawnoutline],players[id].tank,players[id].body,tankX + hsCameraX,tankY + hsCameraY,lbAngle,tankWidth*2,true);
           }
         }
         hctx.lineJoin = "miter"; //change it back
@@ -10794,7 +9252,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
       }
 
-      if (debugState == "open" && openedUI=="no") {
+      if (debugState == "open") {
         //update debug
         let pingdiv = document.getElementById("ping");
         if (latency < 250) {
@@ -10854,7 +9312,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
         document.getElementById("drawnEntities").textContent = "Drawn Entities: " + numberOfObjectsDrawn;
       }
-    }
   //}, 30); //check every 30ms //dont use setinterval anymore
         requestAnimationFrame(screenDrawLoop);//chage this to request interval after figuring out how to call it and stop it
   }
@@ -10865,1752 +9322,67 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
   if (localStorage.prevname) {
     nameInput.value = localStorage.prevname;
   }
-/*
-  //sandbox
-  //listen for enter presses to change tank properties
-  var inputfield0 = document.getElementById("tank-name");
-  var inputfield1 = document.getElementById("tank-rad");
-  var inputfield2 = document.getElementById("tank-xp");
-  var inputfield3 = document.getElementById("tank-size");
-  var inputfield4 = document.getElementById("weapon-name");
-  var inputfield5 = document.getElementById("weapon-fov");
-  var inputfield6 = document.getElementById("body-name");
-  var inputfield7 = document.getElementById("body-sides");
-  var inputfield8 = document.getElementById("body-health");
-  var inputfield9 = document.getElementById("body-regen");
-  var inputfield10 = document.getElementById("body-regen-time");
-  var inputfield11 = document.getElementById("body-damage");
-  var inputfield12 = document.getElementById("body-speed");
-  var inputfield13 = document.getElementById("team-select");
-  var inputfield15 = document.getElementById("turret-base");
-  function sendSanboxValue(value,id){
-    var packet = JSON.stringify(["sandbox", value, id]);
-    socket.send(packet)
-  }
-  function sendBarrelEdit(value,type,id){
-    if (value === undefined || value === null || (typeof value === "number" && isNaN(value)) || value == "" || value == "NaN" || value == "undefined" || value == "null"){
-      createNotif("This property value is not allowed: "+value,"darkorange",3000)
+
+
+  document.getElementById("star").onclick = function() {
+    //open star road
+    if (loggedin == "yes"){
+      document.getElementById("starroad").style.display = "block";
     }
     else{
-      var packet = JSON.stringify(["BarEdit", value, type, id]);
-      socket.send(packet)
+      document.getElementById('modal').style.display = "block";
+      darken.style.display = "block";
     }
-  }
-  function sendAssetEdit(value,type,id){
-    if (value === undefined || value === null || (typeof value === "number" && isNaN(value)) || value == "" || value == "NaN" || value == "undefined" || value == "null"){
-      createNotif("This property value is not allowed: "+value,"darkorange",3000)
-    }
-    else{
-      var packet = JSON.stringify(["AssEdit", value, type, id]);
-      socket.send(packet)
-    }
-  }
-  function sendBbEdit(value,type,id){
-    if (value === undefined || value === null || (typeof value === "number" && isNaN(value)) || value == "" || value == "NaN" || value == "undefined" || value == "null"){
-      createNotif("This property value is not allowed: "+value,"darkorange",3000)
+  };
+  document.getElementById("person").onclick = function() {
+    //open accounts
+    if (loggedin == "yes"){
+      document.getElementById("acc").style.display = "block";
     }
     else{
-      var packet = JSON.stringify(["BbEdit", value, type, id]);
-      socket.send(packet)
+      document.getElementById('modal').style.display = "block";
+      darken.style.display = "block";
     }
+  };
+  document.getElementById("lb").onclick = function() {
+    //open leaderboard
+    if (loggedin == "yes"){
+      document.getElementById("accLeaderboard").style.display = "block";
+    }
+    else{
+      document.getElementById('modal').style.display = "block";
+      darken.style.display = "block";
+    }
+  };
+  const leaderboardType = document.getElementById('lbType');
+  const leaderboardSubtitle = document.getElementById('lbSubtitle');
+  leaderboardType.onchange = (event) => {
+      const inputText = event.target.value;
+      switch(inputText) {
+        case "star":
+          leaderboardSubtitle.textContent = "Star Champions";
+          document.getElementById("lbContainer").innerHTML = starLBdivs;
+          break;
+        case "score":
+          leaderboardSubtitle.textContent = "Dominators of the Arena";
+          document.getElementById("lbContainer").innerHTML = scoreLBdivs;
+          break;
+        case "age":
+          leaderboardSubtitle.textContent = "Old Folks' Home";
+          document.getElementById("lbContainer").innerHTML = ageLBdivs;
+          break;
+      }
   }
-  inputfield0.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {//pressed enter inside input field
-        sendSanboxValue(inputfield0.value,0)
-      }
-  });
-  $( "#"+inputfield0.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield0.value,0)
-  });
-  inputfield1.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield1.value,1)
-      }
-  });
-$( "#"+inputfield1.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield1.value,1)
-  });
-  inputfield2.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield2.value,2)
-      }
-  });
-$( "#"+inputfield2.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield2.value,2)
-  });
-  inputfield3.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          if(inputfield3.value >= 0) {
-          sendSanboxValue(inputfield3.value,3)
-          }
-      }
-  });
-$( "#"+inputfield3.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield3.value,3)
-  });
-  inputfield4.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield4.value,4)
-      }
-  });
-$( "#"+inputfield4.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield4.value,4)
-  });
-  inputfield5.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield5.value,5)
-      }
-  });
-$( "#"+inputfield5.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield5.value,5)
-  });
-  inputfield6.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield6.value,6)
-      }
-  });
-$( "#"+inputfield6.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield6.value,6)
-  });
-  inputfield7.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield7.value,7)
-      }
-  });
-$( "#"+inputfield7.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield7.value,7)
-  });
-  inputfield8.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield8.value,8)
-      }
-  });
-$( "#"+inputfield8.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield8.value,8)
-  });
-  inputfield9.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield9.value,9)
-      }
-  });
-$( "#"+inputfield9.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield9.value,9)
-  });
-  inputfield10.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield10.value,10)
-      }
-  });
-$( "#"+inputfield10.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield10.value,10)
-  });
-  inputfield11.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield11.value,11)
-      }
-  });
-$( "#"+inputfield11.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield11.value,11)
-  });
-  inputfield12.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield12.value,12)
-      }
-  });
-$( "#"+inputfield12.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield12.value,12)
-  });
-   inputfield13.onchange = (event) => {//dropdown select
-     sendSanboxValue(event.target.value,13)
-   }
-  inputfield15.addEventListener("keyup", function(event) {
-      if (event.key === "Enter") {
-          sendSanboxValue(inputfield15.value,15)
-      }
-  });
-$( "#"+inputfield15.id ).blur(function() {//clicked outside the input field after input field was selected
-    sendSanboxValue(inputfield15.value,15)
-  });
-   //inside barrel editor
-  $('#barrelUI').on('keyup', 'input', function(event) {
-    if (event.key === "Enter") {//someone press enter on an input field in barrel editor
-      var barrelID = $(event.target).parent().attr('id');
-      var inputType = $(event.target).attr('placeholder');
-      var value = event.target.value;
-      sendBarrelEdit(value,inputType,barrelID)
-    }
-  });
-$('#barrelUI').on('focusout', 'input', function(event) {
-      var barrelID = $(event.target).parent().attr('id');
-      var inputType = $(event.target).attr('placeholder');
-      var value = event.target.value;
-      sendBarrelEdit(value,inputType,barrelID)
-  });
-  $('#barrelUI').on('change', 'select', function(event) {//dropdown select for choosing barrel type
-        var barrelID = $(event.target).parent().attr('id');
-        var inputType = $(event.target).attr('name');//differentiate between different dropdowns, but not neccessary for now cuz there's only one dropdown
-        var selection = event.target.value;
-    sendBarrelEdit(selection,inputType,barrelID)
-    if (selection =="drone"){//changed barrel type to drone
-      //need to add one more
-      var htmlObject = document.createElement('div');
-      var divid = 'dc'+barrelID;
-      var divid2 = 'dc2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="droneLimit" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="3"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Max Drone Count</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      //remove trap stuff
-      try{
-      document.getElementById("tr"+barrelID).remove();
-      document.getElementById("tr2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove minion stuff
-      try{
-      document.getElementById("mc"+barrelID).remove();
-      document.getElementById("mc2"+barrelID).remove();
-        document.getElementById("md"+barrelID).remove();
-      document.getElementById("md2"+barrelID).remove();
-        document.getElementById("minion"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("ma"+barrelID).remove();
-      document.getElementById("ma2"+barrelID).remove();
-      document.getElementById("mha"+barrelID).remove();
-      document.getElementById("mha2"+barrelID).remove();
-      document.getElementById("mine"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("bk"+barrelID).remove();
-      document.getElementById("bk2"+barrelID).remove();
-      document.getElementById("bg"+barrelID).remove();
-      document.getElementById("bg2"+barrelID).remove();
-      }
-      catch(err){}
-    }
-    else if (selection =="trap"){//changed barrel type to trap
-      //need to add one more
-      var htmlObject = document.createElement('div');
-      var divid = 'tr'+barrelID;
-      var divid2 = 'tr2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="trapDistBeforeStop" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="10"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Trap Distance</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      //remove drone stuff
-      try{
-      document.getElementById("dc"+barrelID).remove();
-      document.getElementById("dc2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove minion stuff
-      try{
-      document.getElementById("mc"+barrelID).remove();
-      document.getElementById("mc2"+barrelID).remove();
-        document.getElementById("md"+barrelID).remove();
-      document.getElementById("md2"+barrelID).remove();
-        document.getElementById("minion"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("ma"+barrelID).remove();
-      document.getElementById("ma2"+barrelID).remove();
-      document.getElementById("mha"+barrelID).remove();
-      document.getElementById("mha2"+barrelID).remove();
-      document.getElementById("mine"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("bk"+barrelID).remove();
-      document.getElementById("bk2"+barrelID).remove();
-      document.getElementById("bg"+barrelID).remove();
-      document.getElementById("bg2"+barrelID).remove();
-      }
-      catch(err){}
-    }
-    else if (selection == "bullet"){
-      var htmlObject = document.createElement('div');
-      var divid = 'bk'+barrelID;
-      var divid2 = 'bk2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="knockback" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="no"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Knockback (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'bg'+barrelID;
-      var divid2 = 'bg2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="growth" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="no"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet growth (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      //remove drone stuff when chnge barrel to bllet
-      try{
-      document.getElementById("dc"+barrelID).remove();
-      document.getElementById("dc2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove trap stuff
-      try{
-      document.getElementById("tr"+barrelID).remove();
-      document.getElementById("tr2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove minion stuff
-      try{
-      document.getElementById("mc"+barrelID).remove();
-      document.getElementById("mc2"+barrelID).remove();
-        document.getElementById("md"+barrelID).remove();
-      document.getElementById("md2"+barrelID).remove();
-        document.getElementById("minion"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("ma"+barrelID).remove();
-      document.getElementById("ma2"+barrelID).remove();
-      document.getElementById("mha"+barrelID).remove();
-      document.getElementById("mha2"+barrelID).remove();
-      document.getElementById("mine"+barrelID).remove();
-      }
-      catch(err){}
-    }
-    else if (selection == "minion"){
-      $('*[placeholder="Timer"]').attr("value", "1000");
-      var htmlObject = document.createElement('div');
-      var divid = 'mc'+barrelID;
-      var divid2 = 'mc2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="droneLimit" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="5"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Max Minion Count</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'md'+barrelID;
-      var divid2 = 'md2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="minDist" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="200"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Minimum Distance</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-       var htmlObject = document.createElement('div');
-      var divid = 'minion'+barrelID;
-      
-      //MINION EDITING UI
-      
-      var textnode = '<div id='+divid+'>'+
-      '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Minion Barrel Positioning</div>'+
-  '<input autocomplete="off" placeholder="Minion Barrel Width" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="15">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Width</div>'+
-  '<input autocomplete="off" placeholder="Minion Barrel Height" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="21">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Length</div>'+
-  '<input autocomplete="off" placeholder="Minion Additional Angle" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Angle (WIP)</div>'+
-  '<input autocomplete="off" placeholder="Minion x-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Side Offset</div>'+
-  '<input autocomplete="off" placeholder="Minion y-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Forward Offset (WIP)</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Minion Barrel Attributes</div>'+
-  '<input autocomplete="off" placeholder="Minion Reload" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="10">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Shoot Interval</div>'+
-  '<input autocomplete="off" placeholder="Minion Health" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="20">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Health</div>'+
-  '<input autocomplete="off" placeholder="Minion Damage" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0.1">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Damage</div>'+
-  '<input autocomplete="off" placeholder="Minion Penetration" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="2">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Penetration</div>'+
-  '<input autocomplete="off" placeholder="Minion Timer" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="30">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Lifetime</div>'+
-  '<input autocomplete="off" placeholder="Minion Speed" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="20">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Speed</div>'+
-  '<input autocomplete="off" placeholder="Minion Recoil" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0.5">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Recoil Amount (WIP)</div>'+
-  '<input autocomplete="off" placeholder="Minion Delay" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Barrel Delay</div>'+
-        '</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      
-      try{
-      document.getElementById("dc"+barrelID).remove();
-      document.getElementById("dc2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove trap stuff
-      try{
-      document.getElementById("tr"+barrelID).remove();
-      document.getElementById("tr2"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("ma"+barrelID).remove();
-      document.getElementById("ma2"+barrelID).remove();
-      document.getElementById("mha"+barrelID).remove();
-      document.getElementById("mha2"+barrelID).remove();
-      document.getElementById("mine"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("bk"+barrelID).remove();
-      document.getElementById("bk2"+barrelID).remove();
-      document.getElementById("bg"+barrelID).remove();
-      document.getElementById("bg2"+barrelID).remove();
-      }
-      catch(err){}
-    }
-    else if (selection == "mine"){
-      var htmlObject = document.createElement('div');
-      var divid = 'tr'+barrelID;
-      var divid2 = 'tr2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="trapDistBeforeStop" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="10"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Trap Distance</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'ma'+barrelID;
-      var divid2 = 'ma2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="AIdetectRange" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="450"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Detection Range</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'mha'+barrelID;
-      var divid2 = 'mha2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="haveAI" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="yes"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Mine AI (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-       var htmlObject = document.createElement('div');
-      var divid = 'mine'+barrelID;
-      
-      //MINE EDITING UI
-      
-      var textnode = '<div id='+divid+'>'+
-  '<select name="Mine type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines</option> <option value="minion">Spawner</option><option value="nothing">Nothing (WIP)</option></select>' +
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;"> Mine Barrel Type (WIP)</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Mine Barrel Positioning</div>'+
-  '<input autocomplete="off" placeholder="Mine Barrel Width" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="5">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Width</div>'+
-  '<input autocomplete="off" placeholder="Mine Barrel Height" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="12.5">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Length</div>'+
-  '<input autocomplete="off" placeholder="Mine Additional Angle" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Angle (WIP)</div>'+
-  '<input autocomplete="off" placeholder="Mine x-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Side Offset (WIP)</div>'+
-  '<input autocomplete="off" placeholder="Mine y-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Forward Offset (WIP)</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Mine Barrel Attributes</div>'+
-  '<input autocomplete="off" placeholder="Mine Reload" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="15">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Shoot Interval</div>'+
-  '<input autocomplete="off" placeholder="Mine Health" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="20">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Health</div>'+
-  '<input autocomplete="off" placeholder="Mine Damage" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0.25">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Damage</div>'+
-  '<input autocomplete="off" placeholder="Mine Penetration" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="2">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Penetration</div>'+
-  '<input autocomplete="off" placeholder="Mine Timer" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="30">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Lifetime</div>'+
-  '<input autocomplete="off" placeholder="Mine Speed" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="20">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Speed</div>'+
-  '<input autocomplete="off" placeholder="Mine Recoil" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0.5">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Recoil Amount (WIP)</div>'+
-  '<input autocomplete="off" placeholder="Mine Delay" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Barrel Delay</div>'+
-        '</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      //remove drone stuff
-      try{
-      document.getElementById("dc"+barrelID).remove();
-      document.getElementById("dc2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove minion stuff
-      try{
-      document.getElementById("mc"+barrelID).remove();
-      document.getElementById("mc2"+barrelID).remove();
-        document.getElementById("md"+barrelID).remove();
-      document.getElementById("md2"+barrelID).remove();
-        document.getElementById("minion"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("bk"+barrelID).remove();
-      document.getElementById("bk2"+barrelID).remove();
-      document.getElementById("bg"+barrelID).remove();
-      document.getElementById("bg2"+barrelID).remove();
-      }
-      catch(err){}
-    }
-  })
+  document.getElementById("closeAcc").onclick = function() { //close accounts
+    document.getElementById("acc").style.display = "none";
+  };
+  document.getElementById("closeRoad").onclick = function() { //close accounts
+    document.getElementById("starroad").style.display = "none";
+  };
+  document.getElementById("closeLB").onclick = function() { //close accounts
+    document.getElementById("accLeaderboard").style.display = "none";
+  };
 
-$('#assetUI').on('keyup', 'input', function(event) {
-    if (event.key === "Enter") {//someone press enter on an input field in barrel editor
-      var barrelID = $(event.target).parent().attr('id');
-      var inputType = $(event.target).attr('placeholder');
-      var value = event.target.value;
-      sendAssetEdit(value,inputType,barrelID)
-    }
-  });
-$('#assetUI').on('focusout', 'input', function(event) {//focusout is blur but bubbles. Doing this applies the blur event listener to all children. (blur triggered when click outside input field)
-      var barrelID = $(event.target).parent().attr('id');
-      var inputType = $(event.target).attr('placeholder');
-      var value = event.target.value;
-      sendAssetEdit(value,inputType,barrelID)
-  });
-  $('#assetUI').on('change', 'select', function(event) {//dropdown select for choosing barrel type
-        var barrelID = $(event.target).parent().attr('id');
-        var inputType = $(event.target).attr('name');//differentiate between different dropdowns, but not neccessary for now cuz there's only one dropdown
-        var selection = event.target.value;
-    sendAssetEdit(selection,inputType,barrelID)
-  })
-
-$('#bbUI').on('keyup', 'input', function(event) {
-    if (event.key === "Enter") {//someone press enter on an input field in barrel editor
-      var barrelID = $(event.target).parent().attr('id');
-      var inputType = $(event.target).attr('placeholder');
-      var value = event.target.value;
-      sendBbEdit(value,inputType,barrelID)
-    }
-  });
-$('#bbUI').on('focusout', 'input', function(event) {
-      var barrelID = $(event.target).parent().attr('id');
-      var inputType = $(event.target).attr('placeholder');
-      var value = event.target.value;
-      sendBbEdit(value,inputType,barrelID)
-  });
-  $('#bbUI').on('change', 'select', function(event) {//dropdown select for choosing barrel type
-        var barrelID = $(event.target).parent().attr('id');
-        var inputType = $(event.target).attr('name');//differentiate between different dropdowns, but not neccessary for now cuz there's only one dropdown
-        var selection = event.target.value;
-    sendBbEdit(selection,inputType,barrelID)
-    if (inputType == "auratype"){//change aura type
-      if (selection == "damage"){//change the aura color that is shown in the input field
-        $('*[placeholder="auraColor"]').attr("value", "rgba(255,0,0,.15)");
-        $('*[placeholder="auraOutline"]').attr("value", "rgba(255,0,0,.15)");
-        try{
-        document.getElementById("hp"+barrelID).remove();
-        document.getElementById("hp2"+barrelID).remove();
-        }
-        catch(err){}
-      }
-      else if (selection == "freeze"){
-        $('*[placeholder="auraColor"]').attr("value", "rgba(173,216,230,.5)");
-        $('*[placeholder="auraOutline"]').attr("value", "rgba(150, 208, 227)");
-        try{
-        document.getElementById("hp"+barrelID).remove();
-        document.getElementById("hp2"+barrelID).remove();
-        }
-        catch(err){}
-      }
-      else if (selection == "attraction"){
-        $('*[placeholder="auraColor"]').attr("value", "rgba(87, 85, 163, .3)");
-        $('*[placeholder="auraOutline"]').attr("value", "rgba(75, 73, 143)");
-        try{
-        document.getElementById("hp"+barrelID).remove();
-        document.getElementById("hp2"+barrelID).remove();
-        }
-        catch(err){}
-      }
-      else if (selection == "heal"){
-        $('*[placeholder="auraColor"]').attr("value", "rgba(56,183,100,.15)");
-        $('*[placeholder="auraOutline"]').attr("value", "rgba(26,153,70,.15)");
-        var htmlObject = document.createElement('div');
-        var divid = 'hp'+barrelID;
-        var divid2 = 'hp2'+barrelID;
-        var textnode = '<input id='+divid+' autocomplete="off" placeholder="healPower" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0.6"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura Heal Power</div>';
-        htmlObject.innerHTML = textnode;
-        htmlObject.setAttribute("id", barrelID);
-        document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      }
-    }
-    if (selection =="drone"){//changed barrel type to drone
-      //need to add one more
-      var htmlObject = document.createElement('div');
-      var divid = 'dc'+barrelID;
-      var divid2 = 'dc2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="droneLimit" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="3"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Max Drone Count</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      //remove trap stuff
-      try{
-      document.getElementById("tr"+barrelID).remove();
-      document.getElementById("tr2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove aura stuff
-      try{
-      document.getElementById("ao"+barrelID).remove();
-      document.getElementById("ao2"+barrelID).remove();
-        document.getElementById("ac"+barrelID).remove();
-      document.getElementById("ac2"+barrelID).remove();
-        document.getElementById("as"+barrelID).remove();
-      document.getElementById("as2"+barrelID).remove();
-        document.getElementById("at"+barrelID).remove();
-      document.getElementById("at2"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("hp"+barrelID).remove();
-      document.getElementById("hp2"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("bk"+barrelID).remove();
-      document.getElementById("bk2"+barrelID).remove();
-      document.getElementById("bg"+barrelID).remove();
-      document.getElementById("bg2"+barrelID).remove();
-      }
-      catch(err){}
-    }
-    else if (selection =="trap"){//changed barrel type to trap
-      //need to add one more
-      var htmlObject = document.createElement('div');
-      var divid = 'tr'+barrelID;
-      var divid2 = 'tr2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="trapDistBeforeStop" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="10"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Trap Distance</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      //remove drone stuff
-      try{
-      document.getElementById("dc"+barrelID).remove();
-      document.getElementById("dc2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove aura stuff
-      try{
-      document.getElementById("ao"+barrelID).remove();
-      document.getElementById("ao2"+barrelID).remove();
-        document.getElementById("ac"+barrelID).remove();
-      document.getElementById("ac2"+barrelID).remove();
-        document.getElementById("as"+barrelID).remove();
-      document.getElementById("as2"+barrelID).remove();
-        document.getElementById("at"+barrelID).remove();
-      document.getElementById("at2"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("hp"+barrelID).remove();
-      document.getElementById("hp2"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("bk"+barrelID).remove();
-      document.getElementById("bk2"+barrelID).remove();
-      document.getElementById("bg"+barrelID).remove();
-      document.getElementById("bg2"+barrelID).remove();
-      }
-      catch(err){}
-    }
-    else if (selection == "bullet"){
-      var htmlObject = document.createElement('div');
-      var divid = 'bk'+barrelID;
-      var divid2 = 'bk2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="knockback" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="no"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Knockback (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'bg'+barrelID;
-      var divid2 = 'bg2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="growth" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="no"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet growth (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      //remove drone stuff when chnge barrel to bllet
-      try{
-      document.getElementById("dc"+barrelID).remove();
-      document.getElementById("dc2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove trap stuff
-      try{
-      document.getElementById("tr"+barrelID).remove();
-      document.getElementById("tr2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove aura stuff
-      try{
-      document.getElementById("ao"+barrelID).remove();
-      document.getElementById("ao2"+barrelID).remove();
-        document.getElementById("ac"+barrelID).remove();
-      document.getElementById("ac2"+barrelID).remove();
-        document.getElementById("as"+barrelID).remove();
-      document.getElementById("as2"+barrelID).remove();
-        document.getElementById("at"+barrelID).remove();
-      document.getElementById("at2"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("hp"+barrelID).remove();
-      document.getElementById("hp2"+barrelID).remove();
-      }
-      catch(err){}
-    }
-    else if (selection == "aura"){
-      //changing body barrel to aura will change several barrel properties, so need to change them
-      //get the inputs using their placeholders
-      $('*[placeholder="Reload"]').attr("value", "1");
-      $('*[placeholder="Health"]').attr("value", "1000");
-      $('*[placeholder="Damage"]').attr("value", "0.2");
-      $('*[placeholder="Penetration"]').attr("value", "0");
-      $('*[placeholder="Timer"]').attr("value", "3");
-      $('*[placeholder="Speed"]').attr("value", "0");
-      var htmlObject = document.createElement('div');
-      var divid = 'as'+barrelID;
-      var divid2 = 'as2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="auraSize" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="4"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura size</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'ac'+barrelID;
-      var divid2 = 'ac2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="auraColor" class="sandboxInput" style="clear:both;position:relative;float:left;" value="rgba(255,0,0,.15)"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura color</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'ao'+barrelID;
-      var divid2 = 'ao2'+barrelID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="auraOutline" class="sandboxInput" style="clear:both;position:relative;float:left;" value="rgba(255,0,0,.15)"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura outline</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'at'+barrelID;
-      var divid2 = 'at2'+barrelID;
-      var textnode = '<select id='+divid+' name="auratype" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="damage">Damage</option><option value="freeze">Freeze</option><option value="attraction">Attraction</option><option value="repulsion">Repulsion</option><option value="heal">Heal</option></select><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura Type</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", barrelID);
-      document.getElementById("btn"+barrelID).before(htmlObject);//add before the delete barrel button
-      //remove drone stuff when chnge barrel to bllet
-      try{
-      document.getElementById("dc"+barrelID).remove();
-      document.getElementById("dc2"+barrelID).remove();
-      }
-      catch(err){}
-      //remove trap stuff
-      try{
-      document.getElementById("tr"+barrelID).remove();
-      document.getElementById("tr2"+barrelID).remove();
-      }
-      catch(err){}
-      try{
-      document.getElementById("bk"+barrelID).remove();
-      document.getElementById("bk2"+barrelID).remove();
-      document.getElementById("bg"+barrelID).remove();
-      document.getElementById("bg2"+barrelID).remove();
-      }
-      catch(err){}
-    }
-  })
-//});
-
-//change radiant aura size when move slider in settings
-var slider = document.getElementById("radiantSizeRange");
-var output = document.getElementById("sizevalue");
-output.innerHTML = slider.value;
-
-slider.oninput = function () {
-  output.innerHTML = this.value;
-};
-
-//for accounts
-var accountUsername = document.getElementById("accountUsername");
-var accountPassword = document.getElementById("accountPassword");
-var accountDesc = document.getElementById("accountDesc");
-var logInButton = document.getElementById("logInButton");
-var signUp = document.getElementById("signUp");
-var logIn = document.getElementById("logIn");
-var accountWords = document.getElementById("accountText");
-function accountsignup() {
-  //for bth sign up and log in
-  accountUsername.style.display = "block";
-  accountPassword.style.display = "block";
-  accountDesc.style.display = "block";
-  logInButton.style.display = "block";
-  signUp.style.display = "none";
-  logIn.style.display = "none";
-  if (acctype == "login") {
-    if (
-      localStorage.getItem("rocketerAccountp") &&
-      localStorage.getItem("rocketerAccountu")
-    ) {
-      const cats = localStorage.getItem("rocketerAccountp");
-      const dogs = localStorage.getItem("rocketerAccountu");
-      accountUsername.value = dogs;
-      accountPassword.value = cats;
-    }
-  }
-}
-function providedUsername() {
-  var usernameGiven = document.getElementById("accountUsername").value;
-  var passwordGiven = document.getElementById("accountPassword").value;
-  var descGiven = document.getElementById("accountDesc").value;
-  //restrictions
-  //if change, remember to change in server code
-  if (usernameGiven.length > 15) {
-    accountWords.innerHTML = "Username must be less than 15 characters.";
-  } else if (passwordGiven.length > 15 || passwordGiven.length < 5) {
-    accountWords.innerHTML =
-      "Password must be between 5 and 15 characters.";
-  } else if (descGiven.length > 50) {
-    accountWords.innerHTML =
-      "Description must be less than 50 characters.";
-  } else {
-    accountUsername.style.display = "none";
-    accountPassword.style.display = "none";
-    accountDesc.style.display = "none";
-    logInButton.style.display = "none";
-    accountWords.innerHTML = "Waiting for server's reply...";
-    canLogIn = "yes"; //cannot send to server here because this part of the code cannot access socket, and the pasrt of the code accessing socket cant access functions
-    accusername = usernameGiven;
-    accpassword = passwordGiven;
-    accdesc = descGiven;
-  }
-}
-
-//tank editor
-//allowing to swap the object
-function showHideTankObject(section, id) {
-document.querySelector(`#${section}UI > div > #${id}`).classList.toggle("tankObjectHide");
-  
-  if (document.getElementById(id).style.width != "auto"){
-    console.log(document.getElementById(id).style.width)
-    document.getElementById(id).style.width = "auto";
-    document.getElementById(id).style.padding = "1vw 2vw";
-    document.getElementById(id).firstChild.style.fontSize = "1.5vw";
-    console.log(document.getElementById(id).firstChild.innerHTML)
-    document.getElementById(id).firstChild.innerHTML = document.getElementById(id).firstChild.innerHTML.slice(0, -1) + '▴'; //change the arrow
-  }
-  else{
-    document.getElementById(id).style.width = "30%";
-    document.getElementById(id).style.padding = "0.5vw 1vw";
-    document.getElementById(id).firstChild.style.fontSize = "1vw";
-    document.getElementById(id).firstChild.innerHTML = document.getElementById(id).firstChild.innerHTML.slice(0, -1) + '▾'; //change the arrow
-  }
-}
-//adding a barrel (add a div to the editor)
-function addBarrelDiv(first) {
-  var htmlObject = document.createElement('div');
-  if (first!="yes"){
-    var dataidgen = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    dataidgen = dataidgen.split('');
-    var specialID  = "";
-    for(let i = 0; i < 20; ++i) {
-      specialID += dataidgen[Math.floor(Math.random() * dataidgen.length)];
-    }
-    //var specialID  = Math.random();
-  }
-  else{//this is the first barrel, which is always barrelOne on the server
-    var specialID  = "barrelOne";
-  }
-  var buttonID = 'btn'+specialID; //note: use 'clear:both;' inside style instead of <br> (doesnt work for relative positioning)
-  //overflow auto below is to make div take up space of nested items (s that background-color will work)
-  var textnode = '<div id=' + specialID + ' class="sandboxStack tankObjectHide" style="overflow: auto;background-color:rgba(0,0,0,.2);width: 30%;padding: 0.5vw 1vw;border-radius:1vw;margin-top: 20px;">' +
-  '<div class="sandboxText" style="font-size: 1vw;clear:both;position:relative;float:left;padding:0.3vw 0.3vw;width:calc(100% - 1vw);cursor: pointer;" onclick="showHideTankObject(\'barrel\', \'' + specialID + '\')">Barrel '+barrelnumberid+' ▾</div>' +
-  '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines</option> <option value="minion">Spawner</option><option value="nothing">Nothing (WIP)</option></select>' +
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;"> Barrel Type</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Positioning</div>'+
-  '<input autocomplete="off" placeholder="Barrel Width" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="25">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Width</div>'+
-  '<input autocomplete="off" placeholder="Barrel Height" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="45">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Length</div>'+
-  '<input autocomplete="off" placeholder="Additional Angle" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Rotation</div>'+
-  '<input autocomplete="off" placeholder="x-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Side Offset</div>'+
-  '<input autocomplete="off" placeholder="y-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Forward Offset (WIP)</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Attributes</div>'+
-  '<input autocomplete="off" placeholder="Reload" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="20">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Shoot Interval</div>'+
-  '<input autocomplete="off" placeholder="Health" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="10">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Health</div>'+
-  '<input autocomplete="off" placeholder="Damage" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0.5">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Damage</div>'+
-  '<input autocomplete="off" placeholder="Penetration" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="2">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Penetration</div>'+
-  '<input autocomplete="off" placeholder="Timer" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="50">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Lifetime</div>'+
-  '<input autocomplete="off" placeholder="Speed" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="12">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Speed</div>'+
-  '<input autocomplete="off" placeholder="Recoil" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="1">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Recoil Amount</div>'+
-  '<input autocomplete="off" placeholder="Delay" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Barrel Delay</div>'+
-  '<button id=' + buttonID + ' class="sandboxButton" style="position: relative;clear:both;float:left;" onclick=delbar(this)>Delete Barrel</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:10vw;" onclick=duplicatebar(this)>Duplicate Barrel</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Forward (WIP)</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Backward (WIP)</button></div>';
-  htmlObject.innerHTML = textnode;
-  document.getElementById("barrelUI").appendChild(htmlObject);
-  document.getElementById("barrels").innerHTML = "Barrels (" + $("#barrelUI").children().length + ")";//update barrel count on button
-  barrelnumberid++;
-  
-  var htmlObject = document.createElement('div');
-      var divid = 'bk'+specialID;
-      var divid2 = 'bk2'+specialID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="knockback" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="no"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Knockback (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", specialID);
-      document.getElementById("btn"+specialID).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'bg'+specialID;
-      var divid2 = 'bg2'+specialID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="growth" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="no"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet growth (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", specialID);
-      document.getElementById("btn"+specialID).before(htmlObject);//add before the delete barrel button
-  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
-    var packet = JSON.stringify(["barrel",specialID]);
-    socket.send(packet)
-  }
-}
-
-function addAssetDiv() {
-  var htmlObject = document.createElement('div');
-  var dataidgen = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    dataidgen = dataidgen.split('');
-    var specialID  = "";
-    for(let i = 0; i < 20; ++i) {
-      specialID += dataidgen[Math.floor(Math.random() * dataidgen.length)];
-    }
-  var buttonID = 'btn'+specialID;
-  
-  var textnode = '<div id=' + specialID + ' class="sandboxStack tankObjectHide" style="overflow: auto;background-color:rgba(0,0,0,.2);width: 30%;padding: 0.5vw 1vw;border-radius:1vw;margin-top: 20px;">'+
-  '<div class="sandboxText" style="font-size: 1vw;clear:both;position:relative;float:left;padding:0.3vw 0.3vw;cursor: pointer;" onclick="showHideTankObject(\'asset\', \'' + specialID + '\')">Asset '+assetnumberid+' ▾</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Positioning</div>'+
-  '<select name="position" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="under">Under tank</option><option value="above">Above tank</option></select>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;"> Position</div>'+
-  '<input autocomplete="off" placeholder="Relative size" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="1.5">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Relative Size</div>'+
-  '<input autocomplete="off" placeholder="Angle" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Rotation</div>'+
-  '<input autocomplete="off" placeholder="x-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Side Offset</div>'+
-  '<input autocomplete="off" placeholder="y-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Forward Offset</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Attributes</div>'+
-  '<input autocomplete="off" placeholder="Asset sides" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="5">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Sides</div>'+
-  '<input autocomplete="off" placeholder="Asset color" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="#5F676C">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Color</div>'+
-  '<input autocomplete="off" placeholder="Asset outline" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="#41494E">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Outline</div>'+
-  '<input autocomplete="off" placeholder="Outline width" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="5">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Outline width</div>'+
-  '<button id=' + buttonID + ' class="sandboxButton" style="position: relative;clear:both;float:left;" onclick=delass(this)>Delete Asset</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:10vw;" onclick=duplicateass(this)>Duplicate Asset</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Forward (WIP)</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Backward (WIP)</button></div>';
-  htmlObject.innerHTML = textnode;
-  document.getElementById("assetUI").appendChild(htmlObject);
-  document.getElementById("assets").innerHTML = "Assets (" + $("#assetUI").children().length + ")";//update barrel count on button
-  assetnumberid++;
-  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
-    var packet = JSON.stringify(["asset",specialID]);
-    socket.send(packet)
-  }
-}
-function addBBDiv() {
-  var htmlObject = document.createElement('div');
-  var dataidgen = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    dataidgen = dataidgen.split('');
-    var specialID  = "";
-    for(let i = 0; i < 20; ++i) {
-      specialID += dataidgen[Math.floor(Math.random() * dataidgen.length)];
-    }
-  var buttonID = 'btn'+specialID;
-  var textnode = '<div id=' + specialID + ' class="sandboxStack tankObjectHide" style="overflow: auto;background-color:rgba(0,0,0,.2);width: 30%;padding: 0.5vw 1vw;border-radius:1vw;margin-top: 20px;">' +
-  '<div class="sandboxText" style="font-size: 1vw;clear:both;position:relative;float:left;padding:0.3vw 0.3vw;cursor: pointer;" onclick="showHideTankObject(\'bb\', \'' + specialID + '\')">Gadget '+gadgetnumberid+' ▾</div>' +
-  '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines (WIP)</option><option value="aura">Aura</option><option value="minion">Spawner (WIP)</option><option value="nothing">Nothing (WIP)</option></select>' +
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;"> Barrel Type</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Positioning</div>'+
-  '<input autocomplete="off" placeholder="Barrel Width" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="25">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Width</div>'+
-  '<input autocomplete="off" placeholder="Barrel Height" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="45">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Length</div>'+
-  '<input autocomplete="off" placeholder="Additional Angle" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Rotation</div>'+
-  '<input autocomplete="off" placeholder="x-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Side Offset</div>'+
-  '<input autocomplete="off" placeholder="y-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Forward Offset (WIP)</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Attributes</div>'+
-  '<input autocomplete="off" placeholder="Reload" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="20">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Shoot Interval</div>'+
-  '<input autocomplete="off" placeholder="Health" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="10">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Health</div>'+
-  '<input autocomplete="off" placeholder="Damage" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0.5">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Damage</div>'+
-  '<input autocomplete="off" placeholder="Penetration" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="2">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Penetration</div>'+
-  '<input autocomplete="off" placeholder="Timer" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="50">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Lifetime</div>'+
-  '<input autocomplete="off" placeholder="Speed" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="12">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Speed</div>'+
-  '<input autocomplete="off" placeholder="Recoil" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="1">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Recoil Amount</div>'+
-  '<input autocomplete="off" placeholder="Delay" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Barrel Delay</div>'+
-  '<button id=' + buttonID + ' class="sandboxButton" style="position: relative;clear:both;float:left;" onclick=delbb(this)>Delete Gadget</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:10vw;" onclick=duplicatebb(this)>Duplicate Gadget</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Forward (WIP)</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Backward (WIP)</button></div>';
-  htmlObject.innerHTML = textnode;
-  document.getElementById("bbUI").appendChild(htmlObject);
-  document.getElementById("turrets").innerHTML = "Gadgets (" + $("#bbUI").children().length + ")";//update barrel count on button
-  document.getElementById('turret-base').value = 0.7;//update the turret base size
-  gadgetnumberid++;
-  
-  var htmlObject = document.createElement('div');
-      var divid = 'bk'+specialID;
-      var divid2 = 'bk2'+specialID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="knockback" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="no"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Knockback (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", specialID);
-      document.getElementById("btn"+specialID).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'bg'+specialID;
-      var divid2 = 'bg2'+specialID;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="growth" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="no"><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet growth (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", specialID);
-      document.getElementById("btn"+specialID).before(htmlObject);//add before the delete barrel button
-  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
-    var packet = JSON.stringify(["bodybarrel",specialID]);
-    socket.send(packet)
-  }
-}
-
-//customized adding barrel
-//use the below 3 functions only for importing/upgrading tank
-//instead of adding default UI, it adds UI based on current properties
-function addCustomBarrelDiv(id,barrel) {
-  var htmlObject = document.createElement('div');
-  let type = barrel.barrelType;
-  let barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines</option> <option value="minion">Spawner</option><option value="nothing">Nothing (WIP)</option></select>';
-  //add "selected" inside the option which is the current barrel type
-  if (type == "bullet"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet" selected>Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines</option> <option value="minion">Spawner</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  else if (type == "drone"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone" selected>Drone</option><option value="trap">Trap</option><option value="mine">Mines</option> <option value="minion">Spawner</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  else if (type == "trap"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap" selected>Trap</option><option value="mine">Mines</option> <option value="minion">Spawner</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  else if (type == "mine"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine" selected>Mines</option> <option value="minion">Spawner</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  else if (type == "minion"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines</option> <option value="minion" selected>Spawner</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  var buttonID = 'btn'+id; //note: use 'clear:both;' inside style instead of <br> (doesnt work for relative positioning)
-  //overflow auto below is to make div take up space of nested items (s that background-color will work)
-  var textnode = '<div id=' + id + ' class="sandboxStack tankObjectHide" style="overflow: auto;background-color:rgba(0,0,0,.2);width: 30%;padding: 0.5vw 1vw;border-radius:1vw;margin-top: 20px;">' +
-  '<div class="sandboxText" style="font-size: 1vw;clear:both;position:relative;float:left;padding:0.3vw 0.3vw;cursor: pointer;" onclick="showHideTankObject(\'barrel\', \'' + id + '\')">Barrel '+barrelnumberid+' ▾</div>' +
-  barrelTypeSelect +
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;"> Barrel Type</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Positioning</div>'+
-  '<input autocomplete="off" placeholder="Barrel Width" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.barrelWidth+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Width</div>'+
-  '<input autocomplete="off" placeholder="Barrel Height" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.barrelHeight+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Length</div>'+
-  '<input autocomplete="off" placeholder="Additional Angle" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.additionalAngle+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Rotation</div>'+
-  '<input autocomplete="off" placeholder="x-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.x+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Side Offset</div>'+
-  '<input autocomplete="off" placeholder="y-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Forward Offset (WIP)</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Attributes</div>'+
-  '<input autocomplete="off" placeholder="Reload" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.reloadRecover+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Shoot Interval</div>'+
-  '<input autocomplete="off" placeholder="Health" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.bulletHealth+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Health</div>'+
-  '<input autocomplete="off" placeholder="Damage" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.bulletDamage+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Damage</div>'+
-  '<input autocomplete="off" placeholder="Penetration" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.bulletPenetration+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Penetration</div>'+
-  '<input autocomplete="off" placeholder="Timer" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.bulletTimer+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Lifetime</div>'+
-  '<input autocomplete="off" placeholder="Speed" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.bulletSpeed+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Speed</div>'+
-  '<input autocomplete="off" placeholder="Recoil" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.recoil+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Recoil Amount</div>'+
-  '<input autocomplete="off" placeholder="Delay" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.reload+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Barrel Delay</div>'+
-  '<button id=' + buttonID + ' class="sandboxButton" style="position: relative;clear:both;float:left;" onclick=delbar(this)>Delete Barrel</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:10vw;" onclick=duplicatebar(this)>Duplicate Barrel</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Forward (WIP)</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Backward (WIP)</button></div>';
-  htmlObject.innerHTML = textnode;
-  document.getElementById("barrelUI").appendChild(htmlObject);
-  document.getElementById("barrels").innerHTML = "Barrels (" + $("#barrelUI").children().length + ")";//update barrel count on button
-  barrelnumberid++;
-  if (type == "drone"){
-    var htmlObject = document.createElement('div');
-      var divid = 'dc'+id;
-      var divid2 = 'dc2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="droneLimit" class="sandboxInput" style="clear:both;position:relative;float:left;" value='+barrel.droneLimit+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Max Drone Count</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-  }
-  else if (type == "trap"){
-    var htmlObject = document.createElement('div');
-      var divid = 'tr'+id;
-      var divid2 = 'tr2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="trapDistBeforeStop" class="sandboxInput" style="clear:both;position:relative;float:left;" value='+barrel.trapDistBeforeStop+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Trap Distance</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-  }
-  else if (type == "minion"){
-    var htmlObject = document.createElement('div');
-      var divid = 'mc'+id;
-      var divid2 = 'mc2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="droneLimit" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.droneLimit+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Max Minion Count</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'md'+id;
-      var divid2 = 'md2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="minDist" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.minDist+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Minimum Distance</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-    let minionbar = barrel.barrels[Object.keys(barrel.barrels)[0]];//get first property of barrels (assuming only one minion barrel)
-       var htmlObject = document.createElement('div');
-      var divid = 'minion'+id;
-      
-      //MINION EDITING UI
-      
-      var textnode = '<div id='+divid+'>'+
-      '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Minion Barrel Positioning</div>'+
-  '<input autocomplete="off" placeholder="Minion Barrel Width" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.barrelWidth+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Width</div>'+
-  '<input autocomplete="off" placeholder="Minion Barrel Height" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.barrelHeight+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Length</div>'+
-  '<input autocomplete="off" placeholder="Minion Additional Angle" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.additionalAngle+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Angle (WIP)</div>'+
-  '<input autocomplete="off" placeholder="Minion x-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.x+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Side Offset</div>'+
-  '<input autocomplete="off" placeholder="Minion y-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Forward Offset (WIP)</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Minion Barrel Attributes</div>'+
-  '<input autocomplete="off" placeholder="Minion Reload" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.reloadRecover+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Shoot Interval</div>'+
-  '<input autocomplete="off" placeholder="Minion Health" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.bulletHealth+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Health</div>'+
-  '<input autocomplete="off" placeholder="Minion Damage" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.bulletDamage+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Damage</div>'+
-  '<input autocomplete="off" placeholder="Minion Penetration" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.bulletPenetration+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Penetration</div>'+
-  '<input autocomplete="off" placeholder="Minion Timer" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.bulletTimer+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Lifetime</div>'+
-  '<input autocomplete="off" placeholder="Minion Speed" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.bulletSpeed+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Speed</div>'+
-  '<input autocomplete="off" placeholder="Minion Recoil" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.recoil+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Recoil Amount (WIP)</div>'+
-  '<input autocomplete="off" placeholder="Minion Delay" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.reload+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Barrel Delay</div>'+
-        '</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-  }
-  else if (type == "mine"){
-    var htmlObject = document.createElement('div');
-      var divid = 'tr'+id;
-      var divid2 = 'tr2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="trapDistBeforeStop" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.trapDistBeforeStop+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Trap Distance</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'ma'+id;
-      var divid2 = 'ma2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="AIdetectRange" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.AIdetectRange+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Detection Range</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-    let minionbar = barrel.barrels[Object.keys(barrel.barrels)[0]];//get first property of barrels (assuming only one minion barrel)
-       var htmlObject = document.createElement('div');
-      var divid = 'mine'+id;
-      
-      //MINE EDITING UI
-      
-      var textnode = '<div id='+divid+'>'+
-  '<select name="Mine type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines</option> <option value="minion">Spawner</option><option value="nothing">Nothing (WIP)</option></select>' +
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;"> Mine Barrel Type (WIP)</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Mine Barrel Positioning</div>'+
-  '<input autocomplete="off" placeholder="Mine Barrel Width" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.barrelWidth+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Width</div>'+
-  '<input autocomplete="off" placeholder="Mine Barrel Height" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.barrelHeight+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Length</div>'+
-  '<input autocomplete="off" placeholder="Mine Additional Angle" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.additionalAngle+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Angle (WIP)</div>'+
-  '<input autocomplete="off" placeholder="Mine x-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.x+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Side Offset (WIP)</div>'+
-  '<input autocomplete="off" placeholder="Mine y-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Forward Offset (WIP)</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Mine Barrel Attributes</div>'+
-  '<input autocomplete="off" placeholder="Mine Reload" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.reloadRecover+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Shoot Interval</div>'+
-  '<input autocomplete="off" placeholder="Mine Health" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.bulletHealth+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Health</div>'+
-  '<input autocomplete="off" placeholder="Mine Damage" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.bulletDamage+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Damage</div>'+
-  '<input autocomplete="off" placeholder="Mine Penetration" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.bulletPenetration+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Penetration</div>'+
-  '<input autocomplete="off" placeholder="Mine Timer" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.bulletTimer+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Lifetime</div>'+
-  '<input autocomplete="off" placeholder="Mine Speed" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.bulletSpeed+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Speed</div>'+
-  '<input autocomplete="off" placeholder="Mine Recoil" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.recoil+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Recoil Amount (WIP)</div>'+
-  '<input autocomplete="off" placeholder="Mine Delay" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+minionbar.reload+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Barrel Delay</div>'+
-        '</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-  }
-  else if (type == "bullet"){
-    let value = "no";
-    if (barrel.knockback == "yes"){
-      value = "yes";
-    }
-  var htmlObject = document.createElement('div');
-      var divid = 'bk'+id;
-      var divid2 = 'bk2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="knockback" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+value+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Knockback (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-    value = "no";
-    if (barrel.growth == "yes"){
-      value = "yes";
-    }
-      var htmlObject = document.createElement('div');
-      var divid = 'bg'+id;
-      var divid2 = 'bg2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="growth" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+value+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet growth (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-  }
-}
-
-function addCustomGadgetDiv(id,barrel) {
-  var htmlObject = document.createElement('div');
-  let type = barrel.barrelType;
-  let barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines (WIP)</option><option value="aura">Aura</option><option value="minion">Spawner (WIP)</option><option value="nothing">Nothing (WIP)</option></select>';
-  //add "selected" inside the option which is the current barrel type
-  if (type == "bullet"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines (WIP)</option><option value="aura">Aura</option><option value="minion">Spawner (WIP)</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  else if (type == "drone"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone" selected>Drone</option><option value="trap">Trap</option><option value="mine">Mines (WIP)</option><option value="aura">Aura</option><option value="minion">Spawner (WIP)</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  else if (type == "trap"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap" selected>Trap</option><option value="mine">Mines (WIP)</option><option value="aura">Aura</option><option value="minion">Spawner (WIP)</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  else if (type == "mine"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine" selected>Mines (WIP)</option><option value="aura">Aura</option><option value="minion">Spawner (WIP)</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  else if (type == "minion"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines (WIP)</option><option value="aura">Aura</option><option value="minion" selected>Spawner (WIP)</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  else if (type == "aura"){
-    barrelTypeSelect = '<select name="type" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="bullet">Bullet</option><option value="drone">Drone</option><option value="trap">Trap</option><option value="mine">Mines (WIP)</option><option value="aura" selected>Aura</option><option value="minion">Spawner (WIP)</option><option value="nothing">Nothing (WIP)</option></select>';
-  }
-  var buttonID = 'btn'+id; //note: use 'clear:both;' inside style instead of <br> (doesnt work for relative positioning)
-  //overflow auto below is to make div take up space of nested items (s that background-color will work)
-  var textnode = '<div id=' + id + ' class="sandboxStack tankObjectHide" style="overflow: auto;background-color:rgba(0,0,0,.2);width: 30%;padding: 0.5vw 1vw;border-radius:1vw;margin-top: 20px;">' +
-  '<div class="sandboxText" style="font-size: 1vw;clear:both;position:relative;float:left;padding:0.3vw 0.3vw;cursor: pointer;" onclick="showHideTankObject(\'bb\', \'' + id + '\')">Gadget '+gadgetnumberid+' ▾</div>' +
-  barrelTypeSelect +
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;"> Barrel Type</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Positioning</div>'+
-  '<input autocomplete="off" placeholder="Barrel Width" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.barrelWidth+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Width</div>'+
-  '<input autocomplete="off" placeholder="Barrel Height" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.barrelHeight+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Length</div>'+
-  '<input autocomplete="off" placeholder="Additional Angle" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.additionalAngle+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Rotation</div>'+
-  '<input autocomplete="off" placeholder="x-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.x+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Side Offset</div>'+
-  '<input autocomplete="off" placeholder="y-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value="0">'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Forward Offset (WIP)</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Attributes</div>'+
-  '<input autocomplete="off" placeholder="Reload" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.reloadRecover+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Shoot Interval</div>'+
-  '<input autocomplete="off" placeholder="Health" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.bulletHealth+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Health</div>'+
-  '<input autocomplete="off" placeholder="Damage" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.bulletDamage+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Damage</div>'+
-  '<input autocomplete="off" placeholder="Penetration" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.bulletPenetration+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Penetration</div>'+
-  '<input autocomplete="off" placeholder="Timer" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.bulletTimer+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Lifetime</div>'+
-  '<input autocomplete="off" placeholder="Speed" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.bulletSpeed+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet Speed</div>'+
-  '<input autocomplete="off" placeholder="Recoil" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.recoil+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Recoil Amount</div>'+
-  '<input autocomplete="off" placeholder="Delay" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.reload+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Barrel Delay</div>'+
-  '<button id=' + buttonID + ' class="sandboxButton" style="position: relative;clear:both;float:left;" onclick=delbb(this)>Delete Gadget</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:10vw;" onclick=duplicatebb(this)>Duplicate Gadget</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Forward (WIP)</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Backward (WIP)</button></div>';
-  htmlObject.innerHTML = textnode;
-  document.getElementById("bbUI").appendChild(htmlObject);
-  document.getElementById("turrets").innerHTML = "Gadgets (" + $("#bbUI").children().length + ")";//update barrel count on button
-  gadgetnumberid++;
-  if (type == "drone"){
-    var htmlObject = document.createElement('div');
-      var divid = 'dc'+id;
-      var divid2 = 'dc2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="droneLimit" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.droneLimit+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Max Drone Count</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-  }
-  else if (type == "trap"){
-    var htmlObject = document.createElement('div');
-      var divid = 'tr'+id;
-      var divid2 = 'tr2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="trapDistBeforeStop" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.trapDistBeforeStop+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Trap Distance</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-  }
-  else if (type == "aura"){
-    var htmlObject = document.createElement('div');
-      var divid = 'as'+id;
-      var divid2 = 'as2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="auraSize" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.auraSize+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura size</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'ac'+id;
-      var divid2 = 'ac2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="auraColor" class="sandboxInput" style="clear:both;position:relative;float:left;" value='+barrel.auraColor+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura color</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'ao'+id;
-      var divid2 = 'ao2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="auraOutline" class="sandboxInput" style="clear:both;position:relative;float:left;" value='+barrel.auraOutline+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura outline</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-      var htmlObject = document.createElement('div');
-      var divid = 'at'+id;
-      var divid2 = 'at2'+id;
-      var textnode = '<select name="auratype" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="damage">Damage</option><option value="freeze">Freeze</option><option value="attraction">Attraction</option><option value="repulsion">Repulsion</option><option value="heal">Heal</option></select><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura Type</div>';
-      if (barrel.auraSpecialty == "freeze"){
-        textnode = '<select name="auratype" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="damage">Damage</option><option value="freeze" selected>Freeze</option><option value="attraction">Attraction</option><option value="repulsion">Repulsion</option><option value="heal">Heal</option></select><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura Type</div>';
-      }
-      else if (barrel.auraSpecialty == "attraction"){
-        textnode = '<select name="auratype" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="damage">Damage</option><option value="freeze">Freeze</option><option value="attraction" selected>Attraction</option><option value="repulsion">Repulsion</option><option value="heal">Heal</option></select><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura Type</div>';
-      }
-      else if (barrel.auraSpecialty == "heal"){
-        textnode = '<select name="auratype" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="damage">Damage</option><option value="freeze">Freeze</option><option value="attraction">Attraction</option><option value="repulsion">Repulsion</option><option value="heal" selected>Heal</option></select><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura Type</div>';
-      }
-      else if (barrel.auraSpecialty == "repulsion"){
-        textnode = '<select name="auratype" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="damage">Damage</option><option value="freeze">Freeze</option><option value="attraction">Attraction</option><option value="repulsion" selected>Repulsion</option><option value="heal">Heal</option></select><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura Type</div>';
-      }
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-      if (barrel.auraSpecialty == "heal"){//heal power div
-        var htmlObject = document.createElement('div');
-        var divid = 'hp'+id;
-        var divid2 = 'hp2'+id;
-        var textnode = '<input id='+divid+' autocomplete="off" placeholder="healPower" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.healPower+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Aura Heal Power</div>';
-        htmlObject.innerHTML = textnode;
-        htmlObject.setAttribute("id", id);
-        document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-      }
-  }
-  else if (type == "bullet"){
-    let value = "no";
-    if (barrel.knockback == "yes"){
-      value = "yes";
-    }
-  var htmlObject = document.createElement('div');
-      var divid = 'bk'+id;
-      var divid2 = 'bk2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="knockback" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+value+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Knockback (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-    value = "no";
-    if (barrel.growth == "yes"){
-      value = "yes";
-    }
-      var htmlObject = document.createElement('div');
-      var divid = 'bg'+id;
-      var divid2 = 'bg2'+id;
-      var textnode = '<input id='+divid+' autocomplete="off" placeholder="growth" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+value+'><div id='+divid2+' class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Bullet growth (y/n)</div>';
-      htmlObject.innerHTML = textnode;
-      htmlObject.setAttribute("id", id);
-      document.getElementById("btn"+id).before(htmlObject);//add before the delete barrel button
-  }
-}
-
-function addCustomAssetDiv(id,barrel) {
-  var htmlObject = document.createElement('div');
-  let type = barrel.type;
-  let barrelTypeSelect = '<select name="position" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="under">Under tank</option><option value="above">Above tank</option></select>';
-  //add "selected" inside the option which is the current barrel type
-  if (type == "under"){
-  //nothing
-  }
-  else{
-    barrelTypeSelect = '<select name="position" class="sandboxSelect" style="clear:both;position:relative;float:left;"><option value="under">Under tank</option><option value="above" selected>Above tank</option></select>';
-  }
-  var buttonID = 'btn'+id; //note: use 'clear:both;' inside style instead of <br> (doesnt work for relative positioning)
-  //overflow auto below is to make div take up space of nested items (s that background-color will work)
-  var textnode = '<div id=' + id + ' class="sandboxStack tankObjectHide" style="overflow: auto;background-color:rgba(0,0,0,.2);width: 30%;padding: 0.5vw 1vw;border-radius:1vw;margin-top: 20px;">'+
-  '<div class="sandboxText" style="font-size: 1vw;clear:both;position:relative;float:left;padding:0.3vw 0.3vw;cursor: pointer;" onclick="showHideTankObject(\'asset\', \'' + id + '\')">Asset '+assetnumberid+' ▾</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Positioning</div>'+
-  barrelTypeSelect+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw;"> Position</div>'+
-  '<input autocomplete="off" placeholder="Relative size" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.size+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Relative Size</div>'+
-  '<input autocomplete="off" placeholder="Angle" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.angle+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Rotation</div>'+
-  '<input autocomplete="off" placeholder="x-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.x+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Side Offset</div>'+
-  '<input autocomplete="off" placeholder="y-offset" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.y+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Forward Offset</div>'+
-  '<div class="sandboxText" style="clear:both;position:relative;font-size:1.25vw;float:left;padding:0.3vw 0.3vw;">Attributes</div>'+
-  '<input autocomplete="off" placeholder="Asset sides" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.sides+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Sides</div>'+
-  '<input autocomplete="off" placeholder="Asset color" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.color+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Color</div>'+
-  '<input autocomplete="off" placeholder="Asset outline" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.outline+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Outline</div>'+
-  '<input autocomplete="off" placeholder="Outline width" class="sandboxInput" style="clear:both;position:relative;float:left;width:5vw;" value='+barrel.outlineThickness+'>'+
-  '<div class="sandboxText" style="position:relative;font-size:1vw;float:left;padding:0.3vw 0.3vw 0.3vw 1vw;">Outline width</div>'+
-  '<button id=' + buttonID + ' class="sandboxButton" style="position: relative;clear:both;float:left;" onclick=delass(this)>Delete Asset</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:10vw;" onclick=duplicateass(this)>Duplicate Asset</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Forward (WIP)</button>'+
-  '<button class="sandboxButton" style="position: relative;float:left;width:12vw;" >Move Backward (WIP)</button></div>';
-  htmlObject.innerHTML = textnode;
-  document.getElementById("assetUI").appendChild(htmlObject);
-  document.getElementById("assets").innerHTML = "Assets (" + $("#assetUI").children().length + ")";//update barrel count on button
-  assetnumberid++;
-}
-
-function delbar(e) {//barrel
-  var par = $(event.target).parent();
-  var parID = par.attr('id');
-  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
-    var packet = JSON.stringify(["delbarrel",parID]);//tell server to delete barrel
-    socket.send(packet)
-  }
-  par.parent().remove();//delete html div
-  document.getElementById("barrels").innerHTML = "Barrels (" + $("#barrelUI").children().length + ")";//update barrel count on button
-}
-function delass(e) {//asset
-  var par = $(event.target).parent();
-  var parID = par.attr('id');
-  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
-    var packet = JSON.stringify(["delasset",parID]);//tell server to delete barrel
-    socket.send(packet)
-  }
-  par.parent().remove();//delete html div
-  document.getElementById("assets").innerHTML = "Assets (" + $("#assetUI").children().length + ")";//update barrel count on button
-}
-function delbb(e) {//bodybarrel
-  var par = $(event.target).parent();
-  var parID = par.attr('id');
-  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
-    var packet = JSON.stringify(["delbb",parID]);//tell server to delete barrel
-    socket.send(packet)
-  }
-  par.parent().remove();//delete html div
-  document.getElementById("turrets").innerHTML = "Gadgets (" + $("#bbUI").children().length + ")";//update barrel count on button
-}
-
-
-function duplicatebar(e){
-  var par = $(event.target).parent();
-  var parID = par.attr('id');
-  //new ids
-  var dataidgen = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    dataidgen = dataidgen.split('');
-    var specialID  = "";
-    for(let i = 0; i < 20; ++i) {
-      specialID += dataidgen[Math.floor(Math.random() * dataidgen.length)];
-    }
-  var buttonID = 'btn'+specialID;
-  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
-    var packet = JSON.stringify(["dupbarrel",parID, specialID]);//tell server to duplicate barrel
-    socket.send(packet)
-  }
-  //clone div
-  var row = par.parent(),
-    inputVal = row.find('input').val(),
-    selectVal = row.find('select').val(),
-    clone = $(row).clone(true, true);
-  //change ID
-  //dont use find. It doesnt work but idk why.
-  clone.children(":first").attr('id', specialID);
-  clone.children(":first").children("button:first").attr('id', buttonID);
-  //copy the input field values
-  clone.find('input[type="text"]').val(inputVal);
-  clone.find('select').val(selectVal);
-  
-  //replace div number
-  let divtitle = 'Barrel ';
-  let text = clone.find(">:first-child").find(">:first-child").text();
-  let indexofnumber = text.indexOf(divtitle) + divtitle.length;
-  let number = text.charAt(indexofnumber);
-  let texttoreplace = divtitle+number.toString();
-  text = text.replace(divtitle+number.toString(), divtitle+barrelnumberid);
-  clone.find(">:first-child").find(">:first-child").text(text);
-  barrelnumberid++;
-
-  //change onclick event
-  clone.find(">:first-child").find(">:first-child").attr("onclick","showHideTankObject(\'barrel\', \'" + specialID + "\')");
-  
-  //change all the ids of custom properties, e.g. minion customization div
-  clone.find(">:first-child").children().each(function () {// "this" is the current html element, but use $(this) to access it as jquery
-    if (this.id == parID){//this div contains the divs that we need to change the id of
-      $(this).attr('id', specialID);
-      $(this).children().each(function () {
-        let newid = this.id.replace(parID, specialID);
-        $(this).attr('id', newid);
-      })
-    }
-  });
-  
-  $('#barrelUI').append(clone);//add clone
-  document.getElementById("barrels").innerHTML = "Barrels (" + $("#barrelUI").children().length + ")";//update barrel count on button
-}
-function duplicateass(e){
-  var par = $(event.target).parent();
-  var parID = par.attr('id');
-  //new ids
-  var dataidgen = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    dataidgen = dataidgen.split('');
-    var specialID  = "";
-    for(let i = 0; i < 20; ++i) {
-      specialID += dataidgen[Math.floor(Math.random() * dataidgen.length)];
-    }
-  var buttonID = 'btn'+specialID;
-  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
-    var packet = JSON.stringify(["dupasset",parID, specialID]);//tell server to duplicate barrel
-    socket.send(packet)
-  }
-  //clone div
-  var row = par.parent(),
-    inputVal = row.find('input').val(),
-    selectVal = row.find('select').val(),
-    clone = $(row).clone(true, true);
-  //change ID
-  //dont use find. It doesnt work but idk why.
-  clone.children(":first").attr('id', specialID);
-  clone.children(":first").children("button:first").attr('id', buttonID);
-  //copy the input field valuessss
-  clone.find('input[type="text"]').val(inputVal);
-  clone.find('select').val(selectVal);
-  
-  //replace div number
-  let divtitle = 'Asset ';
-  let text = clone.find(">:first-child").find(">:first-child").text();
-  let indexofnumber = text.indexOf(divtitle) + divtitle.length;
-  let number = text.charAt(indexofnumber);
-  let texttoreplace = divtitle+number.toString();
-  text = text.replace(divtitle+number.toString(), divtitle+assetnumberid);
-  clone.find(">:first-child").find(">:first-child").text(text);
-  assetnumberid++;
-
-  //change onclick event
-  clone.find(">:first-child").find(">:first-child").attr("onclick","showHideTankObject(\'asset\', \'" + specialID + "\')");
-  
-  $('#assetUI').append(clone);//add clone
-  document.getElementById("assets").innerHTML = "Assets (" + $("#assetUI").children().length + ")";//update barrel count on button
-}
-function duplicatebb(e){
-  var par = $(event.target).parent();
-  var parID = par.attr('id');
-  //new ids
-  var dataidgen = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    dataidgen = dataidgen.split('');
-    var specialID  = "";
-    for(let i = 0; i < 20; ++i) {
-      specialID += dataidgen[Math.floor(Math.random() * dataidgen.length)];
-    }
-  
-  var buttonID = 'btn'+specialID;
-  if (gamemode=="Tank Editor"){//prevent error which causes editor to not be able to open
-    var packet = JSON.stringify(["dupbb",parID, specialID]);//tell server to duplicate barrel
-    socket.send(packet)
-  }
-  //clone div
-  var row = par.parent(),
-    inputVal = row.find('input').val(),
-    selectVal = row.find('select').val(),
-    clone = $(row).clone(true, true);
-  //change ID
-  //dont use find. It doesnt work but idk why.
-  clone.children(":first").attr('id', specialID);
-  clone.children(":first").children("button:first").attr('id', buttonID);
-  //copy the input field valuessss
-  clone.find('input[type="text"]').val(inputVal);
-  clone.find('select').val(selectVal);
-  
-  //replace div number
-  let divtitle = 'Gadget ';
-  let text = clone.find(">:first-child").find(">:first-child").text();
-  let indexofnumber = text.indexOf(divtitle) + divtitle.length;
-  let number = text.charAt(indexofnumber);
-  let texttoreplace = divtitle+number.toString();
-  text = text.replace(divtitle+number.toString(), divtitle+gadgetnumberid);
-  clone.find(">:first-child").find(">:first-child").text(text);
-  gadgetnumberid++;
-
-  //change onclick event
-  clone.find(">:first-child").find(">:first-child").attr("onclick","showHideTankObject(\'bb\', \'" + specialID + "\')");
-  
-  //change all the ids of custom properties, e.g. minion customization div
-  clone.find(">:first-child").children().each(function () {// "this" is the current html element, but use $(this) to access it as jquery
-    if (this.id == parID){//this div contains the divs that we need to change the id of
-      $(this).attr('id', specialID);
-      $(this).children().each(function () {
-        let newid = this.id.replace(parID, specialID);
-        $(this).attr('id', newid);
-      })
-    }
-  });
-  
-  $('#bbUI').append(clone);//add clone
-  
-  document.getElementById("turrets").innerHTML = "Gadgets (" + $("#bbUI").children().length + ")";//update barrel count on button
-  
-  //update the aura type if have
-  try{
-    let e = document.getElementById("at"+parID);
-    let value = e.value;
-    let text = e.options[e.selectedIndex].text;
-    console.log(text)
-    if (text == "Damage"){
-        document.getElementById("at"+specialID).innerHTML = '<option value="damage" selected>Damage</option><option value="freeze">Freeze</option><option value="attraction">Attraction</option><option value="repulsion">Repulsion</option><option value="heal">Heal</option>';
-      }
-    else if (text == "Freeze"){
-        document.getElementById("at"+specialID).innerHTML = '<option value="damage">Damage</option><option value="freeze" selected>Freeze</option><option value="attraction">Attraction</option><option value="repulsion">Repulsion</option><option value="heal">Heal</option>';
-      }
-      else if (text == "Attraction"){
-        document.getElementById("at"+specialID).innerHTML = '<option value="damage">Damage</option><option value="freeze">Freeze</option><option value="attraction" selected>Attraction</option><option value="repulsion">Repulsion</option><option value="heal">Heal</option>';
-      }
-      else if (text == "Heal"){
-        document.getElementById("at"+specialID).innerHTML = '<option value="damage">Damage</option><option value="freeze">Freeze</option><option value="attraction">Attraction</option><option value="repulsion">Repulsion</option><option value="heal" selected>Heal</option>';
-      }
-      else if (text == "Repulsion"){
-        document.getElementById("at"+specialID).innerHTML = '<option value="damage">Damage</option><option value="freeze">Freeze</option><option value="attraction">Attraction</option><option value="repulsion" selected>Repulsion</option><option value="heal">Heal</option>';
-      }
-  }
-  catch(err){}
-}
-
-//addBarrelDiv("yes");//add one barrel to the editor UI cuz the player spawns with one barrel (basic tank)
-
-var tankEditor1 = document.getElementById("sandbox");
-var tankEditor2 = document.getElementById("sandbox2");
-var barrelEditor = document.getElementById("sandbox3");
-var assetEditor = document.getElementById("sandbox4");
-var bbEditor = document.getElementById("sandbox5");
-function openBarrelUI(){
-  if (barrelEditor.style.display == "none"){
-    barrelEditor.style.display = "block";
-    assetEditor.style.display = "none";
-    bbEditor.style.display = "none";
-  }
-  else{
-    barrelEditor.style.display = "none";
-  }
-}
-function openAssetUI(){
-  if (assetEditor.style.display == "none"){
-    assetEditor.style.display = "block";
-    barrelEditor.style.display = "none";
-    bbEditor.style.display = "none";
-  }
-  else{
-    assetEditor.style.display = "none";
-  }
-}
-function openBBUI(){
-  if (bbEditor.style.display == "none"){
-    bbEditor.style.display = "block";
-    assetEditor.style.display = "none";
-    barrelEditor.style.display = "none";
-  }
-  else{
-    bbEditor.style.display = "none";
-  }
-}
-function openEditorUI(){
-  if (tankEditor1.style.display == "none"){
-    tankEditor1.style.display = "block";
-    tankEditor2.style.display = "block";
-    openedUI = "yes";
-    document.getElementById("chat").style.display = "none";
-  }
-  else{
-    tankEditor1.style.display = "none";
-    tankEditor2.style.display = "none";
-    barrelEditor.style.display = "none";
-    assetEditor.style.display = "none";
-    bbEditor.style.display = "none";
-    openedUI = "no";
-    document.getElementById("chat").style.display = "block";
-  }
-}
-        //open UI for editing account pfp
-        function openeditpfp(){
-          document.getElementById("editProfilePic").style.display = "block";
-          document.getElementById("accountsPopup").style.display = "none";
-        }
-        function closeeditpfp(){
-          document.getElementById("editProfilePic").style.display = "none";
-          document.getElementById("accountsPopup").style.display = "block";
-        }
-
-//import tank code
-//send the tank code to server
-function sendTankCode(){
-  var tankcode = document.getElementById("import-code").value;
-  var packet = JSON.stringify(["tankcode",tankcode]);
-  socket.send(packet)
-}
-//get tank code
-function getTankCode(){
-  var packet = JSON.stringify(["export"]);
-  socket.send(packet)
-  createNotif("Exporting tank code...",defaultNotifColor,3000)
-  createNotif("Note that this feature is new and may not work properly.",defaultNotifColor,3000)
-}
-
-//change account pfp
-function changepfp(weapon){
-  alert(weapon)
-}
-*/
 window.onbeforeunload = () =>  {
     if(state == "ingame"){//in game (show confirmation)
        return true
@@ -12618,3 +9390,67 @@ window.onbeforeunload = () =>  {
        return null
     }
 }//confirmation dialog when close tab
+
+//create leaderboard
+//temporarily put here for testing
+const lbarrayStar = [
+  {name: 'Farmer', stars: '999999'},
+  {name: 'Infinite-3D', stars: '500'},
+  {name: 'Testing acc', stars: '100'},
+  {name: 'test', stars: '89'},
+  {name: 'e', stars: '69'},
+  {name: 'ugh', stars: '50'},
+  {name: 'Farmer', stars: '30'},
+  {name: 'Farmer', stars: '20'},
+  {name: 'Farmer', stars: '0'},
+  {name: 'Farmer', stars: '-100'},
+];
+const lbarrayScore = [
+  {name: 'Farmer', score: '999999'},
+  {name: 'Infinite-3D', score: '500'},
+  {name: 'Testing acc', score: '100'},
+  {name: 'test', score: '89'},
+  {name: 'e', score: '69'},
+  {name: 'ugh', score: '50'},
+  {name: 'Farmer', score: '30'},
+  {name: 'Farmer', score: '20'},
+  {name: 'Farmer', score: '0'},
+  {name: 'Farmer', score: '-100'},
+];
+const lbarrayAge = [
+  {name: 'Farmer', lastseen: '999999'},
+  {name: 'Infinite-3D', lastseen: '500'},
+  {name: 'Testing acc', lastseen: '100'},
+  {name: 'test', lastseen: '89'},
+  {name: 'e', lastseen: '69'},
+  {name: 'ugh', lastseen: '50'},
+  {name: 'Farmer', lastseen: '30'},
+  {name: 'Farmer', lastseen: '20'},
+  {name: 'Farmer', lastseen: '0'},
+  {name: 'Farmer', lastseen: '-100'},
+];
+let starLBdivs = '';
+let scoreLBdivs = '';
+let ageLBdivs = '';
+let divtop = 25;
+let rank = 1;
+for (const dude of lbarrayStar){
+  starLBdivs += "<div class='lbBox' style='top: "+divtop+"vmin;'>"+rank+". "+dude.name+"<span style='float: right;'><img src='/scenexeIconStarSmall.png' class='hsImage' style='width: 4vmin; height: 4vmin;position:relative;top: .5vmin;'>"+dude.stars+"</span></div>";
+  rank++;
+  divtop += 7;
+}
+divtop = 25;
+rank = 1;
+for (const dude of lbarrayScore){
+  scoreLBdivs += "<div class='lbBox' style='top: "+divtop+"vmin;'>"+rank+". "+dude.name+"<span style='float: right;'>"+dude.score+"</span></div>";
+  rank++;
+  divtop += 7;
+}
+divtop = 25;
+rank = 1;
+for (const dude of lbarrayAge){
+  ageLBdivs += "<div class='lbBox' style='top: "+divtop+"vmin;'>"+rank+". "+dude.name+"<span style='float: right;'>"+dude.lastseen+"</span></div>";
+  rank++;
+  divtop += 7;
+}
+document.getElementById("lbContainer").innerHTML = starLBdivs;
