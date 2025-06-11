@@ -3352,8 +3352,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)//wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/
           document.getElementById("adminPanelYN").style.display = "block";
           var serverlist = {
-            //"Free For All": "wss://ffa-r.mrharryw.dev/",
-            "Free For All": "wss://cfaa32e2-5c79-441a-84a3-292ea9aafe5d-00-1o94mkz7bqr58.riker.replit.dev/",
+            "Free For All": "wss://ffa-r.mrharryw.dev/",
+            //"Free For All": "wss://cfaa32e2-5c79-441a-84a3-292ea9aafe5d-00-1o94mkz7bqr58.riker.replit.dev/",
             "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
             "4 Teams": "wss://devrocketer4tdm.devrocketer.repl.co/",
             "Tank Editor": "wss://devrocketereditor.devrocketer.repl.co/",
