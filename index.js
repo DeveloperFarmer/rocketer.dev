@@ -227,7 +227,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               socket.close();//disconnect from current server
             }
             connected = "no";
-            connectServer(serverlist[gamemode],"no")
+            connectServer(serverlist[gamemode])
             console.log("Connecting to "+gamemode)
             joinedWhichGM = gamemode;//respawn in the gamemode which you spawned in after you died
             //might want to animate the gamemode region too...
@@ -2768,14 +2768,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         export function closeModal3(){//disconnected modal
           closeModalFunction('modal3')
           //reconnect
-          connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in
+          connectServer(serverlist[joinedWhichGM])//join the gamemode which you spawned in
           gamemode = joinedWhichGM;
         }
         export function closeModal3a(){//connection error modal
           closeModalFunction('modal3a')
           //reconnect
           if (connected == "no"){
-            connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in
+            connectServer(serverlist[joinedWhichGM])//join the gamemode which you spawned in
             gamemode = joinedWhichGM;
           }
         }
@@ -2825,6 +2825,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         function returnToHomeScreen(ctype){//if ctype is either disconnect, or pointerEvent (default when no parameter given, e.g. deathscreen)
           if (state != "homepage"){//ingame or deathscreen
             state = "homepage";
+            var packet = JSON.stringify(["stopSpectating"]);
+            socket.send(packet);
             homeScreenLoop();//restart the home page animation
           }
           hcanvas.style.display = "block";
@@ -2849,7 +2851,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           else if (joinedWhichGM != gamemode){//respawning in a different gamemode, e.g. died in crossroads, respawning in FFA
               reconnectToDefault = "yes";//prevent disconnect notification
               socket.close();//disconnect from current server
-              connectServer(serverlist[joinedWhichGM],"no")//join the gamemode which you spawned in. If you spawned in FFA and died in 2tdm, you can only respawn in FFA
+              connectServer(serverlist[joinedWhichGM])//join the gamemode which you spawned in. If you spawned in FFA and died in 2tdm, you can only respawn in FFA
               gamemode = joinedWhichGM;
           }
           else{//PvE singleplayer
@@ -3353,7 +3355,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           document.getElementById("adminPanelYN").style.display = "block";
           var serverlist = {
             //"Free For All": "wss://ffa-r.mrharryw.dev/",
-            "Free For All": "wss://cfaa32e2-5c79-441a-84a3-292ea9aafe5d-00-1o94mkz7bqr58.riker.replit.dev/",
+            "Free For All": "wss://cfaa32e2-5c79-441a-84a3-292ea9aafe5d-00-1o94mkz7bqr58.riker.replit.dev:8080/",
             "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
             "4 Teams": "wss://devrocketer4tdm.devrocketer.repl.co/",
             "Tank Editor": "wss://devrocketereditor.devrocketer.repl.co/",
@@ -3375,7 +3377,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             "sanc": "wss://rocketersanc.rocketer.repl.co/",
           }
         }
-        function connectServer(whichserver,teleportingYN){
+        function connectServer(whichserver){
             socket = new WebSocket(whichserver);
             socket.binaryType = "arraybuffer";//receive uint8array instead of blob (when servre compresses game data)
             console.log("Connecting to server...")
@@ -3394,15 +3396,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     //dont ping again if server havent replied
                     start = Date.now();
                     var packet = JSON.stringify(["pingServer"]);
-                    socket.send(packet)
+                    socket.send(packet);
                     sentBack = "no";
                   }
                 }, 1500); //every 1.5 second
 
-                if (teleportingYN=="yes"){
-                  var packet = JSON.stringify(["teleporting",prevplayerstring]);
-                  socket.send(packet)
-                }
                 //auto sign into account when open website
                 if ("rocketerAccountp" in localStorage && "rocketerAccountu" in localStorage) {
                   const catss = localStorage.getItem("rocketerAccountp");
@@ -3434,7 +3432,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     prevBandwidthUpdate = Date.now();
                     bandwidth = 0;
                   }
-
 
                   if (type=="sendID"){//client sending player's id
                     let yourID = info[1];
@@ -3483,8 +3480,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     */
 
                     loggedin = "yes";
-                    signedupdiv.style.display = "block";
-                    signupdiv.style.display = "none";
+                    if (state!="ingame"){
+                      signedupdiv.style.display = "block";
+                      signupdiv.style.display = "none";
+                    }
                     if (document.getElementById("signup").style.display != "none" || document.getElementById("login").style.display != "none") {
                       document.getElementById("signup").style.display = "none";
                       document.getElementById("login").style.display = "none";
@@ -3695,6 +3694,18 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       if (x) x.remove();
                     }, 5000);
                   }
+                  else if (type=="stars"){//awarded stars without an achievement, e.g. on death
+                    console.log('spong')
+                    let starGiven = info[1];
+                    let div = document.createElement('div');
+                    div.id = 'achnotifdiv';
+                    div.innerHTML = "<div id='achnotiftext' class='achievementText' style='z-index:1000;'>Awarded stars<br><img src='/scenexeIconStarYellow.png' class='hsImage' style='width: 4vmin; height: 4vmin;'>"+starGiven+"</div>";
+                    document.body.appendChild(div);//need z index above so that appear above death screen ^
+                    setTimeout(function(){//remove div after some time
+                      let x = document.getElementById("achnotifdiv");
+                      if (x) x.remove();
+                    }, 5000);
+                  }
                   else if (type=="pong"){
                     //server reply after client ping to check latency
                     latency = Date.now() - start;
@@ -3744,6 +3755,26 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       } else {
                         if (!portals.hasOwnProperty(property)) {
                           portals[property] = { ...portalslist[property] };
+                          switch(portals[property].destination) {
+                            case "dune":
+                              portals[property].color = "255,205,112";
+                              break;
+                            case "sanc":
+                              portals[property].color = "255,255,255";
+                              break;
+                            case "FFA":
+                              portals[property].color = "201, 68, 68";
+                              break;
+                            case "2tdm":
+                              portals[property].color = "116, 70, 135";
+                              break;
+                            case "4tdm":
+                              portals[property].color = "5, 218, 108";
+                              break;
+                            case "cavern":
+                              portals[property].color = "red";
+                              break;
+                          }
                         } else {
                           for (const propertyy in portalslist[property]) {
                             portals[property][propertyy] = portalslist[property][propertyy];
@@ -3941,29 +3972,13 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     teleportingTransition = "yes";
                     oldteleportingLocation = gamemode;//change all of this
                     teleportingcount = 0;
-                    if (dimension=="dune"||dimension=="sanc"||dimension=="cavern"||dimension=="cr"||dimension=="arena"||dimension=="2tdm"||dimension=="4tdm"){
-                      socket.close();//disconnect from current server
-                      if (dimension=="arena"){
-                        dimension = "Free For All";
-                      }
-                      else if (dimension=="2tdm"){
-                        dimension = "2 Teams";
-                      }
-                      else if (dimension=="4tdm"){
-                        dimension = "4 Teams";
-                      }
-                      connectServer(serverlist[dimension],"yes")
-                      if (dimension=="sanc"){
-                        gamemode = "sanctuary";
-                      }
-                      else if (dimension=="cr"){
-                        gamemode = "crossroads";
-                      }
-                      else{
-                        gamemode = dimension;//gamemode used to be arena, 2tdm, and 4tdm
-                      }
-                      teleportingLocation = gamemode;
-                    }
+                    if (dimension=="arena") dimension = "Free For All";
+                    else if (dimension=="2tdm") dimension = "2 Teams";
+                    else if (dimension=="4tdm") dimension = "4 Teams";
+                    else if (dimension=="sanc") gamemode = "sanctuary";
+                    else if (dimension=="cr") gamemode = "crossroads";
+                    else gamemode = dimension;
+                    teleportingLocation = gamemode;
                   }
                 };
 
@@ -4000,7 +4015,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               }
             }
             if (gamemode != "PvE arena"){
-              connectServer(serverlist[gamemode],"no");//connect to the server when open the website
+              connectServer(serverlist[gamemode]);//connect to the server when open the website
             }
 
             var joinedWhichGM = "Free For All";//needed for respawning, cuz some gamemodes like crossroads cannot respawn there, so need to respawn to previous gamemode
@@ -4822,6 +4837,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   canvas.rotate(ctxRot);
                   playerBodyCol = canvas.fillStyle;//for upgrade buttons
                   playerBodyOutline = canvas.strokeStyle;
+                  canvas.lineWidth = 4 / fov;
                 }
                 if (eternal == "no") {
                   //not a tier 6 tank
@@ -5274,13 +5290,13 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.rotate(object.moveAngle);
                   if (object.bulletType == "minion"){
                     //draw barrels underneath
+                    ctx.rotate(Math.PI / 2);
                     var prevfill = ctx.fillStyle;
                     var prevstroke = ctx.strokeStyle;//store previous bullet color so can change back later
                     ctx.fillStyle = bodyColors.barrel.col;
                     ctx.strokeStyle = bodyColors.barrel.outline;
                     Object.keys(object.barrels).forEach((barrel) => {
                       let thisBarrel = object.barrels[barrel];
-                      ctx.rotate(thisBarrel.additionalAngle); //rotate to barrel angle
                       if (thisBarrel.barrelType == "bullet") {
                         drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
                       }
@@ -5296,16 +5312,16 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       else if (thisBarrel.barrelType == "minion") {
                         drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
                       }
-                      ctx.rotate(-thisBarrel.additionalAngle);//rotate back
                     })
                     ctx.fillStyle = prevfill;
                     ctx.strokeStyle = prevstroke;
+                    ctx.rotate(-Math.PI / 2);
                   }
                   ctx.beginPath();
                   if (object.bulletType == "mine"){//mine trap
-                    ctx.rotate(45 * Math.PI / 180);//rotate 45 degrees so its a square, not diamond
+                    ctx.rotate(45 * Math.PI / 180 - object.moveAngle);//rotate 45 degrees so its a square, not diamond
                     renderPolygon(object.width / clientFovMultiplier,4);
-                    ctx.rotate(-45 * Math.PI / 180);
+                    ctx.rotate(-45 * Math.PI / 180 + object.moveAngle);
                   }
                   else{//minion
                     let firstBarrel = object.barrels[Object.keys(object.barrels)[0]];
@@ -5329,7 +5345,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   if (object.bulletType == "mine"){
                   Object.keys(object.barrels).forEach((barrel) => {
                       let thisBarrel = object.barrels[barrel];
-                      ctx.rotate(thisBarrel.additionalAngle); //rotate to barrel angle
+                      ctx.rotate(object.moveAngle); //rotate to barrel angle
                       ctx.fillStyle = bodyColors.barrel.col;
                       ctx.strokeStyle = bodyColors.barrel.outline;
                       if (thisBarrel.barrelType == "bullet") {
@@ -5355,7 +5371,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       ctx.arc(0, 0, turretWidth, 0, 2 * Math.PI);
                       ctx.fill();
                       ctx.stroke();
-                      ctx.rotate(-thisBarrel.additionalAngle); //rotate back
+                      ctx.rotate(-object.moveAngle); //rotate back
                   });
                 }
 
@@ -6305,21 +6321,16 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               var drawingY = (object.y - py) / clientFovMultiplier + canvas.height / 2;
               if(object.type == "player") {
                 //write chats
-                if (id != playerstring) {
-                  var firstChatY = object.width / clientFovMultiplier /5*4 + 55 / clientFovMultiplier;
-                }
-                else{
-                  var firstChatY = object.width / clientFovMultiplier /5*4;//chat nearer to player body if no need to display name
+                var firstChatY = object.width / clientFovMultiplier /5*4 + 55 / clientFovMultiplier;
+                if (id == playerstring) {
+                  firstChatY = object.width / clientFovMultiplier /5*4;//chat nearer to player body if no need to display name
                 }
                 ctx.font = "700 25px Roboto";
                 ctx.textAlign = "center";
                 ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-                var xpadding = 15;
-                var ypadding = 10;
+                var xpadding = 13;
+                var ypadding = 7;
                 var lineheight = 30;
-                
-                var timeWhenChatRemove = 100;//when change on server code, remember to change here too
-                
                 if (typeof object.chats == 'undefined'){
                   object.chats = [];
                 }
@@ -6421,7 +6432,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   let isTypingAnimation = "no";
                   if (chatObj.chat == "typingAnim"){
                     isTypingAnimation = "yes";
-                    chatObj.chat = "anim"
+                    chatObj.chat = "me";//the typing animation's size is determined based on this text
                   }
                   let wrappedText = wrapText(ctx, chatObj.chat, drawingX, drawingY - firstChatY, 900, lineheight);//split message into multiline text
                   //draw rect
@@ -6430,84 +6441,82 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   if (wrappedText.length == 1){//remove spacing between text for single-line text
                     h = 25 + ypadding * 2;
                   }
-                  var r = 15;
+                  var r = 10;
                   var x = drawingX - longestLine / 2 - xpadding;
                   var y = drawingY - firstChatY - ypadding - h - 20;//the actual y location of this chat message
                   //aniamte towards this y position
                   //remember that the loop is reversed, so indexes are reversed here too
                   let thischat = chatlist[id][chatlist[id].length - 1 - index];
                   let diffpos = 0;
-                  if (!thischat.y){
-                    thischat.y = y;
-                  }
+                  if (!thischat.y) thischat.y = y;
                   else{
                     if (y > thischat.y){
-                      thischat.y+=(y - thischat.y)/2*deltaTime;
-                      if (y < thischat.y){
-                        thischat.y = y;
-                      }
+                      thischat.y += (y - thischat.y)/2*deltaTime;
+                      if (y < thischat.y) thischat.y = y;
                     }
                     else if (y < thischat.y){
-                      thischat.y-=(thischat.y - y)/2*deltaTime;
-                      if (y > thischat.y){
-                        thischat.y = y;
-                      }
+                      thischat.y -= (thischat.y - y)/2*deltaTime;
+                      if (y > thischat.y) thischat.y = y;
                     }
-                    if (Math.abs(y - thischat.y)<0.1){//small difference between current position and actual position
+                    if (Math.abs(y - thischat.y) < 0.1){//small difference between current position and actual position
                       thischat.y = y;
                     }
                     diffpos = y - thischat.y;
                     y = thischat.y;
                   }
                   if (thischat.opacity < 1){
-                    thischat.opacity+=0.1;
+                    thischat.opacity += 0.1;
                   }
                   ctx.globalAlpha = thischat.opacity;
                   ctxroundRectangleFill(x,y,r,w,h);
-                  if (index == 0){
-                    //if this is first chat message, draw triangle
+                  if (index == 0){ //if this is first chat message, draw triangle
                     let trianglewidth = 20;
                     let triangleheight = 10;
                     ctx.beginPath();
-                    ctx.moveTo(x + w/2 - trianglewidth/2, y + h);
-                    ctx.lineTo(x + w/2 + trianglewidth/2, y + h);
-                    ctx.lineTo(x + w/2, y + h + triangleheight);
+                    ctx.moveTo(x + w/2 - trianglewidth/2, y + h - 0.5);//-0.5 to remove gap between triangle and chat
+                    ctx.lineTo(x + w/2 + trianglewidth/2, y + h - 0.5);
+                    ctx.lineTo(x + w/2, y + h + triangleheight - 0.5);
                     ctx.fill();
                   }
                   //write words
-                  ctx.fillStyle = "white";
                   wrappedText.forEach(function(item) {
                     if (isTypingAnimation == "no"){
+                      ctx.fillStyle = "white"
                       ctx.fillText(item[0], item[1], item[2]-h-diffpos);//write text
                     }
-                    else{//typing animation
-                      ctx.beginPath();
+                    else{//typing animation (3 circles)
+                      let maxTime = 20;//typingAnimation increase from 0 to 20
                       for (let i = 0; i < 3; i++) {
                         let radiusIncrease = 0;
-                        if (typingAnimation <= 3*(i+1)+3*i && typingAnimation >= 6*i){
-                          radiusIncrease = (typingAnimation - 6*i);
+                        let s = 6 * i;//timing when each circles start animating: 0, 6, 12
+                        let g = 8;//time taken for circle to grow / shrink
+                        let growthToTime = 0.4;//0.5 means that if it takes 4 ticks to grow, it only grow 2x
+                        if (typingAnimation >= s){
+                          if (typingAnimation <= (s + g)) radiusIncrease = (typingAnimation - s) * growthToTime; //grow
+                          else if (typingAnimation <= (s + g*2)) radiusIncrease = (s + g*2 - typingAnimation) * growthToTime; //shrink
                         }
-                        else if (typingAnimation <= 6*(i+1) && typingAnimation >= 6*i){
-                          radiusIncrease = (6*(i+1) - typingAnimation);
-                        }
-                        if (radiusIncrease < 0){
-                          radiusIncrease = 0;
-                        }
-                        ctx.arc(item[1]+(i-1)*18, item[2]-h-diffpos-6, 5+radiusIncrease, 0, 2 * Math.PI);
+                        //shrink for last circle (because shrink animation is until 26, but timer stop at 20 and reset to 0)
+                        else if ((s + g*2) > maxTime && typingAnimation <= (s + g*2 - maxTime)) radiusIncrease = (s + g*2 - maxTime - typingAnimation) * growthToTime;
+                        if (radiusIncrease < 0) radiusIncrease = 0;
+                        let transparency = (radiusIncrease + 1) / g + 0.5;
+                        if (transparency > 1) transparency = 1;
+                        ctx.fillStyle = "rgba(255,255,255," + transparency + ")";
+                        ctx.beginPath();
+                        ctx.arc(item[1]+(i-1)*15, item[2]-h-diffpos-6, 4+radiusIncrease, 0, 2 * Math.PI);
+                        ctx.fill();
                       }
-                      ctx.fill();
                     }
                   })
                   ctx.globalAlpha = 1.0;
-                  firstChatY += (h + 10); //height of chat plus space between chats
+                  firstChatY += (h + 5); //height of chat plus space between chats
                 });
                 ctx.lineJoin = "miter"; //change it back
                 
                 if (id != playerstring) {
                   ctx.fillStyle = "white";
                   ctx.strokeStyle = "black";
-                  ctx.lineWidth = 8 / clientFovMultiplier;
-                  ctx.font = "700 " + 35 / clientFovMultiplier + "px Roboto";
+                  ctx.lineWidth = 10 / clientFovMultiplier;
+                  ctx.font = "700 " + 30 / clientFovMultiplier + "px Roboto";
                   ctx.textAlign = "center";
                   ctx.miterLimit = 2;//prevent text spikes, alternative to linejoin round
                   //ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
@@ -6663,18 +6672,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   socket.send(packet)
                   document.getElementById("chat").value = ""; //clear input field
                   document.getElementById("chat").blur(); //remove cursor
-                }
-              } else if (
-                document.activeElement === document.getElementById("devtoken")
-              ) {
-                //if dev token input box is selected
-                if (e.key == "Enter") {
-                  //if press enter, send chat message
-                  var devToken = document.getElementById("devtoken").value; //get inputted token
-                  var packet = JSON.stringify(["developerTest", devToken]);
-                  socket.send(packet)
-                  document.getElementById("devtoken").value = ""; //clear input field
-                  document.getElementById("devtoken").blur(); //remove cursor
                 }
               }
             });
@@ -7340,7 +7337,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               var resizeDiffX = 1/window.innerWidth*hcanvas.width;//prevent squashed HUD on different sized screens
               var resizeDiffY = 1/window.innerHeight*hcanvas.height;
 
-              if (state == "ingame" && sentStuffBefore == "yes") {
+              if ((state == "ingame" || state == "deathscreen") && sentStuffBefore == "yes") {
                 //DRAW THE GAME STUFF
                 
                 //reset to prevent restore bugs (hctx.restore wont happen if there is an error in the code)
@@ -7405,7 +7402,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 //interpolate the player's position first
                 lerpDrawnX = 0;
                 lerpDrawnY = 0;
-                if (objects.player && oldobjects.player && interpolatedobjects.player){
+                if (objects.player && oldobjects.player && interpolatedobjects.player && objects.player[playerstring]){
                   interpolatedobjects.player[playerstring] = JSON.parse(JSON.stringify(objects.player[playerstring]));
                   simpleLerpPos(objects.player[playerstring],oldobjects.player[playerstring]);
                   px = lerpDrawnX;//needed for drawing stuff
@@ -7601,7 +7598,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       objects[type][id].y += Math.sin(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
                       objects[type][id].x += Math.cos(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
                     }
-                    drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
+                    if (id != playerstring || state != "deathscreen"){//dont draw self on the death screen (u still 'exist' to allow code to function)
+                      drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
+                    }
                   }
                 }
                 
@@ -7630,7 +7629,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     thisobject.type = "player";
                     interpolatedobjects.player[id].x = thisobject.x;
                     interpolatedobjects.player[id].y = thisobject.y;
-                    drawplayerdata(thisobject, id, playerstring, auraWidth); //draw the obcjects on the canvas
+                    if (id != playerstring || state != "deathscreen"){//dont draw self on the death screen (u still 'exist' to allow code to function)
+                      drawplayerdata(thisobject, id, playerstring, auraWidth); //draw the obcjects on the canvas
+                    }
                   }
                 
                 listofdeadobjects.forEach((object) => {
@@ -7708,7 +7709,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
                 if (gamemode == "dune") {
                   //spawn random particles if in dune
-                  if (spawnduneparticle == "yes"){
+                  //if (spawnduneparticle == "yes"){
                     var choosing = Math.floor((Math.random() * 10)/clientFovMultiplier); //choose if particle spawn
                     if (choosing <= 0) {
                       //spawn a particle
@@ -7731,7 +7732,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       };
                       particleID++;
                     }
-                  }
+                  //}
                   //cover whole screen in darkness for dune
                   ctx.fillStyle = "rgba(0,0,0,.2)"; //make background darker
                   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -7756,7 +7757,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
                 if (gamemode == "crossroads") {
                   //spawn random particles if in crossroads
-                  if (spawncrossroadsparticle == "yes"){
+                  //if (spawncrossroadsparticle == "yes"){
                     var choosing = Math.floor((Math.random() * 2)/clientFovMultiplier); //choose if particle spawn
                     if (choosing <= 0) {
                       //spawn a particle
@@ -7780,12 +7781,18 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       };
                       particleID++;
                     }
-                  }
+                  //}
                 }
 
                 if (prevShakeYN == "yes" || slightshake == "yes") {
                   ctx.restore();
                 }
+                
+      if (state == "deathscreen") {
+        requestAnimationFrame(screenDrawLoop);
+        return;
+      }//end the loop here. everything below doesnt render in death screen
+
 
                 if (gamemode == "crossroads") {
                   //draw the darkness for crossroads
