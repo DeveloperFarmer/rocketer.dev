@@ -1,5 +1,61 @@
-ALPHA 0.1.3 - June 17, 2025
-- Re-added all the dimensions except dune (will be reworked and added in the future)
+ALPHA 0.1.5 - June 20, 2025
+- Fixed walls
+- Wormholes only teleport players when they collapse
+- Removed wormholes that led you to 2tdm and 4tdm
+- Reduced maximum developer FoV from 20 to 10
+- Fixed a rendering issue related to drone barrels' x-offset
+- Reworked Mayhem
+- Gateways (the square portals) have colors based on teams
+- Gateways now change teams when you teleport
+- Fixed cavern protector and abysslings
+
+ALPHA 0.1.4 - June 18, 2025
+- Fixed sanctuary spawner rendering
+- Optimized client rendering
+- Fixed a bug where players couldn't send chat messages
+- Eternals' balancing
+    - Hailstorm
+        - Nerfed bullet speed (1.8 -> 1.4)
+        - Nerfed bullet damage (2.63 -> 1.75)
+    - Thunderstorm
+        - Nerfed bullet speed (2 -> 1.4)
+        - Nerfed bullet damage (2.63 -> 2.2)
+    - Bunker
+        - Nerfed trap launch speed (1.4 -> 1)
+        - Buffed trap health (15 -> 35)
+        - Buffed trap lifetime (150 -> 300)
+        - Nerfed trap damage (2.5 -> 1)
+    - Vault
+        - Nerfed trap reload (1.33 -> 2)
+        - Nerfed trap damage (2.5 -> 1.5)
+        - Nerfed trap launch speed (1.8 -> 1.3)
+        - Buffed trap lifetime (100 -> 200)
+    - Asteroid
+        - Reduced barrel width (0.9 -> 0.65)
+        - Nerfed trap launch speed (1.8 -> 1)
+        - Increased trap's auto cannon width (0.2 -> 0.5)
+        - Increased trap's auto cannon height (0.5 -> 1.25)
+        - Nerfed bullet damage (4.5 -> 3)
+    - Dynamite
+        - Removed visual barrels
+        - Reduced mine barrel width (1 -> 0.75)
+        - Reduced mine barrel height (2 -> 1.1)
+    - Chaos
+        - Completely reworked
+    - Warrior & Veteran
+        - Lots of minor visual changes
+    - Tarvos
+        - Fixed minion barrels not rendering
+        - Increased minion limit from 6 to 9
+    - Heliosphere
+         - Fixed aura positioning
+    - Firebolt
+         - Increased body speed multiplier (1.2 -> 1.4)
+    - Corvus
+         - Increased healing aura size (6.5 -> 8.5)
+
+ALPHA 0.1.3 - June 18, 2025
+- Re-added all the dimensions except dune (will be reworked and added in the future), 2tdm and 4tdm
 - Portals now do not suck players in
 - Optimized portal spawning and collision
 - Optimized websocket packets

@@ -1531,34 +1531,26 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           if (bodyupgrades[name].hasOwnProperty("assets")) {
             hctx.lineJoin = "round";
             //draw under assets
-            Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
-              var asset = bodyupgrades[name].assets[assetID];
+            for (const assetID in bodyupgrades[name].assets) {
+              let asset = bodyupgrades[name].assets[assetID];
               if (asset.type == "under") {
                 hctx.rotate(-bodyangle);
                 let assetcolor = asset.color;
                 let assetoutline = asset.outline;
                 if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
                   assetcolor = playerBodyCol;
-                  if (bodyupgrades[name].eternal){
-                    assetcolor = "#934c93";
-                  }
-                  if (greyedOut == "yes"){
-                    assetcolor = "#c0c0c0";
-                  }
+                  if (bodyupgrades[name].eternal) assetcolor = "#934c93";
+                  if (greyedOut == "yes") assetcolor = "#c0c0c0";
                 }
                 if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
                   assetoutline = playerBodyOutline;
-                  if (bodyupgrades[name].eternal){
-                    assetoutline = "#660066";
-                  }
-                  if (greyedOut == "yes"){
-                    assetoutline = "#a2a2a2";
-                  }
+                  if (bodyupgrades[name].eternal) assetoutline = "#660066";
+                  if (greyedOut == "yes") assetoutline = "#a2a2a2";
                 }
                 drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
                 hctx.rotate(bodyangle);
               }
-            });
+            }
             hctx.lineJoin = "miter";
           }
           //FOR BODY UPGRADES BODY
@@ -1599,64 +1591,54 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           if (bodyupgrades[name].hasOwnProperty("assets")) {
             hctx.lineJoin = "round";
             //draw above assets
-            Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
-              var asset = bodyupgrades[name].assets[assetID];
+            for (const assetID in bodyupgrades[name].assets) {
+              let asset = bodyupgrades[name].assets[assetID];
               if (asset.type == "above") {
                 hctx.rotate(-bodyangle);
                 let assetcolor = asset.color;
                 let assetoutline = asset.outline;
-                if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
+                if (assetcolor == "default"){
                   assetcolor = playerBodyCol;
-                  if (bodyupgrades[name].eternal){
-                    assetcolor = "#934c93";
-                  }
-                  if (greyedOut == "yes"){
-                    assetcolor = "#c0c0c0";
-                  }
+                  if (bodyupgrades[name].eternal) assetcolor = "#934c93";
+                  if (greyedOut == "yes") assetcolor = "#c0c0c0";
                 }
-                if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
+                if (assetoutline == "default"){
                   assetoutline = playerBodyOutline;
-                  if (bodyupgrades[name].eternal){
-                    assetoutline = "#660066";
-                  }
-                  if (greyedOut == "yes"){
-                    assetoutline = "#a2a2a2";
-                  }
+                  if (bodyupgrades[name].eternal) assetoutline = "#660066";
+                  if (greyedOut == "yes") assetoutline = "#a2a2a2";
                 }
                 drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
                 hctx.rotate(bodyangle);
               }
-            });
+            }
             hctx.lineJoin = "miter";
           }
           if (bodyupgrades[name].hasOwnProperty("bodybarrels")) {
             //draw barrels
             hctx.lineJoin = "round";
-            Object.keys(bodyupgrades[name].bodybarrels).forEach(
-              (barrel) => {
-                let thisBarrel = bodyupgrades[name].bodybarrels[barrel];
-                hctx.rotate(thisBarrel.additionalAngle - bodyangle);
-                hctx.fillStyle = bodyColors.barrel.col;
-                hctx.strokeStyle = bodyColors.barrel.outline;
-                if (thisBarrel.barrelType == "bullet") {
-                  drawBulletBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                } else if (thisBarrel.barrelType == "drone") {
-                  if (Math.round(thisBarrel.barrelWidth) != Math.round(thisBarrel.barrelHeight)){
-                    drawDroneBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                  }
-                  else{
-                    drawDroneTurret(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,0,1)
-                  }
-                } else if (thisBarrel.barrelType == "trap") {
-                  drawTrapBarrel(hctx, thisBarrel.x*bodysize, thisBarrel.barrelWidth*bodysize, thisBarrel.barrelHeight*bodysize, 0, 1, bodysize)
-                }/* else if (thisBarrel.barrelType == "mine") {
-                  drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1, bodysize)
-                } else if (thisBarrel.barrelType == "minion") {
-                  drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                }*/
-                hctx.rotate(-thisBarrel.additionalAngle + bodyangle); //rotate back
-              }
-            );
+            for (const barrel in bodyupgrades[name].bodybarrels) {
+              let k = bodyupgrades[name].bodybarrels[barrel];
+              hctx.rotate(k.additionalAngle - bodyangle);
+              hctx.fillStyle = bodyColors.barrel.col;
+              hctx.strokeStyle = bodyColors.barrel.outline;
+              if (k.barrelType == "bullet") {
+                drawBulletBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1)
+              } else if (k.barrelType == "drone") {
+                if (Math.round(k.barrelWidth) != Math.round(k.barrelHeight)){
+                  drawDroneBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1)
+                }
+                else{
+                  drawDroneTurret(hctx, k.x * bodysize, k.barrelWidth * bodysize,0,1)
+                }
+              } else if (k.barrelType == "trap") {
+                drawTrapBarrel(hctx, k.x*bodysize, k.barrelWidth*bodysize, k.barrelHeight*bodysize, 0, 1, bodysize)
+              }/* else if (k.barrelType == "mine") {
+                drawMineBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1, bodysize)
+              } else if (k.barrelType == "minion") {
+                drawMinionBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1)
+              }*/
+              hctx.rotate(-k.additionalAngle + bodyangle); //rotate back
+            }
             //draw turret base
             hctx.beginPath();
             hctx.arc( 0, 0, bodysize * bodyupgrades[name].turretBaseSize, 0, 2 * Math.PI );
@@ -1668,26 +1650,18 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           hctx.lineWidth = bodysize/4;
           if (weaponupgrades[name].hasOwnProperty("barrels")) {
             hctx.lineJoin = "round";
-            Object.keys(weaponupgrades[name].barrels).forEach(
-              (assetID) => {
-                var thisBarrel = weaponupgrades[name].barrels[assetID];
-                hctx.rotate((thisBarrel.additionalAngle * Math.PI) / 180 - bodyangle); //rotate to barrel angle
+            for (const barrelID in weaponupgrades[name].barrels) {
+                let k = weaponupgrades[name].barrels[barrelID];
+                hctx.rotate(k.additionalAngle * Math.PI / 180 - bodyangle);
                 hctx.fillStyle = bodyColors.barrel.col;
                 hctx.strokeStyle = bodyColors.barrel.outline;
-                if (thisBarrel.barrelType == "bullet") {
-                  drawBulletBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                } else if (thisBarrel.barrelType == "drone") {
-                  drawDroneBarrel(hctx, thisBarrel.x*bodysize, thisBarrel.barrelWidth*bodysize, thisBarrel.barrelHeight*bodysize, 0, 1)
-                } else if (thisBarrel.barrelType == "trap") {
-                  drawTrapBarrel(hctx, thisBarrel.x*bodysize, thisBarrel.barrelWidth*bodysize, thisBarrel.barrelHeight*bodysize, 0, 1, bodysize)
-                } else if (thisBarrel.barrelType == "mine") {
-                  drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1, bodysize)
-                } else if (thisBarrel.barrelType == "minion") {
-                  drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                }
-                hctx.rotate((-thisBarrel.additionalAngle * Math.PI) / 180 + bodyangle); //rotate back
-              }
-            );
+                if (k.barrelType == "bullet") drawBulletBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1)
+                else if (k.barrelType == "drone") drawDroneBarrel(hctx, k.x*bodysize, k.barrelWidth*bodysize, k.barrelHeight*bodysize, 0, 1)
+                else if (k.barrelType == "trap") drawTrapBarrel(hctx, k.x*bodysize, k.barrelWidth*bodysize, k.barrelHeight*bodysize, 0, 1, bodysize)
+                else if (k.barrelType == "mine") drawMineBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1, bodysize)
+                else if (k.barrelType == "minion") drawMinionBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1)
+                hctx.rotate(-k.additionalAngle * Math.PI / 180 + bodyangle);
+            }
             hctx.lineJoin = "miter"; //change back
           }
           //FOR WEAPON BODY
@@ -4222,9 +4196,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               let h = -(height - shootChange/shootBarrelMax*height) / fov;
               canvas.beginPath();
               canvas.moveTo((x - width / 2) / fov,0);
-              canvas.lineTo((x-width) / fov,h);
-              canvas.lineTo((x * 2 + width) / fov,h);
-              canvas.lineTo((x * 2 + width/2) / fov,0);
+              canvas.lineTo((x - width) / fov,h);
+              canvas.lineTo((x + width) / fov,h);
+              canvas.lineTo((x + width/2) / fov,0);
               canvas.fill();
               canvas.stroke();
             }
@@ -5052,20 +5026,16 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     }
                     if (bodyupgrades[name].hasOwnProperty("assets") && bodywhich!="under") {
                       //draw above assets
-                      Object.keys(bodyupgrades[name].assets).forEach((assetID) => {
-                        var asset = bodyupgrades[name].assets[assetID];
+                      for (const assetID in bodyupgrades[name].assets) {
+                        let asset = bodyupgrades[name].assets[assetID];
                         if (asset.type == "above") {
                           let assetcolor = asset.color;
                           let assetoutline = asset.outline;
-                          if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
-                            assetcolor = bodycolor;
-                          }
-                          if (assetoutline == "default"){//asset same color as body, e.g. ziggurat
-                            assetoutline = bodyoutline;
-                          }
+                          if (assetcolor == "default") assetcolor = bodycolor;//e.g. ziggurat
+                          if (assetoutline == "default") assetoutline = bodyoutline;
                           drawAsset(asset,bodysize,assetcolor,assetoutline,hctx)
                         }
-                      });
+                      }
                     }
                     if (bodyupgrades[name].hasOwnProperty("bodybarrels") && bodywhich!="under") {
                       //draw barrels
@@ -5115,37 +5085,18 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     }
                   } else if (which == "weapon" && (name in weaponupgrades)) {
                     if (weaponupgrades[name].hasOwnProperty("barrels")) {
-                          hctx.fillStyle = bodyColors.barrel.col;
-                          hctx.strokeStyle = bodyColors.barrel.outline;
-                      Object.keys(weaponupgrades[name].barrels).forEach(
-                        (assetID) => {
-                          var thisBarrel = weaponupgrades[name].barrels[assetID];
-                          hctx.rotate((thisBarrel.additionalAngle * Math.PI) / 180); //rotate to barrel angle
-                          //bullet barrel
-                          if (thisBarrel.barrelType == "bullet") {
-                            drawBulletBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                          }
-                          //drone barrel
-                          else if (thisBarrel.barrelType == "drone") {
-                            drawDroneBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                          }
-                          //trap barrel (doesnt exist atm)
-                          else if (thisBarrel.barrelType == "trap") {
-                            drawTrapBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1, bodysize)
-                          }
-                          //mine barrel (doesnt exist atm)
-                          else if (thisBarrel.barrelType == "mine") {
-                            drawMineBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1, bodysize)
-                          }
-                          //minion barrel (doesnt exist atm)
-                          else if (thisBarrel.barrelType == "minion") {
-                            drawMinionBarrel(hctx,thisBarrel.x * bodysize,thisBarrel.barrelWidth * bodysize,thisBarrel.barrelHeight * bodysize,0,1)
-                          }
-                          hctx.rotate(
-                            (-thisBarrel.additionalAngle * Math.PI) / 180
-                          ); //rotate back
+                        hctx.fillStyle = bodyColors.barrel.col;
+                        hctx.strokeStyle = bodyColors.barrel.outline;
+                        for (const barrelID in weaponupgrades[name].barrels) {
+                          const k = weaponupgrades[name].barrels[barrelID];
+                          hctx.rotate(k.additionalAngle * Math.PI / 180);
+                          if (k.barrelType == "bullet") drawBulletBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1)
+                          else if (k.barrelType == "drone") drawDroneBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1)
+                          else if (k.barrelType == "trap") drawTrapBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1, bodysize)
+                          else if (k.barrelType == "mine") drawMineBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1, bodysize)
+                          else if (k.barrelType == "minion") drawMinionBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1)
+                          hctx.rotate(-k.additionalAngle * Math.PI / 180); //rotate back
                         }
-                      );
                     }
                     hctx.fillStyle = bodycolor;
                     hctx.strokeStyle = bodyoutline;
@@ -5295,24 +5246,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     var prevstroke = ctx.strokeStyle;//store previous bullet color so can change back later
                     ctx.fillStyle = bodyColors.barrel.col;
                     ctx.strokeStyle = bodyColors.barrel.outline;
-                    Object.keys(object.barrels).forEach((barrel) => {
-                      let thisBarrel = object.barrels[barrel];
-                      if (thisBarrel.barrelType == "bullet") {
-                        drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-                      }
-                      else if (thisBarrel.barrelType == "drone") {
-                        drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-                      }
-                      else if (thisBarrel.barrelType == "trap") {
-                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
-                      }
-                      else if (thisBarrel.barrelType == "mine") {
-                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
-                      }
-                      else if (thisBarrel.barrelType == "minion") {
-                        drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-                      }
-                    })
+                    for (const barrelID in object.barrels) {
+                      let k = object.barrels[barrelID];
+                      if (k.barrelType == "bullet") drawBulletBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                      else if (k.barrelType == "drone") drawDroneBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                      else if (k.barrelType == "trap") drawTrapBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
+                      else if (k.barrelType == "mine") drawMineBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
+                      else if (k.barrelType == "minion") drawMinionBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                    }
                     ctx.fillStyle = prevfill;
                     ctx.strokeStyle = prevstroke;
                     ctx.rotate(-Math.PI / 2);
@@ -5343,28 +5284,18 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.rotate(-object.moveAngle); //rotate back
                   //BARREL FOR THE MINE TRAP
                   if (object.bulletType == "mine"){
-                  Object.keys(object.barrels).forEach((barrel) => {
-                      let thisBarrel = object.barrels[barrel];
+                    for (const barrelID in object.barrels) {
+                      let k = object.barrels[barrelID];
                       ctx.rotate(object.moveAngle); //rotate to barrel angle
                       ctx.fillStyle = bodyColors.barrel.col;
                       ctx.strokeStyle = bodyColors.barrel.outline;
-                      if (thisBarrel.barrelType == "bullet") {
-                        drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-                      }
-                      else if (thisBarrel.barrelType == "drone") {
-                        drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-                      }
-                      else if (thisBarrel.barrelType == "trap") {
-                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
-                      }
-                      else if (thisBarrel.barrelType == "mine") {
-                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
-                      }
-                      else if (thisBarrel.barrelType == "minion") {
-                        drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-                      }
-                      let turretWidth = thisBarrel.barrelWidth / clientFovMultiplier / 1.3;//add server property in the future so can manually change turret size
-                      if (thisBarrel.x > 0){//for arsenal weapon upgrade
+                      if (k.barrelType == "bullet") drawBulletBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                      else if (k.barrelType == "drone") drawDroneBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                      else if (k.barrelType == "trap") drawTrapBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
+                      else if (k.barrelType == "mine") drawMineBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange,clientFovMultiplier, object.width)
+                      else if (k.barrelType == "minion") drawMinionBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                      let turretWidth = k.barrelWidth / clientFovMultiplier / 1.3;//add server property in the future so can manually change turret size
+                      if (k.x > 0){//for arsenal weapon upgrade
                         turretWidth *= (5/3);
                       }
                       ctx.beginPath();//draw turret base
@@ -5372,8 +5303,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       ctx.fill();
                       ctx.stroke();
                       ctx.rotate(-object.moveAngle); //rotate back
-                  });
-                }
+                    }
+                  }
 
                   ctx.restore();
                 }
@@ -5402,28 +5333,18 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 ctx.rotate(object.angle);
                 //draw barrels
                 if (object.name!="Pillbox"){//pillbox's barrel is visually a turret
-                  Object.keys(object.barrels).forEach((barrel) => {
-                    let thisBarrel = object.barrels[barrel];
-                    ctx.rotate((thisBarrel.additionalAngle + 90) * Math.PI / 180); //rotate to barrel angle
+                  for (const barrelID in object.barrels) {
+                    let k = object.barrels[barrelID];
+                    ctx.rotate((k.additionalAngle + 90) * Math.PI / 180); //rotate to barrel angle
                     ctx.fillStyle = bodyColors.barrel.col;
                     ctx.strokeStyle = bodyColors.barrel.outline;
-                    if (thisBarrel.barrelType == "bullet") {
-                        drawBulletBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-                      }
-                      else if (thisBarrel.barrelType == "drone") {
-                        drawDroneBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-                      }
-                      else if (thisBarrel.barrelType == "trap") {
-                        drawTrapBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
-                      }
-                      else if (thisBarrel.barrelType == "mine") {
-                        drawMineBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier, object.width)
-                      }
-                      else if (thisBarrel.barrelType == "minion") {
-                        drawMinionBarrel(ctx,thisBarrel.x,thisBarrel.barrelWidth,thisBarrel.barrelHeight,thisBarrel.barrelHeightChange,clientFovMultiplier)
-                      }
-                    ctx.rotate(-(thisBarrel.additionalAngle + 90) * Math.PI / 180); //rotate back
-                  });
+                    if (k.barrelType == "bullet") drawBulletBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                    else if (k.barrelType == "drone") drawDroneBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                    else if (k.barrelType == "trap") drawTrapBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
+                    else if (k.barrelType == "mine") drawMineBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
+                    else if (k.barrelType == "minion") drawMinionBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                    ctx.rotate(-(k.additionalAngle + 90) * Math.PI / 180); //rotate back
+                  }
                 }
                 if (object.name=="Cluster"){
                   //draw the spawning barrels
@@ -5501,6 +5422,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.fillStyle = pSBC ( botHit[id], botcolors[object.name].color, false, true );//LINEAR BLENDING (dont use log blending, or else heptagon look too greyish)
                   ctx.strokeStyle = pSBC ( botHit[id], botcolors[object.name].outline, false, true );
                 }
+                else{
+                  ctx.fillStyle = botcolors[object.name].color;
+                  ctx.strokeStyle = botcolors[object.name].outline;
+                }
                 //draw body
                 const w = object.width / clientFovMultiplier;
                 if (object.side==0) {
@@ -5550,13 +5475,13 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       ctx.rotate(Math.PI / 2);
                       ctx.fillStyle = bodyColors.barrel.col;
                       ctx.strokeStyle = bodyColors.barrel.outline;
-                      Object.keys(object.barrels).forEach((barrel) => {
-                        let thisBarrel = object.barrels[barrel];
-                        let bw = thisBarrel.barrelWidth / clientFovMultiplier;
-                        let bh = (thisBarrel.barrelHeight - thisBarrel.barrelHeightChange) / clientFovMultiplier;
-                        ctx.fillRect(-bw / 2 + thisBarrel.x, -bh, bw, bh);
-                        ctx.strokeRect(-bw / 2 + thisBarrel.x, -bh, bw, bh);
-                      });
+                      for (const barrelID in object.barrels) {
+                        let k = object.barrels[barrelID];
+                        let bw = k.barrelWidth / clientFovMultiplier;
+                        let bh = (k.barrelHeight - k.barrelHeightChange) / clientFovMultiplier;
+                        ctx.fillRect(-bw / 2 + k.x, -bh, bw, bh);
+                        ctx.strokeRect(-bw / 2 + k.x, -bh, bw, bh);
+                      }
                       ctx.rotate(-Math.PI / 2);
                       drawCircle(w*0.6);//draw turret base
                     } else if (object.name=="Abyssling"){
@@ -5587,7 +5512,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 ctx.restore();
                 if (object.health < object.maxhealth) {
                   //draw health bar background
-                  let w = w * 2;
+                  let ww = w * 2;
                   let h = 7 / clientFovMultiplier;
                   let r = h / 2;
                   let x = drawingX - w;
@@ -5595,17 +5520,17 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.fillStyle = "black";
                   ctx.strokeStyle = "black";
                   ctx.lineWidth = 2.5 / clientFovMultiplier;
-                  ctxroundRectangle(x,y,r,w,h);
+                  ctxroundRectangle(x,y,r,ww,h);
                   //draw health bar
                   if (object.health > 0) {
-                    w = (w / object.maxhealth) * object.health;
-                    if (r * 2 > w) { //prevent weird shape when radius more than width
-                      r = w / 2;
-                      y += (h - w) / 2; //move health bar so that it is centered vertically in black bar
-                      h = w;
+                    ww = (ww / object.maxhealth) * object.health;
+                    if (r * 2 > ww) { //prevent weird shape when radius more than width
+                      r = ww / 2;
+                      y += (h - ww) / 2; //move health bar so that it is centered vertically in black bar
+                      h = ww;
                     }
                     ctx.fillStyle = botcolors[object.name].color;
-                    ctxroundRectangle(x,y,r,w,h);
+                    ctxroundRectangle(x,y,r,ww,h);
                   }
                 }
                 ctx.fillStyle = "white";
@@ -5614,16 +5539,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 ctx.font = "700 " + 20 / clientFovMultiplier + "px Roboto";
                 ctx.textAlign = "center";
                 ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-                //note: if you stroke then fill, the words will be thicker and nicer. If you fill then stroke, the words are thinner.
-                if ((showStaticMobName == "yes"||botcolors[object.name].static=="no") && (showMinionMobName == "yes"||botcolors[object.name].minion=="no")){//settings for showing static and minion names
-                  if (botcolors[object.name].specialty != "") {
-                    var specialtyText = " (" + botcolors[object.name].specialty + ")";
-                  } else {
-                    var specialtyText = "";
-                  }
-                  ctx.strokeText(object.name + specialtyText, drawingX, drawingY - w - 10);
-                  ctx.fillText(object.name + specialtyText, drawingX, drawingY - w - 10);
-                }
+                let specialtyText = "";
+                if (botcolors[object.name].specialty != "") specialtyText = " (" + botcolors[object.name].specialty + ")";
+                ctx.strokeText(object.name + specialtyText, drawingX, drawingY - w - 10);
+                ctx.fillText(object.name + specialtyText, drawingX, drawingY - w - 10);
                 ctx.lineJoin = "miter";
                 if (object.hasOwnProperty("deadOpacity")) {
                   ctx.globalAlpha = 1.0; //reset opacity
@@ -5702,7 +5621,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.translate(barrelX3 / clientFovMultiplier, barrelY3 / clientFovMultiplier);
                   ctx.rotate(barAngle - Math.PI / 2);
                   ctx.beginPath();
-                  ctx.moveTo(w/3*2, -h);
+                  ctx.moveTo(-w/3*2, -h);
                   ctx.lineTo(-w, 0);
                   ctx.lineTo(w, 0);
                   ctx.lineTo(w/3*2, -h);
@@ -5741,7 +5660,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 }
                 //draw aura
                 ctx.fillStyle = object.auraColor;
-                ctx.lineWidth = 0;
+                ctx.strokeStyle = object.auraColor;
                 renderPolygon(object.auraWidth / clientFovMultiplier, object.sides);
                 ctx.lineWidth = 4 / clientFovMultiplier;
                 ctx.lineJoin = "miter"; //change back
@@ -6046,8 +5965,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 ctx.save(); //save so later can restore
                 ctx.translate(drawingX, drawingY); //translate so white portal is at 0,0 coordinates so can rotate around center of portal
                 ctx.rotate(fixedPortals[id] * Math.PI / 180); //rotate portal
-                ctx.fillStyle = object.color;
-                ctx.strokeStyle = object.outline;
+                let teamCol = bodyColors[object.team];
+                if (object.team == "none" || !teamCol) teamCol = bodyColors.blue;//if no team color (ffa) or team is invalid
+                ctx.fillStyle = teamCol.col;
+                ctx.strokeStyle = teamCol.outline;
                 let w = object.width / clientFovMultiplier;
                 ctx.fillRect(-w/2, -w/2, w, w);
                 ctx.strokeRect(-w/2, -w/2, w, w);
@@ -6102,6 +6023,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.save();
                   ctx.translate(drawingX, drawingY);
                   ctx.rotate(object.angle/180*Math.PI);
+                  ctx.lineWidth = 3/clientFovMultiplier;
                   //draw white rectangle below
                   ctx.fillStyle = "rgba(255,255,255,.7)";
                   ctx.strokeStyle = "white";
@@ -7509,40 +7431,29 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 };
                 shakeYN = "no"; //reset portal screen shake
                 shakeIntensity = 1;
-                Object.keys(portals).forEach((id) => {
-                  //draw portals. portals not inside object list because all need to be sent for the minimap anyways
+                for (const id in portals) { //draw portals
+                  const o = portals[id];
                   if (!portalwidths.hasOwnProperty(id)) {
-                    portalwidths[id] = portals[id].width; //this is used for keeping track the sizes of portal that changes when player enter and exit a portal
+                    portalwidths[id] = o.width; //this is used for keeping track the sizes of portal that changes when player enter and exit a portal
                   } else {
-                    //if this portal already existed
-                    if (portalwidths[id] < portals[id].width + portals[id].peopleTouch * 45) { //45px portal size growth per person
-                      portalwidths[id] += 3;
-                    } else if (portalwidths[id] > portals[id].width + portals[id].peopleTouch * 45) {
-                      portalwidths[id] -= 3;
-                    }
+                    const w = o.width + o.peopleTouch * 45;//45px portal size growth per person
+                    if (portalwidths[id] < w)  portalwidths[id] += 3;
+                    else if (portalwidths[id] > w)  portalwidths[id] -= 3;
                   }
-                  var thisobject = portals[id];
-                  thisobject.type = "portal";
-                  let oldtimer = thisobject.timer;
-                  if (oldportals[id]){
-                    thisobject.timer = lerpProperty(thisobject,oldportals[id],'timer')
-                  }
-                  drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
-                  thisobject.timer = oldtimer;//reset timer to original (not lerped)
-
+                  o.type = "portal";
+                  let oldtimer = o.timer;
+                  if (oldportals[id]) o.timer = lerpProperty(o,oldportals[id],'timer')
+                  drawobjects(o, id, playerstring, auraWidth); //draw the objects on the canvas
+                  o.timer = oldtimer;//reset timer to original (not lerped)
                   //check for collision with portal to check if shake canvas or not
-                  var DistanceBetween = Math.sqrt(
-                    (player.x - thisobject.x) * (player.x - thisobject.x) +
-                      (player.y - thisobject.y) * (player.y - thisobject.y)
-                  ); //calculate distance between center of portal and player
-                  if (DistanceBetween <= player.width + thisobject.width * 3) {
-                    //portal width times 3 so that shake will be felt from a distance
+                  const dist = Math.sqrt((player.x - o.x) * (player.x - o.x) + (player.y - o.y) * (player.y - o.y));
+                  const shakeDist = player.width + o.width * 3;//portal width times 3 so that shake will be felt from a distance
+                  if (dist <= shakeDist) {
                     shakeYN = "yes";
-                    if (DistanceBetween / (player.width + thisobject.width * 3) < shakeIntensity) { //if new shake intensity higher than shake intensity from anither portal
-                      shakeIntensity = DistanceBetween / (player.width + thisobject.width * 3); //ranges from 1 to 0, 0 meaning player is at center of portal
-                    }
+                    const r = dist / shakeDist;
+                    if (r < shakeIntensity) shakeIntensity = r;//if new shake intensity higher than shake intensity from another portal
                   }
-                });
+                }
       
                 //smoothly change player's fov
                 if (player.fovMultiplier){
@@ -7634,42 +7545,25 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     }
                   }
                 
-                listofdeadobjects.forEach((object) => {
-                  //dead object array
+                for (const object of listofdeadobjects) { //dead object array
                   if (object.bulletType != "aura") {
                     if (object.type == "bullet") {
-                      //check if bullet belongs to player. usually server does this, but not for dead objects
-                      if (object.ownerId == playerstring) {
-                        object.ownsIt = "yes";
-                      }
+                      if (object.ownerId == playerstring) object.ownsIt = "yes";
                     }
                     else if (object.type == "shape"){
                       if (shapeHealthBar.hasOwnProperty(object.id)){//for health bar width animation when die
-                        if (shapeHealthBar[object.id] > 0){
-                          shapeHealthBar[object.id]-=5*deltaTime;
-                        }
-                        if (shapeHealthBar[object.id] < 0){
-                          shapeHealthBar[object.id] = 0;
-                        }
+                        if (shapeHealthBar[object.id] > 0) shapeHealthBar[object.id] -= 5 * deltaTime;
+                        if (shapeHealthBar[object.id] < 0) shapeHealthBar[object.id] = 0;
                       }
                     }
                     if (object.hasOwnProperty("deadanimation")) {
                       object.deadanimation--; //animate object
-                      //object.width += 5;
                       object.width *= 1.1;
-                      if (object.deadOpacity > 0) {
-                        object.deadOpacity -= 0.2;
-                      }
-                      if (object.deadOpacity < 0) {
-                        object.deadOpacity = 0;
-                      }
-                      if (object.deadanimation < 0) {
-                        //remove object from array
+                      if (object.deadOpacity > 0) object.deadOpacity -= 0.2;
+                      if (object.deadOpacity < 0) object.deadOpacity = 0;
+                      if (object.deadanimation < 0) { //remove object from array
                         var index = listofdeadobjects.indexOf(object);
-                        if (index > -1) {
-                          // only splice array when item is found
-                          listofdeadobjects.splice(index, 1); // 2nd parameter means remove one item only
-                        }
+                        if (index > -1) listofdeadobjects.splice(index, 1);
                       }
                     } else {
                       object.deadanimation = 5; //duration of dead animation
@@ -7677,22 +7571,17 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     }
                     drawobjects(object, object.id, playerstring, auraWidth); //draw the objects on the canvas
                   }
-                });
-                Object.keys(radparticles).forEach((id) => {
-                  //radiant particle list last so that it is drawn at the top
-                  var thisobject = radparticles[id];
-                  drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
-                  thisobject.x += Math.cos(thisobject.angle) * thisobject.speed*deltaTime;
-                  thisobject.y += Math.sin(thisobject.angle) * thisobject.speed*deltaTime;
-                  thisobject.timer-=1*deltaTime;
-                  if(thisobject.source == "dune") {
-                    thisobject.angle = (((-90 * Math.PI) / 180) + (thisobject.angle * 199)) / 200;
-                  }
+                }
 
-                  if (thisobject.timer < 0) {
-                    delete radparticles[id];
-                  }
-                });
+                for (const id in radparticles) { //radiant particle list last so that it is drawn at the top
+                  const p = radparticles[id];
+                  drawobjects(p, id, playerstring, auraWidth); //draw the objects on the canvas
+                  p.x += Math.cos(p.angle) * p.speed * deltaTime;
+                  p.y += Math.sin(p.angle) * p.speed * deltaTime;
+                  p.timer -= 1*deltaTime;
+                  if (p.source == "dune") p.angle = (p.angle * 199 - Math.PI / 2) / 200;
+                  if (p.timer < 0) delete radparticles[id];
+                }
 
                 // FPS counter update
                 frameCount++;
@@ -8678,7 +8567,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           hctx.fill();
           hctx.restore();
           //drawing portals on minimap
-          Object.keys(portals).forEach((portalID) => {
+          for (const portalID in portals) {
             let portal = portals[portalID];
             if (portal.rad > 0) { //if portal is radiant
               hctx.fillStyle = updateRadiantColorPortal(portalID);
@@ -8690,35 +8579,15 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               hctx.fillStyle = "rgb(" + portal.color + ")";
             }
             hctx.beginPath();
-            hctx.arc(
-              (portal.x / MAP_WIDTH) * mmSize + mmX,
-              (portal.y / MAP_WIDTH) * mmSize + mmY,
-              4,
-              0,
-              2 * Math.PI
-            );
-            //5 refers to width of portal on minimap, the size is not based on actual portal size bcause portal would be almost invisible on minimap if the map is big
+            hctx.arc((portal.x / MAP_WIDTH) * mmSize + mmX, (portal.y / MAP_WIDTH) * mmSize + mmY, 4, 0, 2 * Math.PI);
             hctx.fill();
-          });
+          }
 
           hctx.restore();
         }
 
       //drawing stat points, the stuff that appear on middle left of screen
-      hctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-        /*
-      var statPointColors = [
-        "#9BFF91",
-        "#9BFFFF",
-        "#8196FF",
-        "#6464FF",
-        "#9664FF",
-        "#C864FF",
-        "#FF64FF",
-        "#FF6496",
-        "#ff6464",
-      ]; //list of colors
-      */
+      hctx.lineJoin = "round";
       var statPointColors = [
         "#768cfc",
         "#fc7676",
