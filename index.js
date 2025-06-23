@@ -173,7 +173,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           div.appendChild(divLighterColor);//add the lighter color first! (affects relative positioning)
           div.appendChild(divtext);
           gamemodebuttonList.appendChild(div);
-          div.onclick = changeGamemode(i);
+          //div.onclick = changeGamemode(i);
           div.setAttribute("onclick", "changeGamemode("+i+")");
         }
         gamemodebuttonList.style.display = "none";//hide the button list
@@ -223,6 +223,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             playButton.style.display = "none";
             nameInput.style.display = "none";
             document.getElementById('connecting').style.display = "block";
+            if (currentGamemodeID != 1) document.getElementById('connecting').innerText = "Coming Soon...";
+            else document.getElementById('connecting').innerText = "Connecting...";
+
             if (previousGamemodeID != 0){//if previous gamemode wasnt PvE, then need to disconnect from the server
               socket.close();//disconnect from current server
             }
@@ -1531,8 +1534,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           if (bodyupgrades[name].hasOwnProperty("assets")) {
             hctx.lineJoin = "round";
             //draw under assets
-            for (const assetID in bodyupgrades[name].assets) {
-              let asset = bodyupgrades[name].assets[assetID];
+            for (const asset of bodyupgrades[name].assets) {
               if (asset.type == "under") {
                 hctx.rotate(-bodyangle);
                 let assetcolor = asset.color;
@@ -1591,8 +1593,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           if (bodyupgrades[name].hasOwnProperty("assets")) {
             hctx.lineJoin = "round";
             //draw above assets
-            for (const assetID in bodyupgrades[name].assets) {
-              let asset = bodyupgrades[name].assets[assetID];
+            for (const asset of bodyupgrades[name].assets) {
               if (asset.type == "above") {
                 hctx.rotate(-bodyangle);
                 let assetcolor = asset.color;
@@ -1616,7 +1617,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           if (bodyupgrades[name].hasOwnProperty("bodybarrels")) {
             //draw barrels
             hctx.lineJoin = "round";
-            for (const barrel in bodyupgrades[name].bodybarrels) {
+            for (let barrel = 0; barrel < bodyupgrades[name].bodybarrels.length; barrel++) {
               let k = bodyupgrades[name].bodybarrels[barrel];
               hctx.rotate(k.additionalAngle - bodyangle);
               hctx.fillStyle = bodyColors.barrel.col;
@@ -1650,8 +1651,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           hctx.lineWidth = bodysize/4;
           if (weaponupgrades[name].hasOwnProperty("barrels")) {
             hctx.lineJoin = "round";
-            for (const barrelID in weaponupgrades[name].barrels) {
-                let k = weaponupgrades[name].barrels[barrelID];
+            for (const k of weaponupgrades[name].barrels) {
                 hctx.rotate(k.additionalAngle * Math.PI / 180 - bodyangle);
                 hctx.fillStyle = bodyColors.barrel.col;
                 hctx.strokeStyle = bodyColors.barrel.outline;
@@ -1796,8 +1796,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             //below code is for crossroads darkness
             barrelsDarkness = [];
             correspondingBarrelHeight = {};
-            for (const barrel in player.barrels){
-              let thisBarrel = player.barrels[barrel];
+            for (const thisBarrel of player.barrels){
               if (!barrelsDarkness.includes(thisBarrel.additionalAngle)){//dont allow repeated angles in the array
                 if (thisBarrel.additionalAngle < 0){//prevent negaive angles to break the darkness code
                   thisBarrel.additionalAngle += 360;
@@ -2576,8 +2575,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           signupdiv.style.display = "none";
           signedupdiv.style.display = "none";
           chatInputBox.style.display = "block";
-          document.getElementById("debugContainer").style.display = "flex";//open debug
-          debugState = "open";
+          //document.getElementById("debugContainer").style.display = "flex";//open debug
+          //debugState = "open";
           //start the game
           hctx.fillStyle = "#cdcdcd";
           hctx.fillRect(0,0,hcanvas.width,hcanvas.height);
@@ -2795,6 +2794,26 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               document.querySelector('#'+parentID).querySelector('.qcnumber').style.display = "block";
             }
           }
+        }
+        let quickchattext = document.getElementById("quickchattext");
+        let quickchat1 = document.getElementById("quickchat1");
+        let quickchat2 = document.getElementById("quickchat2");
+        let quickchat3 = document.getElementById("quickchat3");
+        let quickchat4 = document.getElementById("quickchat4");
+        function closeQuickChat() {
+          quickchattext.style.animation = "rising .5s";
+          quickchat1.style.animation = "shrinking1 .5s";
+          quickchat2.style.animation = "shrinking2 .5s";
+          quickchat3.style.animation = "shrinking3 .5s";
+          quickchat4.style.animation = "shrinking4 .5s";
+          setTimeout(() => {
+            quickchat.style.display = "none";//hide div
+            quickchattext.style.animation = "falling .5s";//reset animation to what is stated in html
+            quickchat1.style.animation = "growing1 .5s";
+            quickchat2.style.animation = "growing2 .5s";
+            quickchat3.style.animation = "growing3 .5s";
+            quickchat4.style.animation = "growing4 .5s";
+          }, 500);//0.5 seconds for animation
         }
         function returnToHomeScreen(ctype){//if ctype is either disconnect, or pointerEvent (default when no parameter given, e.g. deathscreen)
           if (state != "homepage"){//ingame or deathscreen
@@ -3191,6 +3210,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   document.getElementById("position").className = "debug";
                 }
                 break;
+              case "showextraperformanceinfo":
+                if (settingsList[settingProp] === true){
+                  drawnentitiesElement.className = "debugopen";
+                }
+                else{
+                  drawnentitiesElement.className = "debug";
+                }
+                break;
             }
           }
           localStorage.settings = JSON.stringify(settingsList);
@@ -3215,7 +3242,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
 
         export function sendTypingIndicator(){
-          if (state=="ingame" && gamemode != "PvE arena"){
+          if (state=="ingame" && gamemode != "PvE arena" && settingsList.silenttyping === false){
             const packet = JSON.stringify(["chat", "typingAnim"]);
             socket.send(packet)
           }
@@ -3275,14 +3302,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         function randomNotif() {
           //random notification when player joined game
           let randomFunFact = [
-            "To get to the crossroads, rupture a portal without entering it.",
-            "Press p for passive mode.",
-            "Press f for fast rotation.",
-            "You can enter the purple portals at lvl 100 only.",
+            "To get to the crossroads, rupture a wormhole!",
+            "Press p to disable turrets and auras.",
+            "Wormholes teleport players when they collapse.",
+            "Rupture a wormhole by entering and exiting it several times.",
             "Press m to toggle debug.",
             "Press t to open quick chat.",
             "Juggernaut have purple auras that can suck in players, careful!",
-            "Blizzard slows down dune mobs.",
+            "Blizzard slows down mobs.",
             "Press the WASD or arrow keys to move.",
             "Detonator shoots traps that explode on death."
           ]
@@ -3458,7 +3485,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       signedupdiv.style.display = "block";
                       signupdiv.style.display = "none";
                     }
-                    if (document.getElementById("signup").style.display != "none" || document.getElementById("login").style.display != "none") {
+                    if (document.getElementById("signup").style.display == "block" || document.getElementById("login").style.display == "block") {
                       document.getElementById("signup").style.display = "none";
                       document.getElementById("login").style.display = "none";
                       darken.style.display = "none";
@@ -3669,7 +3696,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     }, 5000);
                   }
                   else if (type=="stars"){//awarded stars without an achievement, e.g. on death
-                    console.log('spong')
                     let starGiven = info[1];
                     let div = document.createElement('div');
                     div.id = 'achnotifdiv';
@@ -3932,6 +3958,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   }
                   else if (type=="teleport"){//server tells player that it successfully teleported, so need to connect to the server for the new dimension
                     let dimension = info[1];
+                    console.log('teleported to ' + dimension)//skibidi
                     prevplayerstring = playerstring;
                     //reset object list when teleport
                     portals = {};
@@ -3946,9 +3973,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     teleportingTransition = "yes";
                     oldteleportingLocation = gamemode;//change all of this
                     teleportingcount = 0;
-                    if (dimension=="arena") dimension = "Free For All";
-                    else if (dimension=="2tdm") dimension = "2 Teams";
-                    else if (dimension=="4tdm") dimension = "4 Teams";
+                    if (dimension=="arena") gamemode = "Free For All";
+                    else if (dimension=="2tdm") gamemode = "2 Teams";
+                    else if (dimension=="4tdm") gamemode = "4 Teams";
                     else if (dimension=="sanc") gamemode = "sanctuary";
                     else if (dimension=="cr") gamemode = "crossroads";
                     else gamemode = dimension;
@@ -4417,9 +4444,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 }
               }
               canvas.strokeStyle = pSBC ( -0.4, canvas.fillStyle );//radiant shape outline is 40% darker
-              r.state += 0.015;
-              if (r.state > 3){
-                r.state = 0;
+              if (object.type != "bullet") {//bullet uses parent's radiance, if all bullets update this state then color animation gonna go crazy lol
+                r.state += 0.015;
+                if (r.state > 3){
+                  r.state = 0;
+                }
               }
               radShapeCol = canvas.fillStyle;//store for health bar
 
@@ -4714,6 +4743,17 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.fillText(name,drawingX, drawingY-(object.width+20) / clientFovMultiplier);
                   ctx.lineJoin = "miter";
                 }
+                if (settingsList.showids === true && debugState == "open") {
+                  ctx.fillStyle = "white";
+                  ctx.strokeStyle = "black";
+                  ctx.lineWidth = 9;
+                  ctx.font = "700 15px Roboto";
+                  ctx.textAlign = "center";
+                  ctx.lineJoin = "round";
+                  ctx.strokeText(id,drawingX, drawingY-(object.width-10) / clientFovMultiplier);
+                  ctx.fillText(id,drawingX, drawingY-(object.width-10) / clientFovMultiplier);
+                  ctx.lineJoin = "miter";
+                }
             }
 
             function drawPlayer(canvas, object, fov, spawnProtect, playercolor, playeroutline, eternal, objectangle, id){//only barrels and body (no heath bars, names, and chats)
@@ -4721,8 +4761,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               //fov is clientFovMultiplier for ctx, hctx is 1
                 canvas.lineJoin = "round"; //make nice round corners
                 //draw assets below body, e.g. rammer body base
-                for (const assetID in object.assets){
-                  var asset = object.assets[assetID];
+                for (const asset of object.assets){
                   if (asset.type == "under") {
                     let assetcolor = asset.color;
                     let assetoutline = asset.outline;
@@ -4740,7 +4779,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 //draw barrel
                 canvas.lineWidth = 4 / fov;
                 //weapon barrels
-                for (const barrel in object.barrels){
+                for (let barrel = 0; barrel < object.barrels.length; barrel++) {
                   let thisBarrel = object.barrels[barrel];
                   canvas.rotate((thisBarrel.additionalAngle * Math.PI) / 180); //rotate to barrel angle
                   canvas.fillStyle = bodyColors.barrel.col;
@@ -4882,8 +4921,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 }
                 
                 //draw assets above body, e.g. aura assets
-                for (const assetID in object.assets){
-                  var asset = object.assets[assetID];
+                for (const asset of object.assets){
                   if (asset.type == "above") {
                     let assetcolor = asset.color;
                     let assetoutline = asset.outline;
@@ -4899,7 +4937,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 }
 
                 //barrels in body upgrade
-                for (const barrel in object.bodybarrels){
+                for (let barrel = 0; barrel < object.bodybarrels.length; barrel++) {
                   let thisBarrel = object.bodybarrels[barrel];
           //lerp barrel angle
                   let oldangle;
@@ -4991,8 +5029,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   if (which == "body" && (name in bodyupgrades)) {
                     if (bodyupgrades[name].hasOwnProperty("assets") && bodywhich!="above") {//bodywhich is under or neither (render both)
                       //draw under assets
-                      for (const assetID in bodyupgrades[name].assets) {
-                        var asset = bodyupgrades[name].assets[assetID];
+                      for (const asset of bodyupgrades[name].assets) {
                         if (asset.type == "under") {
                           let assetcolor = asset.color;
                           let assetoutline = asset.outline;
@@ -5026,8 +5063,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     }
                     if (bodyupgrades[name].hasOwnProperty("assets") && bodywhich!="under") {
                       //draw above assets
-                      for (const assetID in bodyupgrades[name].assets) {
-                        let asset = bodyupgrades[name].assets[assetID];
+                      for (const asset of bodyupgrades[name].assets) {
                         if (asset.type == "above") {
                           let assetcolor = asset.color;
                           let assetoutline = asset.outline;
@@ -5041,7 +5077,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       //draw barrels
                       hctx.fillStyle = bodyColors.barrel.col;
                       hctx.strokeStyle = bodyColors.barrel.outline;
-                      for (const barrel in bodyupgrades[name].bodybarrels) {
+                      for (let barrel = 0; barrel < bodyupgrades[name].bodybarrels.length; barrel++) {
                           let thisBarrel = bodyupgrades[name].bodybarrels[barrel];
                           hctx.rotate(thisBarrel.additionalAngle);
                           if (ishomeScreen === true && thisBarrel.barrelType != "drone"){//rotate turrets at an angle for home screen so that they dont awkwardly point forward
@@ -5087,8 +5123,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     if (weaponupgrades[name].hasOwnProperty("barrels")) {
                         hctx.fillStyle = bodyColors.barrel.col;
                         hctx.strokeStyle = bodyColors.barrel.outline;
-                        for (const barrelID in weaponupgrades[name].barrels) {
-                          const k = weaponupgrades[name].barrels[barrelID];
+                        for (const k of weaponupgrades[name].barrels) {
                           hctx.rotate(k.additionalAngle * Math.PI / 180);
                           if (k.barrelType == "bullet") drawBulletBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1)
                           else if (k.barrelType == "drone") drawDroneBarrel(hctx, k.x * bodysize, k.barrelWidth * bodysize, k.barrelHeight * bodysize,0,1)
@@ -5180,6 +5215,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 if (object.team=="mob"){ //dune mob's bullets is the color of mob
                   ctx.fillStyle = botcolors[object.ownerName].color;
                   ctx.strokeStyle = botcolors[object.ownerName].outline;
+                  if (object.ownerName == "Cavern Protector" && radiantShapes.cp) {//skibidi
+                    object.radtier = 0;
+                    updateRadiantColor(object,'cp');
+                  }
                 }
                 if (object.passive == "yes") {
                   if (object.bulletType == "aura") {
@@ -5246,8 +5285,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     var prevstroke = ctx.strokeStyle;//store previous bullet color so can change back later
                     ctx.fillStyle = bodyColors.barrel.col;
                     ctx.strokeStyle = bodyColors.barrel.outline;
-                    for (const barrelID in object.barrels) {
-                      let k = object.barrels[barrelID];
+                    for (const k of object.barrels) {
                       if (k.barrelType == "bullet") drawBulletBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
                       else if (k.barrelType == "drone") drawDroneBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
                       else if (k.barrelType == "trap") drawTrapBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
@@ -5265,7 +5303,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     ctx.rotate(-45 * Math.PI / 180 + object.moveAngle);
                   }
                   else{//minion
-                    let firstBarrel = object.barrels[Object.keys(object.barrels)[0]];
+                    let firstBarrel = object.barrels[0];
                     let firstBarrelWidth = firstBarrel.barrelWidth;
                     let minionWidth = object.width * 2;
                     if (Math.abs(firstBarrelWidth - minionWidth) < 5){//barrel is almost as wide as minion's body, e.g. manufacturer
@@ -5284,8 +5322,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.rotate(-object.moveAngle); //rotate back
                   //BARREL FOR THE MINE TRAP
                   if (object.bulletType == "mine"){
-                    for (const barrelID in object.barrels) {
-                      let k = object.barrels[barrelID];
+                    for (const k of object.barrels) {
                       ctx.rotate(object.moveAngle); //rotate to barrel angle
                       ctx.fillStyle = bodyColors.barrel.col;
                       ctx.strokeStyle = bodyColors.barrel.outline;
@@ -5333,8 +5370,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 ctx.rotate(object.angle);
                 //draw barrels
                 if (object.name!="Pillbox"){//pillbox's barrel is visually a turret
-                  for (const barrelID in object.barrels) {
-                    let k = object.barrels[barrelID];
+                  for (const k of object.barrels) {
                     ctx.rotate((k.additionalAngle + 90) * Math.PI / 180); //rotate to barrel angle
                     ctx.fillStyle = bodyColors.barrel.col;
                     ctx.strokeStyle = bodyColors.barrel.outline;
@@ -5426,6 +5462,18 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.fillStyle = botcolors[object.name].color;
                   ctx.strokeStyle = botcolors[object.name].outline;
                 }
+                if (object.name == "Cavern Protector") {//radiant//skibidi
+                  if (!radiantShapes.cp) {
+                    let randomState = Math.floor(Math.random() * 3);//state changes from 0.0 to 3.0
+                    let randomType = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
+                    radiantShapes.cp = {
+                      state: randomState,
+                      type: randomType
+                    }
+                  }
+                  object.radtier = 0;
+                  updateRadiantColor(object,'cp');
+                }
                 //draw body
                 const w = object.width / clientFovMultiplier;
                 if (object.side==0) {
@@ -5448,7 +5496,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     ctx.stroke();
                   }
                   else{//normal spawner
-                    if (object.name=="Cluster"||object.name=="Pursuer"||object.name=="Champion"||object.name=="Infestor"||object.name=="Abyssling"){
+                    if (object.name=="Cluster"||object.name=="Pursuer"||object.name=="Champion"||object.name=="Infestor"||object.name=="Abyssling"||object.name=="Cavern Protector"){
                       ctx.rotate(Math.PI/object.side);//tilt so vertex not facing player
                     }
                     renderPolygon(w, object.side);
@@ -5475,8 +5523,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       ctx.rotate(Math.PI / 2);
                       ctx.fillStyle = bodyColors.barrel.col;
                       ctx.strokeStyle = bodyColors.barrel.outline;
-                      for (const barrelID in object.barrels) {
-                        let k = object.barrels[barrelID];
+                      for (const k of object.barrels) {
                         let bw = k.barrelWidth / clientFovMultiplier;
                         let bh = (k.barrelHeight - k.barrelHeightChange) / clientFovMultiplier;
                         ctx.fillRect(-bw / 2 + k.x, -bh, bw, bh);
@@ -5503,6 +5550,29 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       ctx.fillRect(-bw / 2, -bh, bw, bh);
                       ctx.strokeRect(-bw / 2, -bh, bw, bh);
                       drawCircle(w*0.45);
+                    } else if (object.name=="Cavern Protector"){
+                      //draw upper layer
+                      let oldfill = ctx.fillStyle;
+                      let oldstroke = ctx.strokeStyle;
+                      ctx.fillStyle = "#5f676c";
+                      ctx.strokeStyle = "#41494e";
+                      renderPolygon(w*0.75, object.side);
+                      ctx.fillStyle = oldfill;
+                      ctx.strokeStyle = oldstroke;
+                      renderPolygon(w*0.7, object.side);
+                      ctx.fillStyle = "#5f676c";
+                      ctx.strokeStyle = "#41494e";
+                      renderPolygon(w*0.55, object.side);
+                      ctx.fillStyle = oldfill;
+                      ctx.strokeStyle = oldstroke;
+                      renderPolygon(w*0.5, object.side);
+                      ctx.fillStyle = bodyColors.barrel.col;
+                      ctx.strokeStyle = bodyColors.barrel.outline;
+                      renderPolygon(w*0.3, object.side);
+                      ctx.fillStyle = oldfill;
+                      ctx.strokeStyle = oldstroke;
+                      renderPolygon(w*0.15, object.side);
+                      ctx.rotate(-Math.PI/object.side);
                     }
                   }
                 } else{//negative sides, draw a star! (cactus)
@@ -5533,17 +5603,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     ctxroundRectangle(x,y,r,ww,h);
                   }
                 }
-                ctx.fillStyle = "white";
-                ctx.strokeStyle = "black";
-                ctx.lineWidth = 5 / clientFovMultiplier;
-                ctx.font = "700 " + 20 / clientFovMultiplier + "px Roboto";
-                ctx.textAlign = "center";
-                ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-                let specialtyText = "";
-                if (botcolors[object.name].specialty != "") specialtyText = " (" + botcolors[object.name].specialty + ")";
-                ctx.strokeText(object.name + specialtyText, drawingX, drawingY - w - 10);
-                ctx.fillText(object.name + specialtyText, drawingX, drawingY - w - 10);
-                ctx.lineJoin = "miter";
                 if (object.hasOwnProperty("deadOpacity")) {
                   ctx.globalAlpha = 1.0; //reset opacity
                 }
@@ -5554,6 +5613,18 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.beginPath();
                   ctx.arc(drawingX, drawingY, w, 0, 2 * Math.PI);
                   ctx.stroke();
+                  //write bot name
+                  ctx.fillStyle = "white";
+                  ctx.strokeStyle = "black";
+                  ctx.lineWidth = 9;
+                  ctx.font = "700 15px Roboto";
+                  ctx.textAlign = "center";
+                  ctx.lineJoin = "round";
+                  let specialtyText = "";
+                  if (botcolors[object.name].specialty != "") specialtyText = " (" + botcolors[object.name].specialty + ")";
+                  ctx.strokeText(object.name + specialtyText, drawingX, drawingY - w - 20 / clientFovMultiplier);
+                  ctx.fillText(object.name + specialtyText, drawingX, drawingY - w - 20 / clientFovMultiplier);
+                  ctx.lineJoin = "miter";
                 }
               } else if (object.type == "shape") {
                 
@@ -6242,6 +6313,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
               var drawingX = (object.x - px) / clientFovMultiplier + canvas.width / 2; //calculate the location on canvas to draw object
               var drawingY = (object.y - py) / clientFovMultiplier + canvas.height / 2;
               if(object.type == "player") {
+                if (settingsList.showchat === true) {
                 //write chats
                 var firstChatY = object.width / clientFovMultiplier /5*4 + 55 / clientFovMultiplier;
                 if (id == playerstring) {
@@ -6433,25 +6505,30 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   firstChatY += (h + 5); //height of chat plus space between chats
                 });
                 ctx.lineJoin = "miter"; //change it back
-                
-                if (id != playerstring) {
+              }
+                if (id != playerstring || settingsList.showownname === true) {
                   ctx.fillStyle = "white";
                   ctx.strokeStyle = "black";
                   ctx.lineWidth = 10 / clientFovMultiplier;
                   ctx.font = "700 " + 30 / clientFovMultiplier + "px Roboto";
                   ctx.textAlign = "center";
                   ctx.miterLimit = 2;//prevent text spikes, alternative to linejoin round
-                  //ctx.lineJoin = "round"; //prevent spikes above the capital letter "M"
-                  //note: if you stroke then fill, the words will be thicker and nicer. If you fill then stroke, the words are thinner.
-                  if (object.name == "unnamed"){
-                    object.name = "";
+                  if (settingsList.showname === true) {
+                    if (object.name == "unnamed"){
+                      object.name = "";
+                    }
+                    ctx.strokeText(object.name, drawingX, drawingY - (object.width + 35) / clientFovMultiplier);
+                    ctx.fillText(object.name, drawingX, drawingY - (object.width + 35) / clientFovMultiplier);
+                    //write player level
+                    ctx.font = "700 " + 15 / clientFovMultiplier + "px Roboto";
+                    ctx.strokeText("lv." + object.level, drawingX, drawingY - (object.width + 10) / clientFovMultiplier);
+                    ctx.fillText("lv." + object.level, drawingX, drawingY - (object.width + 10) / clientFovMultiplier);
                   }
-                  ctx.strokeText(object.name, drawingX, drawingY - (object.width + 35) / clientFovMultiplier);
-                  ctx.fillText(object.name, drawingX, drawingY - (object.width + 35) / clientFovMultiplier);
-                  //write player level
-                  ctx.font = "700 " + 15 / clientFovMultiplier + "px Roboto";
-                  ctx.strokeText("lv." + object.level, drawingX, drawingY - (object.width + 10) / clientFovMultiplier);
-                  ctx.fillText("lv." + object.level, drawingX, drawingY - (object.width + 10) / clientFovMultiplier);
+                  if (settingsList.showids === true && debugState == "open") {
+                    ctx.font = "700 " + 15 / clientFovMultiplier + "px Roboto";
+                    ctx.strokeText(id,drawingX, drawingY-(object.width-20) / clientFovMultiplier);
+                    ctx.fillText(id,drawingX, drawingY-(object.width-20) / clientFovMultiplier);
+                  }
                   ctx.lineJoin = "miter"; //change it back
                 }
               }
@@ -6698,24 +6775,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   }
                 } else if ((e.key == "t" || e.key == "T") && state=="ingame") {
                   if (quickchat.style.display == "block"){//close quick chat (turn on closing animation, then reset animation, then hide div)
-                    let quickchattext = document.getElementById("quickchattext");
-                    let quickchat1 = document.getElementById("quickchat1");
-                    let quickchat2 = document.getElementById("quickchat2");
-                    let quickchat3 = document.getElementById("quickchat3");
-                    let quickchat4 = document.getElementById("quickchat4");
-                    quickchattext.style.animation = "rising .5s";
-                    quickchat1.style.animation = "shrinking1 .5s";
-                    quickchat2.style.animation = "shrinking2 .5s";
-                    quickchat3.style.animation = "shrinking3 .5s";
-                    quickchat4.style.animation = "shrinking4 .5s";
-                    setTimeout(() => {
-                      quickchat.style.display = "none";//hide div
-                      quickchattext.style.animation = "falling .5s";//reset animation to what is stated in html
-                      quickchat1.style.animation = "growing1 .5s";
-                      quickchat2.style.animation = "growing2 .5s";
-                      quickchat3.style.animation = "growing3 .5s";
-                      quickchat4.style.animation = "growing4 .5s";
-                    }, 500);//0.5 seconds for animation
+                    closeQuickChat()
                   }
                   else{//if display is none or " "
                     //js will return display as " " because it cant read the css, unless you set it using js before
@@ -6747,6 +6807,13 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   } else {
                     hcanvas.style.display = "none";
                     createNotif("Screenshot Mode (P): ON",defaultNotifColor,keybindNotifTimer)
+                  }
+                } else if ((e.key == "1" || e.key == "2" || e.key == "3" || e.key == "4") && quickchat.style.display == "block" && state=="ingame") {
+                  const quickchatmsg = quickchats[e.key];
+                  if (quickchatmsg) {
+                    var packet = JSON.stringify(["chat", quickchatmsg]);
+                    socket.send(packet);
+                    closeQuickChat()
                   }
                 }
               }
@@ -7385,6 +7452,15 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.fillRect(xx + mw /2 - s /2, yy + mw /2 - s /2, s, s);
                 }
 
+                //draw maze walls
+                if (objects.wall) {
+                  for (const id in objects.wall) {
+                    const thisobject = objects.wall[id];
+                    thisobject.type = "wall";
+                    drawobjects(thisobject, id, playerstring, auraWidth);
+                  }
+                }
+
                 //drawin grid lines
                 ctx.beginPath();
                 ctx.lineWidth = 4; //thickness of grid
@@ -7467,6 +7543,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
       
       
                 for (const type in objects) {
+                  if (type == "wall") continue;//dont render walls here. Walls are rendered below the map grid
                   for (const id in objects[type]) {
                     var thisobject = JSON.parse(JSON.stringify(objects[type][id]));
                     if (!interpolatedobjects[type]){
@@ -7506,8 +7583,15 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     if (type == "bullet" && thisobject.bulletType == "bullet"){
                       //server wont send bullet updates all the time if the bullet is a bullet and not a trap or drone or minion etc.
                       //client move bullet yourself
-                      objects[type][id].y += Math.sin(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
-                      objects[type][id].x += Math.cos(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
+                      const b = objects[type][id];
+                      if (b.team == "mob") {//bot bullet
+                        b.y += Math.sin(thisobject.moveAngle) * thisobject.amountAddWhenMove * deltaTime;
+                        b.x += Math.cos(thisobject.moveAngle) * thisobject.amountAddWhenMove * deltaTime;
+                      }
+                      else {//normal bullet
+                        b.y += Math.sin(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
+                        b.x += Math.cos(thisobject.moveAngle - 0.5 * Math.PI) * thisobject.amountAddWhenMove * deltaTime;
+                      }
                     }
                     if (id != playerstring || state != "deathscreen"){//dont draw self on the death screen (u still 'exist' to allow code to function)
                       drawobjects(thisobject, id, playerstring, auraWidth); //draw the objects on the canvas
@@ -7647,7 +7731,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 if (gamemode == "crossroads") {
                   //spawn random particles if in crossroads
                   //if (spawncrossroadsparticle == "yes"){
-                    var choosing = Math.floor((Math.random() * 2)/clientFovMultiplier); //choose if particle spawn
+                    var choosing = Math.floor((Math.random() * 4)/clientFovMultiplier); //choose if particle spawn
                     if (choosing <= 0) {
                       //spawn a particle
 
@@ -8507,7 +8591,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
       hctx.restore();
 
       //drawing minimap
-        if (gamemode != "crossroads" && gamemode != "cavern") {
+        if (gamemode != "crossroads" && gamemode != "cavern" && settingsList.showminimap === true) {
           //dont draw anything on minimap for crossroads and cavern
           let mmX = 10;
           let mmY = 10;
@@ -8968,7 +9052,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         }
         else{//a developer
           drawncolor = players[id].color;
-          drawnoutline = players[id].color;//skibidi wtf why need this
+          drawnoutline = players[id].color;
         }
         if (players[id].rad > 0){//rad player
           if (!radiantShapes.hasOwnProperty(id)) {
@@ -9186,7 +9270,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             numberOfObjectsDrawn++;
           }
         }
-        document.getElementById("drawnEntities").textContent = "Drawn Entities: " + numberOfObjectsDrawn;
+        drawnentitiesElement.textContent = "Drawn Entities: " + numberOfObjectsDrawn;
       }
   //}, 30); //check every 30ms //dont use setinterval anymore
         requestAnimationFrame(screenDrawLoop);//chage this to request interval after figuring out how to call it and stop it
@@ -9330,3 +9414,5 @@ for (const dude of lbarrayAge){
   divtop += 7;
 }
 document.getElementById("lbContainer").innerHTML = starLBdivs;
+
+changeGamemode(1);//CONNECT TO FFA DEFAULT(change this in the future)

@@ -87,5 +87,6 @@ crossroads maze walls should render below grids
 add upgrade tank particles for all players, not just yourself
 update the way bots are rendered
 add leave animation for leaderboard
+fix quickchat (allow editing and deleting of quickchats, and they should save)
 
 Note: this file is for my reference, isnt used ingame

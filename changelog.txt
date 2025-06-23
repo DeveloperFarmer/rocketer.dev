@@ -1,3 +1,43 @@
+ALPHA 0.1.7 - June 23, 2025
+- Barrels are arrays now (instead of objects)
+- Fixed wave
+- Tweaked Cavern Protector
+    - It's radiant now
+    - Increased its size (250 -> 700)
+    - Increased FoV (1500 -> 2000)
+    - Nerfed bullet damage (3 & 3 -> 1 & 2)
+    - Nerfed side trap damage (10 -> 2)
+    - Nerfed front trap damage (3 -> 0.3)
+    - Changed order of trap barrel layers
+    - Added body visual design
+- Fixed player count and global player count
+- Game no longer gives stars for teleporting
+- Game connects to FFA by default
+- Debug is now turned off by default
+- New settings:
+    - Show extra performance info
+    - Show chat
+    - Show names
+    - Show IDs
+    - Show own name
+    - Silent typing
+    - Show minimap
+- Quickchats work now (press t), more features will come in future updates
+
+ALPHA 0.1.6 - June 21, 2025
+- Reduced ambient particle amount in crossroads
+- Walls are now rendered below the grid
+- Wormholes collapse 3 times faster when there are players in it
+- Reworked and buffed Satellite and Triton
+- Fixed the ?dim developer command (syntax: ?dim [arena/sanc/cr/cavern])
+    - Note: don't teleport to your current dimension
+- Fixed maze wall collisions
+- Octagon is now the largest shape that can spawn in the cavern hallways
+- Patched a bug where buttons were displaying wrong eternal body upgrades
+- Patched a bug where teleporting back to FFA did not change the map color
+- Patched a bug where drone turrets were not attacking small shapes properly
+- Updated notification tips
+
 ALPHA 0.1.5 - June 20, 2025
 - Fixed walls
 - Wormholes only teleport players when they collapse
