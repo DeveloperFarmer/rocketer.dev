@@ -1,3 +1,22 @@
+ALPHA 0.1.8 - June 27, 2025
+- Added 2 new teams: brown and cyan
+- Crossroads and cavern main area now have a lower chance of spawning small shapes
+- Tanks are now rendered using client-side code so that server sends less data
+- Fixed a rendering issue for Chaos
+- Improvements to barrel shooting animation
+    - Moved barrel animation from server to client
+    - Animation is now based on reload (most obvious for tanks with high reload, e.g. annihilator)
+    - Bots now have this animation e.g. Cavern Protector
+    - Fixed barrels becoming super long when lagging
+- Improvements to shooting
+    - Reload state changes even when not shooting (i.e. tanks like annihilator shoot immediately when you press your mouse after not shooting for a long time)
+    - Reload delays are now consistent (e.g. Duo has shooting delay for one barrel, this delay no longer disappears after shooting for long periods of time)
+- Improvements to accounts
+    - Added accounts leaderboard, it updates every 15 minutes
+    - You can now edit your account pfp and description
+    - Total stars now update when you gain stars or achievements
+    - Fixed explorer and ascended achievements
+
 ALPHA 0.1.7 - June 23, 2025
 - Barrels are arrays now (instead of objects)
 - Fixed wave

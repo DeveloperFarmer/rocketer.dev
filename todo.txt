@@ -89,4 +89,7 @@ update the way bots are rendered
 add leave animation for leaderboard
 fix quickchat (allow editing and deleting of quickchats, and they should save)
 
+edit pfp
+https://discord.com/channels/1250077958559891467/1298672667070824571/1371898495501467729
+
 Note: this file is for my reference, isnt used ingame

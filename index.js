@@ -12,11 +12,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         let dctx = dcanvas.getContext('2d');
 
         const pfpcanvas = document.getElementById("accPfp");
-        //pfpcanvas.width = 1920/5;
-        //pfpcanvas.height = 1080/5;
         pfpcanvas.width = 300;
         pfpcanvas.height = 300;
         let pctx = pfpcanvas.getContext("2d");
+
+        const ecanvas = document.getElementById("editpfpcanvas");
+        ecanvas.width = 300;
+        ecanvas.height = 300;
+        let ectx = ecanvas.getContext("2d");
 
         const scoreElement = document.getElementById('score');
         const mapSizeElement = document.getElementById('mapSize');
@@ -96,6 +99,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           accusername = document.getElementById("loginuser").value;
           accpassword = document.getElementById("loginpw").value;
           canLogIn = "yes";
+          acctype = "login";
         }
         export function signup(){
           //document.getElementById("signupdesc").value
@@ -116,6 +120,68 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           document.getElementById("signup").style.display = "block";
           darken.style.display = "block";
         });
+        //acc lb vars
+        let starLBdivs = '';
+        let scoreLBdivs = '';
+        //update star count when gain achievement or gain stars after death (server only sends how many stars gained, not total star amount)
+        function updateStarCount(starGained) {
+          if (loggedInAccount.star){
+            loggedInAccount.star += starGained;
+            document.getElementById("starAmt").textContent = loggedInAccount.star;
+            document.getElementById("starAmt2").textContent = loggedInAccount.star;
+          }
+        }
+        function renderAccountPfp(cx, ca, accountObject) {
+          cx.fillStyle = "#CDCDCD"; //background
+          cx.strokeStyle = "grey";
+          cx.lineWidth = 5;
+          cx.beginPath();
+          cx.arc(ca.width/2, ca.height/2, ca.width/2 - 2, 0, 2 * Math.PI);
+          cx.fill();
+          cx.stroke();
+          //draw grid
+          let pgridHeight = 150;
+          cx.lineWidth = 15; //thickness of grid
+          cx.strokeStyle = "#afafaf";
+          for (
+            let x = -pgridHeight - ((-ca.width / 2) % pgridHeight);
+            x < ca.width;
+            x += pgridHeight
+          ) {
+            cx.moveTo(x, 0);
+            cx.lineTo(x, ca.height);
+          }
+          for (
+            let y = -pgridHeight - ((-ca.height / 2) % pgridHeight);
+            y < ca.height;
+            y += pgridHeight
+          ) {
+            cx.moveTo(0, y);
+            cx.lineTo(ca.width, y);
+          }
+          cx.stroke();
+          //crop grid to a circle
+          cx.globalCompositeOperation = "destination-in";
+          cx.beginPath();
+          cx.arc(ca.width/2, ca.height/2, ca.width/2 - 2, 0, 2 * Math.PI);
+          cx.closePath();
+          cx.fill();
+          cx.globalCompositeOperation = "source-over"; //change back to default
+          //draw tank
+          cx.lineJoin = "round";
+          let bodysize = ca.width/3;
+          const pfpInfo = accountObject.pfp;
+          let tank = pfpInfo[0];
+          let body = pfpInfo[1];
+          let team = pfpInfo[2];
+          let x = ca.width/2 + pfpInfo[3];
+          let y = ca.height/2 + pfpInfo[4];
+          let bodyangle = pfpInfo[5];
+          let temphctx = hctx;
+          hctx = cx;//temporarily change hctx to cx for function to work
+          drawFakePlayer2(team,tank,body,x + hsCameraX,y + hsCameraY,bodyangle,bodysize,true);
+          hctx = temphctx;
+        }
 
         // Set canvas to window size
         canvas.width = window.innerWidth;
@@ -2387,16 +2453,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             if (state == "ingame") return;//dont do anything if ingame
             //check if user logging in (only possible at home page)
             if (canLogIn == "yes") {
-              if (acctype != "edit"){
-                var packet = JSON.stringify(["logInOrSignUp", accusername, accpassword, accdesc, acctype]);
-                socket.send(packet)
-                canLogIn = "no";
-              }
-              else{
-                //var packet = JSON.stringify(["editaccount", accusername, accpassword, accdesc]);
-                //socket.send(packet)
-                canLogIn = "no";
-              }
+              var packet = JSON.stringify(["logInOrSignUp", accusername, accpassword, accdesc, acctype]);
+              socket.send(packet)
+              canLogIn = "no";
             }
             //start drawing the homescreen if not ingame
             hctx.fillStyle = mapColors.default;
@@ -2871,9 +2930,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var accdesc = 0;
         var acctype = "error";
         var loggedInAccount = {};
+        var storedAcc = {};//this one doesnt change when editing an account
         var loggedin = "no";
         const achievementList = [//the order is the order that achievements appear on the account page (based on star awarded)
-          ['Welcome',5,'Create an account.',1],//name, star, description, achievement id
+          ['Welcome',5,'Log in to your account.',1],//name, star, description, achievement id
           ['Explorer',5,'Enter a portal.',7],
           ['Killer',20,'Kill a player by shooting.',2],
           ['Ascended',20,'Enter the sanctuary.',13],
@@ -3347,35 +3407,21 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
         var socket = "null";
         // Connect to server
-        if (window.location.href.includes("developer-rocketer")
-          ||window.location.href.includes("rocketer-v2")
-          ||window.location.href.includes("rocketer-dev")
-          ||window.location.href.includes("127.0.0.1")){//this is a testing website, or local host
+        if (window.location.href.includes("127.0.0.1")){//this is a testing website, or local host
           //createNotif("Connected to the developer's testing servers.","rgba(150,0,0)",5000)
           //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)//wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/
           document.getElementById("adminPanelYN").style.display = "block";
           var serverlist = {
-            //"Free For All": "wss://ffa-r.mrharryw.dev/",
             "Free For All": "wss://cfaa32e2-5c79-441a-84a3-292ea9aafe5d-00-1o94mkz7bqr58.riker.replit.dev:8080/",
-            "2 Teams": "wss://devrocketer2tdm.devrocketer.repl.co/",
-            "4 Teams": "wss://devrocketer4tdm.devrocketer.repl.co/",
-            "Tank Editor": "wss://devrocketereditor.devrocketer.repl.co/",
-            "dune": "wss://devrocketerdune.devrocketer.repl.co/",
-            "cavern": "wss://devrocketercavern.devrocketer.repl.co/",
-            "cr": "wss://devrocketercr.devrocketer.repl.co/",
-            "sanc": "wss://devrocketersanc.devrocketer.repl.co/",
+            "2 Teams": "",
+            "4 Teams": "",
           }
         }
         else{//actual rocketer
           var serverlist = {
-            // "Free For All": "",
             "Free For All": "wss://ffa-r.mrharryw.dev/",
-            "4 Teams": "wss://rocketer4tdm.rocketer.repl.co/",
-            "Tank Editor": ["wss://rocketereditor.rocketer.repl.co/", "wss://rocketereditor2.rocketer.repl.co/"],
-            "dune": "wss://rocketerdune.rocketer.repl.co/",
-            "cavern": "wss://rocketercavern.rocketer.repl.co/",
-            "cr": "wss://rocketercr.rocketer.repl.co/",
-            "sanc": "wss://rocketersanc.rocketer.repl.co/",
+            "2 Teams": "",
+            "4 Teams": "",
           }
         }
         function connectServer(whichserver){
@@ -3491,6 +3537,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       darken.style.display = "none";
                     }
                     loggedInAccount = accountObject;
+                    storedAcc = JSON.parse(JSON.stringify(accountObject));
                     var achievementsDescription = "";
                     function addAchievementDiv(color,color2,name,star,textcol,desc){
                       achievementsDescription += "<div class='achievementDiv' style='color:"+textcol+";background: linear-gradient(to bottom, "+color+" 50%, "+color2+" 0%);'>";
@@ -3562,103 +3609,137 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     if (!highestStreak) highestStreak = 0;
                     document.getElementById("highstreak").textContent = highestStreak;
                     document.getElementById("achievementContainer").innerHTML = achievementsDescription;
-                    pctx.fillStyle = "#CDCDCD"; //background
-                    pctx.strokeStyle = "grey";
-                    pctx.lineWidth = 5;
-                    pctx.beginPath();
-                    pctx.arc(pfpcanvas.width/2, pfpcanvas.height/2, pfpcanvas.width/2 - 2, 0, 2 * Math.PI);
-                    pctx.fill();
-                    pctx.stroke();
-                    //draw grid
-                    var pgridHeight = 150;
-                    pctx.lineWidth = 15; //thickness of grid
-                    //pctx.strokeStyle = "rgba(180, 180, 180, .2)";
-                    pctx.strokeStyle = "#afafaf";
-                    for (
-                      let x = -pgridHeight - ((-pfpcanvas.width / 2) % pgridHeight);
-                      x < pfpcanvas.width;
-                      x += pgridHeight
-                    ) {
-                      pctx.moveTo(x, 0);
-                      pctx.lineTo(x, pfpcanvas.height);
+                    renderAccountPfp(pctx, pfpcanvas, accountObject)
+                    //update edit account panel values
+                    renderAccountPfp(ectx, ecanvas, accountObject)
+                    const xslider = document.getElementById("xOffset");
+                    const xtext = document.getElementById("xoffsetvalue");
+                    const yslider = document.getElementById("yOffset");
+                    const ytext = document.getElementById("yoffsetvalue");
+                    const aslider = document.getElementById("angle");
+                    const atext = document.getElementById("anglevalue");
+                    const weaponDropdown = document.getElementById("pfpWeapon");
+                    const bodyDropdown = document.getElementById("pfpBody");
+                    const teamDropdown = document.getElementById("pfpTeam");
+                    xtext.textContent = accountObject.pfp[3];
+                    xslider.value = accountObject.pfp[3];
+                    ytext.textContent = accountObject.pfp[4];
+                    yslider.value = accountObject.pfp[4];
+                    atext.textContent = accountObject.pfp[5];
+                    aslider.value = accountObject.pfp[5];
+                    weaponDropdown.value = accountObject.pfp[0];
+                    bodyDropdown.value = accountObject.pfp[1];
+                    teamDropdown.value = accountObject.pfp[2];
+                    //document.getElementById("pfpBg").value = accountObject.pfp[6];//doesnt exist now, add in the future (and also continue support for accounts without this)
+                    xslider.oninput = function (event) {
+                      xtext.textContent = xslider.value;
+                      loggedInAccount.pfp[3] = Number(xslider.value);
+                      renderAccountPfp(ectx, ecanvas, loggedInAccount)
                     }
-                    for (
-                      let y = -pgridHeight - ((-pfpcanvas.height / 2) % pgridHeight);
-                      y < pfpcanvas.height;
-                      y += pgridHeight
-                    ) {
-                      pctx.moveTo(0, y);
-                      pctx.lineTo(pfpcanvas.width, y);
+                    yslider.oninput = function (event) {
+                      ytext.textContent = yslider.value;
+                      loggedInAccount.pfp[4] = Number(yslider.value);
+                      renderAccountPfp(ectx, ecanvas, loggedInAccount)
                     }
-                    pctx.stroke();
-                    //crop grid to a circle
-                    pctx.globalCompositeOperation = "destination-in";
-                    pctx.beginPath();
-                    pctx.arc(pfpcanvas.width/2, pfpcanvas.height/2, pfpcanvas.width/2 - 2, 0, 2 * Math.PI);
-                    pctx.closePath();
-                    pctx.fill();
-                    pctx.globalCompositeOperation = "source-over"; //change back to default
-                    //draw tank
-                    pctx.lineJoin = "round";
-                    let bodysize = pfpcanvas.width/3;
-                    const pfpInfo = accountObject.pfp;
-                    let tank = pfpInfo[0];
-                    let body = pfpInfo[1];
-                    let team = pfpInfo[2];
-                    let x = pfpcanvas.width/2 + pfpInfo[3];
-                    let y = pfpcanvas.height/2 + pfpInfo[4];
-                    let bodyangle = pfpInfo[5];
-                    let temphctx = hctx;
-                    hctx = pctx;//temporarily change hctx to pctx for function to work
-                    drawFakePlayer2(team,tank,body,x + hsCameraX,y + hsCameraY,bodyangle,bodysize,true);
-                    hctx = temphctx;
-                    
-                    //draw tanks on the UI for editing account pfp
-                    /*
-                    let availablepfp = ['node','basic','trapper','guard','twin','sniper','cannon','flank','delta','commander','overseer']
-                    for (let i = 0; i < availablepfp.length; i++) {
-                      let divid = 'tank' + availablepfp[i];
-                      let tempcanvas = document.getElementById(divid);
-                      tempcanvas.width = "100"; //canvas coordinate width and height, not the actual canvas width and height
-                      tempcanvas.height = "100";
-                      let pctx = tempcanvas.getContext("2d");
-                      pctx.lineJoin = "round";
-                      let x = 50;
-                      let y = 50;
-                      let bodysize = 20;
-                      let bodycolor = "#00B0E1";
-                      let bodyoutline = "#0092C3";
-                      let which = "weapon";
-                      let name = availablepfp[i];
-                      let bodyangle = 45/180*Math.PI;
-                      pctx.lineWidth = 3;
-                      let temphctx = hctx;
-                      hctx = pctx;//temporarily change hctx to pctx for function to work
-                      drawFakePlayer(name,x,y,bodysize,bodyangle,bodycolor,bodyoutline,which)
-                      hctx = temphctx;
-                      pctx.fillStyle = "white";
-                      pctx.strokeStyle = "black";
-                      pctx.lineWidth = 7;
-                      pctx.font = "900 20px Roboto";
-                      pctx.textAlign = "center";
-                      pctx.strokeText(availablepfp[i], 50, 90);
-                      pctx.fillText(availablepfp[i], 50, 90);
-                    }*/
-        
-                    //used to get the Last Online string, which currently isnt needed (cuz last seen is literally the time now)
-                    //only needed when you can see other people's accounts in search function in future update
-                    /*
-                    var lastSeenString = "";
-                    const weekday = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];//needed because date wll return number value, e.g. 0 for Sunday
-                    var d = new Date(accountObject.lastSeen);
-                    var day = weekday[d.getDay()];
-                    lastSeenString += day+" "+d.getDate()+"/"+(d.getMonth()+1)+"/"+d.getFullYear()+" "+ d.getHours()+":"+d.getMinutes()+":"+d.getSeconds();
-                    */
-                    //for editing account
-                    //accountUsername.value = accountObject.name;
-                    //accountPassword.value = accountObject.pw;
-                    //accountDesc.value = accountObject.desc;
-                    //document.getElementById("editAccount").style.display = "block";//RE-ADD
+                    aslider.oninput = function (event) {
+                      atext.textContent = aslider.value;
+                      loggedInAccount.pfp[5] = Number(aslider.value);
+                      renderAccountPfp(ectx, ecanvas, loggedInAccount)
+                    }
+                    weaponDropdown.onchange = function (event) {
+                      loggedInAccount.pfp[0] = weaponDropdown.value;
+                      renderAccountPfp(ectx, ecanvas, loggedInAccount)
+                    }
+                    bodyDropdown.onchange = function (event) {
+                      loggedInAccount.pfp[1] = bodyDropdown.value;
+                      renderAccountPfp(ectx, ecanvas, loggedInAccount)
+                    }
+                    teamDropdown.onchange = function (event) {
+                      loggedInAccount.pfp[2] = teamDropdown.value;
+                      renderAccountPfp(ectx, ecanvas, loggedInAccount)
+                    }
+                    document.getElementById("edit-pfp-apply").onclick = function() {
+                      if (document.getElementById("editIconPanel").style.display != "none") {
+                        if (JSON.stringify(loggedInAccount.pfp) != JSON.stringify(storedAcc.pfp)) {//pfp was edited
+                          var packet = JSON.stringify(["editAcc","pfp",loggedInAccount.pfp]);
+                          socket.send(packet)
+                        }
+                      }
+                      else{//description was edited
+                        var packet = JSON.stringify(["editAcc","desc",document.getElementById("editDescInput").value]);
+                        socket.send(packet)
+                      }
+                    }
+                    document.getElementById("edit-pfp-cancel").onclick = function() {
+                      if (document.getElementById("editIconPanel").style.display != "none") {//editing pfp
+                        loggedInAccount = JSON.parse(JSON.stringify(storedAcc));
+                        xtext.textContent = loggedInAccount.pfp[3];
+                        xslider.value = loggedInAccount.pfp[3];
+                        ytext.textContent = loggedInAccount.pfp[4];
+                        yslider.value = loggedInAccount.pfp[4];
+                        atext.textContent = loggedInAccount.pfp[5];
+                        aslider.value = loggedInAccount.pfp[5];
+                        weaponDropdown.value = loggedInAccount.pfp[0];
+                        bodyDropdown.value = loggedInAccount.pfp[1];
+                        teamDropdown.value = loggedInAccount.pfp[2];
+                        renderAccountPfp(ectx, ecanvas, loggedInAccount)
+                      }
+                      else{//editing desc
+                        document.getElementById("editDescInput").value = "";
+                      }
+                      document.getElementById("editPanel").style.display = "none";
+                    }
+                    const editicon = document.getElementById("editicon");
+                    const editdesc = document.getElementById("editdesc");
+                    editicon.onclick = function() {
+                      if (editicon.style.color != "white") {//currently not showing edit icon UI
+                        editicon.style.color = "white";
+                        editicon.style.backgroundColor = "grey";
+                        editdesc.style.color = "grey";
+                        editdesc.style.backgroundColor = "transparent";
+                        //remove desc UI and add icon UI
+                        document.getElementById("editDescPanel").style.display = "none";
+                        document.getElementById("editIconPanel").style.display = "inline-block";
+                      }
+                    }
+                    editdesc.onclick = function() {
+                      if (editdesc.style.color != "white") {//currently not showing edit icon UI
+                        editdesc.style.color = "white";
+                        editdesc.style.backgroundColor = "grey";
+                        editicon.style.color = "grey";
+                        editicon.style.backgroundColor = "transparent";
+                        //remove icon UI and add desc UI
+                        document.getElementById("editIconPanel").style.display = "none";
+                        document.getElementById("editDescPanel").style.display = "inline-block";
+                      }
+                    }
+                  }
+                  else if (type == "accLb") {
+                    //accounts leaderboard
+                    const lbarrayStar = info[1];
+                    const lbarrayScore = info[2];
+                    starLBdivs = '';
+                    scoreLBdivs = '';
+                    let divtop = 25;
+                    let rank = 1;
+                    let note = "Note: leaderboard only updates every 15 minutes";
+                    for (const dude of lbarrayStar){
+                      starLBdivs += "<div class='lbBox' style='top: "+divtop+"vmin;'>"+rank+". "+dude.name+"<span style='float: right;'><img src='/scenexeIconStarSmall.png' class='hsImage' style='width: 4vmin; height: 4vmin;position:relative;top: .5vmin;'>"+dude.star+"</span></div>";
+                      rank++;
+                      divtop += 7;
+                    }
+                    starLBdivs += "<br><div class='lbBox' style='top: "+divtop+"vmin;background-color: transparent;font-size: 2vmin;'>"+note+"</div>"
+                    divtop = 25;
+                    rank = 1;
+                    for (const dude of lbarrayScore){
+                      scoreLBdivs += "<div class='lbBox' style='top: "+divtop+"vmin;'>"+rank+". "+dude.name+"<span style='float: right;'>"+abbreviateScore(dude.topScore)+"</span></div>";
+                      rank++;
+                      divtop += 7;
+                    }
+                    scoreLBdivs += "<br><div class='lbBox' style='top: "+divtop+"vmin;background-color: transparent;font-size: 2vmin;'>"+note+"</div>"
+                    if (accLBstate == "star") document.getElementById("lbContainer").innerHTML = starLBdivs;
+                    else if (accLBstate == "score") document.getElementById("lbContainer").innerHTML = scoreLBdivs;
+                    else console.log("error: undefined account leaderboard type")
                   }
                   else if (type=="newach"){//got a new achievement
                     let id = info[1];//id of the achievement gained
@@ -3679,6 +3760,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                           let x = document.getElementById("achnotifdiv");
                           if (x) x.remove();
                         }, 5000);
+                        updateStarCount(star)
                         break;
                       }
                     }
@@ -3705,6 +3787,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       let x = document.getElementById("achnotifdiv");
                       if (x) x.remove();
                     }, 5000);
+                    updateStarCount(starGiven)
                   }
                   else if (type=="pong"){
                     //server reply after client ping to check latency
@@ -3850,7 +3933,58 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                               };
                             } else {
                               //changed object
+                              let actual = objects[type][property];
+                              let obj = gameobjects[type][property];
+                              if (type == "player" && obj.hasOwnProperty('width')) {//server sent new width, need to manually update barrel widths
+                                const stuffNeedToScale = ["barrelWidth","barrelHeight","x"];
+                                for (const barrelID in actual.barrels) {
+                                  for (const p of stuffNeedToScale){
+                                    actual.barrels[barrelID][p] /= actual.width
+                                    actual.barrels[barrelID][p] *= obj.width;
+                                  }
+                                }
+                              }
                               loopobj(gameobjects[type][property], objects[type][property])
+                            }
+                            const obj = gameobjects[type][property];
+                            const actual = objects[type][property];
+                            if (obj.hasOwnProperty("bodyType")) {//tanks are rendered using client side data, server will only send tank upgrade names when upgrade
+                              for (const prop in bodyupgrades[obj.bodyType]){
+                                if (prop != "upgradeTo" && prop != "bodybarrels") {//body barrels have angle which decided by server, so server need to send it
+                                  actual[prop] = JSON.parse(JSON.stringify(bodyupgrades[obj.bodyType][prop]));
+                                  obj[prop] = JSON.parse(JSON.stringify(bodyupgrades[obj.bodyType][prop]));
+                                }
+                              }
+                              if (!bodyupgrades[obj.bodyType].hasOwnProperty("turretBaseSize") && (actual.hasOwnProperty("turretBaseSize") || obj.hasOwnProperty("turretBaseSize"))) {
+                                //had turret base, but current upgrade doesnt have
+                                actual.turretBaseSize = 0;
+                                obj.turretBaseSize = 0;
+                              }
+                              if (!actual.hasOwnProperty('assets')) {//happens at the start of the game cuz base doesnt have assets
+                                actual.assets = [];
+                                obj.assets = [];
+                              }
+                            }
+                            if (obj.hasOwnProperty("tankType")) {
+                              for (const prop in weaponupgrades[obj.tankType]){
+                                if (prop != "upgradeTo") {
+                                  actual[prop] = JSON.parse(JSON.stringify(weaponupgrades[obj.tankType][prop]));
+                                  obj[prop] = JSON.parse(JSON.stringify(weaponupgrades[obj.tankType][prop]));
+                                  if (prop == "barrels") {
+                                    const stuffNeedToScale = ["barrelWidth","barrelHeight","x"];
+                                    for (const barrelID in obj[prop]) {
+                                      for (const p of stuffNeedToScale){
+                                        actual[prop][barrelID][p] *= actual.width;
+                                        obj[prop][barrelID][p] *= actual.width;
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                              if (!actual.hasOwnProperty('barrels')) {//happens for eternals
+                                actual.barrels = [];
+                                obj.barrels = [];
+                              }
                             }
                           }
                         }
@@ -4204,6 +4338,38 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
             var skillpointspos = -370; //current position of skill points bar
             var skillpointsstart = -370; //start position
             var skillpointsend = 155; //end position
+
+            const decreaseTime = 3;
+            const decreaseSpeed = 4;
+            const barrelAnimation = {barrels:{players: {}, bots: {},}, bodybarrels:{players: {}, bots: {},}};
+            function animateBarrels(animObj, barrelID, reloadstate, maxreload) {
+              if (!animObj[barrelID]) animObj.push({
+                barrelHeightChange: 0,
+                shootingState: "no",
+                canShoot: "no",
+              });
+              const b = animObj[barrelID];
+              if (reloadstate <= 0) b.canShoot = "yes";
+              else if (b.canShoot == "yes") {//barrel reload state just changed from 0 to the maxreload, this means the server shot a bullet
+                b.shootingState = "decreasing";
+                b.canShoot = "no";
+              }
+              if (b.shootingState == "decreasing") {
+                b.barrelHeightChange += decreaseSpeed*deltaTime;
+                if (b.barrelHeightChange >= decreaseSpeed*decreaseTime) {
+                  b.shootingState = "increasing";
+                  b.barrelHeightChange = decreaseSpeed*decreaseTime;
+                }
+              } else if (b.shootingState == "increasing") {
+                const remainingTime = maxreload - decreaseTime/deltaTime;
+                b.barrelHeightChange -= decreaseSpeed/remainingTime*decreaseTime*deltaTime;
+                if (b.barrelHeightChange <= 0 || remainingTime <= 0) {
+                  b.barrelHeightChange = 0;
+                  b.shootingState = "no";
+                }
+              }
+              return b.barrelHeightChange;
+            }
 
             const shootBarrelMax = 100;//reduce this value for a larger shooting height change
 
@@ -4765,7 +4931,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   if (asset.type == "under") {
                     let assetcolor = asset.color;
                     let assetoutline = asset.outline;
-                    canvas.lineWidth = asset.outlineThickness / fov;
+                    if (asset.outlineThickness) canvas.lineWidth = asset.outlineThickness / fov;
+                    else canvas.lineWidth = 5 / fov;
                     if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
                       assetcolor = playercolor;
                     }
@@ -4779,8 +4946,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 //draw barrel
                 canvas.lineWidth = 4 / fov;
                 //weapon barrels
+                if (!barrelAnimation.barrels.players[id]) barrelAnimation.barrels.players[id] = [];
                 for (let barrel = 0; barrel < object.barrels.length; barrel++) {
                   let thisBarrel = object.barrels[barrel];
+                  thisBarrel.barrelHeightChange = animateBarrels(barrelAnimation.barrels.players[id], barrel, object.rb[0][barrel], object.rb[1][barrel]);
                   canvas.rotate((thisBarrel.additionalAngle * Math.PI) / 180); //rotate to barrel angle
                   canvas.fillStyle = bodyColors.barrel.col;
                   canvas.strokeStyle = bodyColors.barrel.outline;
@@ -4925,7 +5094,8 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   if (asset.type == "above") {
                     let assetcolor = asset.color;
                     let assetoutline = asset.outline;
-                    canvas.lineWidth = asset.outlineThickness / fov;
+                    if (asset.outlineThickness) canvas.lineWidth = asset.outlineThickness / fov;
+                    else canvas.lineWidth = 5 / fov;
                     if (assetcolor == "default"){//asset same color as body, e.g. ziggurat
                       assetcolor = playercolor;
                     }
@@ -4937,8 +5107,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 }
 
                 //barrels in body upgrade
+                if (!barrelAnimation.bodybarrels.players[id]) barrelAnimation.bodybarrels.players[id] = [];
                 for (let barrel = 0; barrel < object.bodybarrels.length; barrel++) {
                   let thisBarrel = object.bodybarrels[barrel];
+                  thisBarrel.barrelHeightChange = animateBarrels(barrelAnimation.bodybarrels.players[id], barrel, object.rbb[0][barrel], object.rbb[1][barrel]);
           //lerp barrel angle
                   let oldangle;
                   try{
@@ -5215,7 +5387,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 if (object.team=="mob"){ //dune mob's bullets is the color of mob
                   ctx.fillStyle = botcolors[object.ownerName].color;
                   ctx.strokeStyle = botcolors[object.ownerName].outline;
-                  if (object.ownerName == "Cavern Protector" && radiantShapes.cp) {//skibidi
+                  if (object.ownerName == "Cavern Protector" && radiantShapes.cp) {
                     object.radtier = 0;
                     updateRadiantColor(object,'cp');
                   }
@@ -5286,11 +5458,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                     ctx.fillStyle = bodyColors.barrel.col;
                     ctx.strokeStyle = bodyColors.barrel.outline;
                     for (const k of object.barrels) {
-                      if (k.barrelType == "bullet") drawBulletBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
-                      else if (k.barrelType == "drone") drawDroneBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
-                      else if (k.barrelType == "trap") drawTrapBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
-                      else if (k.barrelType == "mine") drawMineBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
-                      else if (k.barrelType == "minion") drawMinionBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                      if (k.barrelType == "bullet") drawBulletBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, 0, clientFovMultiplier)
+                      else if (k.barrelType == "drone") drawDroneBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, 0, clientFovMultiplier)
+                      else if (k.barrelType == "trap") drawTrapBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, 0, clientFovMultiplier, object.width)
+                      else if (k.barrelType == "mine") drawMineBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, 0, clientFovMultiplier, object.width)
+                      else if (k.barrelType == "minion") drawMinionBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, 0, clientFovMultiplier)
                     }
                     ctx.fillStyle = prevfill;
                     ctx.strokeStyle = prevstroke;
@@ -5326,11 +5498,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       ctx.rotate(object.moveAngle); //rotate to barrel angle
                       ctx.fillStyle = bodyColors.barrel.col;
                       ctx.strokeStyle = bodyColors.barrel.outline;
-                      if (k.barrelType == "bullet") drawBulletBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
-                      else if (k.barrelType == "drone") drawDroneBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
-                      else if (k.barrelType == "trap") drawTrapBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
-                      else if (k.barrelType == "mine") drawMineBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange,clientFovMultiplier, object.width)
-                      else if (k.barrelType == "minion") drawMinionBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                      if (k.barrelType == "bullet") drawBulletBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, 0, clientFovMultiplier)
+                      else if (k.barrelType == "drone") drawDroneBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, 0, clientFovMultiplier)
+                      else if (k.barrelType == "trap") drawTrapBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, 0, clientFovMultiplier, object.width)
+                      else if (k.barrelType == "mine") drawMineBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, 0,clientFovMultiplier, object.width)
+                      else if (k.barrelType == "minion") drawMinionBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, 0, clientFovMultiplier)
                       let turretWidth = k.barrelWidth / clientFovMultiplier / 1.3;//add server property in the future so can manually change turret size
                       if (k.x > 0){//for arsenal weapon upgrade
                         turretWidth *= (5/3);
@@ -5369,6 +5541,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 ctx.translate(drawingX, drawingY);
                 ctx.rotate(object.angle);
                 //draw barrels
+                if (!barrelAnimation.barrels.bots[id]) barrelAnimation.barrels.bots[id] = [];
+                for (let barrel = 0; barrel < object.barrels.length; barrel++) {
+                  object.barrels[barrel].barrelHeightChange = animateBarrels(barrelAnimation.barrels.bots[id], barrel, object.rb[0][barrel], object.rb[1][barrel]);
+                }
                 if (object.name!="Pillbox"){//pillbox's barrel is visually a turret
                   for (const k of object.barrels) {
                     ctx.rotate((k.additionalAngle + 90) * Math.PI / 180); //rotate to barrel angle
@@ -5462,7 +5638,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.fillStyle = botcolors[object.name].color;
                   ctx.strokeStyle = botcolors[object.name].outline;
                 }
-                if (object.name == "Cavern Protector") {//radiant//skibidi
+                if (object.name == "Cavern Protector") {//radiant
                   if (!radiantShapes.cp) {
                     let randomState = Math.floor(Math.random() * 3);//state changes from 0.0 to 3.0
                     let randomType = Math.floor(Math.random() * 2) + 1; //choose animation color type (1 or 2)
@@ -9316,8 +9492,10 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
   };
   const leaderboardType = document.getElementById('lbType');
   const leaderboardSubtitle = document.getElementById('lbSubtitle');
+  let accLBstate = "star";
   leaderboardType.onchange = (event) => {
       const inputText = event.target.value;
+      accLBstate = inputText;
       switch(inputText) {
         case "star":
           leaderboardSubtitle.textContent = "Star Champions";
@@ -9326,10 +9504,6 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         case "score":
           leaderboardSubtitle.textContent = "Dominators of the Arena";
           document.getElementById("lbContainer").innerHTML = scoreLBdivs;
-          break;
-        case "age":
-          leaderboardSubtitle.textContent = "Old Folks' Home";
-          document.getElementById("lbContainer").innerHTML = ageLBdivs;
           break;
       }
   }
@@ -9342,6 +9516,33 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
   document.getElementById("closeLB").onclick = function() { //close accounts
     document.getElementById("accLeaderboard").style.display = "none";
   };
+  document.getElementById("editPfp").onclick = function() { //open edit profile panel
+    document.getElementById("editPanel").style.display = "block";
+  };
+  //add edit profile dropdown list
+  let select = document.getElementById('pfpTeam');
+  for (const team in bodyColors){
+      let opt = document.createElement('option');
+      opt.value = team;
+      opt.innerHTML = team;
+      select.appendChild(opt);
+  }
+  select = document.getElementById('pfpWeapon');
+  for (const weapon in weaponupgrades){
+      if (weaponupgrades[weapon].dev) continue;//skip the dev tanks
+      let opt = document.createElement('option');
+      opt.value = weapon;
+      opt.innerHTML = weapon;
+      select.appendChild(opt);
+  }
+  select = document.getElementById('pfpBody');
+  for (const body in bodyupgrades){
+      if (bodyupgrades[body].dev) continue;//skip the dev tanks
+      let opt = document.createElement('option');
+      opt.value = body;
+      opt.innerHTML = body;
+      select.appendChild(opt);
+  }
 
 window.onbeforeunload = () =>  {
     if(state == "ingame"){//in game (show confirmation)
@@ -9350,69 +9551,5 @@ window.onbeforeunload = () =>  {
        return null
     }
 }//confirmation dialog when close tab
-
-//create leaderboard
-//temporarily put here for testing
-const lbarrayStar = [
-  {name: 'Farmer', stars: '999999'},
-  {name: 'Infinite-3D', stars: '500'},
-  {name: 'Testing acc', stars: '100'},
-  {name: 'test', stars: '89'},
-  {name: 'e', stars: '69'},
-  {name: 'ugh', stars: '50'},
-  {name: 'Farmer', stars: '30'},
-  {name: 'Farmer', stars: '20'},
-  {name: 'Farmer', stars: '0'},
-  {name: 'Farmer', stars: '-100'},
-];
-const lbarrayScore = [
-  {name: 'Farmer', score: '999999'},
-  {name: 'Infinite-3D', score: '500'},
-  {name: 'Testing acc', score: '100'},
-  {name: 'test', score: '89'},
-  {name: 'e', score: '69'},
-  {name: 'ugh', score: '50'},
-  {name: 'Farmer', score: '30'},
-  {name: 'Farmer', score: '20'},
-  {name: 'Farmer', score: '0'},
-  {name: 'Farmer', score: '-100'},
-];
-const lbarrayAge = [
-  {name: 'Farmer', lastseen: '999999'},
-  {name: 'Infinite-3D', lastseen: '500'},
-  {name: 'Testing acc', lastseen: '100'},
-  {name: 'test', lastseen: '89'},
-  {name: 'e', lastseen: '69'},
-  {name: 'ugh', lastseen: '50'},
-  {name: 'Farmer', lastseen: '30'},
-  {name: 'Farmer', lastseen: '20'},
-  {name: 'Farmer', lastseen: '0'},
-  {name: 'Farmer', lastseen: '-100'},
-];
-let starLBdivs = '';
-let scoreLBdivs = '';
-let ageLBdivs = '';
-let divtop = 25;
-let rank = 1;
-for (const dude of lbarrayStar){
-  starLBdivs += "<div class='lbBox' style='top: "+divtop+"vmin;'>"+rank+". "+dude.name+"<span style='float: right;'><img src='/scenexeIconStarSmall.png' class='hsImage' style='width: 4vmin; height: 4vmin;position:relative;top: .5vmin;'>"+dude.stars+"</span></div>";
-  rank++;
-  divtop += 7;
-}
-divtop = 25;
-rank = 1;
-for (const dude of lbarrayScore){
-  scoreLBdivs += "<div class='lbBox' style='top: "+divtop+"vmin;'>"+rank+". "+dude.name+"<span style='float: right;'>"+dude.score+"</span></div>";
-  rank++;
-  divtop += 7;
-}
-divtop = 25;
-rank = 1;
-for (const dude of lbarrayAge){
-  ageLBdivs += "<div class='lbBox' style='top: "+divtop+"vmin;'>"+rank+". "+dude.name+"<span style='float: right;'>"+dude.lastseen+"</span></div>";
-  rank++;
-  divtop += 7;
-}
-document.getElementById("lbContainer").innerHTML = starLBdivs;
 
 changeGamemode(1);//CONNECT TO FFA DEFAULT(change this in the future)

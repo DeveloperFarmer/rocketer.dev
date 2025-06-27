@@ -590,10 +590,10 @@
         .lbBox {
           background-color: rgba(255, 255, 255, .5);
           border-radius: 1vmin;
-          width: 40vmin;
+          width: 50vmin;
           height: 6%;
           position: absolute;
-          left: calc(50% - 40vmin/2);
+          left: calc(50% - 50vmin/2);
           font-size: 3.5vmin;
           line-height: 5.5vmin;
           padding-left: 2vmin;
@@ -1442,6 +1442,51 @@
         color: white;
         display: none;
       }
+
+      #editDescInput {
+        height: 5vmin;
+        width: 75%;
+        font-size: 1.9vmin;
+        font-weight: 400;
+        font-family: "Roboto", sans-serif;
+        background-color: rgba(15,15,15, .75);
+        border: 0.23vw solid #000000;
+        border-radius: 1vmin;
+        color: white;
+      }
+
+      /*range sliders, e.g. in edit profile panel and settings*/
+      .slidecontainer {
+        width: 20%;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .slider {
+        -webkit-appearance: none;  /* Override default CSS styles */
+        appearance: none;
+        width: 100%;
+        height: 3vmin;
+        border-radius: 4vmin;
+        background: rgba(255,255,255,.3);/*scenexe is rgba(0,0,0,.75), but too dark imo*/
+        outline: none;
+      }
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none; /* Override default look */
+        appearance: none;
+        width: 2.5vmin;
+        height: 2.5vmin;
+        border-radius: 4vmin;
+        background: white; /* Green background */
+        cursor: pointer; /* Cursor on hover */
+      }
+      .slider::-moz-range-thumb {
+        width: 2.5vmin;
+        height: 2.5vmin;
+        border-radius: 4vmin;
+        background: white;
+        cursor: pointer; /* Cursor on hover */
+      }
     </style>
 </head>
 <body>
@@ -1632,7 +1677,7 @@
             <img src="/scenexeIconSearch.png" alt="Search" class="hsImage" onclick="" style="text-align: center;width: 3vmin; height: 3vmin; margin-left: -0.5vmin;">
           </button>
         </div>
-        <button class="accButton" style="cursor: not-allowed;">Edit Profile</button>
+        <button class="accButton" id="editPfp">Edit Profile</button>
         <button class="accButton" style="cursor: not-allowed;">Log Out</button>
         <button class="accButton" id="closeAcc">Back to Game</button>
       </div>
@@ -1641,7 +1686,7 @@
         <span id="accName2" style="font-size: 5vmin;">Loading...</span><br>
         <img src="/scenexeIconStarSmall.png" alt="Account Stars" class="hsImage" style="width: 4vmin; height: 4vmin;">
         <span id="starAmt2" style="position: relative; bottom: .8vmin;">Loading...</span>
-        <br><br><div id="accDesc" style="float: left; font-size: 2.3vmin;">Description: testing testing testing blah blah blah i dont know what to type here and i dont know why im spending my time typing this</div>
+        <br><br><div id="accDesc" style="float: left; font-size: 2.3vmin;">Description: loading...</div>
         <br><hr>
         <div id="accInfo">
           <div><div class="accInfoBig">Joined</div><div class="accInfoSmall" id="joindate">Loading...</div></div>
@@ -1657,6 +1702,34 @@
           <button class="accButton" style="position: relative; font-size: 2vmin; margin-left: 2vmin; padding: .2vmin 1vmin; bottom: .5vmin;" onclick="">+</button>
         </div>
         <div id="achievementContainer"></div>
+      </div>
+      <div id="editPanel" style="position: fixed; width: 70%; height: 70%; overflow: scroll; font-size: 3vmin; background-color: rgba(0,0,0,.8);" class="modal">
+        <button id='editicon' class="accButton" style="color: white; background-color: grey;">Edit Icon</button>
+        <button id='editdesc' class="accButton" style="color: grey; background-color: transparent;">Edit Description</button>
+        <hr>
+        <div id="editIconPanel" style="position: relative; width: 100%; height: calc(100% - 30vmin); display: inline-block;">
+          <canvas id="editpfpcanvas" style="position: absolute; left: 3vmin; top: 0vmin; width: 15vmin; height: 15vmin;"></canvas>
+          X offset: <span id="xoffsetvalue" style="width: 3vmin;">0</span><br>
+          <div class="slidecontainer"><input type="range" min="-150" max="150" value="0" class="slider" id="xOffset"></div><br>
+          Y offset: <span id="yoffsetvalue">0</span><br>
+          <div class="slidecontainer"><input type="range" min="-150" max="150" value="0" class="slider" id="yOffset"></div><br>
+          Angle: <span id="anglevalue">45</span> degrees<br>
+          <div class="slidecontainer"><input type="range" min="0" max="360" value="45" class="slider" id="angle"></div><br>
+          Weapon upgrade: <select name="pfpWeapon" id="pfpWeapon" class="accButton"></select><br>
+          Body upgrade: <select name="pfpBody" id="pfpBody" class="accButton"></select><br>
+          Team: <select name="pfpTeam" id="pfpTeam" class="accButton"></select><br>
+          Background (WIP): <select name="pfpBg" id="pfpBg" class="accButton">
+            <option value="ffa">FFA</option>
+            <option value="cr">crossroads</option>
+            <option value="sanc">sanctuary</option>
+            <option value="cavern">cavern</option>
+          </select>
+        </div>
+        <div id="editDescPanel" style="position: relative; width: 100%; height: calc(100% - 30vmin); display: none;">
+          <input type="text" enterkeyhint="send" autocomplete="off" id="editDescInput" placeholder="Type your new account description here (max 50 characters)" maxlength="50"/>
+        </div>
+        <hr>
+        <button id="edit-pfp-apply" class="modalButton">APPLY</button>&emsp;<button id="edit-pfp-cancel" class="modalButton">CANCEL</button>
       </div>
     </div>
     <div id="starroad" class="accountPage" style="overflow-x: scroll; overflow-y: hidden; padding-left: 5vmin; padding-right: 5vmin; width: calc(100% - 10vmin);">
@@ -1688,7 +1761,6 @@
       <select name="lbType" id="lbType" class="accButton" style="position: fixed; right: 50%; top: 15vmin; transform: translate(50%,0);">
         <option value="star">Star Amount</option>
         <option value="score">Highest Score</option>
-        <option value="age">Account Age</option>
       </select>
       <button class="accButton" id="closeLB" style="position: fixed; right: 5vmin; top: 2vmin;">Back to Game</button>
       <div id="lbContainer"></div>
