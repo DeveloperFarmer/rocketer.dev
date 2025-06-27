@@ -3407,7 +3407,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
         var socket = "null";
         // Connect to server
-        if (window.location.href.includes("127.0.0.1")){//this is a testing website, or local host
+        if (window.location.href.includes("127.0.0.1") || window.location.href.includes("rocketer-dev")){//this is a testing website, or local host
           //createNotif("Connected to the developer's testing servers.","rgba(150,0,0)",5000)
           //createNotif("To play the actual game, proceed to rocketer.glitch.me","rgba(150,0,0)",5000)//wss://e2973976-8e79-445f-a922-9602c03fb568-00-1xwdc1uekk0t0.riker.replit.dev/
           document.getElementById("adminPanelYN").style.display = "block";
