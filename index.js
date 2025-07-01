@@ -2987,8 +2987,9 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var chatlist = {};
         var typingAnimation = 20;
 
-        //animate shape health bar length
+        //animate health bar length
         var shapeHealthBar = {};
+        var playerHealthBar = {};
 
         //animate skill points number font size
         var extraFontSize = 0;
@@ -6005,12 +6006,17 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 //write player name if not the client's tank
 
                 //draw player health
-                if (object.health < object.maxhealth) {
+                if (object.health < object.maxhealth || playerHealthBar[id] != 0) {
                   //draw health bar background
-                  var w = (object.width / clientFovMultiplier) * 2;
+                  if (!playerHealthBar.hasOwnProperty(id)) playerHealthBar[id] = 0;
+                  else if (playerHealthBar[id] < 10 && object.health < object.maxhealth) playerHealthBar[id]+=2*deltaTime;
+                  else if (object.health >= object.maxhealth) playerHealthBar[id]-=2*deltaTime;
+                  if (playerHealthBar[id] > 10) playerHealthBar[id] = 10;
+                  else if (playerHealthBar[id] < 0) playerHealthBar[id] = 0;
+                  var w = (object.width / clientFovMultiplier) * 2 * (playerHealthBar[id]/10);
                   var h = 7 / clientFovMultiplier;
                   var r = h / 2;
-                  var x = drawingX - object.width / clientFovMultiplier;
+                  var x = drawingX - object.width / clientFovMultiplier * (playerHealthBar[id]/10);
                   var y = drawingY + object.width / clientFovMultiplier + 10;
                   ctx.fillStyle = "black";
                   ctx.strokeStyle = "black";

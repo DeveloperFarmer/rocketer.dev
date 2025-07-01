@@ -1,3 +1,10 @@
+ALPHA 0.1.9 - June 28, 2025
+- Added events (happens randomly in FFA, lasts for 15 minutes)
+- Player health bars are now animated
+- Added dune portals
+- Upgrading max health stat no longer changes health percentage
+- Fixed spawnShape dev command
+
 ALPHA 0.1.8 - June 27, 2025
 - Added 2 new teams: brown and cyan
 - Crossroads and cavern main area now have a lower chance of spawning small shapes

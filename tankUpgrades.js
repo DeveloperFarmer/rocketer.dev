@@ -813,4 +813,22 @@ export const botcolors = {
     static: "yes",
     minion: "no",
   },
+
+  //events
+  "Chaos Critters": {
+    color: "#37013d",
+    outline: "#19011f",
+    specialty: "",
+    static: "no",
+    minion: "no",
+  },
+  
+  //bosses
+  Vulcan: {
+    color: "#19013d",
+    outline: "#00011f",
+    specialty: "",
+    static: "yes",
+    minion: "no",
+  },
 };
