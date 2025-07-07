@@ -2937,16 +2937,27 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           ['Explorer',5,'Enter a portal.',7],
           ['Killer',20,'Kill a player by shooting.',2],
           ['Ascended',20,'Enter the sanctuary.',13],
+          ['Dimension Traveler',30,'Enter the crossroads.',22],//NEW
           ['Rainbow',35,'Kill a radiant shape.',3],
           ['Bomber',50,'Kill a shape with 10 or more sides.',8],
           ['Giant',50,'Get 10 million xp in one run.',4],
+          ['Not so fast!',50,'Kill a Booster.',19],//NEW
+          ['Ooh shiny...',50,'Enter the cavern.',20],//NEW
           ['Monstrous',75,'Get 100 million xp in one run.',5],
+          ['Guardian',75,'Kill an Infestor.',18],//NEW
+          ['Demolitionist',85,'Kill a Tridecagon.',24],//NEW
           ['Titan',150,'Get 500 million xp in one run.',6],
           ['Survivor',150,'Survive for 20 minutes in FFA.<br>(Achievement given after death)',11],//<br> to next line
           ['Oh Node!',300,'Reach lvl 60 as a node.',9],
           ['Shiny!',300,'Kill a radiant hendecagon.',10],
           ['Champion',400,'Reach lvl 85.',14],
+          ['Sticky',700,'Kill a Slime Blob.',16],//NEW
+          ['Hunter',1000,'Kill a Chaos Critter.',15],//NEW
+          ['Warrior',1200,'Defeat a Vulcan.',21],//NEW
+          ['Treasure',1300,'Kill a Highly Radiant shape.',23],//NEW
           ['Victor',1500,'Survive for an hour in FFA.<br>(Achievement given after death)',12],
+          ['Slayer',5000,'Kill an abyssling.',17],//NEW
+          ['Mission Impossible',50000,'Kill the cavern protector.',25],//NEW
         ];
 
         const achcolors = [
@@ -5793,14 +5804,22 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   //write bot name
                   ctx.fillStyle = "white";
                   ctx.strokeStyle = "black";
-                  ctx.lineWidth = 9;
-                  ctx.font = "700 15px Roboto";
+                  ctx.lineWidth = 10 / clientFovMultiplier;
+                  ctx.font = "700 " + 30 / clientFovMultiplier + "px Roboto";
                   ctx.textAlign = "center";
-                  ctx.lineJoin = "round";
-                  let specialtyText = "";
-                  if (botcolors[object.name].specialty != "") specialtyText = " (" + botcolors[object.name].specialty + ")";
-                  ctx.strokeText(object.name + specialtyText, drawingX, drawingY - w - 20 / clientFovMultiplier);
-                  ctx.fillText(object.name + specialtyText, drawingX, drawingY - w - 20 / clientFovMultiplier);
+                  ctx.miterLimit = 2;//prevent text spikes, alternative to linejoin round
+                  if (settingsList.showname === true) {
+                    ctx.strokeText(object.name, drawingX, drawingY - (w + 35) / clientFovMultiplier);
+                    ctx.fillText(object.name, drawingX, drawingY - (w + 35) / clientFovMultiplier);
+                    ctx.font = "700 " + 15 / clientFovMultiplier + "px Roboto";
+                    ctx.strokeText("lv." + botcolors[object.name].level, drawingX, drawingY - (w + 10) / clientFovMultiplier);
+                    ctx.fillText("lv." + botcolors[object.name].level, drawingX, drawingY - (w + 10) / clientFovMultiplier);
+                  }
+                  if (settingsList.showids === true && debugState == "open") {
+                    ctx.font = "700 " + 15 / clientFovMultiplier + "px Roboto";
+                    ctx.strokeText(id,drawingX, drawingY-(w-20) / clientFovMultiplier);
+                    ctx.fillText(id,drawingX, drawingY-(w-20) / clientFovMultiplier);
+                  }
                   ctx.lineJoin = "miter";
                 }
               } else if (object.type == "shape") {
@@ -6222,6 +6241,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 if (object.team == "none" || !teamCol) teamCol = bodyColors.blue;//if no team color (ffa) or team is invalid
                 ctx.fillStyle = teamCol.col;
                 ctx.strokeStyle = teamCol.outline;
+                ctx.lineWidth = 4 / clientFovMultiplier;
                 let w = object.width / clientFovMultiplier;
                 ctx.fillRect(-w/2, -w/2, w, w);
                 ctx.strokeRect(-w/2, -w/2, w, w);
@@ -8940,6 +8960,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           if (currentpoints >= 4) {
             x -= statw;
           }
+          if (r < 0) r = 0; //prevent negative radius
           hctxroundRectangleFill(x,y,r,statw,h);
         }
         h = 25; //change back to original - 5

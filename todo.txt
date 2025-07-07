@@ -81,17 +81,21 @@ FFA:
 
 ---------
 Dune mobs ideas: (small size)
-- (all the old dune mobs)
+- old dune mobs: booster, legion
+- Glutton: rushes towards you and grows rapidly, low health
 Dune boss ideas: (all quite big)
-- Vulcan: sudden spray of bullets and long reload, high health
-- Oblivion: sudden explosive blast in all direction
-- Bane: 5 slow annihilator cannon, very slow bullets but super high damage
-- Gravedigger: low health but lots of detonator mines
-- Maw: powerful juggernaut aura, super high body damage if get sucked in
-- Monarch: super fast sniper bullets
+- old dune mobs: infestor, cluster
+- Vulcan: sudden spray of bullets and long reload, high health [visual: layers of squares and diamonds]
+- Oblivion: sudden explosive blast in all direction [visual: layers of 4 sided stars (diamonds)]
+- Bane: 5 slow annihilator cannon, very slow bullets but super high damage [visual: pentagon body]
+- Gravedigger: low health but lots of detonator mines [visual: 3 sided star]
+- Maw: powerful juggernaut aura, super high body damage if get sucked in [visual: spiky layers like saw]
+- Monarch: super fast sniper bullets [visual: triangle body]
 Dune apex ideas: (massive, requires lots of players to defeat)
-- Executor: lots of small fast moving drones
-- Tempest: knockback + growth bullets
-- Ironjaw: ring of trap defence around it + quad tank barrels
+- Executor: lots of small fast moving drones + lifesteal [visual: 2 rotating hexagon layers]
+- Tempest: knockback + growth bullets [visual: rotating layers, square body, layers are pentagon and hexagon, black and green]
+- Ironjaw: ring of trap defence around it + quad tank barrels [visual: ziggurat + castle]
+
+other possible names: rogue, sultan, beast
 
 Note: this file is for my reference, isnt used ingame

@@ -860,6 +860,12 @@
         bottom: 0;
         flex-direction: row;
       }
+      #help {
+        background-color: #a85dfc;
+      }
+      #help:hover {
+        background-color: #cd87ff;
+      }
       #reddit {
         background-color: #f94404;
       }
@@ -1574,6 +1580,10 @@
     </div>
     <input type="text" enterkeyhint="send" autocomplete="off" id="chat" placeholder="Click or press ENTER" onfocus="sendTypingIndicator()" onblur="removeTypingIndicator()" />
     <div id="left-buttons" class="hsFlexbox">
+      <button id="help" class="hsButtons">
+        <img src="/scenexeIconHelp.png" alt="Help" class="hsImage" onclick="window.open('https://rocketer2.fandom.com/wiki/FAQ')">
+        <span class="tooltiptext2">Help</span>
+      </button>
       <button id="reddit" class="hsButtons">
         <img src="/scenexeIconReddit.png" alt="Reddit" class="hsImage" onclick="window.open('https://www.reddit.com/r/rocketer/')">
         <span class="tooltiptext2">Subreddit</span>

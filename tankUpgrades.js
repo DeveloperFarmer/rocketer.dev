@@ -630,205 +630,35 @@ export const bodyColors = {//side note: color when hit or have spawn protection 
 };
 
 
-export const botcolors = {
-  //get colors based on dune mob name
-  Cluster: {
-    color: "#00ffff",
-    outline: "#09d3fb",
-    specialty: "",
-    static: "no",
-    minion: "no",
-  },
-  Pursuer: {
-    color: "#00ffff",
-    outline: "#09d3fb",
-    specialty: "",
-    static: "no",
-    minion: "yes",
-  },
-  Crasher: {
-    color: "#00ffff",
-    outline: "#09d3fb",
-    specialty: "",
-    static: "no",
-    minion: "yes",
-  },
-  Champion: {
-    color: "#00ffff",
-    outline: "#09d3fb",
-    specialty: "",
-    static: "no",
-    minion: "no",
-  },
-  Infestor: {
-    color: "#916f6f",
-    outline: "#6c5353",
-    specialty: "",
-    static: "no",
-    minion: "no",
-  },
-  Pillbox: {
-    color: "#916f6f",
-    outline: "#6c5353",
-    specialty: "bullet knockback",
-    static: "no",
-    minion: "yes",
-  },
-  Leech: {
-    color: "#916f6f",
-    outline: "#6c5353",
-    specialty: "lifesteal",
-    static: "no",
-    minion: "yes",
-  },
-
-  "Cavern Protector": {
-    color: "#FFE46B",
-    outline: "#E1C64D",
-    specialty: "",
-    static: "no",
-    minion: "no",
-  },
-  "Abyssling": {
-    color: "#FFE46B",
-    outline: "#E1C64D",
-    specialty: "",
-    static: "no",
-    minion: "no",
-  },
-
-
-  Legion: {
-    color: "#e9ac7a",
-    outline: "#d99b68",
-    specialty: "",
-    static: "no",
-    minion: "no",
-  },
-  Booster: {
-    color: "#e9ac7a",
-    outline: "#d99b68",
-    specialty: "",
-    static: "no",
-    minion: "no",
-  },
-  'Mega-Crasher': {
-    color: "#bf3939",
-    outline: "#B22222",
-    specialty: "",
-  },
-  Spike: {
-    color: "#123573",
-    outline: "#0c2859",
-    specialty: "it hurts",
-  },
-  Mortar: {
-    color: "#001a47",
-    outline: "#001333",
-    specialty: "it hurts even more",
-  },
-  Rogue: {
-    color: "#731582",
-    outline: "#581063",
-    specialty: "lifesteal",
-  },
-  Shield: {
-    color: "#c79b4e",
-    outline: "#a6803d",
-    specialty: "bullet knockback",
-  },
-  Grower: {
-    color: "#9400D3",
-    outline: "#62008B",
-    specialty: "grows when it deals damage",
-  },
-  Protector: {
-    color: "#D5CE67",
-    outline: "#ABA552",
-    specialty: "sniper",
-  },
-  Boss: {
-    color: "#86775F",
-    outline: "#404040",
-    specialty: "rarely spawns",
-  },
-  King: {
-    color: "#47048a",
-    outline: "#830ff7",
-    specialty: "high health",
-  },
-  Titan: {
-    color: "#a03333",
-    outline: "#791a1a",
-    specialty: "superior health",
-  },
-  Sultan: {
-    color: "#0003b3",
-    outline: "#00027a",
-    specialty: "Upgraded Titan",
-  },
-  Beast: {
-    color: "#B5D648",
-    outline: "#5B692C",
-    specialty: "Insane health",
-  },
-  Wall: {
-    color: "#3b2b20",
-    outline: "#8a6950",
-    specialty: "bullet knockback",
-  },
-
-  Rock: {
-    color: "#909090",
-    outline: "#5c5c5c",
-    specialty: "",
-    static: "yes",
-    minion: "no",
-  },
-  Gravel: {
-    color: "#909090",
-    outline: "#5c5c5c",
-    specialty: "",
-    static: "yes",
-    minion: "no",
-  },
-  Boulder: {
-    color: "#505250",
-    outline: "#000000",
-    specialty: "",
-    static: "yes",
-    minion: "no",
-  },
-  Mountain: {
-    color: "#b8683b",
-    outline: "#87563a",
-    specialty: "",
-    static: "yes",
-    minion: "no",
-  },
-  Cactus: {
-    color: "#60b560",
-    outline: "#428042",
-    specialty: "",
-    static: "yes",
-    minion: "no",
-  },
-
-  //events
-  "Chaos Critters": {
-    color: "#37013d",
-    outline: "#19011f",
-    specialty: "",
-    static: "no",
-    minion: "no",
-  },
-  
+export const botcolors = { //get colors based on dune mob name
+  //mobs
+  Legion: {color: "#e9ac7a", outline: "#d99b68", level: "30 (mob)",},
+  Booster: {color: "#e9ac7a", outline: "#d99b68", level: "30 (mob)",},
+  Glutton: {color: "#402d2d", outline: "#220f0f", level: "40 (mob)",},
   //bosses
-  Vulcan: {
-    color: "#19013d",
-    outline: "#00011f",
-    specialty: "",
-    static: "yes",
-    minion: "no",
-  },
+  Cluster: {color: "#00ffff", outline: "#09d3fb", level: "80 (boss)",},
+  Pursuer: {color: "#00ffff", outline: "#09d3fb", level: "50 (minion)",},
+  Crasher: {color: "#00ffff", outline: "#09d3fb", level: "15 (minion)",},
+  Champion: {color: "#00ffff", outline: "#09d3fb", level: "50 (minion)",},
+  Infestor: {color: "#916f6f", outline: "#6c5353", level: "80 (boss)",},//bullet knockback
+  Pillbox: {color: "#916f6f", outline: "#6c5353", level: "50 (minion)",},
+  Leech: {color: "#916f6f", outline: "#6c5353", level: "50 (minion)",},//lifesteal
+  Vulcan: {color: "#19013d", outline: "#00011f", level: "100 (boss)",},
+  Oblivion: {color: "#b03333", outline: "#921515", level: "100 (boss)",},
+  Bane: {color: "#4d4b4b", outline: "#2f2d2d", level: "100 (boss)",},
+  Gravedigger: {color: "#2f2d4b", outline: "#110f2d", level: "100 (boss)",},
+  Maw: {color: "#402d4b", outline: "#220f2d", level: "100 (boss)",},
+  Monarch: {color: "#3f402d", outline: "#21220f", level: "100 (boss)",},
+  //cavern guardians
+  "Cavern Protector": {color: "#FFE46B", outline: "#E1C64D", level: "210",},
+  "Abyssling": {color: "#FFE46B", outline: "#E1C64D", level: "100",},
+  //static mobs
+  Rock: {color: "#909090", outline: "#5c5c5c", level: "25 (static)",},
+  Gravel: {color: "#909090", outline: "#5c5c5c", level: "10 (static)",},
+  Boulder: {color: "#505250", outline: "#000000", level: "45 (static)",},
+  Mountain: {color: "#b8683b", outline: "#87563a", level: "60 (static)",},
+  Cactus: {color: "#60b560", outline: "#428042", level: "60 (static)",},
+  //FFA events
+  "Chaos Critters": {color: "#37013d", outline: "#19011f", level: "100",},
+  "Slime Blob": {color: "#7bc35c", outline: "#5da53e", level: "60",},
 };
