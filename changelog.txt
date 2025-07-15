@@ -1,18 +1,21 @@
-ALPHA 0.2.0 - June 28, 2025
+ALPHA 0.2.0 - July 15, 2025
 - Added a new FFA event (slime raid)
-- Added 11 new achievements (TODO)
+- Added 11 new achievements
 - Reworked dunes
     - Buffed map size from 6k to 20k
-    - added 9 new bots (TODO)
+    - There is now a safe zone in the middle
+    - added 7 new bots
     - there are now 3 types of bots: mobs, bosses, and apexes
-    - bots spawn in different zones based on difficulty (TODO)
+    - bots spawn in different zones based on type
+    - bots with lifesteal will flash green when hit
+- Increased account description character limit from 50 to 600
 - Fixed gateway rendering issue
+- Fixed map hitbox not rendering for non-pve gamemodes
 - Fixed a bug preventing amalgam from shooting
 - Fixed the broadcast dev command
 - Nerfed event chance
 - Added button that links to fandom website
 - Bots now show their levels
-- Infestor now has bullet knockback
 
 ALPHA 0.1.9 - June 28, 2025
 - Added events (happens randomly in FFA, lasts for 15 minutes)

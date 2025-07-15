@@ -79,6 +79,9 @@ FFA:
 
 - add leave animation for leaderboard
 
+- add more safe zones in dune
+- lerp bot angle (old angle += diff/30*delta)
+
 ---------
 Dune mobs ideas: (small size)
 - old dune mobs: booster, legion
@@ -93,7 +96,7 @@ Dune boss ideas: (all quite big)
 - Monarch: super fast sniper bullets [visual: triangle body]
 Dune apex ideas: (massive, requires lots of players to defeat)
 - Executor: lots of small fast moving drones + lifesteal [visual: 2 rotating hexagon layers]
-- Tempest: knockback + growth bullets [visual: rotating layers, square body, layers are pentagon and hexagon, black and green]
+- Tempest: growth bullets [visual: rotating layers, square body, layers are pentagon and hexagon, black and green]
 - Ironjaw: ring of trap defence around it + quad tank barrels [visual: ziggurat + castle]
 
 other possible names: rogue, sultan, beast

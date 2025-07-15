@@ -2236,7 +2236,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           document.getElementById('loadingWords3').style.display = "none";
         }
 
-        // Game loop
+        // Game loop for pve
         function gameLoop() {
             if (isGamePaused) return;//dont do anything if at death screen
             starting = performance.now();//for client tick time
@@ -2937,28 +2937,28 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
           ['Explorer',5,'Enter a portal.',7],
           ['Killer',20,'Kill a player by shooting.',2],
           ['Ascended',20,'Enter the sanctuary.',13],
-          ['Dimension Traveler',30,'Enter the crossroads.',22],//NEW
+          ['Dimension Traveler',30,'Enter the crossroads.',22],//NEW//added
           ['Rainbow',35,'Kill a radiant shape.',3],
           ['Bomber',50,'Kill a shape with 10 or more sides.',8],
           ['Giant',50,'Get 10 million xp in one run.',4],
-          ['Not so fast!',50,'Kill a Booster.',19],//NEW
-          ['Ooh shiny...',50,'Enter the cavern.',20],//NEW
+          ['Not so fast!',50,'Kill a Booster.',19],//NEW//added
+          ['Ooh shiny...',50,'Enter the cavern.',20],//NEW//added
           ['Monstrous',75,'Get 100 million xp in one run.',5],
-          ['Guardian',75,'Kill an Infestor.',18],//NEW
-          ['Demolitionist',85,'Kill a Tridecagon.',24],//NEW
+          ['Guardian',75,'Kill an Infestor.',18],//NEW//added
+          ['Demolitionist',85,'Kill a Tridecagon.',24],//NEW//added
           ['Titan',150,'Get 500 million xp in one run.',6],
           ['Survivor',150,'Survive for 20 minutes in FFA.<br>(Achievement given after death)',11],//<br> to next line
           ['Oh Node!',300,'Reach lvl 60 as a node.',9],
           ['Shiny!',300,'Kill a radiant hendecagon.',10],
           ['Champion',400,'Reach lvl 85.',14],
-          ['Sticky',700,'Kill a Slime Blob.',16],//NEW
-          ['Hunter',1000,'Kill a Chaos Critter.',15],//NEW
-          ['Warrior',1200,'Defeat a Vulcan.',21],//NEW
-          ['Treasure',1300,'Kill a Highly Radiant shape.',23],//NEW
+          ['Sticky',700,'Kill a Slime Blob.',16],//NEW//added
+          ['Hunter',1000,'Kill a Chaos Critter.',15],//NEW//added
+          ['Warrior',1200,'Defeat a Vulcan.',21],//NEW//added
+          ['Treasure',1300,'Kill a Highly Radiant shape.',23],//NEW//added
           ['Victor',1500,'Survive for an hour in FFA.<br>(Achievement given after death)',12],
-          ['Slayer',5000,'Kill an abyssling.',17],//NEW
-          ['Mission Impossible',50000,'Kill the cavern protector.',25],//NEW
-        ];
+          ['Slayer',5000,'Kill an abyssling.',17],//NEW//added
+          ['Mission Impossible',50000,'Kill the cavern protector.',25],//NEW//added
+        ];//if change this list (only visual), remember to change in the server code too
 
         const achcolors = [
           ['rgb(242,219,120)','rgb(212,189,90)'],
@@ -3073,8 +3073,11 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
         var reconnectToDefault = "no";//when die, reconnect to spawning server, e.g. ffa
 
         //for the tank editor
-        var safeZone = 2000;
-        var safeZoneColor = "rgba(133, 194, 212, .5)";
+        //var safeZone = 2000;
+        //var safeZoneColor = "rgba(133, 194, 212, .5)";
+        //for dune
+        var safeZone = 1500;
+        var safeZoneColor = "rgba(240, 224, 5, .3)";
 
         //keep track of the previous mouse position, and only send the new mouse position when there is a difference of 5px (or else mousemove event listener will trigger every 1px of movement)
         var oldmousex = 0;
@@ -5557,7 +5560,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 for (let barrel = 0; barrel < object.barrels.length; barrel++) {
                   object.barrels[barrel].barrelHeightChange = animateBarrels(barrelAnimation.barrels.bots[id], barrel, object.rb[0][barrel], object.rb[1][barrel]);
                 }
-                if (object.name!="Pillbox"){//pillbox's barrel is visually a turret
+                if (object.name!="Pillbox" && object.name!="Vulcan"){//pillbox's barrel is visually a turret
                   for (const k of object.barrels) {
                     ctx.rotate((k.additionalAngle + 90) * Math.PI / 180); //rotate to barrel angle
                     ctx.fillStyle = bodyColors.barrel.col;
@@ -5643,8 +5646,14 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   if (botHit[id] == maxshade && object.sides <= 8){//slight flash
                     botHit[id]-=(Math.random() * 0.2 + maxshade/5);
                   }
-                  ctx.fillStyle = pSBC ( botHit[id], botcolors[object.name].color, false, true );//LINEAR BLENDING (dont use log blending, or else heptagon look too greyish)
-                  ctx.strokeStyle = pSBC ( botHit[id], botcolors[object.name].outline, false, true );
+                  if (object.name == "Leech") {//leech have lifesteal, so flash green instead of white (default)
+                    ctx.fillStyle = pSBC ( botHit[id], botcolors[object.name].color, "rgb(0,255,0)" );
+                    ctx.strokeStyle = pSBC ( botHit[id], botcolors[object.name].outline, "rgb(0,255,0)" );
+                  }
+                  else{
+                    ctx.fillStyle = pSBC ( botHit[id], botcolors[object.name].color, false, true );//LINEAR BLENDING (dont use log blending, or else heptagon look too greyish)
+                    ctx.strokeStyle = pSBC ( botHit[id], botcolors[object.name].outline, false, true );
+                  }
                 }
                 else{
                   ctx.fillStyle = botcolors[object.name].color;
@@ -5761,11 +5770,32 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                       ctx.strokeStyle = oldstroke;
                       renderPolygon(w*0.15, object.side);
                       ctx.rotate(-Math.PI/object.side);
+                    } else if (object.name=="Monarch"){
+                      ctx.rotate(60 * Math.PI / 180);
+                      renderPolygon(w/2, object.side);
+                      ctx.rotate(60 * Math.PI / 180);
+                      renderPolygon(w/4, object.side);
                     }
                   }
                 } else{//negative sides, draw a star! (cactus)
                   ctx.rotate(-object.angle); //rotate back so that rock wont rotate to face you
                   drawSpikes(1, 1.5, -object.side, object.width);
+                  if (object.name == "Vulcan") {//Vulcan's barrel is visually a turret
+                      ctx.rotate(object.angle);
+                      for (const k of object.barrels) {
+                        ctx.rotate((k.additionalAngle + 90) * Math.PI / 180); //rotate to barrel angle
+                        ctx.fillStyle = bodyColors.asset.col;
+                        ctx.strokeStyle = bodyColors.asset.outline;
+                        if (k.barrelType == "bullet") drawBulletBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                        else if (k.barrelType == "drone") drawDroneBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                        else if (k.barrelType == "trap") drawTrapBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
+                        else if (k.barrelType == "mine") drawMineBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier, object.width)
+                        else if (k.barrelType == "minion") drawMinionBarrel(ctx, k.x, k.barrelWidth, k.barrelHeight, k.barrelHeightChange, clientFovMultiplier)
+                        ctx.rotate(-(k.additionalAngle + 90) * Math.PI / 180); //rotate back
+                      }
+                      //drawCircle(w*0.6);//draw turret base
+                      renderPolygon(w*0.6, 5);
+                  }
                 }
                 ctx.restore();
                 if (object.health < object.maxhealth) {
@@ -7623,6 +7653,24 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                 else if (gamemode == "crossroads") ctx.fillStyle = mapColors.cr;
                 else ctx.fillStyle = mapColors.default;
                 ctx.fillRect(xx, yy, mw, mw);
+                if (settingsList.showhitboxes === true && debugState == "open"){//show hitbox (green box around map)
+                  ctx.strokeStyle = "#00ff00";
+                  ctx.lineWidth = 1.5;
+                  ctx.strokeRect(xx, yy, mw, mw);
+                  if (gamemode == "dune") {//draw sections (dune is split into 6x6 spawning regions)
+                    let increment = mw / 6;
+                    let sectionX = xx;
+                    let sectionY = yy;
+                    for (let i = 0; i < 6; i++) {
+                      sectionX = xx;
+                      for (let j = 0; j < 6; j++) {
+                        ctx.strokeRect(sectionX, sectionY, increment, increment);
+                        sectionX += increment;
+                      }
+                      sectionY += increment;
+                    }
+                  }
+                }
 
                 function minimapBaseColor(team) {//NOTE: THESE ARE DIFFERENT COLORS FROM THE BODY COLORS! (but base color is same as minimap)
                   if (team == "red") ctx.fillStyle = "#dbbfc0";
@@ -7648,7 +7696,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   minimapBaseColor(teamColors[3]);
                   ctx.fillRect(xx, yy + mw - baseSize, baseSize, baseSize);
                 }
-                else if (gamemode == "Tank Editor"){//draw safe zone
+                else if (gamemode == "Tank Editor"){//draw safe zone (below grid)
                   const s = safeZone / clientFovMultiplier;
                   ctx.fillStyle = safeZoneColor;
                   ctx.fillRect(xx + mw /2 - s /2, yy + mw /2 - s /2, s, s);
@@ -7681,7 +7729,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   gridHeight = gridSizes.cr / clientFovMultiplier;
                 }
 
-                if (player.fovMultiplier < 10) {
+                if (player.fovMultiplier < 5) {
                   //dont draw grid lines if field of vision is high, to prevent lag from drawing too many grid lines
                   for (let x = -gridHeight - (-(canvas.width / 2 - px / clientFovMultiplier) % gridHeight); x < canvas.width; x += gridHeight) {
                     ctx.moveTo(x, 0);
@@ -7694,6 +7742,16 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
                   ctx.stroke();
                 }
                 
+                if (gamemode == "dune"){//draw safe zone (above grid)
+                  const s = safeZone / clientFovMultiplier;
+                  ctx.fillStyle = safeZoneColor;
+                  ctx.fillRect(xx + mw /2 - s /2, yy + mw /2 - s /2, s, s);
+                  if (settingsList.showhitboxes === true && debugState == "open"){//show hitbox (green box around safe zone)
+                    ctx.strokeStyle = "#00ff00";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(xx + mw /2 - s /2, yy + mw /2 - s /2, s, s);
+                  }
+                }
                 
                 //drawing the objects that are sent from the server, order of drawings are already changed by the server, so if you want something to be below another thing, change the order of adding to the object list in the server code, not the client code
                 for (const id in portalparticles) {
@@ -8833,7 +8891,7 @@ import { bodyUpgradeMap,celestialBodyUpgradeMap,weaponUpgradeMap,celestialWeapon
 
           hctx.strokeRect(mmX, mmY, mmSize, mmSize);//MINIMAP OUTLINE
 
-          if (gamemode == "Tank Editor"){//draw safe zone
+          if (gamemode == "Tank Editor" || gamemode == "dune"){//draw safe zone
             hctx.fillStyle = safeZoneColor;
             hctx.fillRect(mmX + mmSize/2 - safeZone/MAP_WIDTH*mmSize/2, mmY + mmSize/2 - safeZone/MAP_WIDTH*mmSize/2, safeZone/MAP_WIDTH*mmSize, safeZone/MAP_WIDTH*mmSize);
           }

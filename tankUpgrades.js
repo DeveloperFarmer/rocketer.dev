@@ -634,21 +634,21 @@ export const botcolors = { //get colors based on dune mob name
   //mobs
   Legion: {color: "#e9ac7a", outline: "#d99b68", level: "30 (mob)",},
   Booster: {color: "#e9ac7a", outline: "#d99b68", level: "30 (mob)",},
-  Glutton: {color: "#402d2d", outline: "#220f0f", level: "40 (mob)",},
+  Glutton: {color: "#402d2d", outline: "#220f0f", level: "40 (mob)",},//grows
   //bosses
   Cluster: {color: "#00ffff", outline: "#09d3fb", level: "80 (boss)",},
   Pursuer: {color: "#00ffff", outline: "#09d3fb", level: "50 (minion)",},
   Crasher: {color: "#00ffff", outline: "#09d3fb", level: "15 (minion)",},
   Champion: {color: "#00ffff", outline: "#09d3fb", level: "50 (minion)",},
-  Infestor: {color: "#916f6f", outline: "#6c5353", level: "80 (boss)",},//bullet knockback
+  Infestor: {color: "#916f6f", outline: "#6c5353", level: "90 (boss)",},
   Pillbox: {color: "#916f6f", outline: "#6c5353", level: "50 (minion)",},
   Leech: {color: "#916f6f", outline: "#6c5353", level: "50 (minion)",},//lifesteal
   Vulcan: {color: "#19013d", outline: "#00011f", level: "100 (boss)",},
-  Oblivion: {color: "#b03333", outline: "#921515", level: "100 (boss)",},
+  Oblivion: {color: "#b03333", outline: "#921515", level: "120 (boss)",},
   Bane: {color: "#4d4b4b", outline: "#2f2d2d", level: "100 (boss)",},
-  Gravedigger: {color: "#2f2d4b", outline: "#110f2d", level: "100 (boss)",},
+  Gravedigger: {color: "#2f2d4b", outline: "#110f2d", level: "110 (boss)",},
   Maw: {color: "#402d4b", outline: "#220f2d", level: "100 (boss)",},
-  Monarch: {color: "#3f402d", outline: "#21220f", level: "100 (boss)",},
+  Monarch: {color: "#3f402d", outline: "#21220f", level: "135 (boss)",},
   //cavern guardians
   "Cavern Protector": {color: "#FFE46B", outline: "#E1C64D", level: "210",},
   "Abyssling": {color: "#FFE46B", outline: "#E1C64D", level: "100",},
